@@ -1,0 +1,13 @@
+org\lamisplus\modules\pmtct\config\AsyncConfiguration.class
+org\lamisplus\modules\pmtct\domain\entity\ANC.class
+org\lamisplus\modules\pmtct\domain\dto\ANCDto.class
+org\lamisplus\modules\pmtct\domain\PMTCTDomain.class
+org\lamisplus\modules\pmtct\domain\dto\ANCDto$ANCDtoBuilder.class
+org\lamisplus\modules\pmtct\service\ANCService.class
+org\lamisplus\modules\pmtct\repository\ANCRepository.class
+org\lamisplus\modules\pmtct\extensions\EntityScanConfiguration.class
+org\lamisplus\modules\pmtct\installers\PMTCTInstaller.class
+org\lamisplus\modules\pmtct\controller\ANCController.class
+org\lamisplus\modules\pmtct\config\DomainConfiguration.class
+org\lamisplus\modules\pmtct\config\CorsConfig.class
+org\lamisplus\modules\pmtct\PMTCTModule.class

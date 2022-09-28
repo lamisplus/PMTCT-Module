@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet id="20222709-001" author="drkarim-data-fi">
+        <sql>
+            CREATE TABLE IF NOT EXISTS public.pmctc_anc
+            (
+            id bigint NOT NULL,
+            anc_no character varying COLLATE pg_catalog."default",
+            visit_date date,
+            systolic double precision,
+            diastolic double precision,
+            body_weight double precision,
+            fundal_height double precision,
+            fetal_presentation character varying COLLATE pg_catalog."default",
+            gestational_age character varying COLLATE pg_catalog."default",
+            visit_type character varying COLLATE pg_catalog."default",
+            visit_status character varying COLLATE pg_catalog."default",
+            viral_load double precision,
+            sample_date date,
+            tb_status character varying COLLATE pg_catalog."default",
+            next_appointment_date date,
+            "nutritional_support;" character varying COLLATE pg_catalog."default",
+            infant_feeding character varying COLLATE pg_catalog."default",
+            family_planing_method character varying COLLATE pg_catalog."default",
+            referred_to character varying COLLATE pg_catalog."default",
+            agreement character varying COLLATE pg_catalog."default",
+            uuid character varying COLLATE pg_catalog."default",
+            archived bigint,
+            CONSTRAINT pmctc_anc_pkey PRIMARY KEY (id)
+            )
+
+            TABLESPACE pg_default;
+
+            ALTER TABLE IF EXISTS public.pmctc_anc
+            OWNER to postgres;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
