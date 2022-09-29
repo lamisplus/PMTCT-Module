@@ -7,44 +7,36 @@
     <property name="autoIncrement" value="true"/>
 
     <changeSet id="20222709-001" author="drkarim-data-fi">
-        <sql>
-            CREATE TABLE IF NOT EXISTS public.pmtct_anc
-            (
-            id bigint NOT NULL DEFAULT nextval('pmtct_anc_id_seq'::regclass),
-            created_by character varying(255) COLLATE pg_catalog."default",
-            created_date timestamp without time zone,
-            facility_id bigint,
-            last_modified_by character varying(255) COLLATE pg_catalog."default",
-            last_modified_date timestamp without time zone,
-            agreement character varying(255) COLLATE pg_catalog."default",
-            anc_no character varying(255) COLLATE pg_catalog."default",
-            archived bigint,
-            body_weight double precision,
-            diastolic double precision,
-            family_planing_method character varying(255) COLLATE pg_catalog."default",
-            fetal_presentation character varying(255) COLLATE pg_catalog."default",
-            fundal_height double precision,
-            gestational_age character varying(255) COLLATE pg_catalog."default",
-            infant_feeding character varying(255) COLLATE pg_catalog."default",
-            next_appointment_date date,
-            nutritional_support character varying(255) COLLATE pg_catalog."default",
-            referred_to character varying(255) COLLATE pg_catalog."default",
-            sample_date date,
-            systolic double precision,
-            tb_status character varying(255) COLLATE pg_catalog."default",
-            uuid character varying(255) COLLATE pg_catalog."default",
-            viral_load double precision,
-            visit_date date,
-            visit_status character varying(255) COLLATE pg_catalog."default",
-            visit_type character varying(255) COLLATE pg_catalog."default",
-            CONSTRAINT pmtct_anc_pkey PRIMARY KEY (id)
-            )
+        CREATE TABLE IF NOT EXISTS public.pmtct_anc
+        (
+        id bigint NOT NULL DEFAULT nextval('pmtct_anc_id_seq'::regclass),
+        anc_no character varying(255) COLLATE pg_catalog."default",
+        created_by character varying(255) COLLATE pg_catalog."default",
+        created_date timestamp without time zone,
+        date_registration date,
+        facility_id bigint,
+        hospital_number character varying(255) COLLATE pg_catalog."default",
+        last_modified_by character varying(255) COLLATE pg_catalog."default",
+        last_modified_date timestamp without time zone,
+        uuid character varying(255) COLLATE pg_catalog."default",
+        lmp date,
+        gaweeks integer,
+        gravida integer,
+        parity integer,
+        referred_syphilis_positive_client character varying(255) COLLATE pg_catalog."default",
+        source_of_referral character varying(255) COLLATE pg_catalog."default",
+        syphilis_test_result character varying(255) COLLATE pg_catalog."default",
+        tested_for_syphilis character varying(255) COLLATE pg_catalog."default",
+        treated_for_syphilis character varying(255) COLLATE pg_catalog."default",
+        archived bigint,
+        CONSTRAINT pmtct_anc_pkey PRIMARY KEY (id)
+        )
 
-            TABLESPACE pg_default;
+        TABLESPACE pg_default;
 
-            ALTER TABLE IF EXISTS public.pmtct_anc
-            OWNER to postgres;
-        </sql>
+        ALTER TABLE IF EXISTS public.pmtct_anc
+        OWNER to postgres;
+    </sql>
     </changeSet>
 
 </databaseChangeLog>
