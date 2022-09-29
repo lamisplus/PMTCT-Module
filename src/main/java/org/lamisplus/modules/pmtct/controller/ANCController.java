@@ -3,8 +3,6 @@ package org.lamisplus.modules.pmtct.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.patient.domain.dto.PersonDto;
-import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
 import org.lamisplus.modules.pmtct.domain.dto.ANCDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.service.ANCService;

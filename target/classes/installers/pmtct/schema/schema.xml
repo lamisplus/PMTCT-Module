@@ -8,36 +8,41 @@
 
     <changeSet id="20222709-001" author="drkarim-data-fi">
         <sql>
-            CREATE TABLE IF NOT EXISTS public.pmctc_anc
+            CREATE TABLE IF NOT EXISTS public.pmtct_anc
             (
-            id bigint NOT NULL,
-            anc_no character varying COLLATE pg_catalog."default",
-            visit_date date,
-            systolic double precision,
-            diastolic double precision,
-            body_weight double precision,
-            fundal_height double precision,
-            fetal_presentation character varying COLLATE pg_catalog."default",
-            gestational_age character varying COLLATE pg_catalog."default",
-            visit_type character varying COLLATE pg_catalog."default",
-            visit_status character varying COLLATE pg_catalog."default",
-            viral_load double precision,
-            sample_date date,
-            tb_status character varying COLLATE pg_catalog."default",
-            next_appointment_date date,
-            "nutritional_support;" character varying COLLATE pg_catalog."default",
-            infant_feeding character varying COLLATE pg_catalog."default",
-            family_planing_method character varying COLLATE pg_catalog."default",
-            referred_to character varying COLLATE pg_catalog."default",
-            agreement character varying COLLATE pg_catalog."default",
-            uuid character varying COLLATE pg_catalog."default",
+            id bigint NOT NULL DEFAULT nextval('pmtct_anc_id_seq'::regclass),
+            created_by character varying(255) COLLATE pg_catalog."default",
+            created_date timestamp without time zone,
+            facility_id bigint,
+            last_modified_by character varying(255) COLLATE pg_catalog."default",
+            last_modified_date timestamp without time zone,
+            agreement character varying(255) COLLATE pg_catalog."default",
+            anc_no character varying(255) COLLATE pg_catalog."default",
             archived bigint,
-            CONSTRAINT pmctc_anc_pkey PRIMARY KEY (id)
+            body_weight double precision,
+            diastolic double precision,
+            family_planing_method character varying(255) COLLATE pg_catalog."default",
+            fetal_presentation character varying(255) COLLATE pg_catalog."default",
+            fundal_height double precision,
+            gestational_age character varying(255) COLLATE pg_catalog."default",
+            infant_feeding character varying(255) COLLATE pg_catalog."default",
+            next_appointment_date date,
+            nutritional_support character varying(255) COLLATE pg_catalog."default",
+            referred_to character varying(255) COLLATE pg_catalog."default",
+            sample_date date,
+            systolic double precision,
+            tb_status character varying(255) COLLATE pg_catalog."default",
+            uuid character varying(255) COLLATE pg_catalog."default",
+            viral_load double precision,
+            visit_date date,
+            visit_status character varying(255) COLLATE pg_catalog."default",
+            visit_type character varying(255) COLLATE pg_catalog."default",
+            CONSTRAINT pmtct_anc_pkey PRIMARY KEY (id)
             )
 
             TABLESPACE pg_default;
 
-            ALTER TABLE IF EXISTS public.pmctc_anc
+            ALTER TABLE IF EXISTS public.pmtct_anc
             OWNER to postgres;
         </sql>
     </changeSet>
