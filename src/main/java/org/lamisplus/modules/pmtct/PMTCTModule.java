@@ -5,12 +5,16 @@ import com.foreach.across.core.AcrossModule;
 import com.foreach.across.core.context.configurer.ComponentScanConfigurer;
 import com.foreach.across.modules.hibernate.jpa.AcrossHibernateJpaModule;
 import org.lamisplus.modules.patient.PatientModule;
+import org.lamisplus.modules.patient.PatientModule;
 
 @AcrossApplication(
         modules = {
                 AcrossHibernateJpaModule.NAME,
                 PatientModule.NAME
-        })
+
+        }
+
+        )
 public class PMTCTModule extends AcrossModule {
 
     public static final String NAME = "PMTCTModule";

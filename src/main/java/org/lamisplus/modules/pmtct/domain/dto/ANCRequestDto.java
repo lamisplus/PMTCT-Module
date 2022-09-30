@@ -1,21 +1,20 @@
-package org.lamisplus.modules.pmtct.domain.entity;
+package org.lamisplus.modules.pmtct.domain.dto;
+
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.lamisplus.modules.pmtct.domain.entity.enums.ReferredSyphilisPositiveClient;
 import org.lamisplus.modules.pmtct.domain.entity.enums.TestedForSyphilis;
 import org.lamisplus.modules.pmtct.domain.entity.enums.TreatedForSyphilis;
 
-import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Table;
 import java.time.LocalDate;
-
-@Entity
-@Table(name = "pmtct_anc")
 @Data
-@NoArgsConstructor
-public class ANC extends PMTCTTransactionalEntity {
+public class ANCRequestDto
+{
+    private Long id;
+    private LocalDate dateRegistration;
+    private String hospitalNumber;
+    private String ancNo;
     private LocalDate LMP;
     private Integer gAWeeks;
     private Integer gravida;
@@ -28,7 +27,4 @@ public class ANC extends PMTCTTransactionalEntity {
     @Enumerated(EnumType.STRING)
     private ReferredSyphilisPositiveClient referredSyphilisPositiveClient;
     private String syphilisTestResult;
-    private Long archived;
-
-
 }
