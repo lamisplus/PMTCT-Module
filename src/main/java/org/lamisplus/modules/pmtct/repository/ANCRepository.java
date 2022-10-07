@@ -15,4 +15,6 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long>
     List<ANC> findByArchived(Long archived);
 
     Optional<ANC> findByHospitalNumberAndArchived (String hospitalNumber, Long archived);
+
+    Optional<ANC> findByHospitalNumber (String hospitalNumber);
 }

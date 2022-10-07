@@ -227,28 +227,38 @@ public class ANCService {
     public List<PMTCTPersonDto> getAllPMTCTPerson() {
         List<Person> personList = this.personRepository.findAll();
         List<PMTCTPersonDto> pmtctPersonDtosList = new ArrayList<>();
+        System.out.println("How many person are in DB "+personList.size());
         personList.forEach(person -> {
             int age = this.calculateAge(person.getDateOfBirth());
+            System.out.println("1 "+age);
             String sex = person.getSex();
-            Integer archive = person.getArchived();
-
-            if ((age >= 10) && (sex.contains("F")) && (archive == 0)) {
+            if ((age >= 10) && (sex.contains("F")) && (person.getActive())) {
                 PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
                 pmtctPersonDto.setAge(age);
+                System.out.println(1);
                 pmtctPersonDto.setDescriptiveAddress(person.getAddress());
+                System.out.println(2);
                 pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
+                System.out.println("3 "+person.getHospitalNumber());
                 pmtctPersonDto.setOtherNames(person.getOtherName());
+                System.out.println(4);
                 pmtctPersonDto.setSurname(person.getSurname());
-                pmtctPersonDto.setContactPoint(person.getContactPoint());
-                Optional<ANC> ancs = ancRepository.findByHospitalNumberAndArchived(person.getHospitalNumber(), 0L);
-                if (ancs.isPresent()) {
-                    pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
-                } else {
-                    pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
-                }
+                System.out.println("5a "+ person.getHospitalNumber());
+               pmtctPersonDto.setContactPoint(person.getContactPoint());
+                try {
+                    System.out.println("Before Oyibo");
+                    Optional<ANC> ancs = ancRepository.findByHospitalNumber(person.getHospitalNumber());
+                    System.out.println("After Oyibo");
+                    if (ancs.isPresent()) {
+                        pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
+                    } else {
+                        pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
+                    }
+                }catch (Exception e){e.printStackTrace();}
                 pmtctPersonDtosList.add(pmtctPersonDto);
             }
         });
+        System.out.println("I actually got here");
         return pmtctPersonDtosList;
     }
 
@@ -269,6 +279,12 @@ public class ANCService {
                 pmtctPersonDto.setSurname(person.getSurname());
                 pmtctPersonDto.setContactPoint(person.getContactPoint());
 
+            }
+            Optional<ANC> ancs = ancRepository.findByHospitalNumberAndArchived(person.getHospitalNumber(), 0L);
+            if (ancs.isPresent()) {
+                pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
+            } else {
+                pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
             }
         }
         return pmtctPersonDto;

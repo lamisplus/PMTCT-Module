@@ -3,15 +3,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "pmtct_anc")
+@Table(name = "pmtct_anc",  schema = "public")
 @Data
 @NoArgsConstructor
-public class ANC extends PMTCTTransactionalEntity {
+public class ANC extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
     private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;

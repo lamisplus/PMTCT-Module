@@ -2,12 +2,6 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
-import org.lamisplus.modules.pmtct.domain.entity.enums.ReferredSyphilisPositiveClient;
-import org.lamisplus.modules.pmtct.domain.entity.enums.TestedForSyphilis;
-import org.lamisplus.modules.pmtct.domain.entity.enums.TreatedForSyphilis;
-
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data

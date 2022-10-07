@@ -8,7 +8,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "delivery")
+@Table(name = "pmtct- delivery")
 @Data
 @NoArgsConstructor
 public class Delivery extends PatientAuditEntity implements Serializable, Persistable<Long> {

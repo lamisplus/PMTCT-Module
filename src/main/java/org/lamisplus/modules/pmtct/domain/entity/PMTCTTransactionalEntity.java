@@ -47,7 +47,6 @@ public class PMTCTTransactionalEntity implements Serializable, Persistable<Long>
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-    private LocalDate dateRegistration;
     private String hospitalNumber;
     private String uuid;
     private String ancNo;
