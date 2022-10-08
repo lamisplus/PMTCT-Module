@@ -115,7 +115,7 @@ const Patients = (props) => {
         async function patients() {
             setLoading(true)
             axios
-                .get(`${baseUrl}hiv/patients`,
+                .get(`${baseUrl}pmtct/anc`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
                 )
                 .then((response) => {
@@ -326,7 +326,7 @@ const Patients = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={ sampleObj.map((row) => ({
+              data={ patientList.map((row) => ({
                   //Id: manager.id,
                     name:row.currentStatus!== "Not Enrolled" ?
                         (
@@ -338,7 +338,7 @@ const Patients = (props) => {
                             }}
 
                             title={"Click to view patient dashboard"}
-                            > {row.firstName + " " + row.surname}
+                            > {row.personDto.firstName + " " + row.personDto.surname}
                             </Link>
                             </>
                         ):
@@ -351,18 +351,18 @@ const Patients = (props) => {
                                 }}
  
                              title={"Enroll Patient"}
-                             > {row.firstName + " " + row.surname}
+                             > {row.personDto.firstName + " " + row.personDto.surname}
                              </Link>
                              </>
                          ),
-                    hospital_number: getHospitalNumber(row.identifier),
-                    gender:row && row.sex ? row.sex : "",
-                    age: (row.dateOfBirth === 0 ||
-                        row.dateOfBirth === undefined ||
-                        row.dateOfBirth === null ||
-                        row.dateOfBirth === "" )
+                    hospital_number: getHospitalNumber(row.personDto.identifier),
+                    gender:row && row.personDto.sex ? row.personDto.sex : "",
+                    age: (row.personDto.dateOfBirth === 0 ||
+                        row.personDto.dateOfBirth === undefined ||
+                        row.personDto.dateOfBirth === null ||
+                        row.personDto.dateOfBirth === "" )
                           ? 0
-                          : calculate_age(moment(row.dateOfBirth).format("DD-MM-YYYY")),
+                          : calculate_age(moment(row.personDto.dateOfBirth).format("DD-MM-YYYY")),
                     
                     //status: (<Label color="blue" size="mini">{row.currentStatus}</Label>),
                  
@@ -376,7 +376,7 @@ const Patients = (props) => {
                                             <Link
                                                 to={{
                                                     pathname: "/patient-history",
-                                                    state: { patientObj: row  }
+                                                    state: { patientObj: row.personDto  }
                                                 }}
                                             >
                                                 <ButtonGroup variant="contained" 
