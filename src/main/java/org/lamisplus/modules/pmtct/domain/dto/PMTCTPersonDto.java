@@ -11,4 +11,5 @@ public class PMTCTPersonDto
     private Object descriptiveAddress;
     private Object contactPoint;
     private Integer age;
+    private Boolean ancRegstrationStatus;
 }
