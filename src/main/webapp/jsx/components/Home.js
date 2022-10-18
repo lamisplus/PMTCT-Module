@@ -1,6 +1,7 @@
 import React, {useState, Fragment } from "react";
 import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
-import Dashboard from './Patient/PatientList'
+import NotEnrollPatients from './Patient/PatientList'
+import ActiveANCPatients from './Patient/ActiveANCPatientList'
 import VisualisationHome from './Visualisation/Index'
 import LostToFollowUp from './Patient/PatientListIit'
 import { Link } from 'react-router-dom'
@@ -49,9 +50,11 @@ const Home = () => {
                 >
                   
                   <Tab eventKey="home" title="Find Patients">                   
-                    <Dashboard />
+                    <NotEnrollPatients />
                   </Tab>
-                 
+                  <Tab eventKey="anc" title="Active ANC Patients">                   
+                    <ActiveANCPatients />
+                  </Tab>
                   <Tab eventKey="visualization" title="Data Visualisation">                   
                     <VisualisationHome />
                   </Tab>                    

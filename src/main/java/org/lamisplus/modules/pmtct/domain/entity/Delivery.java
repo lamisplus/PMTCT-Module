@@ -6,37 +6,32 @@ import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "pmtct- delivery")
+@Table(name = "pmtct_delivery")
 @Data
 @NoArgsConstructor
-public class Delivery extends PatientAuditEntity implements Serializable, Persistable<Long> {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
-    private String dateOfDelivery;
-    private String hospitalNumber;
-    private String ancNo;
-    private String uniqueARTNo;
-    private Integer age;
-    private String timeOfHIVDiagnosis;
-    private Integer gAinWeeks;
-    private String HBVStatus;
-    private String HCVStatus;
-    private String ART;
-    private String ARTStartedLDWard;
-    private String ROMDeliveryInterval;
+public class Delivery extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
+    private LocalDate dateOfDelivery;
+    private String bookingStatus;
+    private Integer gAWeeks;
+    private String romDeliveryInterval;
     private String modeOfDelivery;
     private String episiotomy;
     private String vaginalTear;
     private String feedingDecision;
     private String maternalOutcome;
-    private String childGivenARVWithin72;
+    private String childGivenArvWithin72;
     private String childStatus;
-    private String HBVExposedInfantGivenHepBWithin24hrsBirth;
-    private String nonHBVExposedInfantGivenHBVVaccineWithin24hrsbirth;
+    private String hivExposedInfantGivenHbWithin24hrs;
+    private String deliveryTime;
+    private String onArt;
+    private String artStartedLdWard;
+    private String HBStatus;
+    private String HCStatus;
+    private String referalSource;
+
 
     @Override
     public boolean isNew() {

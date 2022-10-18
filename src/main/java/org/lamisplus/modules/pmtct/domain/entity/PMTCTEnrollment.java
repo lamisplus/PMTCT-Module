@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "pmtct_Enrollment",  schema = "public")
+@Table(name = "pmtct_enrollment",  schema = "public")
 @Data
 @NoArgsConstructor
 public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {

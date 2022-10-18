@@ -53,8 +53,34 @@ const useStyles = makeStyles((theme) => ({
         margin: theme.spacing(1),
     },
     root: {
-        flexGrow: 1,
-        maxWidth: 752,
+        '& > *': {
+            margin: theme.spacing(1)
+        },
+        "& .card-title":{
+            color:'#fff',
+            fontWeight:'bold'
+        },
+        "& .form-control":{
+            borderRadius:'0.25rem',
+            height:'41px'
+        },
+        "& .card-header:first-child": {
+            borderRadius: "calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0"
+        },
+        "& .dropdown-toggle::after": {
+            display: " block !important"
+        },
+        "& select":{
+            "-webkit-appearance": "listbox !important"
+        },
+        "& p":{
+            color:'red'
+        },
+        "& label":{
+            fontSize:'14px',
+            color:'#014d88',
+            fontWeight:'bold'
+        }
     },
     demo: {
         backgroundColor: theme.palette.background.default,
@@ -143,12 +169,21 @@ const UserRegistration = (props) => {
      const [femaleStatus, setfemaleStatus]= useState(false)
      //const [values, setValues] = useState([]);
      const [objValues, setObjValues] = useState(
-        {id:"", uniqueId: "",dateOfRegistration:"",entryPointId:"", facilityName:"",statusAtRegistrationId:"",
-        dateConfirmedHiv:"",sourceOfReferrerId:"",enrollmentSettingId:"",pregnancyStatusId:"",dateOfLpm:"",
-        tbStatusId:"",targetGroupId:"",ovc_enrolled:"",ovcNumber:"",
-        householdNumber:"", referredToOVCPartner:"", dateReferredToOVCPartner:"",
-        referredFromOVCPartner:"", dateReferredFromOVCPartner:"",
-        careEntryPointOther:""
+        {   ancNo:"",
+            gaweeks: "",
+            gravida: "",
+            expectedDeliveryDate:"",
+            lmp: "",
+            parity: "",
+            hivDiognosicTime:"",
+            referredSyphilisTreatment: "",
+            testResultSyphilis: "",
+            testedSyphilis: "",
+            treatedSyphilis: "",
+            personDto:{},
+            pmtctHtsInfo:{},
+            syphilisInfo:{},
+            partnerNotification:{}
         });
      const [carePoints, setCarePoints] = useState([]);
      const [sourceReferral, setSourceReferral] = useState([]);
@@ -459,15 +494,15 @@ const UserRegistration = (props) => {
             temp.stateId = basicInfo.stateId ? "" : "State is required."  
             temp.district = basicInfo.district ? "" : "Province/LGA is required." 
             //HIV FORM VALIDATION
-            temp.targetGroupId = objValues.targetGroupId ? "" : "Target group is required."
-            {objValues.statusAtRegistrationId!=='55' &&( temp.dateConfirmedHiv = objValues.dateConfirmedHiv ? "" : "date confirm HIV is required.")}
-            temp.sourceOfReferrerId = objValues.sourceOfReferrerId ? "" : "Source of referrer is required."
-            temp.enrollmentSettingId = objValues.enrollmentSettingId ? "" : "Enrollment Setting Number  is required."
-            temp.tbStatusId = objValues.tbStatusId ? "" : "TB status is required."    
-            temp.statusAtRegistrationId = objValues.statusAtRegistrationId ? "" : "Status at Registration is required."  
-            temp.entryPointId = objValues.entryPointId ? "" : "Care Entry Point is required." 
-            temp.dateOfRegistration = objValues.dateOfRegistration ? "" : "Date of Registration is required."  
-            temp.uniqueId = objValues.uniqueId ? "" : "Unique ID is required."
+            // temp.targetGroupId = objValues.targetGroupId ? "" : "Target group is required."
+            // {objValues.statusAtRegistrationId!=='55' &&( temp.dateConfirmedHiv = objValues.dateConfirmedHiv ? "" : "date confirm HIV is required.")}
+            // temp.sourceOfReferrerId = objValues.sourceOfReferrerId ? "" : "Source of referrer is required."
+            // temp.enrollmentSettingId = objValues.enrollmentSettingId ? "" : "Enrollment Setting Number  is required."
+            // temp.tbStatusId = objValues.tbStatusId ? "" : "TB status is required."    
+            // temp.statusAtRegistrationId = objValues.statusAtRegistrationId ? "" : "Status at Registration is required."  
+            // temp.entryPointId = objValues.entryPointId ? "" : "Care Entry Point is required." 
+            // temp.dateOfRegistration = objValues.dateOfRegistration ? "" : "Date of Registration is required."  
+            // temp.uniqueId = objValues.uniqueId ? "" : "Unique ID is required."
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -560,9 +595,9 @@ const UserRegistration = (props) => {
                 }
                 patientForm.contactPoint.push(phone);
                 patientForm.id = patientId;
-                patientDTO.person=patientForm;
-                patientDTO.hivEnrollment=objValues;
-                const response = await axios.post(`${baseUrl}hiv/patient`, patientDTO, { headers: {"Authorization" : `Bearer ${token}`} });
+                objValues.personDto=patientForm;
+                //patientDTO.personDto=objValues;
+                const response = await axios.post(`${baseUrl}pmtct/anc`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful");
                 history.push('/');
             } catch (error) {                
@@ -677,24 +712,8 @@ const UserRegistration = (props) => {
         });    
     }
     const handleInputChange = e => {        
-        setObjValues ({...objValues,  [e.target.name]: e.target.value});
-        if(e.target.name ==="entryPointId" ){
-            if(e.target.value==="21"){
-                setTransferIn(true)
-            }else{
-                setTransferIn(false)
-            }
-        }
-        if(e.target.name ==="pregnancyStatusId" ){
-            console.log(e.target.value)
-            if(e.target.value==="72"){
-                setTransferIn(true)
-            }else{
-                setTransferIn(false)
-            }
-        }                
-    }    
-    
+        setObjValues ({...objValues,  [e.target.name]: e.target.value});          
+    }      
     const checkPhoneNumber=(e, inputName)=>{
         const limit = 10;
             setRelatives({...relatives,  [inputName]: e.slice(0, limit)});     
@@ -703,7 +722,6 @@ const UserRegistration = (props) => {
         const limit = 10;
             setBasicInfo({...basicInfo,  [inputName]: e.slice(0, limit)});     
     } 
-
     const checkNINLimit=(e)=>{
         const limit = 11;        
         const acceptedNumber= e.slice(0, limit)
@@ -726,7 +744,7 @@ const UserRegistration = (props) => {
         <ToastContainer autoClose={3000} hideProgressBar />
         <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>
 			<ol className="breadcrumb">
-				<li className="breadcrumb-item active"><h4> <Link to={"/"} >Prep /</Link> Patient Registration</h4></li>
+				<li className="breadcrumb-item active"><h4> <Link to={"/"} >PMTCT /</Link> Patient Registration</h4></li>
 			</ol>
 		  </div>
           <Link
@@ -746,7 +764,7 @@ const UserRegistration = (props) => {
             </Link>
             <br /><br/>
   
-            <Card className={classes.cardBottom}>
+            <Card className={classes.root}>
                 <CardContent>
                     
                     <div className="col-xl-12 col-lg-12">
@@ -1482,54 +1500,39 @@ const UserRegistration = (props) => {
                             {/* Adding HIV ENROLLEMENT FORM HERE */}
                             <div className="card">
                                 <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder', borderRadius:"0.2rem"}}>
-                                    <h5 className="card-title"  style={{color:'#fff'}}>Prep  Enrollment</h5>
+                                    <h5 className="card-title"  style={{color:'#fff'}}>ANC  Enrollment</h5>
                                 </div>
 
                             <div className="card-body">
                             <div className="row">
-                                <h2>ANC Enrollment</h2>
+                              
                                 <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >ANC No *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="ancNo"
+                                                    id="ancNo"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.ancNo} 
                                                 />
 
                                             </InputGroup>
                                         
                                             </FormGroup>
                                     </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Date of 1st ANC *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="date"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-
-                                            </InputGroup>
-                                        
-                                            </FormGroup>
-                                    </div>
+                                    
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Gravida</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="gravida"
+                                                    id="gravida"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.gravida} 
                                                 />
 
                                             </InputGroup>
@@ -1542,10 +1545,10 @@ const UserRegistration = (props) => {
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="parity"
+                                                    id="parity"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.parity} 
                                                 />
 
                                             </InputGroup>
@@ -1558,62 +1561,34 @@ const UserRegistration = (props) => {
                                             <InputGroup> 
                                                 <Input 
                                                     type="date"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="lmp"
+                                                    id="lmp"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.lmp} 
                                                 />
 
                                             </InputGroup>
                                         
                                             </FormGroup>
                                     </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Expected Date Of Delivery </Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="Date"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-
-                                            </InputGroup>
-                                        
-                                            </FormGroup>
-                                    </div>
+                                   
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Gestational Age (Weeks)</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="gaweeks"
+                                                    id="gaweeks"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.gaweeks} 
                                                 />
 
                                             </InputGroup>
                                         
                                             </FormGroup>
                                     </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Time of HIV Diagnosis</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
+                                    
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Source of Referral</Label>
@@ -1622,270 +1597,89 @@ const UserRegistration = (props) => {
                                                     type="text"
                                                     name="encounterDate"
                                                     id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    onChange={handleInputChange}
+                                                    value={objValues.encounterDate} 
                                                 />
 
                                             </InputGroup>
                                         
                                             </FormGroup>
-                                    </div>
-                                    
-                                    <h3>Syphilis Information</h3>
-                                    <hr/>
+                                    </div>                                
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Tested for syphilis?</Label>
+                                            <Label >Tested for syphilis</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
+                                                    name="testedSyphilis"
+                                                    id="testedSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.testedSyphilis} 
+                                                >
+                                                     <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
+                                                </Input>
                                             </InputGroup>                                        
                                             </FormGroup>
                                     </div>
                                 
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Test Result</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="date"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Treated for Syphilis</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Referred for syphilis treatment</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <h3>PMTCT HTS</h3>
-                                    <hr/>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Previously known HIV positive?</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Date tested HIV positive</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="date"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Accepted HIV Testing?</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >HIV test result</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >HIV Restesting?</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Received HIV test result?</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    
-                                    <h3>Hepatitis Information</h3>
-                                    <hr/>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Tested for Hepatitis B</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Hepatitis B test result</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Tested for Hepatitis C</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Hepatitis C test result</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
-                                                />
-                                            </InputGroup>                                        
-                                            </FormGroup>
-                                    </div>
-                                    <h3>Partner Notification</h3>
-                                    <hr/>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Agreed to partner notification?</Label>
+                                            <Label >Syphilis test result</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="testResultSyphilis"
+                                                    id="testResultSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.testResultSyphilis} 
                                                 >
-                                                    <option value="">Select</option>
+                                                    <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
                                                 </Input>
                                             </InputGroup>                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Partner's HIV status</Label>
+                                            <Label >Treated for syphilis (penicillin)</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="treatedSyphilis"
+                                                    id="treatedSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.encounterDate} 
                                                 >
-                                                    <option value="">Select</option>
+                                                    <option value="" >Select</option>
+                                                    <option value="Yes" >Yes</option>
+                                                    <option value="No" >No</option>
                                                 </Input>
                                             </InputGroup>                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Partner referred to?</Label>
+                                            <Label >Referred Syphilis +ve client</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
-                                                    //onChange={handleInputChangeVitalSignDto}
-                                                    //value={vital.encounterDate} 
+                                                    name="referredSyphilisTreatment"
+                                                    id="referredSyphilisTreatment"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.referredSyphilisTreatment} 
                                                 >
-                                                    <option value="">Select</option>
+                                                    <option value="" >Select</option>
+                                                    <option value="Yes" >Yes</option>
+                                                    <option value="No" >No</option>
                                                 </Input>
                                             </InputGroup>                                        
                                             </FormGroup>
                                     </div>
-                                </div>
+                                   
+                            </div>
                             </div>
                             </div>
                             {/* END OF HIV ENROLLEMENT FORM */}

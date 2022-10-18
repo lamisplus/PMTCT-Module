@@ -400,7 +400,7 @@ const redirectLink=()=>{
                     defaultActiveKey="0"
                   >
                     <>
-                    {recentActivities.map((data, i)=>
+                    {[].map((data, i)=>
                     <div className="accordion-item" key={i}>
                       <Accordion.Toggle
                           as={Card.Text}

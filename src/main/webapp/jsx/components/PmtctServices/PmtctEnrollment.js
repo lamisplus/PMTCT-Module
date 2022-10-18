@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {Card,CardBody, FormGroup, Label, Input, InputGroup,InputGroupText} from 'reactstrap';
+import {Label as FormLabelName, } from "reactstrap";
 import MatButton from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles'
 import SaveIcon from '@material-ui/icons/Save'
@@ -10,6 +11,8 @@ import { url as baseUrl, token } from "../../../api";
 import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
+import {Message } from 'semantic-ui-react'
+import Biometrics from '../Patient/Biometric';
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -63,60 +66,139 @@ const AncPnc = (props) => {
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
 
-    const [vital, setVitalSignDto]= useState({
+    const [enroll, setEnrollDto]= useState({
 
-                                                bodyWeight: "",
-                                                diastolic: "",
-                                                encounterDate: "",
-                                                facilityId: 1,
-                                                height: "",
-                                                personId: "",
-                                                pulse: "",
-                                                respiratoryRate: "",
-                                                systolic:"",
-                                                temperature: "",
-                                                visitId:""
-                                            })
+                    agreed2PartnerNotification: "",
+                    ancNo: patientObj.ancNo,
+                    bodyWeight: "",
+                    diastolic: "",
+                    fetalPresentation: "",
+                    fpl: "",
+                    fundalHeight: "",
+                    id: "",
+                    infantFeeding: "",
+                    nextAppointmentDate: "",
+                    nutritionalSupport: "",
+                    pmtctEnrollmentDate: "",
+                    referredTo: "",
+                    systolic: "",
+                    tbStatus: "",
+                    viralLoadSample: "",
+                    viralLoadSampleDate: "",
+                    visitStatus: "",
+                    visitType: ""
+    })
     
-        const handleInputChangeVitalSignDto = e => {            
-            setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
-        }
+    const handleInputChangeEnrollmentDto = e => {            
+        setEnrollDto ({...enroll,  [e.target.name]: e.target.value});
+    }
 
-        //FORM VALIDATION
-        const validate = () => {
-            let temp = { ...errors }
-            //temp.name = details.name ? "" : "This field is required"
-            //temp.description = details.description ? "" : "This field is required"
-            setErrors({
-                ...temp
-                })    
-            return Object.values(temp).every(x => x == "")
-        }
-          
-        /**** Submit Button Processing  */
-        const handleSubmit = (e) => {        
-            e.preventDefault();        
-            
-            setSaving(true);
-            axios.post(`${baseUrl}patient/vital-sign/`, vital,
-            { headers: {"Authorization" : `Bearer ${token}`}},
-            
-            )
-              .then(response => {
-                  setSaving(false);
-                  props.patientObj.commenced=true
-                  toast.success("Vital signs save successful");
-                  props.toggle()
-                  props.patientsVitalsSigns()
+    //FORM VALIDATION
+    const validate = () => {
+        let temp = { ...errors }
+        //temp.name = details.name ? "" : "This field is required"
+        //temp.description = details.description ? "" : "This field is required"
+        setErrors({
+            ...temp
+            })    
+        return Object.values(temp).every(x => x == "")
+    }
+    //Vital signs clinical decision support 
+  const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
+    bodyWeight: "",
+    diastolic: "",
+    fundalHeight: "",
+    systolic: "",
+  })
+     //to check the input value for clinical decision 
+  const handleInputValueCheckHeight =(e)=>{
+    if(e.target.name==="fundalHeight" && (e.target.value < 48.26 || e.target.value>216.408)){
+      const message ="Height cannot be greater than 216.408 and less than 48.26"
+      setVitalClinicalSupport({...vitalClinicalSupport, fundalHeight:message})
+    }else{
+      setVitalClinicalSupport({...vitalClinicalSupport, fundalHeight:""})
+    }
+  }
+  const handleInputValueCheckBodyWeight =(e)=>{
+    if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
+      const message ="Body weight must not be greater than 150 and less than 3"
+      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
+    }else{
+      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
+    }
+  }
+  const handleInputValueCheckSystolic =(e)=>{
+    if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
+      const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
+      setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
+    }else{
+      setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
+    }
+  }
+  const handleInputValueCheckDiastolic =(e)=>{
+    if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
+      const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
+      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
+    }else{
+      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
+    }
+  }
+  const handleInputValueCheckPulse =(e)=>{
+    if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
+    const message ="Pulse must not be greater than 120 and less than 40"
+    setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
+    }else{
+    setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
+    }
+  }      
+    /**** Submit Button Processing  */
+    const handleSubmit = (e) => {        
+        e.preventDefault();        
+        
+        setSaving(true);
+        axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
+        { headers: {"Authorization" : `Bearer ${token}`}},
+        
+        )
+            .then(response => {
+                setSaving(false);
+                //props.patientObj.commenced=true
+                toast.success("Enrollment save successful");
 
-              })
-              .catch(error => {
-                  setSaving(false);
-                  toast.error("Something went wrong");
-                 
-              });
-          
+            })
+            .catch(error => {
+                setSaving(false);
+                toast.error("Something went wrong");
+                
+            });
+        
+    }
+
+    function BmiCal (bmi){
+        if(bmi<18.5){
+          return (
+            <Message        
+             size='mini'
+             color='brown'
+              content='Underweight'
+            />
+          )      
+        }else if(bmi >=18.5 && bmi<=24.9){
+          <Message        
+             size='mini'
+             color='olive'
+              content='Well nourished'
+            />
         }
+        else if( bmi>25){
+          <Message        
+             size='mini'
+             color='blue'
+              content='Overweight/Obese'
+            />
+        }
+        
+      }
 
   return (      
       <div >
@@ -132,10 +214,11 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="ancNo"
+                                    id="ancNo"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={patientObj.ancNo} 
+                                    disabled
                                 />
 
                             </InputGroup>
@@ -144,14 +227,14 @@ const AncPnc = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of Visit *</Label>
+                            <Label >Date of Enrollment</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="pmtctEnrollmentDate"
+                                    id="pmtctEnrollmentDate"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.pmtctEnrollmentDate} 
                                 />
 
                             </InputGroup>
@@ -159,92 +242,145 @@ const AncPnc = (props) => {
                             </FormGroup>
                     </div>
 
-                    <div className="form-group mb-3 col-md-6">
+                    <div className="row">
+                    <div className="form-group mb-3 col-md-12">
                         <FormGroup>
-                        <Label >Blood Presure</Label>
+                        <FormLabelName >Blood Pressure</FormLabelName>
                         <InputGroup>
-                        <InputGroupText>
-                            systolic(mmHg)
-                            </InputGroupText> 
+                        <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                                systolic(mmHg)
+                        </InputGroupText> 
                             <Input 
-                                type="number"
+                                type="text"
                                 name="systolic"
                                 id="systolic"
-                                onChange={handleInputChangeVitalSignDto}
-                                value={vital.systolic} 
+                                min="90"
+                                max="240"
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.systolic}
+                                onKeyUp={handleInputValueCheckSystolic}
+                                style={{border: "1px solid #014D88", borderRadius:"0rem"}} 
                             />
                             
-                        </InputGroup>
-                        {vital.systolic > 200 ? (
-                                <span className={classes.error}>{"Blood Pressure cannot be greater than 200."}</span>
-                            ) : "" }
-                        </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                        <FormGroup>
-                        <Label >Blood Presure</Label>
-                        
-                        <InputGroup> 
-                        <InputGroupText>
-                            diastolic (mmHg)
+                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                            diastolic(mmHg)
                             </InputGroupText>
-                            <Input 
+                            
+                                <Input 
                                 type="text"
                                 name="diastolic"
                                 id="diastolic"
-                                onChange={handleInputChangeVitalSignDto}
-                                value={vital.diastolic} 
-                            />
+                                min={0}
+                                max={140}
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.diastolic}
+                                onKeyUp={handleInputValueCheckDiastolic} 
+                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
+                                />
+                            
                             
                         </InputGroup>
-                        {vital.diastolic > 200 ? (
-                            <span className={classes.error}>{"Blood Pressure cannot be greater than 200."}</span>
-                        ) : "" }
+                        {vitalClinicalSupport.systolic !=="" ? (
+                            <span className={classes.error}>{vitalClinicalSupport.systolic}</span>
+                            ) : ""}
+                            {errors.systolic !=="" ? (
+                                <span className={classes.error}>{errors.systolic}</span>
+                            ) : "" }  
+                            {vitalClinicalSupport.diastolic !=="" ? (
+                            <span className={classes.error} >{vitalClinicalSupport.diastolic}</span>
+                            ) : ""}
+                            {errors.diastolic !=="" ? (
+                                <span className={'float-end'}><span className={classes.error} >{errors.diastolic}</span></span>
+                            ) : "" }       
                         </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
+                    </div>
+                    <div className="row">                  
+                    <div className=" mb-3 col-md-4">
                         <FormGroup>
-                        <Label >Body Weight</Label>
-                        <InputGroup>
-                        <InputGroupText>
-                                kg
-                            </InputGroupText> 
+                        <FormLabelName >Body Weight</FormLabelName>
+                        <InputGroup> 
                             <Input 
-                                type="number"
+                                type="text"
                                 name="bodyWeight"
                                 id="bodyWeight"
-                                onChange={handleInputChangeVitalSignDto}
-                                value={vital.bodyWeight} 
+                                onChange={handleInputChangeEnrollmentDto}
+                                min="3"
+                                max="150"
+                                value={enroll.bodyWeight}
+                                onKeyUp={handleInputValueCheckBodyWeight} 
+                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
                             />
-                            
-                            
-                        </InputGroup>
-                        {vital.bodyWeight > 200 ? (
-                                <span className={classes.error}>{"Body Weight cannot be greater than 200."}</span>
-                            ) : "" 
-                        }
-                        </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                        <FormGroup>
-                        <Label >Fundal Height</Label>
-                        <InputGroup> 
-                        <InputGroupText>
-                                cm
+                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                                kg
                             </InputGroupText>
-                            <Input 
-                                type="number"
-                                name="height"
-                                id="height"
-                                onChange={handleInputChangeVitalSignDto}
-                                value={vital.height} 
-                            />
-                            
                         </InputGroup>
-                        {vital.height > 3 ? (
-                            <span className={classes.error}>{"Height cannot be greater than 3."}</span>
+                        {vitalClinicalSupport.bodyWeight !=="" ? (
+                                <span className={classes.error}>{vitalClinicalSupport.bodyWeight}</span>
+                        ) : ""}
+                        {errors.bodyWeight !=="" ? (
+                            <span className={classes.error}>{errors.bodyWeight}</span>
                         ) : "" }
                         </FormGroup>
+                    </div>                                   
+                    <div className="form-group mb-3 col-md-5">
+                        <FormGroup>
+                        <FormLabelName >Fundal Height</FormLabelName>
+                        <InputGroup> 
+                        <InputGroupText
+                                addonType="append"
+                                
+                                style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}
+                                >
+                                cm
+                        </InputGroupText>
+                            <Input 
+                                type="text"
+                                name="fundalHeight"
+                                id="fundalHeight"
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.fundalHeight}
+                                min="48.26"
+                                max="216.408"
+                                onKeyUp={handleInputValueCheckHeight} 
+                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
+                            />
+                                <InputGroupText
+                                addonType="append"
+                               
+                                style={{ backgroundColor:"#992E62", color:"#fff", border: "1px solid #992E62", borderRadius:"0rem"}}
+                                >
+                                {enroll.fundalHeight!=='' && enroll.fundalHeight!=='NaN' ? (enroll.fundalHeight/100).toFixed(2) + "m" : "m"}
+                            </InputGroupText>
+                        </InputGroup>
+                        {vitalClinicalSupport.fundalHeight !=="" ? (
+                            <span className={classes.error}>{vitalClinicalSupport.fundalHeight}</span>
+                        ) : ""}
+                        {errors.fundalHeight !=="" ? (
+                            <span className={classes.error}>{errors.fundalHeight}</span>
+                        ) : "" }
+                        </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 mt-2 col-md-3">
+                        {enroll.bodyWeight!=="" && enroll.fundalHeight!=='' && (
+                            <FormGroup>
+                            <Label > {" "}</Label>
+                            <InputGroup> 
+                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                                BMI : {(enroll.bodyWeight/(((enroll.fundalHeight/100) * (enroll.fundalHeight/100)))).toFixed(2)}
+                            </InputGroupText>                   
+                           
+                            </InputGroup>                
+                            </FormGroup>
+                        )}
+                    </div>
+                    {enroll.bodyWeight!=='' && enroll.fundalHeight!=='' && (
+                      <div className="form-group mb-3 mt-2 col-md-12">
+                            {
+                              BmiCal((enroll.bodyWeight/(((enroll.fundalHeight/100) * (enroll.fundalHeight/100)))).toFixed(2))
+                            }
+                      </div>
+                     )}
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
@@ -252,10 +388,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="fetalPresentation"
+                                    id="fetalPresentation"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.fetalPresentation} 
                                 />
 
                             </InputGroup>
@@ -268,10 +404,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
+                                    name="gAge"
                                     id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.encounterDate} 
                                 />
 
                             </InputGroup>
@@ -284,10 +420,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="visitType"
+                                    id="visitType"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.visitType} 
                                 />
 
                             </InputGroup>
@@ -300,10 +436,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="visitStatus"
+                                    id="visitStatus"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.visitStatus} 
                                 />
 
                             </InputGroup>
@@ -316,10 +452,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="viralLoadSample"
+                                    id="viralLoadSample"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.viralLoadSample} 
                                 />
 
                             </InputGroup>
@@ -332,10 +468,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="viralLoadSampleDate"
+                                    id="viralLoadSampleDate"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.viralLoadSampleDate} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -346,10 +482,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="tbStatus"
+                                    id="tbStatus"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.tbStatus} 
                                 />
 
                             </InputGroup>
@@ -362,10 +498,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="nextAppointmentDate"
+                                    id="nextAppointmentDate"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.nextAppointmentDate} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -378,11 +514,11 @@ const AncPnc = (props) => {
                             <Label >Nutritional Support</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    type="text"
+                                    name="nutritionalSupport"
+                                    id="nutritionalSupport"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.nutritionalSupport} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -393,10 +529,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="infantFeeding"
+                                    id="infantFeeding"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.infantFeeding} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -407,10 +543,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="fpl"
+                                    id="fpl"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.fpl} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -421,10 +557,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="referredTo"
+                                    id="referredTo"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.referredTo} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -438,10 +574,10 @@ const AncPnc = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="agreed2PartnerNotification"
+                                    id="agreed2PartnerNotification"
+                                    onChange={handleInputChangeEnrollmentDto}
+                                    value={enroll.agreed2PartnerNotification} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>

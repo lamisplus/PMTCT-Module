@@ -32,11 +32,11 @@ const ClinicVisitPage = (props) => {
                     className="mb-3"
                 >
 
-                  <Tab eventKey="home" title="CLINIC VISIT ">                   
+                  <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">                   
                     <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
                   </Tab>  
-                  <Tab eventKey="history" title=" HISTORY">                   
-                    <ClinicHistoryPage patientObj={patientObj} activeContent={props.activeContent} setActiveContent={props.setActiveContent} />
+                  <Tab eventKey="history" title=" CHILD FOLLOW UP VISIT">                   
+                   <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
                   </Tab>                   
                 </Tabs>
               </div>

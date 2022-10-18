@@ -309,7 +309,7 @@
 <!--                    <phase>generate-resources</phase>-->
 <!--                    <configuration>-->
 <!--                        <target>-->
-<!--                            <copy todir="${project.build.directory}/classes/views/static/triage">-->
+<!--                            <copy todir="${project.build.directory}/classes/views/static/pmtct">-->
 <!--                                <fileset dir="${project.basedir}/build"/>-->
 <!--                            </copy>-->
 <!--                        </target>-->

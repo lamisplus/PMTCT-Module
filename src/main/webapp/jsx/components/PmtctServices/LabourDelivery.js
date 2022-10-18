@@ -56,30 +56,37 @@ const useStyles = makeStyles(theme => ({
 
 const LabourDelivery = (props) => {
     const patientObj = props.patientObj;
-    console.log(patientObj)
-    let history = useHistory();
+    //let history = useHistory();
     const classes = useStyles()
     //const [values, setValues] = useState([]);
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
 
-    const [vital, setVitalSignDto]= useState({
+    const [delivery, setDelivery]= useState({
 
-                                                bodyWeight: "",
-                                                diastolic: "",
-                                                encounterDate: "",
-                                                facilityId: 1,
-                                                height: "",
-                                                personId: "",
-                                                pulse: "",
-                                                respiratoryRate: "",
-                                                systolic:"",
-                                                temperature: "",
-                                                visitId:""
-                                            })
+                ancNo: patientObj.ancNo,
+                artStartedLdWard: "",
+                bookingStatus: "",
+                childGivenArvWithin72: "",
+                childStatus: "",
+                dateOfDelivery: "",
+                deliveryTime: "",
+                episiotomy: "",
+                feedingDecision: "",
+                gaweeks: "",
+                hbstatus: "",
+                hcstatus: "",
+                hivExposedInfantGivenHbWithin24hrs: "",
+                maternalOutcome: "",
+                modeOfDelivery: "",
+                onArt: "",
+                referalSource: "",
+                romDeliveryInterval: "",
+                vaginalTear: ""
+    })
     
-        const handleInputChangeVitalSignDto = e => {            
-            setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
+        const handleInputChangeDeliveryDto = e => {            
+            setDelivery ({...delivery,  [e.target.name]: e.target.value});
         }
 
         //FORM VALIDATION
@@ -98,16 +105,14 @@ const LabourDelivery = (props) => {
             e.preventDefault();        
             
             setSaving(true);
-            axios.post(`${baseUrl}patient/vital-sign/`, vital,
+            axios.post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery,
             { headers: {"Authorization" : `Bearer ${token}`}},
             
             )
               .then(response => {
                   setSaving(false);
-                  props.patientObj.commenced=true
-                  toast.success("Vital signs save successful");
-                  props.toggle()
-                  props.patientsVitalsSigns()
+                  //props.patientObj.commenced=true
+                  toast.success("Record save successful");
 
               })
               .catch(error => {
@@ -132,10 +137,11 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="ancNo"
+                                    id="ancNo"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.ancNo} 
+                                    disabled
                                 />
 
                             </InputGroup>
@@ -148,10 +154,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="bookingStatus"
+                                    id="bookingStatus"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.bookingStatus} 
                                 />
 
                             </InputGroup>
@@ -164,10 +170,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="dateOfDelivery"
+                                    id="dateOfDelivery"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.dateOfDelivery} 
                                 />
 
                             </InputGroup>
@@ -180,10 +186,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="gaweeks"
+                                    id="gaweeks"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.gaweeks} 
                                 />
 
                             </InputGroup>
@@ -195,11 +201,11 @@ const LabourDelivery = (props) => {
                             <Label >ROM to Delivery Interval </Label>
                             <InputGroup> 
                                 <Input 
-                                    type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    type="text"
+                                    name="romDeliveryInterval"
+                                    id="romDeliveryInterval"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.romDeliveryInterval} 
                                 />
 
                             </InputGroup>
@@ -211,11 +217,11 @@ const LabourDelivery = (props) => {
                             <Label >Mode of Delivery</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="Date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    type="text"
+                                    name="modeOfDelivery"
+                                    id="modeOfDelivery"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.modeOfDelivery} 
                                 />
 
                             </InputGroup>
@@ -228,10 +234,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="episiotomy"
+                                    id="episiotomy"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.episiotomy} 
                                 />
 
                             </InputGroup>
@@ -244,10 +250,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="vaginalTear"
+                                    id="vaginalTear"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.vaginalTear} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -258,10 +264,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="feedingDecision"
+                                    id="feedingDecision"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.feedingDecision} 
                                 />
 
                             </InputGroup>
@@ -275,10 +281,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="maternalOutcome"
+                                    id="maternalOutcome"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.maternalOutcome} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -289,11 +295,11 @@ const LabourDelivery = (props) => {
                             <Label >Child given ARV within 72 hrs</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="date"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    type="text"
+                                    name="childGivenArvWithin72"
+                                    id="childGivenArvWithin72"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.childGivenArvWithin72} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -304,10 +310,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="childStatus"
+                                    id="childStatus"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.childStatus} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -318,10 +324,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="hivExposedInfantGivenHbWithin24hrs"
+                                    id="hivExposedInfantGivenHbWithin24hrs"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.hivExposedInfantGivenHbWithin24hrs} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -332,11 +338,11 @@ const LabourDelivery = (props) => {
                             <Label >Time of Diagnosis</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    type="time"
+                                    name="deliveryTime"
+                                    id="deliveryTime"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.deliveryTime} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -347,10 +353,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="onArt"
+                                    id="onArt"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.onArt} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -361,10 +367,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="artStartedLdWard"
+                                    id="artStartedLdWard"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.artStartedLdWard} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -375,10 +381,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="referalSource"
+                                    id="referalSource"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.referalSource} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -389,10 +395,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="hbstatus"
+                                    id="hbstatus"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.hbstatus} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -403,10 +409,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="encounterDate"
-                                    id="encounterDate"
-                                    onChange={handleInputChangeVitalSignDto}
-                                    value={vital.encounterDate} 
+                                    name="hcstatus"
+                                    id="hcstatus"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.hcstatus} 
                                 />
                             </InputGroup>                                        
                             </FormGroup>

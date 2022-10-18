@@ -5,24 +5,14 @@ import { FormGroup, Label as FormLabelName, InputGroup,
           InputGroupText,
           Input,
         } from "reactstrap";
-import ADR from './ADR/Index'
-import OpportunisticInfection from './OpportunisticInfection/Index'
-import TBScreening from './TBScreening/Index'
 import { url as baseUrl, token } from "../../../api";
 import MatButton from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles'
 import SaveIcon from '@material-ui/icons/Save'
 import axios from "axios";
-//import AddVitals from './Vitals/AddVitals'
-import AddAllergy from './Allergies/AddAllergy'
-import AddCondition from './Conditions/AddCondition'
-import PostPatient from './PostPatient/Index'
 import moment from "moment";
 import { toast } from "react-toastify";
-import { Accordion, Alert } from "react-bootstrap";
-import PerfectScrollbar from "react-perfect-scrollbar";
 
-let adherenceLevelObj = []
 const useStyles = makeStyles(theme => ({
   card: {
     margin: theme.spacing(20),
@@ -68,18 +58,9 @@ const useStyles = makeStyles(theme => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
-  const [splitButtonOpen, setSplitButtonOpen] = React.useState(false);
-  const toggleDropDown = () => setDropdownOpen(!dropdownOpen);
-  const toggleSplit = () => setSplitButtonOpen(!splitButtonOpen);
-  const [heightValue, setHeightValue]= useState("cm")
   const [errors, setErrors] = useState({});
   const [clinicVisitList, setClinicVisitList] = useState([])
   const [loading, setLoading] = useState(true)
-  const [
-    activeAccordionHeaderShadow,
-    setActiveAccordionHeaderShadow,
-  ] = useState(0);
   let temp = { ...errors }
   const classes = useStyles()
   const [getPatientObj, setGetPatientObj] = useState({});
@@ -87,21 +68,11 @@ const ClinicVisit = (props) => {
   const [clinicalStage, setClinicalStage] = useState([]);
   const [functionalStatus, setFunctionalStatus] = useState([]);
   const [adherenceLevel, setAdherenceLevel] = useState([]);
-  const [tbStatus, setTbStatus] = useState([]);
-  const [TBForms, setTBForms] = useState(false)
-  // const [addVitalModal, setAddVitalModal] = useState(false);
-  // const AddVitalToggle = () => setAddVitalModal(!addVitalModal)
-  const [addConditionModal, setAddConditionModal] = useState(false);
-  const AddConditionToggle = () => setAddConditionModal(!addConditionModal)
-  const [addAllergyModal, setAddAllergyModal] = useState(false);
-  const AddAllergyToggle = () => setAddAllergyModal(!addAllergyModal)
-  const [postPatientModal, setPostPatientModal] = useState(false);
-  const PostPatientToggle = () => setPostPatientModal(!postPatientModal)
+
+
   const [currentVitalSigns, setcurrentVitalSigns] = useState({})
   const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
-  //opportunistic infection Object
-  const [infection, setInfection] = useState({ illnessInfection: "", ondateInfection: "" });
-  const [infectionList, setInfectionList] = useState([]);
+
   //ADR array Object 
   const [adrObj, setAdrObj] = useState({ adr: "", adrOnsetDate: "" });
   const [adrList, setAdrList] = useState([]);
@@ -116,30 +87,36 @@ const ClinicVisit = (props) => {
                                                                     respiratoryRate:"" 
                                                                   })
   const [objValues, setObjValues] = useState({
-    adherenceLevel: "",
-    adheres: {},
-    adrScreened: "",
-    adverseDrugReactions: {},
-    artStatusId: "" ,
-    cd4: "",
-    cd4Percentage: "",
-    clinicalNote: "",
-    clinicalStageId: "",
-    facilityId: 0,
-    functionalStatusId: "",
-    hivEnrollmentId: "",
-    nextAppointment: "",
-    lmpDate: "",
-    oiScreened: "",
-    opportunisticInfections: {},
-    personId: patientObj.id,
-    tbScreen: {},
-    stiIds: "",
-    stiTreated: "",
-    uuid: "",
-    visitDate: "",
-    whoStagingId: ""
-  });
+
+      adr: [
+        {
+          ard: "",
+          onSetDate: ""
+        }
+      ],
+      ancNo: "",
+      bodyWeight: "",
+      clinicalNotes: "",
+      dateOfVisit: "",
+      diastolic: "",
+      functionalStatus: "",
+      height: "",
+      levelOfAdherence: "",
+      nextClinicalAppointmentDate: "",
+      onAntiTbDrugs: "",
+      opportunisticInfection: [
+        {
+          illness: "",
+          onSetDate: ""
+        }
+      ],
+      pulse: "",
+      respiratoryRate: "",
+      systolic: "",
+      temperature: "",
+      whoStaging: ""
+    }
+  );
   const [vital, setVitalSignDto] = useState({
     bodyWeight: "",
     diastolic: "",
@@ -153,22 +130,12 @@ const ClinicVisit = (props) => {
     temperature:"",
     respiratoryRate:"" 
   })
-  const [tbObj, setTbObj] = useState({
-    currentOnIpt: "",
-    coughing: "",
-    antiTBDrug: "",
-    nightSweat: "",
-    fever: "",
-    contactWithTBCase: "",
-    lethergy: "",
-    tbStatusId: ""
-  });
+
 
   useEffect(() => {
     FunctionalStatus();
     WhoStaging();
     AdherenceLevel();
-    TBStatus();
     VitalSigns();
     GetPatientObj();
     ClinicVisitList();
@@ -253,22 +220,6 @@ const ClinicVisit = (props) => {
 
   }
   ///GET LIST OF FUNCTIONAL%20_STATUS
-  // TB STATUS
-  const TBStatus = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TB_STATUS`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
-        //console.log(response.data);
-        setTbStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-
-  }
-
   async function FunctionalStatus() {
     axios
       .get(`${baseUrl}application-codesets/v2/FUNCTIONAL%20_STATUS`,
@@ -297,30 +248,11 @@ const ClinicVisit = (props) => {
   }
   const handleInputChange = e => {
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    if (e.target.name === "whoStagingId") {
-      if (e.target.value === "NO") {
-        setTBForms(true)
-      } else {
-        setTBForms(false)
-      }
-    }
+    
   }
   const handleInputChangeVitalSignDto = e => {
     setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
-  }
-
-  const addConditionsModal = () => {
-    //setpatientObj({...patientObj, ...row});
-    setAddConditionModal(!addConditionModal)
-  }
-  const addAllergiesModal = () => {
-    //setpatientObj({...patientObj, ...row});
-    setAddAllergyModal(!addAllergyModal)
-  }
-  const PostPatientService = (row) => {
-    //setpatientObj({...patientObj, ...row});
-    setPostPatientModal(!postPatientModal)
-  }
+  } 
   //Handle CheckBox 
   const handleCheckBox = e => {
     if (e.target.checked) {
@@ -403,11 +335,11 @@ const handleInputValueCheckTemperature =(e)=>{
   const validate = () => {        
     temp.encounterDate = vital.encounterDate ? "" : "This field is required"
     temp.nextAppointment = objValues.nextAppointment ? "" : "This field is required"
-    temp.whoStagingId = objValues.whoStagingId ? "" : "This field is required"
-    temp.clinicalNote = objValues.clinicalNote ? "" : "This field is required"
-    temp.functionalStatusId = objValues.functionalStatusId ? "" : "This field is required"
-    temp.adherenceLevel = objValues.adherenceLevel ? "" : "This field is required"
-    temp.labTestGroupId = vital.diastolic ? "" : "This field is required"
+    temp.whoStaging = objValues.whoStaging ? "" : "This field is required"
+    temp.clinicalNotes = objValues.clinicalNotes ? "" : "This field is required"
+    temp.functionalStatus = objValues.functionalStatus ? "" : "This field is required"
+    temp.levelOfAdherence = objValues.levelOfAdherence ? "" : "This field is required"
+    //temp.labTestGroupId = vital.diastolic ? "" : "This field is required"
     temp.systolic = vital.systolic ? "" : "This field is required"
     temp.height = vital.height ? "" : "This field is required"
     temp.bodyWeight = vital.bodyWeight ? "" : "This field is required"
@@ -424,11 +356,6 @@ const handleInputValueCheckTemperature =(e)=>{
     if(validate()){
     setSaving(true)
     objValues.visitDate = vital.encounterDate
-    objValues.adverseDrugReactions = adrList
-    objValues.artStatusId = getPatientObj.artCommence.id
-    objValues.hivEnrollmentId = getPatientObj.enrollment.id
-    objValues.opportunisticInfections = infectionList
-    objValues.tbScreen = tbObj
     objValues['vitalSignDto'] = vital
     axios.post(`${baseUrl}hiv/art/clinic-visit/`, objValues,
       { headers: { "Authorization": `Bearer ${token}` } },
@@ -459,163 +386,14 @@ const handleInputValueCheckTemperature =(e)=>{
     <div>
     <div className="row">
 
-      <div className="col-md-6">
-        <h2>Clinic Follow-up Visit</h2>
+      <div className="col-md-8 ">
+        <h2>Mother Follow-up Visit</h2>
         </div>
         
       </div>
-      <Grid columns='equal'>
-       <Grid.Column width={5}>
-          
-            <Segment>
-              <Label as='a' color='blue' style={{width:'110%', height:'35px'}} ribbon>
-              <h4 style={{color:'#fff'}}>Vital Signs</h4>
-              </Label>
-              <br />
+      <Grid >
 
-               <PerfectScrollbar
-                style={{ height: "370px" }}
-                id="DZ_W_Todo1"
-                className="widget-media dz-scroll ps ps--active-y"
-              >
-                <br/>
-                    <ul className="timeline">
-                    { clinicVisitList.length > 0 ?(
-                      
-                    <Accordion
-                        className="accordion accordion-header-bg accordion-header-shadow accordion-rounded "
-                        defaultActiveKey="0"
-                        
-                      >
-                        <>
-                        {clinicVisitList.map((visit, i)=>
-                        <div className="accordion-item" key={i} >
-                          <Accordion.Toggle
-                              as={Card.Text}
-                              eventKey={`${i}`}
-                              className={`accordion-header ${
-                                activeAccordionHeaderShadow === 1 ? "" : "collapsed"
-                              } accordion-header-info`}
-                              onClick={() =>
-                                setActiveAccordionHeaderShadow(
-                                  activeAccordionHeaderShadow === 1 ? -1 : i
-                                )
-                              }
-                              style={{width:'100%'}}
-                          >
-                          <span className="accordion-header-icon"></span>
-                          <span className="accordion-header-text float-start">Visit Date : <span className="">{visit.visitDate}</span> </span>
-                          <span className="accordion-header-indicator"></span>
-                        </Accordion.Toggle>
-                        <Accordion.Collapse
-                          eventKey={`${i}`}
-                          className="accordion__body"
-                        >
-                          <div className="accordion-body-text">
-                        
-                              <List celled style={{width:'100%'}}>
-                                  {visit.vitalSignDto && visit.vitalSignDto.pulse!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px',borderTop:'1px solid #fff', marginTop:'-5px' }}>Pulse <span style={{color:'rgb(153, 46, 98)'}} className="float-end"><b>{visit.vitalSignDto.pulse} bpm</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.respiratoryRate!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>Respiratory Rate <span className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{visit.vitalSignDto.respiratoryRate} bpm</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.temperature!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>Temperature <span className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{visit.vitalSignDto.temperature} <sup>0</sup>C</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.systolic!==null && visit.vitalSignDto.diastolic!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>Blood Pressure <span  className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{visit.vitalSignDto.systolic}/{visit.vitalSignDto.diastolic}</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.height!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>Height <span  className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{visit.vitalSignDto.height} cm</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.bodyWeight!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>Weight <span  className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{visit.vitalSignDto.bodyWeight} kg</b></span></List.Item>)}
-                                  {visit.vitalSignDto && visit.vitalSignDto.bodyWeight!==null && visit.vitalSignDto.height!==null && (<List.Item style={{paddingBottom:'10px', paddingTop:'10px'}}>BMI <span  className="float-end"><b style={{color:'rgb(153, 46, 98)'}}>{Math.round(visit.vitalSignDto.bodyWeight/(visit.vitalSignDto.height/100))} kg</b></span></List.Item>)}
-                              </List>
-                            
-                          </div>
-                        </Accordion.Collapse>
-                      </div>
-                    )}
-                    </>
-                    </Accordion>             
-
-                ):
-                (
-                  <>
-                  <br/>
-                  <Alert
-                      variant="info"
-                      className="alert-dismissible solid fade show"
-                    >
-                      <p>No Vital Signs</p>
-                    </Alert>
-                  </>
-                )}
-                    </ul>
-               
-                </PerfectScrollbar>
-            </Segment>
-            <Segment>
-              <Label as='a' color='teal' style={{width:'110%', height:'35px'}} ribbon>
-                <h4 style={{color:'#fff'}}>Previous Clinical Notes</h4>
-              </Label>
-               
-             <PerfectScrollbar
-               style={{ height: "370px" }}
-               id="DZ_W_Todo1"
-               className="widget-media dz-scroll ps ps--active-y"
-             >
-              <br/>
-               <ul className="timeline">
-               { clinicVisitList.length > 0 ?(
-                 
-               <Accordion
-                   className="accordion accordion-header-bg accordion-header-shadow accordion-rounded "
-                   defaultActiveKey="0"
-                 >
-                   <>
-                   {clinicVisitList.map((visit, i)=>
-                 <div className="accordion-item" key={i}>
-                   <Accordion.Toggle
-                     as={Card.Text}
-                     eventKey={`${i}`}
-                     className={`accordion-header ${
-                       activeAccordionHeaderShadow === 1 ? "" : "collapsed"
-                     } accordion-header-info`}
-                     onClick={() =>
-                       setActiveAccordionHeaderShadow(
-                         activeAccordionHeaderShadow === 1 ? -1 : i
-                       )
-                     }
-                     style={{width:'100%'}}
-                   >
-                     <span className="accordion-header-icon"></span>
-                     <span className="accordion-header-text float-start" style={{width:'100%'}}>Visit Date : <span className="">{visit.visitDate}</span> </span>
-                     <span className="accordion-header-indicator "></span>
-                   </Accordion.Toggle>
-                   <Accordion.Collapse
-                     eventKey={`${i}`}
-                     className="accordion__body"
-                   >
-                     <div className="accordion-body-text">
-                         <p>{visit.clinicalNote}</p>
-                     </div>
-                   </Accordion.Collapse>
-                 </div>
-               )}
-               </>
-             </Accordion>             
-
-                   ):
-                   (
-                     <>
-                     <br/>
-                     <Alert
-                         variant="info"
-                         className="alert-dismissible solid fade show"
-                       >
-                         <p>No Clinical Notes</p>
-                       </Alert>
-                     </>
-                   )}
-               </ul>
-               </PerfectScrollbar>
-               
-         </Segment>
-         
-        </Grid.Column>
-        <Grid.Column width={11}>
+        <Grid.Column >
           <Segment>
             <Label as='a' color='blue'  style={{width:'106%', height:'35px'}} ribbon>
               <h4 style={{color:'#fff'}}>VITAL  SIGNS</h4>
@@ -778,8 +556,6 @@ const handleInputValueCheckTemperature =(e)=>{
                         <InputGroup> 
                         <InputGroupText
                                 addonType="append"
-                                isOpen={dropdownOpen}
-                                toggle={toggleDropDown}
                                 style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}
                                 >
                                 cm
@@ -797,8 +573,7 @@ const handleInputValueCheckTemperature =(e)=>{
                             />
                                 <InputGroupText
                                 addonType="append"
-                                isOpen={dropdownOpen}
-                                toggle={toggleDropDown}
+                              
                                 style={{ backgroundColor:"#992E62", color:"#fff", border: "1px solid #992E62", borderRadius:"0rem"}}
                                 >
                                 {vital.height!=='' ? (vital.height/100).toFixed(2) + "m" : "m"}
@@ -887,14 +662,14 @@ const handleInputValueCheckTemperature =(e)=>{
             <div className=" mb-3">
               <FormLabelName >Clinical Notes</FormLabelName>
               <textarea
-                name="clinicalNote"
+                name="clinicalNotes"
                 className="form-control"
-                value={objValues.clinicalNote}
+                value={objValues.clinicalNotes}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
               ></textarea>
-              {errors.clinicalNote !=="" ? (
-                      <span className={classes.error}>{errors.clinicalNote}</span>
+              {errors.clinicalNotes !=="" ? (
+                      <span className={classes.error}>{errors.clinicalNotes}</span>
                   ) : "" }
             </div>
             <div className="row">
@@ -904,9 +679,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >WHO Staging *</FormLabelName>
                   <Input
                     type="select"
-                    name="whoStagingId"
-                    id="whoStagingId"
-                    value={objValues.whoStagingId}
+                    name="whoStaging"
+                    id="whoStaging"
+                    value={objValues.whoStaging}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -919,8 +694,8 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.whoStagingId !=="" ? (
-                      <span className={classes.error}>{errors.whoStagingId}</span>
+                  {errors.whoStaging !=="" ? (
+                      <span className={classes.error}>{errors.whoStaging}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -929,9 +704,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >Functional Status *</FormLabelName>
                   <Input
                     type="select"
-                    name="functionalStatusId"
-                    id="functionalStatusId"
-                    value={objValues.functionalStatusId}
+                    name="functionalStatus"
+                    id="functionalStatus"
+                    value={objValues.functionalStatus}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -944,8 +719,8 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.functionalStatusId !=="" ? (
-                      <span className={classes.error}>{errors.functionalStatusId}</span>
+                  {errors.functionalStatus !=="" ? (
+                      <span className={classes.error}>{errors.functionalStatus}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -954,9 +729,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >Level of Adherence *</FormLabelName>
                   <Input
                     type="select"
-                    name="adherenceLevel"
-                    id="adherenceLevel"
-                    value={objValues.adherenceLevel}
+                    name="levelOfAdherence"
+                    id="levelOfAdherence"
+                    value={objValues.levelOfAdherence}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -969,33 +744,15 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.adherenceLevel !=="" ? (
-                      <span className={classes.error}>{errors.adherenceLevel}</span>
+                  {errors.levelOfAdherence !=="" ? (
+                      <span className={classes.error}>{errors.levelOfAdherence}</span>
                   ) : "" }
                 </FormGroup>
               </div>
 
             </div>
             <br />
-            <Label as='a' color='red' style={{width:'106%', height:'35px'}} ribbon>
-              <h4 style={{color:'#fff'}}>OPPORTUNISTIC INFECTION</h4>
-            </Label>
-            <br /><br />
-            <OpportunisticInfection setInfection={setInfection} infection={infection} setInfectionList={setInfectionList} infectionList={infectionList} artStartDate={props.patientObj.enrollment.dateOfRegistration}/>
-            <br />
-            <Label as='a' color='pink' style={{width:'106%', height:'35px'}}  ribbon>
-            <h4 style={{color:'#fff'}}>ADR </h4>
-            </Label>
-            <br /><br />
-            <ADR setAdrObj={setAdrObj} adrObj={adrObj} setAdrList={setAdrList} adrList={adrList} artStartDate={props.patientObj.enrollment.dateOfRegistration} />
-            <br />
-            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>TB SCREENING</h4>
-            </Label>
-            <br /><br />
-            {/* TB Screening Form */}
-            <TBScreening tbObj={tbObj} setTbObj={setTbObj} />
-            <br />
+
             <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}>NEXT CLINICAL APPOINTMENT DATE </h4>
             </Label>
@@ -1035,10 +792,7 @@ const handleInputValueCheckTemperature =(e)=>{
           </Segment>
         </Grid.Column>
       </Grid>
-      {/* <AddVitals toggle={AddVitalToggle} showModal={addVitalModal} /> */}
-      <AddAllergy toggle={AddAllergyToggle} showModal={addAllergyModal} />
-      <AddCondition toggle={AddConditionToggle} showModal={addConditionModal} />
-      <PostPatient toggle={PostPatientToggle} showModal={postPatientModal} />
+      
     </div>
   );
 };

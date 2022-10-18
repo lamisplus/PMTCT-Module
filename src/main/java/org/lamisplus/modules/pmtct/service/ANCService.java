@@ -3,6 +3,8 @@ package org.lamisplus.modules.pmtct.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
@@ -22,14 +24,19 @@ import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ANCService {
     private final ANCRepository ancRepository;
     private final PersonRepository personRepository;
@@ -43,8 +50,11 @@ public class ANCService {
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
-        System.out.println("hostpitalNumber = " + hostpitalNumber);
-        Optional<Person> persons = this.personRepository.getPersonByHospitalNumber(hostpitalNumber);
+        System.out.println("ancRequestDto.getPerson_uuid() = " + ancRequestDto.getPerson_uuid());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        Long facilityId = 0L;
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancRequestDto.getPerson_uuid(), facilityId, 0);
         if (persons.isPresent()) {
             Person person = persons.get();
             ANC anc = new ANC();
@@ -120,7 +130,7 @@ public class ANCService {
                     anc.setPartnerNotification(partnerNotificationInfoJsonNode);
                 }
                 try {
-                    Optional<Person> persons1 = this.personRepository.getPersonByHospitalNumber(hostpitalNumber);
+                    Optional<Person> persons1 = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(hostpitalNumber, facilityId, 0);
                     if (persons1.isPresent()) {
                         Person person = persons1.get();
                         anc.setFacilityId(person.getFacilityId());
@@ -140,6 +150,7 @@ public class ANCService {
         Person person = this.getPersonFromDto(personDto);
         this.getCurrentFacility(person);
         person.setUuid(UUID.randomUUID().toString());
+        person.setFullName(personService.getFullName(personDto.getFirstName(), personDto.getSurname()));
         this.personRepository.save(person);
         return person.getUuid();
     }
@@ -174,8 +185,11 @@ public class ANCService {
     public List<ANCRespondDto> getAllAnc() {
         List<ANC> ancList = this.ancRepository.findAll();
         List<ANCRespondDto> ancRespondDtoList = new ArrayList<>();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        Long facilityId = 0L;
         ancList.forEach(anc -> {
-            Optional<Person> persons = this.personRepository.getPersonByHospitalNumber(anc.getHospitalNumber());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(anc.getPersonUuid(), user.getCurrentOrganisationUnitId(), 0);
             Person person = new Person();
             if (persons.isPresent()) {
                 person = persons.get();
@@ -201,7 +215,7 @@ public class ANCService {
         ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
-        ancRespondDto.setPersonDto(getDtoFromPerson(person));
+        //ancRespondDto.setPersonDto(getDtoFromPerson(person));
 
 
         return ancRespondDto;
@@ -224,13 +238,13 @@ public class ANCService {
         }
     }
 
-    public List<PMTCTPersonDto> getAllPMTCTPerson() {
+    public List<PMTCTPersonDto> getAllPMTCTPerson2() {
         List<Person> personList = this.personRepository.findAll();
         List<PMTCTPersonDto> pmtctPersonDtosList = new ArrayList<>();
-        System.out.println("How many person are in DB "+personList.size());
+        System.out.println("How many person are in DB " + personList.size());
         personList.forEach(person -> {
             int age = this.calculateAge(person.getDateOfBirth());
-            System.out.println("1 "+age);
+            System.out.println("1 " + age);
             String sex = person.getSex();
             if ((age >= 10) && (sex.contains("F")) && (person.getActive())) {
                 PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
@@ -239,22 +253,24 @@ public class ANCService {
                 pmtctPersonDto.setDescriptiveAddress(person.getAddress());
                 System.out.println(2);
                 pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
-                System.out.println("3 "+person.getHospitalNumber());
+                System.out.println("3 " + person.getHospitalNumber());
                 pmtctPersonDto.setOtherNames(person.getOtherName());
                 System.out.println(4);
                 pmtctPersonDto.setSurname(person.getSurname());
-                System.out.println("5a "+ person.getHospitalNumber());
-               pmtctPersonDto.setContactPoint(person.getContactPoint());
+                System.out.println("5a " + person.getHospitalNumber());
+                pmtctPersonDto.setContactPoint(person.getContactPoint());
                 try {
-                    System.out.println("Before Oyibo");
+                    //System.out.println("Before Oyibo");
                     Optional<ANC> ancs = ancRepository.findByHospitalNumber(person.getHospitalNumber());
-                    System.out.println("After Oyibo");
+                    //System.out.println("After Oyibo");
                     if (ancs.isPresent()) {
                         pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
                     } else {
                         pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
                     }
-                }catch (Exception e){e.printStackTrace();}
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 pmtctPersonDtosList.add(pmtctPersonDto);
             }
         });
@@ -262,53 +278,125 @@ public class ANCService {
         return pmtctPersonDtosList;
     }
 
-    public PMTCTPersonDto getPMTCTPersonByHospitalNumber(String hospitalNumber) {
-        Optional<Person> persons = this.personRepository.getPersonByHospitalNumber(hospitalNumber);
-        PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
-        if (persons.isPresent()) {
-            Person person = persons.get();
-            int age = this.calculateAge(person.getDateOfBirth());
-            String sex = person.getSex();
-            Integer archive = person.getArchived();
+    public PersonMetaDataDto getAllPMTCTPerson3(String searchValue, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            User user = (User) currentUser.get();
+            currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
 
-            if ((age >= 10) && (sex.contains("F")) && (archive == 0)) {
-                pmtctPersonDto.setAge(age);
-                pmtctPersonDto.setDescriptiveAddress(person.getAddress());
-                pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
-                pmtctPersonDto.setOtherNames(person.getOtherName());
-                pmtctPersonDto.setSurname(person.getSurname());
-                pmtctPersonDto.setContactPoint(person.getContactPoint());
-
-            }
-            Optional<ANC> ancs = ancRepository.findByHospitalNumberAndArchived(person.getHospitalNumber(), 0L);
-            if (ancs.isPresent()) {
-                pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
-            } else {
-                pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
-            }
         }
+        Page<Person> persons = null;
+        if (!((searchValue == null) || (searchValue.equals("*")))) {
+            searchValue = searchValue.replaceAll("\\s", "");
+            searchValue = searchValue.replaceAll(",", "");
+            String queryParam = "%" + searchValue + "%";
+            persons = personRepository.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            System.out.println("searchValue = " + searchValue);
+        } else {
+            Integer rec = ancRepository.getTotalAnc();
+            if (rec >= 1) {
+                persons = personRepository.findFemalePerson(0, currentOrganisationUnitId, paging);
+            } else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
+            System.out.println("persons Size2 = " + persons.getTotalElements());
+
+        }
+
+        List <Person>  personList = persons.getContent();
+        ArrayList<PersonResponseDto> personResponseDtos = new ArrayList<>();
+        personList.forEach(person -> {
+            if(!(this.activeOnANC(person.getUuid())))
+            {
+                PersonResponseDto personResponseDto =  getDtoFromPerson(person);
+                personResponseDtos.add(personResponseDto);
+            }
+
+        });
+
+        PageDTO pageDTO = personService.generatePagination(persons);
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords(pageDTO.getTotalRecords());
+        personMetaDataDto.setPageSize(pageDTO.getPageSize());
+        personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
+        personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
+        personMetaDataDto.setRecords(personResponseDtos);
+        //personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
+        return personMetaDataDto;
+        //return checkedInPeople;
+    }
+
+    public PersonMetaDataDto getActiveOnANC(String searchValue, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            User user = (User) currentUser.get();
+            currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
+
+        }
+        Page<Person> persons = null;
+        if (!((searchValue == null) || (searchValue.equals("*")))) {
+            searchValue = searchValue.replaceAll("\\s", "");
+            searchValue = searchValue.replaceAll(",", "");
+            String queryParam = "%" + searchValue + "%";
+            persons = personRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+
+        } else {
+            persons = personRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
+        }
+        PageDTO pageDTO = personService.generatePagination(persons);
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords(pageDTO.getTotalRecords());
+        personMetaDataDto.setPageSize(pageDTO.getPageSize());
+        personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
+        personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
+        personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
+        return personMetaDataDto;
+        //return checkedInPeople;
+    }
+
+    public PMTCTPersonDto getPMTCTPersonByHospitalNumber(String hospitalNumber) {
+        List<Person> persons = this.personRepository.getPersonByHospitalNumber(hospitalNumber);
+        PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
+        persons.forEach(person -> {
+            if (person.getArchived() == 0) {
+                //Person person = persons.get();
+                int age = this.calculateAge(person.getDateOfBirth());
+                String sex = person.getSex();
+                Integer archive = person.getArchived();
+
+                if ((age >= 10) && (sex.contains("F")) && (archive == 0)) {
+                    pmtctPersonDto.setAge(age);
+                    pmtctPersonDto.setDescriptiveAddress(person.getAddress());
+                    pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
+                    pmtctPersonDto.setOtherNames(person.getOtherName());
+                    pmtctPersonDto.setSurname(person.getSurname());
+                    pmtctPersonDto.setContactPoint(person.getContactPoint());
+
+                }
+                Optional<ANC> ancs = ancRepository.findByHospitalNumberAndArchived(person.getHospitalNumber(), 0L);
+                if (ancs.isPresent()) {
+                    pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
+                } else {
+                    pmtctPersonDto.setAncRegstrationStatus(Boolean.FALSE);
+                }
+            }
+        });
         return pmtctPersonDto;
     }
 
     public PersonResponseDto getDtoFromPerson(Person person) {
-        List<Encounter> encounterList = this.encounterRepository.findByPersonAndStatus(person, "PENDING");
         PersonResponseDto personResponseDto = new PersonResponseDto();
-
-        encounterList.forEach(encounter -> {
-            personResponseDto.setVisitId(encounter.getVisit().getId());
-            personResponseDto.setCheckInDate(encounter.getVisit().getVisitStartDate());
-            personResponseDto.setEncounterDate(encounter.getEncounterDate());
-        });
-
         personResponseDto.setId(person.getId());
         personResponseDto.setNinNumber(person.getNinNumber());
         personResponseDto.setEmrId(person.getEmrId());
         personResponseDto.setFacilityId(person.getFacilityId());
         personResponseDto.setIsDateOfBirthEstimated(person.getIsDateOfBirthEstimated());
         personResponseDto.setDateOfBirth(person.getDateOfBirth());
-        personResponseDto.setFirstName(person.getFirstName());
-        personResponseDto.setSurname(person.getSurname());
-        personResponseDto.setOtherName(person.getOtherName());
+        personResponseDto.setFirstName("");
+        personResponseDto.setSurname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
+        personResponseDto.setOtherName("");
         personResponseDto.setContactPoint(person.getContactPoint());
         personResponseDto.setAddress(person.getAddress());
         personResponseDto.setContact(person.getContact());
@@ -323,10 +411,34 @@ public class ANCService {
         personResponseDto.setActive(person.getActive());
         personResponseDto.setDeceasedDateTime(person.getDeceasedDateTime());
         personResponseDto.setOrganization(person.getOrganization());
+        personResponseDto.setUuid(person.getUuid());
+        personResponseDto.setAncNo(this.myRecentAncNo(person.getUuid()));
         //personResponseDto.setBiometricStatus(getPatientBiometricStatus(person.getUuid()));
 
 
         return personResponseDto;
+    }
+    public String myRecentAncNo (String personUuid)
+    {
+        String ancNo = "";
+        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
+        if (ancs.isPresent()) {
+            ancNo = ancs.get().getAncNo();
+        } else {
+            ancNo = "";
+        }
+        return ancNo;
+    }
+
+    public boolean activeOnANC(String personUuid){
+        boolean ancNo = false;
+        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
+        if (ancs.isPresent()) {
+            ancNo = true;
+        } else {
+            ancNo = false;
+        }
+        return ancNo;
     }
 
     @NotNull
@@ -448,7 +560,7 @@ public class ANCService {
         List<ANC> ancList = this.ancRepository.findAll();
         List<ANCRespondDto> ancRespondDtoList = new ArrayList<>();
         ancList.forEach(anc -> {
-            if(anc.getArchived() == 0L) {
+            if (anc.getArchived() == 0L) {
                 Optional<User> currentUser = userService.getUserWithRoles();
                 Long facilityId = 0L;
                 if (currentUser.isPresent()) {
@@ -472,7 +584,7 @@ public class ANCService {
         List<ANC> ancList = this.ancRepository.findAll();
         List<ANCRespondDto> ancRespondDtoList = new ArrayList<>();
         ancList.forEach(anc -> {
-            if(anc.getArchived() != 0L) {
+            if (anc.getArchived() != 0L) {
                 Optional<User> currentUser = userService.getUserWithRoles();
                 Long facilityId = 0L;
                 if (currentUser.isPresent()) {
@@ -492,6 +604,129 @@ public class ANCService {
 
     }
 
+    private String getFullName(String fn, String on, String sn) {
+        String fullName = "";
+        if (fn == null) fn = "";
+        if (sn == null) sn = "";
+        if (on == null) on = "";
+        fullName = fn + " " + on + " " + sn;
+        return fullName;
+    }
 
+    public ANCRespondDto ANCEnrollement(ANCEnrollementRequestDto ancEnrollementRequestDto) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancEnrollementRequestDto.getPerson_uuid(), user.getCurrentOrganisationUnitId(), 0);
+        Person person = new Person();
+        ANC anc = new ANC();
+        if (persons.isPresent()) {
+            person = persons.get();
+            anc.setAncNo(ancEnrollementRequestDto.getAncNo());
+            anc.setFirstAncDate(ancEnrollementRequestDto.getFirstAncDate());
+            anc.setGravida(ancEnrollementRequestDto.getGravida());
+            anc.setParity(ancEnrollementRequestDto.getParity());
+            anc.setLMP(ancEnrollementRequestDto.getLMP());
+            anc.setExpectedDeliveryDate(ancEnrollementRequestDto.getExpectedDeliveryDate());
+            anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
+            anc.setHivDiognosicTime(ancEnrollementRequestDto.getHivDiognosicTime());
+            anc.setCreatedBy(user.getUserName());
+            anc.setLastModifiedBy(user.getUserName());
+            anc.setUuid(UUID.randomUUID().toString());
+            anc.setPersonUuid(person.getUuid());
+            anc.setHospitalNumber(person.getHospitalNumber());
+            anc.setArchived(0L);
+            anc.setFacilityId(person.getFacilityId());
+            SyphilisInfo syphilisInfo = ancEnrollementRequestDto.getSyphilisInfo();
+            if (syphilisInfo != null) {
+                JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
+                anc.setSyphilisInfo(syphilisInfoJsonNode);
+
+            }
+
+            PmtctHtsInfo pmtctHtsInfo = ancEnrollementRequestDto.getPmtctHtsInfo();
+            if (pmtctHtsInfo != null) {
+                JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
+                anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
+
+            }
+
+            PartnerNotification partnerNotification = ancEnrollementRequestDto.getPartnerNotification();
+            if (partnerNotification != null) {
+                JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
+                anc.setPartnerNotification(partnerNotificationInfoJsonNode);
+            }
+        }
+        return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
+    }
+
+    public ANCRespondDto getANCRespondDtoFromPersonAndAnc(Person persons, ANC anc) {
+        ANCRespondDto ancRespondDto = new ANCRespondDto();
+        ancRespondDto.setId(anc.getId());
+        ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
+        ancRespondDto.setAncNo(anc.getAncNo());
+        ancRespondDto.setFullname(this.getFullName(persons.getFirstName(), persons.getOtherName(), persons.getSurname()));
+        ancRespondDto.setAncUuid(anc.getUuid());
+        ancRespondDto.setAge(this.calculateAge(persons.getDateOfBirth()));
+        ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
+        ancRespondDto.setGravida(anc.getGravida());
+        ancRespondDto.setParity(anc.getParity());
+        ancRespondDto.setLMP(anc.getLMP());
+        ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
+        ancRespondDto.setGAWeeks(anc.getGAWeeks());
+        ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
+        ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+        ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
+        ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
+        ancRespondDto.setPerson_uuid(persons.getUuid());
+        return ancRespondDto;
+    }
+
+    public ANCRespondDto newANCRegistration(ANCWithPersonRequestDto ancWithPersonRequestDto) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        String personUuid = createPerson(ancWithPersonRequestDto.getPersonDto());
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0);
+        Person person = new Person();
+        ANC anc = new ANC();
+        if (persons.isPresent()) {
+            person = persons.get();
+            anc.setAncNo(ancWithPersonRequestDto.getAncNo());
+            anc.setFirstAncDate(ancWithPersonRequestDto.getFirstAncDate());
+            anc.setGravida(ancWithPersonRequestDto.getGravida());
+            anc.setParity(ancWithPersonRequestDto.getParity());
+            anc.setLMP(ancWithPersonRequestDto.getLMP());
+            anc.setExpectedDeliveryDate(ancWithPersonRequestDto.getExpectedDeliveryDate());
+            anc.setGAWeeks(ancWithPersonRequestDto.getGAWeeks());
+            anc.setHivDiognosicTime(ancWithPersonRequestDto.getHivDiognosicTime());
+            anc.setCreatedBy(user.getUserName());
+            anc.setLastModifiedBy(user.getUserName());
+            anc.setUuid(UUID.randomUUID().toString());
+            anc.setPersonUuid(person.getUuid());
+            anc.setHospitalNumber(person.getHospitalNumber());
+            anc.setArchived(0L);
+            anc.setFacilityId(person.getFacilityId());
+            SyphilisInfo syphilisInfo = ancWithPersonRequestDto.getSyphilisInfo();
+            if (syphilisInfo != null) {
+                JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
+                anc.setSyphilisInfo(syphilisInfoJsonNode);
+
+            }
+
+            PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
+            if (pmtctHtsInfo != null) {
+                JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
+                anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
+
+            }
+
+            PartnerNotification partnerNotification = ancWithPersonRequestDto.getPartnerNotification();
+            if (partnerNotification != null) {
+                JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
+                anc.setPartnerNotification(partnerNotificationInfoJsonNode);
+            }
+        }
+        return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
+    }
 
 }
+
