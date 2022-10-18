@@ -33,5 +33,10 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String personUuid;
     private Long archived;
 
+    @Override
+    public boolean isNew() {
+        return false;
+    }
+
 
 }

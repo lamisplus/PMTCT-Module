@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
@@ -15,6 +16,7 @@ import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRespondDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.stereotype.Service;
@@ -99,7 +101,6 @@ public class PMTCTEnrollmentService {
   private String getFullName(String hostpitalNumber) {
       Optional<Person> persons = this.personRepository.getPersonByHospitalNumber(hostpitalNumber);
       String fullName = "";
-      System.out.println("HostpitalNumber in FullName " + hostpitalNumber);
       if (persons.isPresent())
       { Person person = persons.get();
         String fn = person.getFirstName();
@@ -108,9 +109,8 @@ public class PMTCTEnrollmentService {
         if (fn == null) fn = "";
         if (sn == null) sn = "";
         if (on == null) on = "";
-        fullName = sn + " " + fn + " " + on; }
-      else { fullName = "No Name"; }
-       System.out.println("FullName " + fullName);
+        fullName = sn + ", " + fn + " " + on; }
+      else { fullName = ""; }
       return fullName;
   }
   
@@ -139,4 +139,10 @@ public class PMTCTEnrollmentService {
     
       return pmtctEnrollmentRespondDtoList;
   }
+
+    @SneakyThrows
+    public PMTCTEnrollment getSinglePmtctEnrollment(Long id) {
+        return this.pmtctEnrollmentReporsitory.findById(id)
+                .orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
+    }
 }

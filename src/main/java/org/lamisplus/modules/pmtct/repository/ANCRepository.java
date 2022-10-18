@@ -7,7 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
-
+// DeliveryRepository
 public interface ANCRepository extends CommonJpaRepository<ANC, Long>
 {
     ANC findByAncNoAndArchived (String ancNo, Long archived);
