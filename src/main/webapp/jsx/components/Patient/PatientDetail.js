@@ -8,7 +8,7 @@ import CardContent from '@mui/material/CardContent';
 import PatientCardDetail from './PatientCard'
 import { useHistory } from "react-router-dom";
 import SubMenu from './SubMenu';
-import RecentHistory from './../History/RecentHistory';
+//import RecentHistory from './../History/RecentHistory';
 import ClinicVisit from '../Consultation/Index'
 import PmtctEnrollment from './../PmtctServices/PmtctEnrollment';
 import AncEnrollement from './../PmtctServices/AncEnrollement';
@@ -71,7 +71,7 @@ function PatientCard(props) {
             <PatientCardDetail patientObj={patientObj} setArt={setArt} setActiveContent={setActiveContent}/>            
             <SubMenu patientObj={patientObj} art={art} setActiveContent={setActiveContent}/>
             <br/>
-          {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {/* {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)} */}
           {activeContent.route==='biometrics' &&(<Biometrics patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='consultation' &&( <ClinicVisit patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='anc-pnc' &&( <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}

@@ -116,30 +116,36 @@ const ClinicVisit = (props) => {
                                                                     respiratoryRate:"" 
                                                                   })
   const [objValues, setObjValues] = useState({
-    adherenceLevel: "",
-    adheres: {},
-    adrScreened: "",
-    adverseDrugReactions: {},
-    artStatusId: "" ,
-    cd4: "",
-    cd4Percentage: "",
-    clinicalNote: "",
-    clinicalStageId: "",
-    facilityId: 0,
-    functionalStatusId: "",
-    hivEnrollmentId: "",
-    nextAppointment: "",
-    lmpDate: "",
-    oiScreened: "",
-    opportunisticInfections: {},
-    personId: patientObj.id,
-    tbScreen: {},
-    stiIds: "",
-    stiTreated: "",
-    uuid: "",
-    visitDate: "",
-    whoStagingId: ""
-  });
+
+      adr: [
+        {
+          ard: "",
+          onSetDate: ""
+        }
+      ],
+      ancNo: "",
+      bodyWeight: "",
+      clinicalNotes: "",
+      dateOfVisit: "",
+      diastolic: "",
+      functionalStatus: "",
+      height: "",
+      levelOfAdherence: "",
+      nextClinicalAppointmentDate: "",
+      onAntiTbDrugs: "",
+      opportunisticInfection: [
+        {
+          illness: "",
+          onSetDate: ""
+        }
+      ],
+      pulse: "",
+      respiratoryRate: "",
+      systolic: "",
+      temperature: "",
+      whoStaging: ""
+    }
+  );
   const [vital, setVitalSignDto] = useState({
     bodyWeight: "",
     diastolic: "",
@@ -309,18 +315,12 @@ const ClinicVisit = (props) => {
     setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
   }
 
-  const addConditionsModal = () => {
-    //setpatientObj({...patientObj, ...row});
-    setAddConditionModal(!addConditionModal)
-  }
+
   const addAllergiesModal = () => {
     //setpatientObj({...patientObj, ...row});
     setAddAllergyModal(!addAllergyModal)
   }
-  const PostPatientService = (row) => {
-    //setpatientObj({...patientObj, ...row});
-    setPostPatientModal(!postPatientModal)
-  }
+  
   //Handle CheckBox 
   const handleCheckBox = e => {
     if (e.target.checked) {
@@ -403,11 +403,11 @@ const handleInputValueCheckTemperature =(e)=>{
   const validate = () => {        
     temp.encounterDate = vital.encounterDate ? "" : "This field is required"
     temp.nextAppointment = objValues.nextAppointment ? "" : "This field is required"
-    temp.whoStagingId = objValues.whoStagingId ? "" : "This field is required"
-    temp.clinicalNote = objValues.clinicalNote ? "" : "This field is required"
-    temp.functionalStatusId = objValues.functionalStatusId ? "" : "This field is required"
-    temp.adherenceLevel = objValues.adherenceLevel ? "" : "This field is required"
-    temp.labTestGroupId = vital.diastolic ? "" : "This field is required"
+    temp.whoStaging = objValues.whoStaging ? "" : "This field is required"
+    temp.clinicalNotes = objValues.clinicalNotes ? "" : "This field is required"
+    temp.functionalStatus = objValues.functionalStatus ? "" : "This field is required"
+    temp.levelOfAdherence = objValues.levelOfAdherence ? "" : "This field is required"
+    //temp.labTestGroupId = vital.diastolic ? "" : "This field is required"
     temp.systolic = vital.systolic ? "" : "This field is required"
     temp.height = vital.height ? "" : "This field is required"
     temp.bodyWeight = vital.bodyWeight ? "" : "This field is required"
@@ -887,14 +887,14 @@ const handleInputValueCheckTemperature =(e)=>{
             <div className=" mb-3">
               <FormLabelName >Clinical Notes</FormLabelName>
               <textarea
-                name="clinicalNote"
+                name="clinicalNotes"
                 className="form-control"
-                value={objValues.clinicalNote}
+                value={objValues.clinicalNotes}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
               ></textarea>
-              {errors.clinicalNote !=="" ? (
-                      <span className={classes.error}>{errors.clinicalNote}</span>
+              {errors.clinicalNotes !=="" ? (
+                      <span className={classes.error}>{errors.clinicalNotes}</span>
                   ) : "" }
             </div>
             <div className="row">
@@ -904,9 +904,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >WHO Staging *</FormLabelName>
                   <Input
                     type="select"
-                    name="whoStagingId"
-                    id="whoStagingId"
-                    value={objValues.whoStagingId}
+                    name="whoStaging"
+                    id="whoStaging"
+                    value={objValues.whoStaging}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -919,8 +919,8 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.whoStagingId !=="" ? (
-                      <span className={classes.error}>{errors.whoStagingId}</span>
+                  {errors.whoStaging !=="" ? (
+                      <span className={classes.error}>{errors.whoStaging}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -929,9 +929,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >Functional Status *</FormLabelName>
                   <Input
                     type="select"
-                    name="functionalStatusId"
-                    id="functionalStatusId"
-                    value={objValues.functionalStatusId}
+                    name="functionalStatus"
+                    id="functionalStatus"
+                    value={objValues.functionalStatus}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -944,8 +944,8 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.functionalStatusId !=="" ? (
-                      <span className={classes.error}>{errors.functionalStatusId}</span>
+                  {errors.functionalStatus !=="" ? (
+                      <span className={classes.error}>{errors.functionalStatus}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -954,9 +954,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   <FormLabelName >Level of Adherence *</FormLabelName>
                   <Input
                     type="select"
-                    name="adherenceLevel"
-                    id="adherenceLevel"
-                    value={objValues.adherenceLevel}
+                    name="levelOfAdherence"
+                    id="levelOfAdherence"
+                    value={objValues.levelOfAdherence}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -969,8 +969,8 @@ const handleInputValueCheckTemperature =(e)=>{
                       </option>
                     ))}
                   </Input>
-                  {errors.adherenceLevel !=="" ? (
-                      <span className={classes.error}>{errors.adherenceLevel}</span>
+                  {errors.levelOfAdherence !=="" ? (
+                      <span className={classes.error}>{errors.levelOfAdherence}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -981,13 +981,13 @@ const handleInputValueCheckTemperature =(e)=>{
               <h4 style={{color:'#fff'}}>OPPORTUNISTIC INFECTION</h4>
             </Label>
             <br /><br />
-            <OpportunisticInfection setInfection={setInfection} infection={infection} setInfectionList={setInfectionList} infectionList={infectionList} artStartDate={props.patientObj.enrollment.dateOfRegistration}/>
+            <OpportunisticInfection setInfection={setInfection} infection={infection} setInfectionList={setInfectionList} infectionList={infectionList} />
             <br />
             <Label as='a' color='pink' style={{width:'106%', height:'35px'}}  ribbon>
             <h4 style={{color:'#fff'}}>ADR </h4>
             </Label>
             <br /><br />
-            <ADR setAdrObj={setAdrObj} adrObj={adrObj} setAdrList={setAdrList} adrList={adrList} artStartDate={props.patientObj.enrollment.dateOfRegistration} />
+            <ADR setAdrObj={setAdrObj} adrObj={adrObj} setAdrList={setAdrList} adrList={adrList}  />
             <br />
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}>TB SCREENING</h4>

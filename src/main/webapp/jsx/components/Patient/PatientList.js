@@ -115,7 +115,7 @@ const Patients = (props) => {
         async function patients() {
             setLoading(true)
             axios
-                .get(`${baseUrl}pmtct/anc`,
+                .get(`${baseUrl}pmtct/pmtct-from-person`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
                 )
                 .then((response) => {
@@ -148,163 +148,7 @@ const Patients = (props) => {
         const hospitalNumber = identifiers.identifier.find(obj => obj.type == 'HospitalNumber');       
         return hospitalNumber ? hospitalNumber.value : '';
     };
-    const sampleObj =[
-        {
-          "id": 3,
-          "visitId": null,
-          "facilityId": 1616,
-          "active": true,
-          "surname": "Eeka",
-          "ninNumber": "34444444444",
-          "emrId": null,
-          "firstName": "Emeka",
-          "otherName": null,
-          "sex": "Female",
-          "gender": {
-            "id": 377,
-            "display": "Female"
-          },
-          "deceased": false,
-          "maritalStatus": {
-            "id": 5,
-            "display": "Single"
-          },
-          "employmentStatus": {
-            "id": 88,
-            "display": "Unemployed"
-          },
-          "education": {
-            "id": 10,
-            "display": "None"
-          },
-          "organization": null,
-          "biometricStatus": false,
-          "dateOfBirth": "1979-06-15",
-          "deceasedDateTime": null,
-          "identifier": {
-            "identifier": [
-              {
-                "type": "HospitalNumber",
-                "value": "344",
-                "assignerId": 1
-              }
-            ]
-          },
-          "contact": null,
-          "contactPoint": {
-            "contactPoint": [
-              {
-                "type": "email",
-                "value": "guest@lamisplus.org"
-              },
-              {
-                "type": "altphone",
-                "value": "2344444444"
-              },
-              {
-                "type": "phone",
-                "value": "2344444444"
-              }
-            ]
-          },
-          "address": {
-            "address": [
-              {
-                "city": "abuha",
-                "line": [
-                  "abuja"
-                ],
-                "stateId": 2,
-                "district": "39",
-                "countryId": 1,
-                "postalCode": "",
-                "organisationUnitId": 0
-              }
-            ]
-          },
-          "dateOfRegistration": "2022-09-02",
-          "checkInDate": null,
-          "encounterDate": null,
-          "currentStatus": "ACTIVE ON ART",
-          "enrollment": {
-            "facilityId": 1616,
-            "id": 2,
-            "uniqueId": "344",
-            "entryPointId": 16,
-            "targetGroupId": 151,
-            "dateConfirmedHiv": "2022-09-02",
-            "dateEnrolledPMTCT": null,
-            "sourceOfReferrerId": 43,
-            "timeHivDiagnosis": null,
-            "pregnant": null,
-            "breastfeeding": null,
-            "dateOfRegistration": "2022-09-02",
-            "statusAtRegistrationId": 54,
-            "enrollmentSettingId": 51,
-            "dateStarted": null,
-            "personId": 3,
-            "facilityName": "",
-            "ovcNumber": "",
-            "dateOfLpm": null,
-            "pregnancyStatusId": 72,
-            "tbStatusId": 67,
-            "visitId": 4,
-            "houseHoldNumber": null,
-            "careEntryPointOther": "",
-            "referredToOVCPartner": "",
-            "referredFromOVCPartner": "",
-            "dateReferredToOVCPartner": null,
-            "dateReferredFromOVCPartner": null
-          },
-          "artCommence": {
-            "id": 5,
-            "visitDate": "2022-09-16",
-            "cd4": 34,
-            "cd4Percentage": 34,
-            "isCommencement": true,
-            "functionalStatusId": 123,
-            "clinicalNote": "test",
-            "uuid": "7176ec2d-c929-4ced-9349-7ddf5ebf5697",
-            "hivEnrollmentId": null,
-            "whoStagingId": 119,
-            "regimenId": 1,
-            "regimenTypeId": 1,
-            "vitalSignId": 3,
-            "facilityId": 1616,
-            "personId": 3,
-            "clinicalStageId": 119,
-            "lmpDate": null,
-            "visitId": 4,
-            "vitalSignDto": {
-              "id": 3,
-              "bodyWeight": 33,
-              "diastolic": 90,
-              "captureDate": null,
-              "height": 90,
-              "personId": 3,
-              "visitId": 4,
-              "systolic": 90,
-              "temperature": 36,
-              "pulse": 45,
-              "respiratoryRate": 44,
-              "archived": 0,
-              "facilityId": 1616
-            },
-            "isViralLoadAtStartOfArt": false,
-            "viralLoadAtStartOfArt": null,
-            "dateOfViralLoadAtStartOfArt": null
-          },
-          "artClinicVisits": [],
-          "artPharmacyRefills": null,
-          "mentalHealth": true,
-          "commenced": true,
-          "enrolled": true,
-          "clinicalEvaluation": true,
-          "isDateOfBirthEstimated": true
-        },
-      
-      ]
-
+    
   return (
     <div>
 
@@ -376,7 +220,7 @@ const Patients = (props) => {
                                             <Link
                                                 to={{
                                                     pathname: "/patient-history",
-                                                    state: { patientObj: row.personDto  }
+                                                    state: { patientObj: row  }
                                                 }}
                                             >
                                                 <ButtonGroup variant="contained" 

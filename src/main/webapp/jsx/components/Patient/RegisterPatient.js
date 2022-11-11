@@ -170,11 +170,11 @@ const UserRegistration = (props) => {
      //const [values, setValues] = useState([]);
      const [objValues, setObjValues] = useState(
         {   ancNo:"",
-            gaweeks: 0,
-            gravida: 0,
+            gaweeks: "",
+            gravida: "",
             expectedDeliveryDate:"",
             lmp: "",
-            parity: 0,
+            parity: "",
             hivDiognosicTime:"",
             referredSyphilisTreatment: "",
             testResultSyphilis: "",
@@ -748,7 +748,7 @@ const UserRegistration = (props) => {
         <ToastContainer autoClose={3000} hideProgressBar />
         <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>
 			<ol className="breadcrumb">
-				<li className="breadcrumb-item active"><h4> <Link to={"/"} >Prep /</Link> Patient Registration</h4></li>
+				<li className="breadcrumb-item active"><h4> <Link to={"/"} >PMTCT /</Link> Patient Registration</h4></li>
 			</ol>
 		  </div>
           <Link
