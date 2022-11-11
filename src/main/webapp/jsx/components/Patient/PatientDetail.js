@@ -8,13 +8,18 @@ import CardContent from '@mui/material/CardContent';
 import PatientCardDetail from './PatientCard'
 import { useHistory } from "react-router-dom";
 import SubMenu from './SubMenu';
-import RecentHistory from './../History/RecentHistory';
+//import RecentHistory from './../History/RecentHistory';
 import ClinicVisit from '../Consultation/Index'
 import PmtctEnrollment from './../PmtctServices/PmtctEnrollment';
 import AncEnrollement from './../PmtctServices/AncEnrollement';
 import LabourDelivery from './../PmtctServices/LabourDelivery';
-import Biometrics from './Biometric'
-
+import PmtctHts from './../PMTCTHTSEnrollment/Index'
+import Partners from './../PmtctServices/Partners/Index'
+import Infants from './../PmtctServices/Infants/Index'
+import AddPartners from './../PmtctServices/Partners/AddNewPartner'
+import AddInfants from './../PmtctServices/Infants/InfantRegistration'
+import PatientHistory from './../History/PatientHistory'
+import RecentHistory from './../History/RecentHistory';
 
 const styles = theme => ({
   root: {
@@ -58,7 +63,8 @@ function PatientCard(props) {
     const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"create", obj:{}});
     const { classes } = props;
     const patientObj = history.location && history.location.state ? history.location.state.patientObj : {}
-    
+    //console.log(patientObj)
+
   return (
     <div className={classes.root}>
       <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>
@@ -72,11 +78,17 @@ function PatientCard(props) {
             <SubMenu patientObj={patientObj} art={art} setActiveContent={setActiveContent}/>
             <br/>
           {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='biometrics' &&(<Biometrics patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+
           {activeContent.route==='consultation' &&( <ClinicVisit patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='anc-pnc' &&( <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='anc-enrollment' &&( <AncEnrollement patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='labour-delivery' &&( <LabourDelivery patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='pmtct-hts' &&( <PmtctHts patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='partners' &&( <Partners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='infants' &&( <Infants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='add-partner' &&( <AddPartners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='add-infant' &&( <AddInfants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='patient-history' &&( <PatientHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}         
           {/* History Pages */}
          
          </CardContent>

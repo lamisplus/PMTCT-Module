@@ -10,11 +10,13 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.4/lombok-1.18.4.jar" />
         </processorPath>
         <module name="pmtct-module" />
+        <module name="PMTCT-module" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="PMTCT-module" options="-parameters" />
       <module name="pmtct-module" options="-parameters" />
     </option>
   </component>

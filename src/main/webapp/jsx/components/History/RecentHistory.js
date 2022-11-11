@@ -11,42 +11,49 @@ import { Alert } from "react-bootstrap";
 import {  Card,Accordion } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import "react-widgets/dist/css/react-widgets.css";
-import { toast} from "react-toastify";
+//import { toast} from "react-toastify";
 
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-      width: '100%',
-  },
-  heading: {
-      fontSize: theme.typography.pxToRem(15),
-      fontWeight: 'bolder',
-  },
-}));
 const RecentHistory = (props) => {
-  const classes = useStyles();
-  const [vitaLoad, setViralLoad]=useState([])
-  const [refillList, setRefillList] = useState([])
-  const [clinicVisitList, setClinicVisitList] = useState([])
-  const [recentActivities, setRecentActivities] = useState([])
-  const [loading, setLoading] = useState(true)
   let history = useHistory();
+  const [recentActivities, setRecentActivities] = useState([])
+  const [infants, setInfants] = useState([])
+  const [summartChart, setSummaryChart]= useState({
+    motherVisit: 0,
+    childVisit: 1,
+    childAlive: 0,
+    childDead: 0
+  })
   const [
     activeAccordionHeaderShadow,
     setActiveAccordionHeaderShadow,
   ] = useState(0);
 
   useEffect(() => {
-    LaboratoryHistory();
-    PharmacyList();
-    ClinicVisitList();
+    InfantInfo();
     RecentActivities();
+    SummaryChart();
   }, [props.patientObj.id]);
+  ///GET LIST OF Infants
 
-  //Get list of LaboratoryHistory
+  const InfantInfo =()=>{
+    axios
+        .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+                setInfants(response.data)
+        })
+
+        .catch((error) => {
+        //console.log(error);
+        });
+    
+  }
+
   const RecentActivities =()=>{
     axios
-       .get(`${baseUrl}hiv/patients/${props.patientObj.id}/activities?full=false`,
+       .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {
@@ -57,75 +64,18 @@ const RecentHistory = (props) => {
        });
    
   }
-  //Get list of LaboratoryHistory
-  const LaboratoryHistory =()=>{
+  const SummaryChart =()=>{
     axios
-       .get(`${baseUrl}laboratory/orders/patients/${props.patientObj.id}`,
+       .get(`${baseUrl}pmtct/anc/get-summary-chart/${props.patientObj.ancNo}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {
-           let LabObject= []
-                response.data.forEach(function(value, index, array) {
-                    const dataOrders = value.labOrder.tests                    
-                    if(dataOrders[index]) {
-                        dataOrders.forEach(function(value, index, array) {
-                            LabObject.push(value)
-                        })                       
-                    }                   
-                });
-              setViralLoad(LabObject)
+        setSummaryChart(response.data)
        })
        .catch((error) => {
        //console.log(error);
        });
    
-  }
-   //GET LIST Drug Refill
-   async function PharmacyList() {
-    setLoading(true)
-    axios
-        .get(`${baseUrl}hiv/art/pharmacy/patient?pageNo=0&pageSize=10&personId=${props.patientObj.id}`,
-        { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setLoading(false)
-            setRefillList(response.data);                
-        })
-        .catch((error) => {  
-            setLoading(false)  
-        });        
-  }
-   //GET LIST Drug Refill
-   async function ClinicVisitList() {
-    setLoading(true)
-    axios
-        .get(`${baseUrl}hiv/art/clinic-visit/person?pageNo=0&pageSize=10&personId=${props.patientObj.id}`,
-        { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setLoading(false)
-            setClinicVisitList(response.data);                
-        })
-        .catch((error) => {  
-            setLoading(false)  
-        });        
-  }
-  const labStatus =(status)=> {
-      if(status===0){
-        return "timeline-badge info"
-      }else if(status===1){
-        return "timeline-badge warning"
-      }else if(status===2){
-        return "timeline-badge success"
-      }else if(status===3){
-        return "timeline-badge danger"
-      }else if(status===4){
-        return "timeline-badge primary"
-      }else if(status===5){
-        return "timeline-badge info"
-      }else {
-        return "timeline-badge secondary"
-      }
   }
   const ActivityName =(name)=> {
       if(name==='HIV Enrollment'){
@@ -142,242 +92,31 @@ const RecentHistory = (props) => {
         return "RA"
       }
   }
-  const regimenName =(regimenObj)=> {
-    let regimenArr = []
-    regimenObj.forEach(function (value, index, array) {
-      //console.log(value)
-        regimenArr.push(value['name'])
-    })
-    return regimenArr.toString();
-  }
+
   const LoadViewPage =(row,action)=>{
-        
-    if(row.path==='Mental-health'){        
-        props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id, actionType:action})
 
-    }else if(row.path==='Art-commence'){
-        props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id, actionType:action})
-
-    }else if(row.path==='Clinical-evaluation'){
-        props.setActiveContent({...props.activeContent, route:'adult-clinic-eveluation-view', id:row.id, actionType:action})
-
-    }else if(row.path==='eac1'){
-        props.setActiveContent({...props.activeContent, route:'first-eac-history', id:row.id, actionType:action})
-    }
-    else if(row.path==='eac2'){
-        props.setActiveContent({...props.activeContent, route:'second-eac-history', id:row.id, actionType:action})
-    }
-    else if(row.path==='eac3'){
-        props.setActiveContent({...props.activeContent, route:'completed-eac-history', id:row.id, actionType:action})
-    }else if(row.path==='hiv-enrollment'){
+    if(row.path==='anc-enrollment'){        
+        //props.setActiveContent({...props.activeContent, route:'anc-enrollment', id:row.id, actionType:action})
         history.push({
             pathname: '/update-patient',
-            state: { id: row.id, patientObj:props.patientObj, actionType:action }
+            state: { id: row.recordId, patientObj:props.patientObj, actionType:action }
         });
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-    }else if(row.path==='pharmacy'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        props.setActiveContent({...props.activeContent, route:'pharmacy-update', id:row.id, activeTab:"history", actionType:action, obj:row})
+    }else if(row.path==='anc-delivery'){
+        props.setActiveContent({...props.activeContent, route:'labour-delivery', id:row.recordId, actionType:action})
 
-    }else if(row.path==='Laboratory'){
-        props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id, actionType:action})
-
-    }else if(row.path==='clinic-visit'){
-      props.setActiveContent({...props.activeContent, route:'consultation', id:row.id, activeTab:"history",actionType:action, })
-
-  }else{
-
-    }
-    
-}
-const LoadDeletePage =(row)=>{
-    
-    if(row.path==='Mental-health'){        
-        //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }else if(row.path==='Art-commence'){
-        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
-        axios
-        .delete(`${baseUrl}hiv/art/commencement/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });
-
-    }else if(row.path==='Clinical-evaluation'){
-        //props.setActiveContent({...props.activeContent, route:'adult-clinic-eveluation-view', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });
-
-    }else if(row.path==='eac1'){
-        //props.setActiveContent({...props.activeContent, route:'first-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }
-    else if(row.path==='eac2'){
-        //props.setActiveContent({...props.activeContent, route:'second-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }
-    else if(row.path==='eac3'){
-        //props.setActiveContent({...props.activeContent, route:'completed-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }else if(row.path==='hiv-enrollment'){
-        axios
-        .delete(`${baseUrl}hiv/enrollment/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-    }else if(row.path==='pharmacy'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        //props.setActiveContent({...props.activeContent, route:'pharmacy', id:row.id, activeTab:"home", actionType:"update", obj:row})
-        axios
-        .delete(`${baseUrl}art/pharmacy/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        }); 
-
-    }else if(row.path==='clinic-visit'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        axios
-        .delete(`${baseUrl}hiv/art/clinic-visit/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        }); 
+    }else if(row.path==='pmtct-enrollment'){
+        props.setActiveContent({...props.activeContent, route:'anc-pnc', id:row.recordId, activeTab:"history", actionType:action, })
+  
+    }else if(row.path==='anc-mother-visit'){
+        props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"home", actionType:action, })
+  
     }else{
 
     }
     
 }
-const redirectLink=()=>{
-  props.setActiveContent({...props.activeContent, route:'recent-history'})
-}
-
+//console.log(infants)
+const index=0;
 
   return (
     <Fragment>
@@ -415,7 +154,7 @@ const redirectLink=()=>{
                           }
                       >
                       <span className="accordion-header-icon"></span>
-                      <span className="accordion-header-text">Visit Date : <span className="">{data.date}</span> </span>
+                      <span className="accordion-header-text">Visit Date : <span className="">{data.activityName}</span> </span>
                       <span className="accordion-header-indicator"></span>
                     </Accordion.Toggle>
                     <Accordion.Collapse
@@ -424,16 +163,14 @@ const redirectLink=()=>{
                     >
                       <div className="accordion-body-text">
                       <ul className="timeline">
-                        {data.activities && data.activities.map((activity,index) => ( 
-                         
-                          <>
+
                             <li>
                               <div className="timeline-panel">
-                              <div className={index % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{ActivityName(activity.name)}</div>
+                              <div className={i % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{"RA"}</div>
                               <div className="media-body">
-                                <h5 className="mb-1">{activity.name}</h5>
+                                <h5 className="mb-1">{data.activityName}</h5>
                                 <small className="d-block">
-                                {activity.date}
+                                {data.activityDate}
                                 </small>
                               </div>
                               <Dropdown className="dropdown">
@@ -461,34 +198,23 @@ const redirectLink=()=>{
                                 </svg>
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="dropdown-menu">
-                                {activity.viewable && ( <Dropdown.Item
+                                 <Dropdown.Item
                                   className="dropdown-item"
-                                  onClick={()=>LoadViewPage(activity,'view')}
+                                  onClick={()=>LoadViewPage(data,'view')}
                                   >
-                                  View
+                                    View
                                   </Dropdown.Item>
-                                )}
-                                {activity.viewable && ( <Dropdown.Item
+                                  <Dropdown.Item
                                   className="dropdown-item"
-                                  onClick={()=>LoadViewPage(activity,'update')}
+                                  onClick={()=>LoadViewPage(data,'view')}
                                   >
-                                  Update
+                                    Update
                                   </Dropdown.Item>
-                                )}
-                                  {activity.deletable && (<Dropdown.Item
-                                  className="dropdown-item"
-                                  to="/widget-basic"
-                                  onClick={()=>LoadDeletePage(activity)}
-                                  >
-                                  Delete
-                                  </Dropdown.Item>
-                                  )}
                                 </Dropdown.Menu>
                               </Dropdown>
                               </div>
                             </li>
-                          </>
-                        ))}                          
+                                                 
                       </ul>
                       </div>
                     </Accordion.Collapse>
@@ -501,70 +227,148 @@ const redirectLink=()=>{
             </div>
           </div>
       </div>
-      <div className="col-xl-8 col-xxl-8 col-lg-8">
+      {props.patientObj.dynamicHivStatus==='Positive'  || props.patientObj.hivStatus==='Positive' ? (
+        <>
+            <div className="col-xl-8 col-xxl-8 col-lg-8">
         <div className="card">
           <div className="card-header border-0 pb-0">
-            <h4 className="card-title">Visit Chart</h4>
+            <h4 className="card-title">Patient Chart</h4>
           </div>
-          <div className="card-body">
-            <PerfectScrollbar
-              style={{ height: "370px" }}
-              id="DZ_W_TimeLine"
-              className="widget-timeline dz-scroll height370 ps ps--active-y"
-            >
-              <ul className="timeline">
-                {vitaLoad.length >0 ? (
-                  <>
-                    {vitaLoad.map((test,index) => ( 
-                    <>
-                      <li key={index}>
-                      <div className={labStatus(test.labTestOrderStatus)}></div>
-                      <span
-                        className="timeline-panel text-muted"
-                        onClick={()=>redirectLink()}
-                        //to=""
-                      >
-                        <h6 className="mb-0">
-                          Test Order Date{" "}<br/>
-                          <strong className="text-primary">{test.orderDate}</strong>
-                        </h6>
-                        {test.labTestGroupName!=='others' &&(<h6 className="mb-0">
-                          Test Order{" "}<br/>
-                          <strong className="text-primary">{test.labTestGroupName + " - " + test.labTestName}</strong>.
-                        </h6>
-                          )}
-                          {test.labTestGroupName==='others' &&(<h6 className="mb-0">
-                          Test Order{" "}<br/>
-                          <strong className="text-primary">{test.labTestName + " - " + test.viralLoadIndicationName}</strong>.
-                        </h6>
-                          )}
-                        
-                        <h6 className="mb-0">
-                          Status{" "}<br/>
-                          <strong className="text-primary">{test.labTestOrderStatusName}</strong>.
-                        </h6>
-                        
-                      </span>
-                      </li>
+          <br/>
+          <div className="row">
+            <div className="col-sm-6 col-md-6 col-lg-6">
+              <div className="col-xl-12 col-xxl-12 col-sm-12">
+                <div className="card overflow-hidden">
+                  <div className="social-graph-wrapper widget-facebook">
+                    <span className="s-icon">
+                      <span style={{fontSize:"16px"}}>Total Clinic Visit</span>
+                    </span>
+                  </div>
+                  <div className="row">
+                    <div className="col-6 border-right">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter"><b>{summartChart.motherVisit}</b></span> 
+                        </h4>
+                        <p className="m-0"><b>Mother Visit</b></p>
+                      </div>
+                    </div>
+                    {infants.length > 0 && (
+                    <div className="col-6">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter"><b>{summartChart.childVisit}</b></span>
+                        </h4>
+                        <p className="m-0"><b>Infant's Visit</b></p>
+                      </div>
+                    </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="col-xl-12 col-xxl-12 col-sm-12">
+                <div className="card overflow-hidden">
+                  <div className="social-graph-wrapper widget-linkedin">
+                    <span className="s-icon">
+                    <span style={{fontSize:"16px"}}>No. of Infants  { infants.length > 0 ? (" : " + infants.length): ""}</span>
+                    </span>
+                  </div>
+                  <div className="row">
+                    {infants.length > 0 ? (
+                      <>
+                    <div className="col-6 border-right">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">{summartChart.childAlive}</span> 
+                        </h4>
+                        <p className="m-0"><b>Alive </b></p>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">{summartChart.childDead}</span>
+                        </h4>
+                        <p className="m-0"><b>Dead </b></p>
+                      </div>
+                    </div>
                     </>
-
-                    ))}
-                  
-                  </>
-                  ) 
-                  :
-                  <Alert
-                    variant="info"
-                    className="alert-dismissible solid fade show"
+                    ) :
+                    (<p>No Record</p>)
+                  }
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-md-6 col-lg-6">
+            <div className="card-body">
+              <h3>Current Infant's Details</h3>
+              {infants.length > 0 ? 
+                (
+                  <PerfectScrollbar
+                    style={{ height: "370px" }}
+                    id="DZ_W_TimeLine1"
+                    className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
                   >
-                    <p>No visit yet</p>
-                  </Alert>
-                }
-              </ul>
-            </PerfectScrollbar>
+                    <ul className="timeline">
+                      {infants.map((obj) => 
+                            <li key={index}>
+                              <div className={index % 2 == 0 ? "timeline-badge info" : "timeline-badge success"}></div>
+                              <span
+                                className="timeline-panel text-muted"
+                                //onClick={()=>redirectLink()}
+                                //to=""
+                              >
+                                <h6 className="mb-0">
+                                  Infant Given Name
+                                  <br/>
+                                  {obj.firstName}
+                                </h6>
+                                <strong className="text-teal">
+                                  Infant DOB<br/>
+                                  {obj.dateOfDelivery}
+                                </strong><br/> 
+                                <strong className="text-warning">
+                                    Gender<br/>
+                                    {obj.sex}
+                                </strong>                    
+
+                              </span>
+                            </li>
+                      )}
+
+                    </ul>
+                  </PerfectScrollbar>
+                )
+                :
+                (
+                 
+                  <p>No Record</p>
+                 
+                  
+                )
+              }
+
+            </div>
+            </div>
           </div>
         </div>
       </div>
+        </>
+        )
+          : 
+          (
+            <>
+             <div className="col-sm-6 col-md-6 col-lg-6">
+                  <div className="card-body">
+                    <b>Patient has no HTS record. Please refer for testing...</b>
+                  </div>
+                  </div>
+
+            </>
+          )
+      }
+      
      
  </div>
       

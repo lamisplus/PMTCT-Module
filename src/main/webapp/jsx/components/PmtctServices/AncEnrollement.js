@@ -10,6 +10,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
+import moment from "moment";
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -37,8 +38,31 @@ const useStyles = makeStyles(theme => ({
     },
 
     root: {
-        '& > *': {
-            margin: theme.spacing(1)
+        flexGrow: 1,
+        "& .card-title":{
+            color:'#fff',
+            fontWeight:'bold'
+        },
+        "& .form-control":{
+            borderRadius:'0.25rem',
+            height:'41px'
+        },
+        "& .card-header:first-child": {
+            borderRadius: "calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0"
+        },
+        "& .dropdown-toggle::after": {
+            display: " block !important"
+        },
+        "& select":{
+            "-webkit-appearance": "listbox !important"
+        },
+        "& p":{
+            color:'red'
+        },
+        "& label":{
+            fontSize:'14px',
+            color:'#014d88',
+            fontWeight:'bold'
         }
     },
     input: {
@@ -78,57 +102,55 @@ const AncEnrollement = (props) => {
                                                 visitId:""
                                             })
     
-        const handleInputChangeVitalSignDto = e => {            
-            setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
-        }
+    const handleInputChangeVitalSignDto = e => {            
+        setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
+    }
 
-        //FORM VALIDATION
-        const validate = () => {
-            let temp = { ...errors }
-            //temp.name = details.name ? "" : "This field is required"
-            //temp.description = details.description ? "" : "This field is required"
-            setErrors({
-                ...temp
-                })    
-            return Object.values(temp).every(x => x == "")
-        }
-          
-        /**** Submit Button Processing  */
-        const handleSubmit = (e) => {        
-            e.preventDefault();        
-            
-            setSaving(true);
-            axios.post(`${baseUrl}patient/vital-sign/`, vital,
-            { headers: {"Authorization" : `Bearer ${token}`}},
-            
-            )
-              .then(response => {
-                  setSaving(false);
-                  props.patientObj.commenced=true
-                  toast.success("Vital signs save successful");
-                  props.toggle()
-                  props.patientsVitalsSigns()
-
-              })
-              .catch(error => {
-                  setSaving(false);
-                  toast.error("Something went wrong");
-                 
-              });
-          
-        }
+    //FORM VALIDATION
+    const validate = () => {
+        let temp = { ...errors }
+        //temp.name = details.name ? "" : "This field is required"
+        //temp.description = details.description ? "" : "This field is required"
+        setErrors({
+            ...temp
+            })    
+        return Object.values(temp).every(x => x == "")
+    }
+        
+    /**** Submit Button Processing  */
+    const handleSubmit = (e) => {        
+        e.preventDefault();        
+        
+        setSaving(true);
+        axios.post(`${baseUrl}patient/vital-sign/`, vital,
+        { headers: {"Authorization" : `Bearer ${token}`}},
+        
+        )
+            .then(response => {
+                setSaving(false);
+                props.patientObj.commenced=true
+                toast.success("Vital signs save successful");
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
+            })
+            .catch(error => {
+                setSaving(false);
+                toast.error("Something went wrong");
+                
+            });
+        
+    }
 
   return (      
       <div >
                    
-        <Card >
+        <Card className={classes.root}>
             <CardBody>
             <form >
                 <div className="row">
                 <h2>ANC Enrollment</h2>
                 <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ANC No *</Label>
+                            <Label >ANC No <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -144,7 +166,7 @@ const AncEnrollement = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of 1st ANC *</Label>
+                            <Label >Date of 1st ANC <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -152,6 +174,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
                             </InputGroup>
@@ -163,7 +186,7 @@ const AncEnrollement = (props) => {
                             <Label >Gravida</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
+                                    type="number"
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
@@ -179,7 +202,7 @@ const AncEnrollement = (props) => {
                             <Label >Parity</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
+                                    type="number"
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
@@ -192,13 +215,14 @@ const AncEnrollement = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date Of Last Menstrual Period* </Label>
+                            <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={vital.encounterDate} 
                                 />
 
@@ -215,6 +239,7 @@ const AncEnrollement = (props) => {
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={vital.encounterDate} 
                                 />
 
@@ -276,7 +301,7 @@ const AncEnrollement = (props) => {
                             <Label >Tested for syphilis?</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
+                                    type="select"
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
@@ -296,6 +321,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -354,6 +380,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>

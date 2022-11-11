@@ -6,13 +6,14 @@ import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "pmtct_delivery")
 @Data
 @NoArgsConstructor
 public class Delivery extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
-    private String dateOfDelivery;
+    private LocalDate dateOfDelivery;
     private String bookingStatus;
     private Integer gAWeeks;
     private String romDeliveryInterval;
@@ -30,8 +31,8 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String HBStatus;
     private String HCStatus;
     private String referalSource;
-
-
+    private Integer numberOfInfantsAlive;
+    private Integer numberOfInfantsDead;
     @Override
     public boolean isNew() {
         return false;

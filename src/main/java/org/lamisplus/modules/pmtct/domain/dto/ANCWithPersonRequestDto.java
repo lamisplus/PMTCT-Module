@@ -9,20 +9,22 @@ import org.lamisplus.modules.pmtct.domain.entity.enums.TreatedForSyphilis;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Data
-public class ANCWithPersonRequestDto
+public class ANCWithPersonRequestDto implements Serializable
 {
     private Long id;
     private String ancNo;
-    private LocalDate firstANCDate;
+    private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;
     private LocalDate LMP;
     private LocalDate expectedDeliveryDate;
     private Integer gAWeeks;
-    private String timeOfHIVDiognosis;
+    private String hivDiognosicTime;
+    private String staticHivStatus;
     private SyphilisInfo syphilisInfo;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;

@@ -1,8 +1,8 @@
 import React, {useState, Fragment } from "react";
 import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
-import Dashboard from './Patient/PatientList'
+import NotEnrollPatients from './Patient/PatientList'
+import ActiveANCPatients from './Patient/ActiveANCPatientList'
 import VisualisationHome from './Visualisation/Index'
-import LostToFollowUp from './Patient/PatientListIit'
 import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 import { FaUserPlus } from "react-icons/fa";
@@ -49,12 +49,14 @@ const Home = () => {
                 >
                   
                   <Tab eventKey="home" title="Find Patients">                   
-                    <Dashboard />
+                    <NotEnrollPatients />
                   </Tab>
-                 
-                  <Tab eventKey="visualization" title="Data Visualisation">                   
+                  <Tab eventKey="anc" title="General ANC Patients">
+                    <ActiveANCPatients />
+                  </Tab>
+                  {/* <Tab eventKey="visualization" title="Data Visualisation">                   
                     <VisualisationHome />
-                  </Tab>                    
+                  </Tab>                     */}
                 </Tabs>
               </div>
             </Card.Body>

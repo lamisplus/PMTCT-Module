@@ -6,38 +6,42 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.springframework.data.domain.Persistable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "pmtct_visit",  schema = "public")
+@Table(name = "pmtct_mother_visitation",  schema = "public")
 @Data
 @NoArgsConstructor
-public class PmtctVisit extends PMTCTTransactionalEntity implements Serializable, Persistable<Long>
+public class PmtctVisit implements Serializable, Persistable<Long>
 {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
+    private String ancNo;
+    private String hospitalNumber;
+    private String personUuid;
+    private String uuid;
+    private String entryPoint;
     private LocalDate dateOfVisit;
-    private String pulse;
-    private String respiratoryRate;
-    private String temperature;
-    private String bodyWeight;
-    private String height;
-    private String systolic;
-    private String diastolic;
-    private String clinicalNotes;
-    private String whoStaging;
-    private String functionalStatus;
-    private String levelOfAdherence;
-    @Type(type = "jsonb-node")
-    @Column(columnDefinition = "jsonb")
-    private JsonNode opportunisticInfection;
-    @Type(type = "jsonb-node")
-    @Column(columnDefinition = "jsonb")
-    private JsonNode adr;
-    private String onAntiTbDrugs;
-    private LocalDate nextClinicalAppointmentDate;
+    private String fpCounseling;
+    private String fpMethod;
+    private String timeOfViralLoad;
+    private LocalDate dateOfViralLoad;
+    private Integer gaOfViralLoad;
+    private Integer resultOfViralLoad;
+    private String dsd;
+    private String dsdOption;
+    private String dsdModel;
+    private String  maternalOutcome;
+    private LocalDate dateOfMaternalOutcome;
+    private String visitStatus;
+    private String transferTo;
+    private LocalDate nextAppointmentDate;
+
+
 
     @Override
     public boolean isNew() {

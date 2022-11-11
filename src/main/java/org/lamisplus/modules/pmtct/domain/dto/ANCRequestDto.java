@@ -20,4 +20,9 @@ public class ANCRequestDto implements Serializable
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
     private PersonDto personDto;
+    private String person_uuid;
+    private String staticHivStatus;
+
+
+
 }

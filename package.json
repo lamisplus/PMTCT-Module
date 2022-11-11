@@ -124,7 +124,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts --max-old-space-size=15096 build && xcopy /s /y build src\\main\\resources\\views\\static\\hiv",
+    "build": "react-scripts --max-old-space-size=15096 build && xcopy /s /y build src\\main\\resources\\views\\static\\pmtct",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
