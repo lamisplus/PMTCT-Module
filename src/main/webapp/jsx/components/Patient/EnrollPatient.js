@@ -1,33 +1,26 @@
 import React, {useCallback, useEffect, useState} from "react";
 import axios from "axios";
-import {format} from 'date-fns';
 import MatButton from "@material-ui/core/Button";
 import Button from "@material-ui/core/Button";
-import {FormGroup, Label, Spinner,Input,Form} from "reactstrap";
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {FormGroup, Label, Spinner,Input,Form, InputGroup} from "reactstrap";
 import {library} from '@fortawesome/fontawesome-svg-core'
 import {faCheckSquare, faCoffee, faEdit, faTrash} from '@fortawesome/free-solid-svg-icons'
-import {yupResolver} from '@hookform/resolvers/yup';
-import * as yup from "yup";
 import * as moment from 'moment';
 import {makeStyles} from "@material-ui/core/styles";
 import {Card, CardContent} from "@material-ui/core";
 import SaveIcon from "@material-ui/icons/Save";
-import AddIcon from "@material-ui/icons/Add";
 import CancelIcon from "@material-ui/icons/Cancel";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-widgets/dist/css/react-widgets.css";
 import {Link, useHistory, useLocation} from "react-router-dom";
 import {TiArrowBack} from 'react-icons/ti'
-import {useForm} from "react-hook-form";
 import {token, url as baseUrl } from "../../../api";
-import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
-import { getValue } from "@syncfusion/ej2-base";
 import  './patient.css'
 // import Form from 'react-bootstrap/Form';
 import {  Modal } from "react-bootstrap";
+
 
 
 
@@ -59,7 +52,31 @@ const useStyles = makeStyles((theme) => ({
     },
     root: {
         flexGrow: 1,
-        maxWidth: 752,
+        "& .card-title":{
+            color:'#fff',
+            fontWeight:'bold'
+        },
+        "& .form-control":{
+            borderRadius:'0.25rem',
+            height:'41px'
+        },
+        "& .card-header:first-child": {
+            borderRadius: "calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0"
+        },
+        "& .dropdown-toggle::after": {
+            display: " block !important"
+        },
+        "& select":{
+            "-webkit-appearance": "listbox !important"
+        },
+        "& p":{
+            color:'red'
+        },
+        "& label":{
+            fontSize:'14px',
+            color:'#014d88',
+            fontWeight:'bold'
+        }
     },
     demo: {
         backgroundColor: theme.palette.background.default,
@@ -143,14 +160,22 @@ const UserRegistration = (props) => {
      //HIV INFORMATION
      const [femaleStatus, setfemaleStatus]= useState(false)
      //const [values, setValues] = useState([]);
-     const [objValues, setObjValues] = useState({
-            id:"", uniqueId: "",dateOfRegistration:"",entryPointId:"", facilityName:"",statusAtRegistrationId:"",
-            dateConfirmedHiv:"",sourceOfReferrer:"",enrollmentSettingId:"",pregnancyStatusId:"",
-            dateOfLpm:"",tbStatusId:"",targetGroupId:"",ovc_enrolled:"",ovcNumber:"",
-            householdNumber:"", referredToOVCPartner:"", dateReferredToOVCPartner:"",
-            referredFromOVCPartner:"", dateReferredFromOVCPartner:"",
-            careEntryPointOther:""
-        });
+     const [objValues, setObjValues] = useState({   ancNo:"",
+            gaweeks: "",
+            gravida: "",
+            expectedDeliveryDate:"",
+            lmp: "",
+            parity: "",
+            hivDiognosicTime:"",
+            referredSyphilisTreatment: "",
+            testResultSyphilis: "",
+            testedSyphilis: "",
+            treatedSyphilis: "",
+            personDto:{},
+            pmtctHtsInfo:{},
+            syphilisInfo:{},
+            partnerNotification:{}
+    });
      const [carePoints, setCarePoints] = useState([]);
      const [sourceReferral, setSourceReferral] = useState([]);
      const [hivStatus, setHivStatus] = useState([]);
@@ -190,7 +215,7 @@ const UserRegistration = (props) => {
         PregnancyStatus();
         GetCountry();
         if(patientObj){
-
+            //console.log(patientObj)
             const contacts =patientObj && patientObj.contact ? patientObj.contact : [];
             //setContacts(patientObj.contacts);
             let newConatctsInfo=[]
@@ -237,6 +262,7 @@ const UserRegistration = (props) => {
             basicInfo.email=email && email.value ? email.value :""
             basicInfo.address=country  && country.city ? country.city :""
             basicInfo.landmark=country.line && country.line.length>0 ? country.line[0]: ""
+            //console.log(basicInfo.landmark)
             basicInfo.countryId=country && country.countryId  ? country.countryId  :""
             setStateByCountryId(country.countryId); 
             getProvincesId(country && country.stateId  ? country.stateId  :"")
@@ -244,6 +270,7 @@ const UserRegistration = (props) => {
             basicInfo.district=country && country.district ? country.district :""
             const patientAge=calculate_age(moment(patientObj.dateOfBirth).format("DD-MM-YYYY"))
             basicInfo.age=patientAge
+            objValues.personId=patientObj.id
             setfemaleStatus(patientObj.sex==='Female'? true : false)
             if(patientObj.age<=14){
                 setOvcEnrolled(true)
@@ -263,8 +290,14 @@ const UserRegistration = (props) => {
             { headers: {"Authorization" : `Bearer ${token}`} }
         )
         .then((response) => {
-            //console.log(response.data);
-            const getSexId=  response.data.find((x)=> x.display===patientObj.sex)//get patient sex ID by filtering the request
+            let patientSex=""
+            if(patientObj.sex==='female' || patientObj.sex==='Female' || patientObj.sex==='FEMALE'){
+                 patientSex= 'Female'
+            }
+            if(patientObj.sex==='Male' || patientObj.sex==='male' || patientObj.sex==='MALE' ){
+                 patientSex= 'Male'
+            }
+            const getSexId=  response.data.find((x)=> x.display===patientSex)//get patient sex ID by filtering the request
             basicInfo.sexId=getSexId.display
         })
         .catch((error) => {
@@ -313,10 +346,6 @@ const UserRegistration = (props) => {
         const response = await axios.get(`${baseUrl}organisation-units/parent-organisation-units/0`, { headers: {"Authorization" : `Bearer ${token}`} });
         settopLevelUnitCountryOptions(response.data);
     }, []);
-    const loadOrganisationUnitsByParentId = async (parentId) => {
-        const response = await axios.get(`${baseUrl}organisation-units/parent-organisation-units/${parentId}`, { headers: {"Authorization" : `Bearer ${token}`} });
-        return response.data;
-    };
 
     //Country List
       const GetCountry =()=>{
@@ -368,21 +397,7 @@ const UserRegistration = (props) => {
                 return age_now ;
     };
      //fetch province
-     const getProvinces = e => {
-            const stateId = e.target.value;
-            setErrors({...errors, [e.target.name]: ""})
-            setBasicInfo({ ...basicInfo, stateId: e.target.value });
-            axios
-            .get(`${baseUrl}organisation-units/parent-organisation-units/${stateId}`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                setProvinces(response.data);
-            })
-            .catch((error) => {
-            //console.log(error);
-            });  
-    };
+
     function getProvincesId(getStateId) {
         axios
         .get(`${baseUrl}organisation-units/parent-organisation-units/${getStateId}`,
@@ -402,12 +417,12 @@ const UserRegistration = (props) => {
             const birthDate = new Date(e.target.value);
             let age_now = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
-            if(m<18){
-                alert("The child is less than 18months")
-                setDisabledAgeBaseOnAge(true)
-            }else{
-                setDisabledAgeBaseOnAge(false)
-            }
+            // if(m<18){
+            //     toast.error("The child is less than 18months",  {position: toast.POSITION.TOP_RIGHT})
+            //     setDisabledAgeBaseOnAge(true)
+            // }else{
+            //     setDisabledAgeBaseOnAge(false)
+            // }
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age_now--;
             }
@@ -429,11 +444,12 @@ const UserRegistration = (props) => {
         }
     }
     const handleAgeChange = (e) => {
-        if (!ageDisabled && e.target.value) {
-            if(e.target.value!=='' && e.target.value>=60){
+        const ageNumber = e.target.value.replace(/\D/g, '')
+        if (!ageDisabled && ageNumber) {
+            if(ageNumber!=='' && ageNumber>=60){
                 toggle()
             }
-            if(e.target.value <=1){
+            if(ageNumber <=1){
                 setDisabledAgeBaseOnAge(true)
             }else{
                 setDisabledAgeBaseOnAge(false)
@@ -442,30 +458,29 @@ const UserRegistration = (props) => {
             currentDate.setDate(15);
             currentDate.setMonth(5);
             const estDob = moment(currentDate.toISOString());
-            const dobNew = estDob.add((e.target.value * -1), 'years');
+            const dobNew = estDob.add((ageNumber * -1), 'years');
             //setBasicInfo({...basicInfo, dob: moment(dobNew).format("YYYY-MM-DD")});
             basicInfo.dob =moment(dobNew).format("YYYY-MM-DD")
 
         }
-        setBasicInfo({...basicInfo, age: Math.abs(e.target.value)});
+        setBasicInfo({...basicInfo, age: ageNumber});
     }
     //End of Date of Birth and Age handling 
      /*****  Validation  */
      const validate = () => {
         let temp = { ...errors }
-            temp.firstName = basicInfo.firstName ? "" : "First Name is required"
-            temp.hospitalNumber = basicInfo.hospitalNumber ? "" : "Hospital Number  is required."
-            //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
-            //temp.landmark = basicInfo.landmark ? "" : "This field is required."
-            temp.lastName = basicInfo.lastName ? "" : "Last Name  is required."
-            temp.sexId = basicInfo.sexId ? "" : "Sex is required."
-            temp.dateOfRegistration1 = basicInfo.dateOfRegistration ? "" : "Date of Registration is required."
-            temp.educationId = basicInfo.educationId ? "" : "Education is required."
-            temp.address = basicInfo.address ? "" : "Address is required."
-            temp.phoneNumber = basicInfo.phoneNumber ? "" : "Phone Number  is required."
-            temp.countryId = basicInfo.countryId ? "" : "Country is required."    
-            temp.stateId = basicInfo.stateId ? "" : "State is required."  
-            temp.district = basicInfo.district ? "" : "Province/LGA is required." 
+            // temp.firstName = basicInfo.firstName ? "" : "First Name is required"
+            // temp.hospitalNumber = basicInfo.hospitalNumber ? "" : "Hospital Number  is required."
+
+            // temp.lastName = basicInfo.lastName ? "" : "Last Name  is required."
+            // temp.sexId = basicInfo.sexId ? "" : "Sex is required."
+            // temp.dateOfRegistration1 = basicInfo.dateOfRegistration ? "" : "Date of Registration is required."
+            // temp.educationId = basicInfo.educationId ? "" : "Education is required."
+            // temp.address = basicInfo.address ? "" : "Address is required."
+            // temp.phoneNumber = basicInfo.phoneNumber ? "" : "Phone Number  is required."
+            // temp.countryId = basicInfo.countryId ? "" : "Country is required."    
+            // temp.stateId = basicInfo.stateId ? "" : "State is required."  
+            // temp.district = basicInfo.district ? "" : "Province/LGA is required." 
             //HIV FORM VALIDATION
             temp.targetGroupId = objValues.targetGroupId ? "" : "Target group is required."
             temp.dateConfirmedHiv = objValues.dateConfirmedHiv ? "" : "date confirm HIV is required."
@@ -501,7 +516,8 @@ const UserRegistration = (props) => {
             setBasicInfo ({...basicInfo,  [e.target.name]: name});
         }
         if(e.target.name==='ninNumber' && e.target.value!==''){
-            const ninNumberValue = checkNINLimit(e.target.value)
+
+            const ninNumberValue = checkNINLimit(e.target.value.replace(/\D/g, ''))
             setBasicInfo ({...basicInfo,  [e.target.name]: ninNumberValue});
         }
                    
@@ -666,13 +682,13 @@ const UserRegistration = (props) => {
                 setTransferIn(false)
             }
         }  
-        if(e.target.name ==="pregnancyStatusId" ){
-            if(e.target.value==="72"){
-                setTransferIn(true)
-            }else{
-                setTransferIn(false)
-            }
-        }                
+        // if(e.target.name ==="pregnancyStatusId" ){
+        //     if(e.target.value==="72"){
+        //         setTransferIn(true)
+        //     }else{
+        //         setTransferIn(false)
+        //     }
+        // }                
     }    
     
     const checkPhoneNumber=(e, inputName)=>{
@@ -697,103 +713,26 @@ const UserRegistration = (props) => {
     }
     const handleSubmit = async (e) => {
         e.preventDefault(); 
-        const getSexId=  genders.find((x)=> x.display===basicInfo.sexId)//get patient sex ID by filtering the request
-        basicInfo.sexId=getSexId && getSexId.id ? getSexId.id : ""
-        let newConatctsInfo=[]
-            //Manipulate relatives contact  address:"",
-            const actualcontacts=contacts && contacts.length>0 && contacts.map((x)=>{
-                
-                const contactInfo = { 
-                address: {
-                    line: [
-                        x.address
-                    ],
-                },
-                contactPoint: {
-                    type: "phone",
-                    value: x.phone
-                },
-                firstName: x.firstName,
-                fullName: x.firstName + " " + x.middleName + " " + x.lastName,
-                relationshipId: x.relationshipId,
-                surname: x.lastName,
-                otherName: x.middleName
-            }
-            
-            newConatctsInfo.push(contactInfo)
-            })
+
          if(validate()){
             try {
-                const patientForm = {
-                    id:"",
-                    active: true,
-                    address: [
-                        {
-                            "city": basicInfo.address,
-                            "countryId": basicInfo.countryId,
-                            "district": basicInfo.district,
-                            "line": [
-                                basicInfo.landmark
-                            ],
-                            "organisationUnitId": 0,
-                            "postalCode": "",
-                            "stateId": basicInfo.stateId
-                        }
-                    ],
-                    contact: newConatctsInfo,
-                    contactPoint: [],
-                    dateOfBirth: basicInfo.dob,
-                    deceased: false,
-                    deceasedDateTime: null,
-                    firstName: basicInfo.firstName,
-                    genderId: basicInfo.sexId,
-                    sexId: basicInfo.sexId,
-                    identifier: [
-                        {
-                            "assignerId": 1,
-                            "type": "HospitalNumber",
-                            "value": basicInfo.hospitalNumber
-                        }
-                    ],
-                    otherName: basicInfo.middleName,
-                    maritalStatusId: basicInfo.maritalStatusId,
-                    surname: basicInfo.lastName,
-                    educationId: basicInfo.educationId,
-                    employmentStatusId: basicInfo.employmentStatusId,
-                    dateOfRegistration: basicInfo.dateOfRegistration,
-                    isDateOfBirthEstimated: basicInfo.dateOfBirth == "Actual" ? false : true,
-                    ninNumber:basicInfo.ninNumber
-                };
-                const phone = {
-                    "type": "phone",
-                    "value": basicInfo.phoneNumber
-                };
-                if (basicInfo.email) {
-                    const email = {
-                        "type": "email",
-                        "value": basicInfo.email
-                    }
-                    patientForm.contactPoint.push(email);
-                }
-                if (basicInfo.altPhonenumber) {
-                    const altPhonenumber = {
-                        "type": "altphone",
-                        "value": basicInfo.altPhonenumber
-                    }
-                    patientForm.contactPoint.push(altPhonenumber);
-                }
-                patientForm.contactPoint.push(phone);
-                patientForm.id = patientId;
-                patientDTO.person=patientForm;
-                patientDTO.hivEnrollment=objValues;
-                const response = await axios.post(`${baseUrl}hiv/patient`, patientDTO, { headers: {"Authorization" : `Bearer ${token}`} });
-                toast.success("Patient Register successful");
+
+                objValues.personId = patientId;
+                const response = await axios.post(`${baseUrl}hiv/enrollment`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
+                toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
             } catch (error) {                
-                let errorMessage = error.response.data && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "An error occured while registering a patient !";
-                    toast.error(errorMessage, {
-                        position: toast.POSITION.TOP_RIGHT
-                    });
+                if(error.response && error.response.data){
+                    let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                    if(error.response.data.apierror && error.response.data.apierror.message!=="" && error.response.data.apierror && error.response.data.apierror.subErrors[0].message!==""){
+                        toast.error(error.response.data.apierror.message + " : " + error.response.data.apierror.subErrors[0].field + " " + error.response.data.apierror.subErrors[0].message, {position: toast.POSITION.BOTTOM_CENTER});
+                    }else{
+                        toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+                    }
+                }
+                else{
+                    toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+                }
             }
         }
 
@@ -807,7 +746,7 @@ const UserRegistration = (props) => {
 			</ol>
 		  </div>
             <ToastContainer autoClose={3000} hideProgressBar />
-            <Card className={classes.cardBottom}>
+            <Card className={classes.root}>
                 <CardContent>
                     <Link
                         to={{
@@ -838,74 +777,15 @@ const UserRegistration = (props) => {
                                         <div className="row">
                                             <div className="form-group mb-3 col-md-4">
                                                 <FormGroup>
-                                                    <Label for="dateOfRegistration">Date of Registration* </Label>
-                                                    <Input
-                                                        className="form-control"
-                                                        type="date"
-                                                        name="dateOfRegistration"
-                                                        min="1983-12-31"
-                                                        max= {moment(new Date()).format("YYYY-MM-DD") }
-                                                        id="dateOfRegistration"
-                                                        value={basicInfo.dateOfRegistration}
-                                                        onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                        //disabled
-                                                    />
-                                                   {errors.dateOfRegistration1 !=="" ? (
-                                                    <span className={classes.error}>{errors.dateOfRegistration1}</span>
-                                                    ) : "" }
-                                                </FormGroup>
-                                            </div>
-                                            
-                                            <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label for="patientId">Hospital Number* </Label>
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        name="hospitalNumber"
-                                                        id="hospitalNumber"
-                                                        value={basicInfo.hospitalNumber}
-                                                        onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88",borderRadius:"0.2rem"}}
-                                                        //disabled
-                                                    />
-                                                   {errors.hospitalNumber !=="" ? (
-                                                    <span className={classes.error}>{errors.hospitalNumber}</span>
-                                                    ) : "" }
-                                                </FormGroup>
-                                            </div>
-                                            <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label for="patientId">EMR Number* </Label>
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        name="emrNumber"
-                                                        id="emrNumber"
-                                                        disabled='true'
-                                                        value={1094328}
-                                                        //onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88",borderRadius:"0.2rem"}}
-                                                    />
-                                                   
-                                                </FormGroup>
-                                            
-                                        </div>
-                                        </div>
-
-                                        <div className="row">
-                                            <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label for="firstName">First Names *</Label>
+                                                    <Label for="firstName">Name</Label>
                                                     <Input
                                                         className="form-control"
                                                         type="text"
                                                         name="firstName"
                                                         id="firstName"
-                                                        value={basicInfo.firstName}
+                                                        value={basicInfo.firstName + " "+ basicInfo.lastName}
                                                         onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                                        style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
                                                         //disabled
                                                     />
                                                     {errors.firstName !=="" ? (
@@ -913,1065 +793,240 @@ const UserRegistration = (props) => {
                                                     ) : "" }
                                                 </FormGroup>
                                             </div>
-
-                                            <div className="form-group mb-3 col-md-4">
+                                            <div className="form-group mb-3 col-md-3">
                                                 <FormGroup>
-                                                    <Label>Middle Name</Label>
-                                                    <Input
-                                                        className="form-control"
-                                                        type="text"
-                                                        name="middleName"
-                                                        id="middleName"
-                                                        value={basicInfo.middleName}
-                                                        onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                        //disabled
-                                                    />
-                                                </FormGroup>
-                                            </div>
-
-                                            <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label>Last Name *</Label>
+                                                    <Label for="patientId">Hospital Number </Label>
                                                     <input
                                                         className="form-control"
                                                         type="text"
-                                                        name="lastName"
-                                                        id="lastName"
-                                                        value={basicInfo.lastName}
+                                                        name="hospitalNumber"
+                                                        id="hospitalNumber"
+                                                        value={basicInfo.hospitalNumber}
                                                         onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                                        style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
                                                         //disabled
                                                     />
-                                                   {errors.lastName !=="" ? (
-                                                    <span className={classes.error}>{errors.lastName}</span>
-                                                    ) : "" }
+                                                   
                                                 </FormGroup>
-                                            </div>
-                                        </div>
+                                            </div>            
 
-                                        <div className="row">
-                                            <div className="form-group  col-md-4">
+                                            <div className="form-group  col-md-2">
                                                 <FormGroup>
-                                                    <Label>Sex *</Label>
-                                                    <select
+                                                    <Label>Sex </Label>
+                                                    <Input
                                                             className="form-control"
                                                             name="sexId"
                                                             id="sexId"
                                                             onChange={handleInputChangeBasic}
                                                             value={basicInfo.sexId}
-                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                                            style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
                                                             
-                                                        >
-                                                            <option value={""}>Select</option>
-                                                            {genders.map((gender, index) => (
-                                                            <option key={gender.id} value={gender.display}>{gender.display}</option>
-                                                            ))}
-                                                        </select>
-                                                        {(errors.sexId !=="" || errors.sexId !==null) ? (
-                                                        <span className={classes.error}>{errors.sexId}</span>
-                                                        ) : "" }
+                                                        />
                                                 </FormGroup>
                                             </div>
-                                            <div className="form-group mb-2 col-md-2">
-                                                <FormGroup>
-                                                    <Label>Date Of Birth</Label>
-                                                    <div className="radio">
-                                                        <label>
-                                                            <input
-                                                                type="radio"
-                                                                value="Actual"
-                                                                name="dateOfBirth"
-                                                                defaultChecked
-                                                                //disabled
-                                                                onChange={(e) => handleDateOfBirthChange(e)}
-                                                                style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                            /> Actual
-                                                        </label>
-                                                    </div>
-                                                    <div className="radio">
-                                                        <label>
-                                                            <input
-                                                                type="radio"
-                                                                value="Estimated"
-                                                                name="dateOfBirth"
-                                                                //disabled
-                                                                onChange={(e) => handleDateOfBirthChange(e)}
-                                                                style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                            /> Estimated
-                                                        </label>
-                                                    </div>
-                                                </FormGroup>
-                                            </div>
-
-                                            <div className="form-group mb-3 col-md-3">
-                                                <FormGroup>
-                                                    <Label>Date</Label>
-                                                    <input
-                                                        className="form-control"
-                                                        type="date"
-                                                        name="dob"
-                                                        id="dob"
-                                                        min="1940-01-01"
-                                                        max={basicInfo.dateOfRegistration}
-                                                        value={basicInfo.dob}
-                                                        onChange={handleDobChange}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                    />
-                                                   
-                                                </FormGroup>
-                                            </div>
-
-                                            <div className="form-group mb-3 col-md-3">
+                                            <div className="form-group mb-3 col-md-2">
                                                 <FormGroup>
                                                     <Label>Age</Label>
                                                     <input
                                                         className="form-control"
-                                                        type="number"
+                                                        type="text"
                                                         name="age"
                                                         id="age"
                                                         value={basicInfo.age}
                                                         disabled={ageDisabled}
                                                         onChange={handleAgeChange}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                                        style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
                                                     />
                                                 </FormGroup>
                                             </div>
-                                        </div>
-
-                                        <div className={"row"}>
-{/*                                            {watchShowAge >=0 &&
-                                            <>*/}
-                                                <div className="form-group mb-3 col-md-3">
-                                                    <FormGroup>
-                                                        <Label>Marital Status</Label>
-                                                        <select
-                                                            className="form-control"
-                                                            name="maritalStatusId"
-                                                            id="maritalStatusId"
-                                                            onChange={handleInputChangeBasic}
-                                                            value={basicInfo.maritalStatusId}
-                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                            //disabled
-                                                        >
-                                                            <option value={""}>Select</option>
-                                                            {maritalStatusOptions.map((maritalStatusOption, index) => (
-                                                                <option key={maritalStatusOption.id} value={maritalStatusOption.id}>{maritalStatusOption.display}</option>
-                                                            ))}
-                                                        </select>
-                                                        
-                                                    </FormGroup>
-                                                </div>
-
-                                                <div className="form-group  col-md-4">
-                                                    <FormGroup>
-                                                        <Label>Employment Status *</Label>
-                                                        <select
-                                                            className="form-control"
-                                                            name="employmentStatusId"
-                                                            id="employmentStatusId"
-                                                            onChange={handleInputChangeBasic}
-                                                            value={basicInfo.employmentStatusId}
-                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                            //disabled
-                                                        >
-                                                            <option value={""}>Select</option>
-                                                            {occupationOptions.map((occupationOption, index) => (
-                                                                <option key={occupationOption.id} value={occupationOption.id}>{occupationOption.display}</option>
-                                                            ))}
-                                                        </select>
-                                                        {errors.employmentStatusId !=="" ? (
-                                                        <span className={classes.error}>{errors.employmentStatusId}</span>
-                                                        ) : "" }
-                                                    </FormGroup>
-                                                </div>
-
-                                            <div className="form-group  col-md-4">
-                                                <FormGroup>
-                                                    <Label>Education Level *</Label>
-                                                    <select
-                                                        className="form-control"
-                                                        name="educationId"
-                                                        id="educationId"
-                                                        onChange={handleInputChangeBasic}
-                                                        value={basicInfo.educationId}
-                                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                        //disabled
-                                                    >
-                                                        <option value={""}>Select</option>
-                                                        {educationOptions.map((educationOption, index) => (
-                                                            <option key={educationOption.id} value={educationOption.id}>{educationOption.display}</option>
-                                                        ))}
-                                                    </select>
-                                                    {errors.educationId !=="" ? (
-                                                    <span className={classes.error}>{errors.educationId}</span>
-                                                    ) : "" }
-                                                </FormGroup>
-                                            </div>
-                                            <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label for="ninNumber">National Identity Number (NIN)  </Label>
-                                                    <input
-                                                        className="form-control"
-                                                        type="number"
-                                                        name="ninNumber"
-                                                        id="ninNumber"
-                                                        value={basicInfo.ninNumber}
-                                                        onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88",borderRadius:"0.2rem"}}
-                                                    />
-                                                   
-                                                </FormGroup>
-                                            
-                                        </div>
-                                        </div>
+                                        </div>                                     
                                     </div>
                                 </div>
+                            {/* </div> */}
+
                             </div>
 
-                            <div className="card">
-                                <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder',  borderRadius:"0.2rem"}}>
-                                    <h5 className="card-title" style={{color:'#fff'}}>Contact Details</h5>
-                                </div>
-
-                                <div className="card-body">
-                                    <div className={"row"}>
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>Phone Number *</Label>
-                                                <PhoneInput
-                                                    containerStyle={{width:'100%',border: "1px solid #014D88"}}
-                                                    inputStyle={{width:'100%',borderRadius:'0px'}}
-                                                    country={'ng'}
-                                                    placeholder="(234)7099999999"
-                                                    maxLength={5}
-                                                    name="phoneNumber"
-                                                    id="phoneNumber"
-                                                    value={basicInfo.phoneNumber}
-                                                    onChange={(e)=>{checkPhoneNumberBasic(e,'phoneNumber')}}
-                                                    
-                                                />
-                                                {(errors.phoneNumber !=="" || errors.phoneNumber !==null) ? (
-                                                    <span className={classes.error}>{errors.phoneNumber}</span>
-                                                    ) : "" }
-                                            </FormGroup>
-                                        </div>
-
-                                        <div className="form-group col-md-4">
-                                            <FormGroup>
-                                                <Label>Alt. Phone Number</Label>
-                                                <PhoneInput
-                                                    containerStyle={{width:'100%',border: "1px solid #014D88"}}
-                                                    inputStyle={{width:'100%',borderRadius:'0px'}}
-                                                    country={'ng'}
-                                                    placeholder="(234)7099999999"
-                                                    value={basicInfo.altPhonenumber}
-                                                    onChange={(e)=>{checkPhoneNumberBasic(e,'altPhonenumber')}}
-                                                />
-
-                                            </FormGroup>
-                                        </div>
-
-                                        <div className="form-group col-md-4">
-                                            <FormGroup>
-                                                <Label>Email</Label>
-                                                <input
-                                                    className="form-control"
-                                                    type="email"
-                                                    name="email"
-                                                    id="email"
-                                                    onChange={handleInputChangeBasic}
-                                                    value={basicInfo.email}
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                />
-                                               
-                                            </FormGroup>
-                                        </div>
-                                    </div>
-
-                                    <div className="row">
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>Country *</Label>
-                                                <select
-                                                    className="form-control"
-                                                    type="text"
-                                                    name="countryId"
-                                                    id="countryId"
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                    value={basicInfo.countryId}
-                                                    onChange={getStates}
-                                                    >
-                                                    <option value={""}>Select</option>
-                                                    {countries.map((value, index) => (
-                                                        <option key={index} value={value.id}>
-                                                            {value.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.countryId !=="" ? (
-                                                    <span className={classes.error}>{errors.countryId}</span>
-                                                    ) : "" }
-                                            </FormGroup>
-                                        </div>
-
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>State *</Label>
-                                                <select
-                                                    className="form-control"
-                                                    type="text"
-                                                    name="stateId"
-                                                    id="stateId"
-                                                    value={basicInfo.stateId}
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                    onChange={getProvinces}
-                                                    >
-                                                    <option value="">Select</option>
-                                                    {states.map((value, index) => (
-                                                        <option key={index} value={value.id}>
-                                                            {value.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.stateId !=="" ? (
-                                                    <span className={classes.error}>{errors.stateId}</span>
-                                                    ) : "" }
-                                            </FormGroup>
-                                        </div>
-
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>Province/District/LGA *</Label>
-                                                <select
-                                                    className="form-control"
-                                                    type="text"
-                                                    name="district"
-                                                    id="district"
-                                                    value={basicInfo.district}
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                    onChange={handleInputChangeBasic}
-                                                    >
-                                                    <option value="">Select</option>
-                                                    {provinces.map((value, index) => (
-                                                        <option key={index} value={value.id}>
-                                                            {value.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.district !=="" ? (
-                                                    <span className={classes.error}>{errors.district}</span>
-                                                    ) : "" }
-                                            </FormGroup>
-                                        </div>
-                                    </div>
-
-                                    <div className={"row"}>
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>Street Address*</Label>
-                                                <input
-                                                    className="form-control"
-                                                    type="text"
-                                                    name="address"
-                                                    id="address"
-                                                    value={basicInfo.address}
-                                                    onChange={handleInputChangeBasic}
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                   
-                                                />
-                                               {errors.address !=="" ? (
-                                                    <span className={classes.error}>{errors.address}</span>
-                                                    ) : "" }
-                                            </FormGroup>
-                                        </div>
-
-                                        <div className="form-group  col-md-4">
-                                            <FormGroup>
-                                                <Label>Landmark</Label>
-                                                <input
-                                                    className="form-control"
-                                                    type="text"
-                                                    name="landmark"
-                                                    id="landmark"
-                                                    value={basicInfo.landmark}
-                                                    onChange={handleInputChangeBasic}
-                                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                    
-                                                />
-                                                
-                                            </FormGroup>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card">
-                                <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder',  borderRadius:"0.2rem"}}>
-                                    <h5 className="card-title" style={{color:'#fff'}}>Relationship / Next Of Kin</h5>
-                                </div>
-                                <div className="card-body">
-                                    <div className="row">
-                                        {
-                                            contacts && contacts.length > 0 && (
-                                                <div className="col-xl-12 col-lg-12">
-                                                    <table style={{ width: '100%' }} className="mb-3">
-                                                        <thead className="mb-3">
-                                                        <tr>
-                                                            <th>Relationship Type</th>
-                                                            <th>Name</th>
-                                                            <th>Phone</th>
-                                                            <th>Address</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody className="mb-3">
-                                                        {contacts.map((item, index) => {
-                                                            return (
-                                                                <tr key={item.index} className="mb-3">
-                                                                    <td>{ 
-                                                                        getRelationship(item.relationshipId) 
-                                                                    }</td>
-                                                                    <td>{ 
-                                                                        item.firstName + " "  + item.middleName + " " + item.lastName
-                                                                    }</td>
-                                                                    <td>{ 
-                                                                            item.phone
-                                                                        }</td>
-                                                                    <td>{ 
-                                                                            item.address
-                                                                    }</td>
-                                                                    <td>
-                                                                        <button type="button"
-                                                                                className="btn btn-default btn-light btn-sm editRow"
-                                                                                onClick={() => handleEditRelative(item, index)}
-                                                                                >
-                                                                            <FontAwesomeIcon icon="edit" />
-                                                                        </button>
-                                                                        &nbsp;&nbsp;
-                                                                        <button
-                                                                            type="button"
-                                                                            className="btn btn-danger btn-sm removeRow"
-                                                                            onClick={(e) => handleDeleteRelative(index)}
-                                                                            >
-                                                                            <FontAwesomeIcon icon="trash" />
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            )
-                                        }
-                                        <div className="col-xl-12 col-lg-12">
-                                            {
-                                                showRelative && (
-                                                    <div className="card">
-                                                        <div className="card-body">
-                                                            <div className="row">
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label for="relationshipType">Relationship Type *</Label>
-                                                                        <select
-                                                                            className="form-control"
-                                                                            name="relationshipId"
-                                                                            id="relationshipId"
-                                                                            value={relatives.relationshipId}
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                            >
-                                                                            <option value={""}>Select</option>
-                                                                            {relationshipOptions.map((relative, index) => (
-                                                                                <option key={relative.id} value={relative.id}>{relative.display}</option>
-                                                                            ))}
-                                                                        </select>
-                                                                        {errors.relationshipId !=="" ? (
-                                                                        <span className={classes.error}>{errors.relationshipId}</span>
-                                                                        ) : "" }
-                                                                    </FormGroup>
-                                                                </div>
-
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label for="cfirstName">First Name *</Label>
-                                                                        <input
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            name="firstName"
-                                                                            value={relatives.firstName}
-                                                                            id="firstName"
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                        />
-                                                                       {errors.firstName !=="" ? (
-                                                                        <span className={classes.error}>{errors.firstName}</span>
-                                                                        ) : "" }
-                                                                    </FormGroup>
-                                                                </div>
-
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label>Middle Name</Label>
-                                                                        <input
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            name="middleName"
-                                                                            id="middleName"
-                                                                            value={relatives.middleName}
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                        />
-                                                                        {/* {errors.cmiddleName && <p>{errors.cmiddleName.message}</p>} */}
-                                                                    </FormGroup>
-                                                                </div>
-
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label>Last Name *</Label>
-                                                                        <input
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            name="lastName"
-                                                                            id="lastName"
-                                                                            value={relatives.lastName}
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                        />
-                                                                       {errors.lastName !=="" ? (
-                                                                        <span className={classes.error}>{errors.lastName}</span>
-                                                                        ) : "" }
-                                                                    </FormGroup>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="row">
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label for="contactPhoneNumber">Phone Number</Label>
-                                                                        <PhoneInput
-                                                                            containerStyle={{width:'100%',border: "1px solid #014D88"}}
-                                                                            inputStyle={{width:'100%',borderRadius:'0px'}}
-                                                                            country={'ng'}
-                                                                            placeholder="(234)7099999999"
-                                                                            name="phone"
-                                                                            value={relatives.phone}
-                                                                            id="phone"
-                                                                           
-                                                                            onChange={(e)=>{checkPhoneNumber(e.slice(0, 10),'phone')}}
-                                                                        />
-                                                                    
-                                                                    </FormGroup>
-                                                                </div>
-
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label for="contactEmail">Email</Label>
-                                                                        <input
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            name="email"
-                                                                            id="email"
-                                                                            value={relatives.email}
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                        />
-                                                                        {/* {errors.contactEmail && <p>{errors.contactEmail.message}</p>} */}
-                                                                    </FormGroup>
-                                                                </div>
-
-                                                                <div className="form-group mb-3 col-md-3">
-                                                                    <FormGroup>
-                                                                        <Label for="contactAddress">Address</Label>
-                                                                        <input
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            name="address"
-                                                                            id="address"
-                                                                            value={relatives.address}
-                                                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                                                            onChange={handleInputChangeRelatives}
-                                                                        />
-                                                                        {/* {errors.contactAddress && <p>{errors.contactAddress.message}</p>} */}
-                                                                    </FormGroup>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="row">
-                                                                <div className="col-1">
-                                                                    <MatButton
-                                                                        type="button"
-                                                                        variant="contained"
-                                                                        color="primary"
-                                                                        className={classes.button}
-                                                                        onClick={handleSaveRelationship}
-                                                                    >
-                                                                        Add
-                                                                    </MatButton>
-                                                                </div>
-
-                                                                <div className="col-1">
-                                                                    <MatButton
-                                                                        type="button"
-                                                                        variant="contained"
-                                                                        color="secondary"
-                                                                        className={classes.button}
-                                                                        onClick={handleCancelSaveRelationship}
-                                                                    >
-                                                                        Cancel
-                                                                    </MatButton>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <div className="row"></div>
-                                        <MatButton
-                                            type="button"
-                                            variant="contained"
-                                            color="primary"
-                                            className={classes.button}
-                                            startIcon={<AddIcon />}
-                                            onClick={handleAddRelative}
-                                            style={{backgroundColor:'#014d88',fontWeight:"bolder"}}
-                                        >
-                                            Add a Relative/Next Of Kin
-                                        </MatButton>
-                                    {/* </div> */}
-                                </div>
-                            </div>
                             {/* Adding HIV ENROLLEMENT FORM HERE */}
                             <div className="card">
-                                <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder', borderRadius:"0.2rem"}}>
-                                    <h5 className="card-title"  style={{color:'#fff'}}>HIV Enrollment</h5>
-                                </div>
-
-                                <div className="card-body">
-                                <div className="row">
-                                
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label for="uniqueId">Unique ID No  * </Label>
-                                    <Input
-                                        type="text"
-                                        name="uniqueId"
-                                        id="uniqueId"
-                                        onChange={handleInputChange}
-                                        value={objValues.uniqueId}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        disabled
-                                    />
-                                    {errors.uniqueId !=="" ? (
-                                    <span className={classes.error}>{errors.uniqueId}</span>
-                                    ) : "" }
-                                    </FormGroup>
-                                </div>
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label for="dateOfRegistration">Date of Enrollment * </Label>
-                                    <Input
-                                        type="date"
-                                        name="dateOfRegistration"
-                                        id="dateOfRegistration"
-                                        min={basicInfo.dateOfRegistration}
-                                        max= {moment(new Date()).format("YYYY-MM-DD") }
-                                        onChange={handleInputChange}
-                                        value={objValues.dateOfRegistration}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        
-                                    />
-                                    {errors.dateOfRegistration !=="" ? (
-                                    <span className={classes.error}>{errors.dateOfRegistration}</span>
-                                    ) : "" }
-                                    </FormGroup>
-                                </div>
+                            <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder', borderRadius:"0.2rem"}}>
+                                <h5 className="card-title"  style={{color:'#fff'}}>ANC  Enrollment</h5>
                             </div>
+                            <div className="card-body">
                             <div className="row">
+                              
                                 <div className="form-group mb-3 col-md-6">
-                                <FormGroup>
-                                <Label for="entryPointId">Care Entry Point * </Label>
-                                <Input
-                                    type="select"
-                                    name="entryPointId"
-                                    id="entryPointId"
-                                    onChange={handleInputChange}
-                                    value={objValues.entryPointId}
-                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                    
-                                >
-                                <option value=""> </option>                  
-                                {carePoints.map((value) => (
-                                    <option key={value.id} value={value.id}>
-                                        {value.display}
-                                    </option>
-                                ))}
-                                </Input>
-                                {errors.entryPointId !=="" ? (
-                                    <span className={classes.error}>{errors.entryPointId}</span>
-                                    ) : "" }
-                                </FormGroup>
-                                
-                                </div>                                
-                                <div className="form-group mb-3 col-md-6">
-                                {transferIn===true ? 
-                                    (
-                                        <FormGroup>
-                                        <Label >Facility Name</Label>
-                                        <Input
-                                            type="text"
-                                            name="facilityName"
-                                            id="facilityName"
-                                            onChange={handleInputChange}
-                                            value={objValues.facilityName}  
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        />
-                                        </FormGroup>
-                                    ):""}
-                                    {objValues.entryPointId==="24" ? 
-                                    (
-                                 
-                                        <FormGroup>
-                                        <Label >Care Entry Point (Others)</Label>
-                                        <Input
-                                            type="text"
-                                            name="careEntryPointOther"
-                                            id="careEntryPointOther"
-                                            onChange={handleInputChange}
-                                            value={objValues.careEntryPointOther}  
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        />
-                                        </FormGroup>
-                                      
-                                    ):""}
-                                </div>
-                                
-                                <div className="form-group mb-3 col-md-6">
-                                <FormGroup>
-                                <Label >HIV Status at Registration *</Label>
-                                <Input
-                                    type="select"
-                                    name="statusAtRegistrationId"
-                                    id="statusAtRegistrationId"
-                                    onChange={handleInputChange}
-                                    value={objValues.statusAtRegistrationId}
-                                    style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                    
-                                >
-                                <option value=""> Select</option>                  
-                                {hivStatus.map((value) => (
-                                    <option key={value.id} value={value.id}>
-                                        {value.display}
-                                    </option>
-                                ))}
-                                </Input>
-                                {errors.statusAtRegistrationId !=="" ? (
-                                    <span className={classes.error}>{errors.statusAtRegistrationId}</span>
-                                    ) : "" }
-                                </FormGroup>
-                                </div>
+                                            <FormGroup>
+                                            <Label >ANC No *</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="ancNo"
+                                                    id="ancNo"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.ancNo} 
+                                                />
 
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label >Date of Confirmed HIV Test *</Label>
-                                    <Input
-                                        type="date"
-                                        name="dateConfirmedHiv"
-                                        id="dateConfirmedHiv"
-                                        min={basicInfo.dob}
-                                        max={objValues.dateOfRegistration}
-                                        onChange={handleInputChange}
-                                        value={objValues.dateConfirmedHiv}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                            </InputGroup>
                                         
-                                    /> 
-                                    {errors.dateConfirmedHiv !=="" ? (
-                                        <span className={classes.error}>{errors.dateConfirmedHiv}</span>
-                                        ) : "" } 
-                                    </FormGroup>
-                                </div>
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label >Source of Referral *</Label>
-                                    <Input
-                                        type="select"
-                                        name="sourceOfReferrer"
-                                        id="sourceOfReferrer"
-                                        value={objValues.sourceOfReferrer}
-                                        onChange={handleInputChange}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        required
-                                    >
-                                        <option value="">Select </option>                 
-                                            {sourceReferral.map((value) => (
-                                                <option key={value.id} value={value.id}>
-                                                    {value.display}
-                                                </option>
-                                            ))}
-                                    </Input>
-                                    {errors.sourceOfReferrer !=="" ? (
-                                        <span className={classes.error}>{errors.sourceOfReferrer}</span>
-                                        ) : "" }
-                                    </FormGroup>
-                                </div>
-                                
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label >Enrollment Setting *</Label>
-                                    <Input
-                                        type="select"
-                                        name="enrollmentSettingId"
-                                        id="enrollmentSettingId"
-                                        value={objValues.enrollmentSettingId}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        onChange={handleInputChange}
-                                        required
-                                        >
-                                        <option value=""> Select</option>
-
-                                            {enrollSetting.map((value) => (
-                                                <option key={value.id} value={value.id}>
-                                                    {value.display}
-                                                </option>
-                                            ))}
-                                    </Input>
-                                    {errors.enrollmentSettingId !=="" ? (
-                                        <span className={classes.error}>{errors.enrollmentSettingId}</span>
-                                        ) : "" }
-                                    </FormGroup>
-                                </div>
-                                {(femaleStatus && basicInfo.age > 9) && (
-                                    <>
-                                   
-                                    <div className = "form-group mb-3 col-md-6" >
-                                        <FormGroup>
-                                        <Label> Pregnancy </Label>
-                                        <Input
-                                            type = "select"
-                                            name = "pregnancyStatusId"
-                                            id = "pregnancyStatusId"
-                                            value = {objValues.pregnancyStatusId}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            onChange = {handleInputChange}                                        
-                                        >
-                                        < option value = "" >Select </option>
-                                        {pregnancyStatus.map((value) => (
-                                                    <option key={value.id} value={value.id}>
-                                                        {value.display}
-                                                    </option>
-                                                ))}
-                                        </Input>                                                                        
-                                    </FormGroup>  
+                                            </FormGroup>
                                     </div>
-                                    {objValues.pregnancyStatusId!=='72' && (
-                                    <>
-                                    <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Date of LMP </Label>                                    
-                                        <Input
-                                            type="date"
-                                            name="dateOfLpm"
-                                            id="dateOfLpm"
-                                            max={today}
-                                            onChange={handleInputChange}
-                                            value={objValues.dateOfLpm}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            required
-                                        />  
-                                            
-                                        </FormGroup>
-                                    </div>
-                                    </>
-                                    )}
-                                    </>
-                                )}
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label >TB Status * </Label>
-                                    <Input
-                                        type="select"
-                                        name="tbStatusId"
-                                        id="tbStatusId"
-                                        value={objValues.tbStatusId}
-                                        onChange={handleInputChange}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        required
-                                        >
-                                        <option value=""> Select</option>
-                                            {tbStatus.map((value) => (
-                                                <option key={value.id} value={value.id}>
-                                                    {value.display}
-                                                </option>
-                                            ))}
-
-                                    </Input>
-                                    {errors.tbStatusId !=="" ? (
-                                        <span className={classes.error}>{errors.tbStatusId}</span>
-                                        ) : "" }
-                                    </FormGroup>
-                                </div>
-                                {hideTargetGroup==="false" ? (
-                                <div className="form-group mb-3 col-md-6">
-                                    <FormGroup>
-                                    <Label >Target Group *</Label>
-                                    <Input
-                                        type="select"
-                                        name="targetGroupId"
-                                        id="targetGroupId"
-                                        value={objValues.targetGroupId}
-                                        onChange={handleInputChange}
-                                        style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                        >
-                                        <option value=""> Select</option>                    
-                                                {kP.map((value) => (
-                                                    <option key={value.id} value={value.id}>
-                                                        {value.display}
-                                                    </option>
-                                                ))}
-                                    </Input>
-                                    {errors.targetGroupId !=="" ? (
-                                        <span className={classes.error}>{errors.targetGroupId}</span>
-                                        ) : "" }
-                                    </FormGroup>
-                                </div>
-                                ) : ""}
-                                {basicInfo.age <=14 && (
-                                <div className="form-group mb-3 col-md-3">
                                     
-                                    <div className="form-check custom-checkbox ml-1 ">
-                                        <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        name="ovc_enrolled"
-                                        id="ovc_enrolled"                                        
-                                        onChange={handleCheckBox}
-                                        />
-                                        <label
-                                        className="form-check-label"
-                                        htmlFor="basic_checkbox_1"
-                                        >
-                                        Enrolled into OVC?
-                                        </label>
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Gravida</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="gravida"
+                                                    id="gravida"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.gravida} 
+                                                />
+
+                                            </InputGroup>
+                                        
+                                            </FormGroup>
                                     </div>
-                                </div>
-                                )}
-                                {/* <div className="form-group mb-3 col-md-3">
-                                    {ovcEnrolled===true ? 
-                                        (
-                                        <FormGroup>
-                                        <Label >OVC Number</Label>
-                                        <Input
-                                            type="text"
-                                            name="ovcNumber"
-                                            id="ovcNumber"
-                                            required={ovcEnrolled}
-                                            onChange={handleInputChange}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            value={objValues.ovcNumber}
-                                            
-                                        />
-                                        </FormGroup>
-                                        )
-                                        :
-                                        ""
-                                    }
-                                </div> */}
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Parity</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="parity"
+                                                    id="parity"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.parity} 
+                                                />
+
+                                            </InputGroup>
+                                        
+                                            </FormGroup>
+                                    </div>
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Date Of Last Menstrual Period* </Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="date"
+                                                    name="lmp"
+                                                    id="lmp"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.lmp} 
+                                                />
+
+                                            </InputGroup>
+                                        
+                                            </FormGroup>
+                                    </div>
+                                   
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Gestational Age (Weeks)</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="gaweeks"
+                                                    id="gaweeks"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.gaweeks} 
+                                                />
+
+                                            </InputGroup>
+                                        
+                                            </FormGroup>
+                                    </div>
+                                    
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Source of Referral</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="encounterDate"
+                                                    id="encounterDate"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.encounterDate} 
+                                                />
+
+                                            </InputGroup>
+                                        
+                                            </FormGroup>
+                                    </div>                                
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Tested for syphilis</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="text"
+                                                    name="testedSyphilis"
+                                                    id="testedSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.testedSyphilis} 
+                                                >
+                                                     <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
+                                                </Input>
+                                            </InputGroup>                                        
+                                            </FormGroup>
+                                    </div>
                                 
-                                {ovcEnrolled===true && 
-                                (
-                                <>        
-                                <div className="row">
                                     <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Household Unique Number</Label>
-                                        <Input
-                                            type="text"
-                                            name="householdNumber"
-                                            id="householdNumber"
-                                            required={ovcEnrolled}
-                                            onChange={handleInputChange}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            value={objValues.householdNumber}
-                                            
-                                        />
-                                        </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6"></div>
-                                    <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Referred To OVC Partner</Label>
-                                        <Input
-                                            type="text"
-                                            name="referredToOVCPartner"
-                                            id="referredToOVCPartner"
-                                            required={ovcEnrolled}
-                                            onChange={handleInputChange}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            value={objValues.referredToOVCPartner}
-                                            
-                                        />
-                                        </FormGroup>
+                                            <FormGroup>
+                                            <Label >Syphilis test result</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="select"
+                                                    name="testResultSyphilis"
+                                                    id="testResultSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.testResultSyphilis} 
+                                                >
+                                                    <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
+                                                </Input>
+                                            </InputGroup>                                        
+                                            </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Date Referred To OVC Partner</Label>
-                                        <Input
-                                            type="date"
-                                            name="dateReferredToOVCPartner"
-                                            id="dateReferredToOVCPartner"
-                                            min={basicInfo.dob}
-                                            max={objValues.dateOfRegistration }
-                                            onChange={handleInputChange}
-                                            value={objValues.dateReferredToOVCPartner}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            
-                                        /> 
-                                        {/* {errors.dateConfirmedHiv !=="" ? (
-                                            <span className={classes.error}>{errors.dateConfirmedHiv}</span>
-                                            ) : "" }  */}
-                                        </FormGroup>
+                                            <FormGroup>
+                                            <Label >Treated for syphilis (penicillin)</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="select"
+                                                    name="treatedSyphilis"
+                                                    id="treatedSyphilis"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.encounterDate} 
+                                                >
+                                                    <option value="" >Select</option>
+                                                    <option value="Yes" >Yes</option>
+                                                    <option value="No" >No</option>
+                                                </Input>
+                                            </InputGroup>                                        
+                                            </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Referred From OVC Partner</Label>
-                                        <Input
-                                            type="text"
-                                            name="referredFromOVCPartner"
-                                            id="referredFromOVCPartner"
-                                            required={ovcEnrolled}
-                                            onChange={handleInputChange}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            value={objValues.referredFromOVCPartner}
-                                            
-                                        />
-                                        </FormGroup>
+                                            <FormGroup>
+                                            <Label >Referred Syphilis +ve client</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="select"
+                                                    name="referredSyphilisTreatment"
+                                                    id="referredSyphilisTreatment"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.referredSyphilisTreatment} 
+                                                >
+                                                    <option value="" >Select</option>
+                                                    <option value="Yes" >Yes</option>
+                                                    <option value="No" >No</option>
+                                                </Input>
+                                            </InputGroup>                                        
+                                            </FormGroup>
                                     </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Date Referred From OVC Partner</Label>
-                                        <Input
-                                            type="date"
-                                            name="dateReferredFromOVCPartner"
-                                            id="dateReferredFromOVCPartner"
-                                            min={basicInfo.dob}
-                                            max={objValues.dateOfRegistration }
-                                            onChange={handleInputChange}
-                                            value={objValues.dateReferredFromOVCPartner}
-                                            style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
-                                            
-                                        /> 
-                                        {/* {errors.dateConfirmedHiv !=="" ? (
-                                            <span className={classes.error}>{errors.dateConfirmedHiv}</span>
-                                            ) : "" }  */}
-                                        </FormGroup>
-                                    </div>
-                                </div>
-                                </>
-                                )}
+                                   
                             </div>
                             </div>
                             </div>

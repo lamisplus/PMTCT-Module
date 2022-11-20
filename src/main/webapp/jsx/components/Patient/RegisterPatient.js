@@ -712,11 +712,8 @@ const UserRegistration = (props) => {
         });    
     }
     const handleInputChange = e => {        
-        setObjValues ({...objValues,  [e.target.name]: e.target.value});
-        
-                 
-    }    
-    
+        setObjValues ({...objValues,  [e.target.name]: e.target.value});          
+    }      
     const checkPhoneNumber=(e, inputName)=>{
         const limit = 10;
             setRelatives({...relatives,  [inputName]: e.slice(0, limit)});     
@@ -725,7 +722,6 @@ const UserRegistration = (props) => {
         const limit = 10;
             setBasicInfo({...basicInfo,  [inputName]: e.slice(0, limit)});     
     } 
-
     const checkNINLimit=(e)=>{
         const limit = 11;        
         const acceptedNumber= e.slice(0, limit)
@@ -1683,7 +1679,7 @@ const UserRegistration = (props) => {
                                             </FormGroup>
                                     </div>
                                    
-                                </div>
+                            </div>
                             </div>
                             </div>
                             {/* END OF HIV ENROLLEMENT FORM */}

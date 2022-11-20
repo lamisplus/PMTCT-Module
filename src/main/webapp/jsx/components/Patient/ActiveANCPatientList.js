@@ -170,41 +170,39 @@ const Patients = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               //isLoading={loading}
-                  data={query =>
-                    new Promise((resolve, reject) =>
-                        axios.get(`${baseUrl}pmtct/anc/pmtct-from-person?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`, { headers: {"Authorization" : `Bearer ${token}`} })
-                            .then(response => response)
-                            .then(result => {
-                                console.log(result.data.records)
-                                resolve({
-                                    data: result.data.records.map((row) => ({
+                data={query =>
+                new Promise((resolve, reject) =>
+                    axios.get(`${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`, { headers: {"Authorization" : `Bearer ${token}`} })
+                        .then(response => response)
+                        .then(result => {
+                            
+                            resolve({
+                                data: result.data.records.map((row) => ({
+                                    name:
+                                        <Link
+                                        to ={{
+                                            pathname: "/patient-history",
+                                            state: { patientObj: row  }
+                                        }}
+            
+                                        title={"Click to view patient dashboard"}
+                                        > {row.firstName + " " + row.surname}
+                                        </Link>,
                                         
-                                        name:<Link
-                                                to={{
-                                                    pathname: "/enroll-patient",
-                                                    state: { patientId : row.id, patientObj: row }
-                                                }}
-                 
-                                             title={"Enroll Patient"}
-                                             > {row.firstName + " " + row.surname}
-                                             </Link>
-                                           ,
-                                    hospital_number: getHospitalNumber(row.identifier),
-                                    gender:row && row.sex ? row.sex : "",
-                                    age: (row.dateOfBirth === 0 ||
-                                        row.dateOfBirth === undefined ||
-                                        row.dateOfBirth === null ||
-                                        row.dateOfBirth === "" )
-                                          ? 0
-                                          : calculate_age(moment(row.dateOfBirth).format("DD-MM-YYYY")),
-                                    
-                                    //status: (<Label color="blue" size="mini">{row.currentStatus}</Label>),
-                                 //enroll-patient
-                                    actions:<div>
+                                hospital_number: getHospitalNumber(row.identifier),
+                                gender:row && row.sex ? row.sex : "",
+                                age: (row.dateOfBirth === 0 ||
+                                    row.dateOfBirth === undefined ||
+                                    row.dateOfBirth === null ||
+                                    row.dateOfBirth === "" )
+                                        ? 0
+                                        : calculate_age(moment(row.dateOfBirth).format("DD-MM-YYYY")),
+                                
+                                actions:<div>
                                             <Link
                                                 to={{
                                                     pathname: "/patient-history",
-                                                    state: { patientId : row.id, patientObj: row }
+                                                    state: { patientObj: row  }
                                                 }}
                                             >
                                                 <ButtonGroup variant="contained" 
@@ -219,42 +217,42 @@ const Patients = (props) => {
                                                 aria-haspopup="menu"
                                                 style={{backgroundColor:'rgb(153, 46, 98)'}}
                                                 >
-                                                    <TiArrowForward />
+                                                    <MdDashboard />
                                                 </Button>
                                                 <Button 
                                                 style={{backgroundColor:'rgb(153, 46, 98)'}}
                                                 >
-                                                    <span style={{fontSize:'12px', color:'#fff', fontWeight:'bolder'}}>Enroll Patient</span>
+                                                    <span style={{fontSize:'12px', color:'#fff', fontWeight:'bolder'}}>Patient Dashboard</span>
                                                 </Button>
                                                 
                                                 </ButtonGroup>
                                             </Link>
-
-                                            </div>
-                                        })),
-                                    page: query.page,
-                                    totalCount: result.data.totalRecords,
-                                    
-                                })
+                                                        
+                                        </div>
+                                    })),
+                                page: query.page,
+                                totalCount: result.data.totalRecords,
+                                
                             })
-                            
-                    )}
-                        options={{
-                          headerStyle: {
-                              backgroundColor: "#014d88",
-                              color: "#fff",
-                          },
-                          searchFieldStyle: {
-                              width : '200%',
-                              margingLeft: '250px',
-                          },
-                          filtering: false,
-                          exportButton: false,
-                          searchFieldAlignment: 'left',
-                          pageSizeOptions:[10,20,100],
-                          pageSize:10,
-                          debounceInterval: 400
-                      }}
+                        })
+                        
+                )}
+                options={{
+                    headerStyle: {
+                        backgroundColor: "#014d88",
+                        color: "#fff",
+                    },
+                    searchFieldStyle: {
+                        width : '200%',
+                        margingLeft: '250px',
+                    },
+                    filtering: false,
+                    exportButton: false,
+                    searchFieldAlignment: 'left',
+                    pageSizeOptions:[10,20,100],
+                    pageSize:10,
+                    debounceInterval: 400
+                }}
             />
        
     </div>

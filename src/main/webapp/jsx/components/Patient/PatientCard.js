@@ -65,8 +65,8 @@ const styles = theme => ({
 
 function PatientCard(props) {
   const { classes } = props;
-  const patientCurrentStatus=props.patientObj && props.patientObj.currentStatus==="Died (Confirmed)" ? true : false ;
-  const patientObjs = props.patientObj ? props.patientObj.personDto : {}
+  //const patientCurrentStatus=props.patientObj && props.patientObj.currentStatus==="Died (Confirmed)" ? true : false ;
+  const patientObjs = props.patientObj ? props.patientObj : {}
   const permissions= props.permissions ? props.permissions : [];
   const [patientObj, setpatientObj] = useState(patientObjs)
   const [patientBiometricStatus, setPatientBiometricStatus]= useState(props.patientObj.biometricStatus);
@@ -199,9 +199,9 @@ function PatientCard(props) {
   
   return (
     <div className={classes.root}>
-       <ExpansionPanel defaultExpanded>
+       <ExpansionPanel >
 
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                <ExpansionPanelSummary >
                 
                 <Row>
                 
@@ -264,7 +264,7 @@ function PatientCard(props) {
                     </Col>
 
                     <Col md={12}>
-                      {biometricStatus===true ? (
+                    {biometricStatus===true ? (
                           <>
                               <div >
                                   <Typography variant="caption">
@@ -272,20 +272,7 @@ function PatientCard(props) {
                                           Biometric Status
                                           <Label.Detail>{props.patientObj.biometricStatus===true? "Captured" : "Not Capture"}</Label.Detail>
                                       </Label>
-                                      {props.patientObj.biometricStatus!==true ? (
-                                    
-                                          <>
-                                             
-                                                  <>
-                                                  <Label as='a' color='teal' onClick={() => capturePatientBiometric(patientObj)} tag>
-                                                      Capture Now
-                                                  </Label>
-                                                  </>
-                                            
-                                          </>
-                                      )
-                                      :""
-                                      }
+                                     
                                       
                                   </Typography>
                               </div>
@@ -293,15 +280,7 @@ function PatientCard(props) {
                           )
                           :
                           <>
-                              <div >
-                                  <Typography variant="caption">
-                                      <Label color={"red"} size={"mini"}>
-                                          Biometric Not Install
-                                          
-                                      </Label>
-                                    
-                                  </Typography>
-                              </div>
+                              
                           </>
                       }
                     </Col>
@@ -310,7 +289,7 @@ function PatientCard(props) {
                 </Row>
             
                 </ExpansionPanelSummary>
-                <ExpansionPanelDetails className={classes.details}>
+               
                 
                     {/* <Button
                       color='red'
@@ -364,11 +343,7 @@ function PatientCard(props) {
                 )
                }
                      */}
-                </ExpansionPanelDetails>
-                <Divider />
-                <ExpansionPanelActions expandIcon={<ExpandMoreIcon />}>
-                
-                </ExpansionPanelActions>
+              
             </ExpansionPanel>
     
     </div>
