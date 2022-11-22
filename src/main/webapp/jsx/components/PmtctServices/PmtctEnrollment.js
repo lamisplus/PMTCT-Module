@@ -12,7 +12,7 @@ import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
 import {Message } from 'semantic-ui-react'
-import Biometrics from '../Patient/Biometric';
+import moment from "moment";
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -235,6 +235,7 @@ const AncPnc = (props) => {
                                     id="pmtctEnrollmentDate"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.pmtctEnrollmentDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
                             </InputGroup>
@@ -472,6 +473,7 @@ const AncPnc = (props) => {
                                     id="viralLoadSampleDate"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.viralLoadSampleDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -502,6 +504,7 @@ const AncPnc = (props) => {
                                     id="nextAppointmentDate"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.nextAppointmentDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>

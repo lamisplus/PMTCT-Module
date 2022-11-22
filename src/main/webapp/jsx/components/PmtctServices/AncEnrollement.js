@@ -10,6 +10,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
+import moment from "moment";
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -152,6 +153,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
                             </InputGroup>
@@ -199,6 +201,7 @@ const AncEnrollement = (props) => {
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={vital.encounterDate} 
                                 />
 
@@ -215,6 +218,7 @@ const AncEnrollement = (props) => {
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={vital.encounterDate} 
                                 />
 
@@ -296,6 +300,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>
@@ -354,6 +359,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
                             </InputGroup>                                        
                             </FormGroup>
