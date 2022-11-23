@@ -267,11 +267,11 @@
                 </annotationProcessorPaths>
             </configuration>
         </plugin>
-<!--        <plugin>-->
-<!--            <groupId>com.github.eirslett</groupId>-->
-<!--            <artifactId>frontend-maven-plugin</artifactId>-->
-<!--            <version>1.12.1</version>-->
-<!--            <executions>-->
+        <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>1.12.1</version>
+            <executions>
 <!--                <execution>-->
 <!--                    <id>install node and npm</id>-->
 <!--                    <goals>-->
@@ -291,35 +291,35 @@
 <!--                        <arguments>install</arguments>-->
 <!--                    </configuration>-->
 <!--                </execution>-->
-<!--                <execution>-->
-<!--                    <id>npm run build</id>-->
-<!--                    <goals>-->
-<!--                        <goal>npm</goal>-->
-<!--                    </goals>-->
-<!--                    <configuration>-->
-<!--                        <arguments>run build</arguments>-->
-<!--                    </configuration>-->
-<!--                </execution>-->
-<!--            </executions>-->
-<!--        </plugin>-->
-<!--        <plugin>-->
-<!--            <artifactId>maven-antrun-plugin</artifactId>-->
-<!--            <executions>-->
-<!--                <execution>-->
-<!--                    <phase>generate-resources</phase>-->
-<!--                    <configuration>-->
-<!--                        <target>-->
-<!--                            <copy todir="${project.build.directory}/classes/views/static/pmtct">-->
-<!--                                <fileset dir="${project.basedir}/build"/>-->
-<!--                            </copy>-->
-<!--                        </target>-->
-<!--                    </configuration>-->
-<!--                    <goals>-->
-<!--                        <goal>run</goal>-->
-<!--                    </goals>-->
-<!--                </execution>-->
-<!--            </executions>-->
-<!--        </plugin>-->
+                <execution>
+                    <id>npm run build</id>
+                    <goals>
+                        <goal>npm</goal>
+                    </goals>
+                    <configuration>
+                        <arguments>run build</arguments>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>generate-resources</phase>
+                    <configuration>
+                        <target>
+                            <copy todir="${project.build.directory}/classes/views/static/pmtct">
+                                <fileset dir="${project.basedir}/build"/>
+                            </copy>
+                        </target>
+                    </configuration>
+                    <goals>
+                        <goal>run</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
     </plugins>
 </build>
 </project>

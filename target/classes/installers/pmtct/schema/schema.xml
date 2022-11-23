@@ -96,10 +96,9 @@
                 last_modified_by character varying(255) COLLATE pg_catalog."default",
                 last_modified_date timestamp without time zone,
                 uuid character varying(255) COLLATE pg_catalog."default",
-
-                date_of_delivery  date,
-                booking_status  character varying(255) COLLATE pg_catalog."default",
-                gA_weeks bigint,
+                date_of_delivery date,
+                booking_status character varying(255) COLLATE pg_catalog."default",
+                gaweeks bigint,
                 rom_delivery_interval character varying(255) COLLATE pg_catalog."default",
                 mode_of_delivery character varying(255) COLLATE pg_catalog."default",
                 episiotomy character varying(255) COLLATE pg_catalog."default",
@@ -108,17 +107,19 @@
                 maternal_outcome character varying(255) COLLATE pg_catalog."default",
                 child_status character varying(255) COLLATE pg_catalog."default",
                 hiv_exposed_infant_given_hb_within24hrs character varying(255) COLLATE pg_catalog."default",
-                child_give_arv_within72hrs character varying(255) COLLATE pg_catalog."default",
+                child_given_arv_within72 character varying(255) COLLATE pg_catalog."default",
                 delivery_time character varying(255) COLLATE pg_catalog."default",
                 on_art character varying(255) COLLATE pg_catalog."default",
                 art_started_ld_ward character varying(255) COLLATE pg_catalog."default",
-                hb_status character varying(255) COLLATE pg_catalog."default",
-                hc_Status character varying(255) COLLATE pg_catalog."default",
-                referral_source character varying(255) COLLATE pg_catalog."default",
+                hbstatus character varying(255) COLLATE pg_catalog."default",
+                hcstatus character varying(255) COLLATE pg_catalog."default",
+                referal_source character varying(255) COLLATE pg_catalog."default",
+                CONSTRAINT pmtct_delivery_pkey PRIMARY KEY (id),
+                CONSTRAINT pmtct_delivery_anc_no_key UNIQUE (anc_no)
+                )
 
-            CONSTRAINT pmtct_delivery_pkey PRIMARY KEY (id)
-            )
-            TABLESPACE pg_default;
+                TABLESPACE pg_default;
+
             ALTER TABLE IF EXISTS public.pmtct_delivery
                 OWNER to postgres;
         </sql>
