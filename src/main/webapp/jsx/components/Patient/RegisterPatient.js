@@ -293,7 +293,7 @@ const UserRegistration = (props) => {
      //Get States from selected country
      const getStates = e => {
         const getCountryId =e.target.value;
-        console.log(getCountryId)
+        //console.log(getCountryId)
             setStateByCountryId(getCountryId); 
             setBasicInfo({ ...basicInfo, countryId: getCountryId });
     };
@@ -597,13 +597,21 @@ const UserRegistration = (props) => {
                 patientForm.id = patientId;
                 objValues.personDto=patientForm;
                 //patientDTO.personDto=objValues;
-                const response = await axios.post(`${baseUrl}pmtct/anc`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
-                toast.success("Patient Register successful");
+                console.log(objValues)
+                const response = await axios.post(`${baseUrl}pmtct/anc/anc-new-registration`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
+                toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
             } catch (error) {                
                 if(error.response && error.response.data){
-                    let errorMessage = error.response.data && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                    toast.error(errorMessage); 
+                    let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                    if(error.response.data.apierror && error.response.data.apierror.message!=="" && error.response.data.apierror && error.response.data.apierror.subErrors[0].message!==""){
+                        toast.error(error.response.data.apierror.message + " : " + error.response.data.apierror.subErrors[0].field + " " + error.response.data.apierror.subErrors[0].message, {position: toast.POSITION.BOTTOM_CENTER});
+                    }else{
+                        toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+                    }
+                }
+                else{
+                    toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
                 }
             }
         }

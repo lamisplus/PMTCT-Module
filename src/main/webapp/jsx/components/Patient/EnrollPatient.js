@@ -123,42 +123,21 @@ const UserRegistration = (props) => {
 
             }
     )
-    const [relatives, setRelatives]= useState(
-                { 
-                    address:"",
-                    phone:"",
-                    firstName: "",
-                    email: "",
-                    relationshipId: "",
-                    lastName: "",
-                    middleName: ""
-                }
-        )
 
-    const [today, setToday] = useState(new Date().toISOString().substr(0, 10).replace('T', ' '));
-    const [contacts, setContacts] = useState([]);
     const [saving, setSaving] = useState(false);
     const [disabledAgeBaseOnAge, setDisabledAgeBaseOnAge] = useState(false);
     const [ageDisabled, setAgeDisabled] = useState(true);
-    const [showRelative, setShowRelative] = useState(false);
-    const [editRelative, setEditRelative] = useState(null);
+
     const [genders, setGenders]= useState([]);
-    const [maritalStatusOptions, setMaritalStatusOptions]= useState([]);
-    const [educationOptions, setEducationOptions]= useState([]);
-    const [occupationOptions, setOccupationOptions]= useState([]);
-    const [relationshipOptions, setRelationshipOptions]= useState([]);
-    const [countries, setCountries] = useState([]);
-    const [states, setStates] = useState([]);
-    const [provinces, setProvinces] = useState([]);
+
+
     const [errors, setErrors] = useState({})
-    const [topLevelUnitCountryOptions, settopLevelUnitCountryOptions]= useState([]);
-    const [patientDTO, setPatientDTO]= useState({"person":"", "hivEnrollment":""})
+
     const userDetail = props.location && props.location.state ? props.location.state.user : null;
     const classes = useStyles();
     const history = useHistory();
     const location = useLocation();
-     //HIV INFORMATION
-     const [femaleStatus, setfemaleStatus]= useState(false)
+
      //const [values, setValues] = useState([]);
      const [objValues, setObjValues] = useState({   ancNo:"",
             gaweeks: "",
@@ -166,6 +145,7 @@ const UserRegistration = (props) => {
             expectedDeliveryDate:"",
             lmp: "",
             parity: "",
+            person_uuid:"",
             hivDiognosicTime:"",
             referredSyphilisTreatment: "",
             testResultSyphilis: "",
@@ -176,20 +156,9 @@ const UserRegistration = (props) => {
             syphilisInfo:{},
             partnerNotification:{}
     });
-     const [carePoints, setCarePoints] = useState([]);
-     const [sourceReferral, setSourceReferral] = useState([]);
-     const [hivStatus, setHivStatus] = useState([]);
-     const [enrollSetting, setEnrollSetting] = useState([]);
-     const [tbStatus, setTbStatus] = useState([]);
-     const [kP, setKP] = useState([]);
-     const [newSex, setNewSex] = useState([]);
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
-     const [transferIn, setTransferIn] = useState(false);
-     // display the OVC number if patient is enrolled into OVC 
-     const [ovcEnrolled, setOvcEnrolled] = useState(false);
-     //Input fields to hidden base on some conditions
-     const [hideTargetGroup, setHideTargetGroup]= useState("false");
+
      const [open, setOpen] = React.useState(false)
      const toggle = () => setOpen(!open);
     const locationState = location.state;
@@ -201,80 +170,22 @@ const UserRegistration = (props) => {
     useEffect(() => { 
         loadGenders();
         getSex();
-        loadMaritalStatus();
-        loadEducation();
-        loadOccupation();
-        loadRelationships();
-        loadTopLevelCountry();        
-        CareEntryPoint();
-        SourceReferral();
-        HivStatus();
-        EnrollmentSetting();
-        TBStatus();
-        KP();
         PregnancyStatus();
-        GetCountry();
         if(patientObj){
-            //console.log(patientObj)
-            const contacts =patientObj && patientObj.contact ? patientObj.contact : [];
-            //setContacts(patientObj.contacts);
-            let newConatctsInfo=[]
-            //Manipulate relatives contact  address:"",
-            const actualcontacts=contacts.contact && contacts.contact.length>0 && contacts.contact.map((x)=>{ 
-                const contactInfo = 
-                    { 
-                        address:x.address.line[0],
-                        phone:x.contactPoint.value,
-                        firstName:x.firstName,
-                        email: "",
-                        relationshipId: x.relationshipId,
-                        lastName: x.surname,
-                        middleName: x.otherName
-                    }
-                newConatctsInfo.push(contactInfo)
-            })
-            setContacts(newConatctsInfo);
             const identifiers = patientObj.identifier;
-            const address = patientObj.address;
-            const contactPoint = patientObj.contactPoint;
             const hospitalNumber = identifiers.identifier.find(obj => obj.type === 'HospitalNumber');
-            const phone = contactPoint.contactPoint.find(obj => obj.type === 'phone');
-            const email = contactPoint.contactPoint.find(obj => obj.type === 'email');
-            const altphone = contactPoint.contactPoint.find(obj => obj.type === 'altphone');
-            const country = address && address.address && address.address.length > 0 ? address.address[0] : null;
-            //const getSexId=  genders.length>0 && genders.find((x)=> x.display===patientObj.sex)//get patient sex ID by filtering the request
-            //console.log(newSex)
-            //setValue('dob', format(new Date(patientObj.dateOfBirth), 'yyyy-MM-dd'));
             basicInfo.dob=patientObj.dateOfBirth
             basicInfo.firstName=patientObj.firstName
             basicInfo.dateOfRegistration=patientObj.dateOfRegistration
             basicInfo.middleName=patientObj.otherName
             basicInfo.lastName=patientObj.surname
+            basicInfo.dateOfRegistration=patientObj.dateOfRegistration
             basicInfo.hospitalNumber=hospitalNumber && hospitalNumber ? hospitalNumber.value : ''
             setObjValues ({...objValues,  uniqueId: hospitalNumber ? hospitalNumber.value : ''});
-            basicInfo.maritalStatusId=patientObj && patientObj.maritalStatus ? patientObj.maritalStatus.id : ""
-            basicInfo.employmentStatusId=patientObj && patientObj.employmentStatus ? patientObj.employmentStatus.id :""
             basicInfo.genderId=patientObj && patientObj.gender ? patientObj.gender.id : null
-            //basicInfo.sexId=patientObj.sex
-            basicInfo.educationId=patientObj && patientObj.education ? patientObj.education.id : ""
-            basicInfo.phoneNumber=phone && phone.value ? phone.value :""
-            basicInfo.altPhonenumber= altphone && altphone.value ? altphone.value :""
-            basicInfo.email=email && email.value ? email.value :""
-            basicInfo.address=country  && country.city ? country.city :""
-            basicInfo.landmark=country.line && country.line.length>0 ? country.line[0]: ""
-            //console.log(basicInfo.landmark)
-            basicInfo.countryId=country && country.countryId  ? country.countryId  :""
-            setStateByCountryId(country.countryId); 
-            getProvincesId(country && country.stateId  ? country.stateId  :"")
-            basicInfo.stateId=country && country.stateId  ? country.stateId  :""
-            basicInfo.district=country && country.district ? country.district :""
             const patientAge=calculate_age(moment(patientObj.dateOfBirth).format("DD-MM-YYYY"))
             basicInfo.age=patientAge
             objValues.personId=patientObj.id
-            setfemaleStatus(patientObj.sex==='Female'? true : false)
-            if(patientObj.age<=14){
-                setOvcEnrolled(true)
-            }
             basicInfo.ninNumber=patientObj.ninNumber
 
         }
@@ -312,74 +223,6 @@ const UserRegistration = (props) => {
             
         }
     }, []);
-    const loadMaritalStatus = useCallback(async () => {
-        try {
-            const response = await axios.get(`${baseUrl}application-codesets/v2/MARITAL_STATUS`, { headers: {"Authorization" : `Bearer ${token}`} });
-            setMaritalStatusOptions(response.data);
-        } catch (e) {
-        }
-    }, []);
-    const loadEducation = useCallback(async () => {
-        try {
-            const response = await axios.get(`${baseUrl}application-codesets/v2/EDUCATION`, { headers: {"Authorization" : `Bearer ${token}`} });
-            setEducationOptions(response.data);
-        } catch (e) {
-
-        }
-    }, []);
-    const loadOccupation = useCallback(async () => {
-        try {
-            const response = await axios.get(`${baseUrl}application-codesets/v2/OCCUPATION`, { headers: {"Authorization" : `Bearer ${token}`} });
-            setOccupationOptions(response.data);
-        } catch (e) {
-
-        }
-    }, []);
-    const loadRelationships = useCallback(async () => {
-      try {
-          const response = await axios.get(`${baseUrl}application-codesets/v2/RELATIONSHIP`, { headers: {"Authorization" : `Bearer ${token}`} });
-          setRelationshipOptions(response.data);
-      } catch (e) {
-      }
-    }, []);
-    const loadTopLevelCountry = useCallback(async () => {
-        const response = await axios.get(`${baseUrl}organisation-units/parent-organisation-units/0`, { headers: {"Authorization" : `Bearer ${token}`} });
-        settopLevelUnitCountryOptions(response.data);
-    }, []);
-
-    //Country List
-      const GetCountry =()=>{
-        axios
-        .get(`${baseUrl}organisation-units/parent-organisation-units/0`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setCountries(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });        
-    }
-     //Get States from selected country
-     const getStates = e => {
-        const getCountryId =e.target.value;
-
-            setStateByCountryId(getCountryId); 
-            setBasicInfo({ ...basicInfo, countryId: getCountryId });
-    };
-    //Get list of State
-    function setStateByCountryId(getCountryId) {
-        axios
-        .get(`${baseUrl}organisation-units/parent-organisation-units/${getCountryId}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setStates(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });  
-    }
     //Calculate Date of birth 
     const calculate_age = dob => {
         var today = new Date();
@@ -397,45 +240,6 @@ const UserRegistration = (props) => {
                 return age_now ;
     };
      //fetch province
-
-    function getProvincesId(getStateId) {
-        axios
-        .get(`${baseUrl}organisation-units/parent-organisation-units/${getStateId}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setProvinces(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });  
-    }
-    //Date of Birth and Age handle 
-    const handleDobChange = (e) => {
-        if (e.target.value) {
-            const today = new Date();
-            const birthDate = new Date(e.target.value);
-            let age_now = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            // if(m<18){
-            //     toast.error("The child is less than 18months",  {position: toast.POSITION.TOP_RIGHT})
-            //     setDisabledAgeBaseOnAge(true)
-            // }else{
-            //     setDisabledAgeBaseOnAge(false)
-            // }
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age_now--;
-            }
-            basicInfo.age=age_now
-            //setBasicInfo({...basicInfo, age: age_now});        
-        } else {
-            setBasicInfo({...basicInfo, age:  ""});
-        }
-        setBasicInfo({...basicInfo, dob: e.target.value});
-        if(basicInfo.age!=='' && basicInfo.age>=60){
-            toggle()
-        }
-    }
     const handleDateOfBirthChange = (e) => {
         if (e.target.value == "Actual") {
             setAgeDisabled(true);
@@ -481,16 +285,7 @@ const UserRegistration = (props) => {
             // temp.countryId = basicInfo.countryId ? "" : "Country is required."    
             // temp.stateId = basicInfo.stateId ? "" : "State is required."  
             // temp.district = basicInfo.district ? "" : "Province/LGA is required." 
-            //HIV FORM VALIDATION
-            temp.targetGroupId = objValues.targetGroupId ? "" : "Target group is required."
-            temp.dateConfirmedHiv = objValues.dateConfirmedHiv ? "" : "date confirm HIV is required."
-            temp.sourceOfReferrer = objValues.sourceOfReferrer ? "" : "Source of referrer is required."
-            temp.enrollmentSettingId = objValues.enrollmentSettingId ? "" : "Enrollment Setting Number  is required."
-            temp.tbStatusId = objValues.tbStatusId ? "" : "TB status is required."    
-            temp.statusAtRegistrationId = objValues.statusAtRegistrationId ? "" : "Status at Registration is required."  
-            temp.entryPointId = objValues.entryPointId ? "" : "Care Entry Point is required." 
-            temp.dateOfRegistration = objValues.dateOfRegistration ? "" : "Date of Registration is required."  
-            temp.uniqueId = objValues.uniqueId ? "" : "Unique ID is required."
+
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -498,166 +293,9 @@ const UserRegistration = (props) => {
     //Handle Input Change for Basic Infor
     const handleInputChangeBasic = e => { 
         setErrors({...errors, [e.target.name]: ""})        
-        setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value}); 
-        //manupulate inpute fields base on gender/sex 
-        if(e.target.name==='sexId' && e.target.value==='Female') {
-            setfemaleStatus(true)
-        }
-        if(e.target.name==='firstName' && e.target.value!==''){
-            const name = alphabetOnly(e.target.value)
-            setBasicInfo ({...basicInfo,  [e.target.name]: name});
-        }
-        if(e.target.name==='lastName' && e.target.value!==''){
-            const name = alphabetOnly(e.target.value)
-            setBasicInfo ({...basicInfo,  [e.target.name]: name});
-        }
-        if(e.target.name==='middleName' && e.target.value!==''){
-            const name = alphabetOnly(e.target.value)
-            setBasicInfo ({...basicInfo,  [e.target.name]: name});
-        }
-        if(e.target.name==='ninNumber' && e.target.value!==''){
-
-            const ninNumberValue = checkNINLimit(e.target.value.replace(/\D/g, ''))
-            setBasicInfo ({...basicInfo,  [e.target.name]: ninNumberValue});
-        }
-                   
+        setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value});              
     } 
-    
-    const checkNINLimit=(e)=>{
-        const limit = 11;        
-        const acceptedNumber= e.slice(0, limit)
-        return  acceptedNumber   
-    }
-    //Function to show relatives 
-    const handleAddRelative = () => {
-        setShowRelative(true);
-    };
-    //Function to cancel the relatives form
-    const handleCancelSaveRelationship = () => {
-        setShowRelative(false);
-    }
 
-    /*****  Validation  Relationship Input*/
-    const validateRelatives = () => {
-        let temp = { ...errors }
-            temp.firstName = relatives.firstName ? "" : "First Name is required"
-            temp.lastName = relatives.lastName ? "" : "Last Name  is required."
-            temp.relationshipId = relatives.relationshipId ? "" : "Relationship Type is required."  
-                setErrors({ ...temp })
-        return Object.values(temp).every(x => x == "")
-    }
-    //Function to add relatives 
-    const handleSaveRelationship = (e) => {
-        if(validateRelatives()){
-            setContacts([...contacts, relatives])
-        }
-
-    }
-    const handleDeleteRelative = (index) => {
-        contacts.splice(index, 1);
-        setContacts([...contacts]);
-    };
-    const handleEditRelative = (relative, index) => {
-        setRelatives(relative)
-        setShowRelative(true);
-        contacts.splice(index, 1); 
-    };   
-    const getRelationship = (relationshipId) => {
-        const relationship = relationshipOptions.find(obj => obj.id == relationshipId);
-        return relationship ? relationship.display : '';
-    };
-    const handleInputChangeRelatives = e => {        
-        setRelatives ({...relatives,  [e.target.name]: e.target.value});               
-    }
-    
-    const alphabetOnly=(value)=>{
-        const result = value.replace(/[^a-z]/gi, '');
-        return result
-    }
-   
-    const CareEntryPoint =()=>{
-            axios
-                .get(`${baseUrl}application-codesets/v2/POINT_ENTRY`,
-                    { headers: {"Authorization" : `Bearer ${token}`} }
-                )
-                .then((response) => {
-                    //console.log(response.data);
-                    setCarePoints(response.data);
-                })
-                .catch((error) => {
-                //console.log(error);
-                });            
-    }
-    //Get list of Source of Referral
-    const SourceReferral =()=>{
-            axios
-            .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                //console.log(response.data);
-                setSourceReferral(response.data);
-            })
-            .catch((error) => {
-            //console.log(error);
-            });        
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const HivStatus =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/HIV_STATUS_ENROL`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setHivStatus(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const EnrollmentSetting =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setEnrollSetting(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const TBStatus =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TB_STATUS`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setTbStatus(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of KP
-    const KP =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TARGET_GROUP`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setKP(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
     //Get list of KP
     const PregnancyStatus =()=>{
         axios
@@ -674,40 +312,11 @@ const UserRegistration = (props) => {
     }
     const handleInputChange = e => { 
         setErrors({...errors, [e.target.name]: ""})       
-        setObjValues ({...objValues,  [e.target.name]: e.target.value});
-        if(e.target.name ==="entryPointId" ){
-            if(e.target.value==="21"){
-                setTransferIn(true)
-            }else{
-                setTransferIn(false)
-            }
-        }  
-        // if(e.target.name ==="pregnancyStatusId" ){
-        //     if(e.target.value==="72"){
-        //         setTransferIn(true)
-        //     }else{
-        //         setTransferIn(false)
-        //     }
-        // }                
+        setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    
-    
-    const checkPhoneNumber=(e, inputName)=>{
-        const limit = 10;
-            setRelatives({...relatives,  [inputName]: e.slice(0, limit)});     
-    }
-    const checkPhoneNumberBasic=(e, inputName)=>{
-        const limit = 10;
-        setErrors({...errors, [inputName]: ""})    
-            setBasicInfo({...basicInfo,  [inputName]: e.slice(0, limit)});     
-    } 
+
     //Handle CheckBox 
-    const handleCheckBox =e =>{
-        if(e.target.checked){
-            setOvcEnrolled(true)
-        }else{
-            setOvcEnrolled(false)
-        }
-    }
+
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
@@ -717,8 +326,9 @@ const UserRegistration = (props) => {
          if(validate()){
             try {
 
-                objValues.personId = patientId;
-                const response = await axios.post(`${baseUrl}hiv/enrollment`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
+                objValues.person_uuid = patientObj.uuid;
+                console.log(objValues)
+                const response = await axios.post(`${baseUrl}pmtct/anc/anc-enrollement`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
             } catch (error) {                
@@ -737,7 +347,7 @@ const UserRegistration = (props) => {
         }
 
     }
-
+console.log(errors)
     return (
         <>
         <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>

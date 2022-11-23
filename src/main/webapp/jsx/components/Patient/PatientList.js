@@ -115,10 +115,9 @@ const Patients = (props) => {
         async function patients() {
             setLoading(true)
             axios
-                .get(`${baseUrl}pmtct/anc/pmtct-from-person`,
+                .get(`${baseUrl}pmtct/pmtct-from-person`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
                 )
-
                 .then((response) => {
                     setLoading(false)
                     setPatientList(response.data);
@@ -204,7 +203,7 @@ const Patients = (props) => {
                                     actions:<div>
                                             <Link
                                                 to={{
-                                                    pathname: "/patient-history",
+                                                    pathname: "/enroll-patient",
                                                     state: { patientId : row.id, patientObj: row }
                                                 }}
                                             >

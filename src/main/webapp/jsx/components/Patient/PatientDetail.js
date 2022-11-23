@@ -58,7 +58,7 @@ function PatientCard(props) {
     const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"create", obj:{}});
     const { classes } = props;
     const patientObj = history.location && history.location.state ? history.location.state.patientObj : {}
-    
+    console.log(patientObj)
   return (
     <div className={classes.root}>
       <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>

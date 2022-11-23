@@ -10,6 +10,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
+import moment from "moment";
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -174,6 +175,7 @@ const LabourDelivery = (props) => {
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.dateOfDelivery} 
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
                             </InputGroup>
