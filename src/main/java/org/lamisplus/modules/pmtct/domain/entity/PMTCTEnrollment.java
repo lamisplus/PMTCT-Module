@@ -40,6 +40,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String viralLoadSample;
     private LocalDate viralLoadSampleDate;
 
+
     @Override
     public boolean isNew() {
         return false;

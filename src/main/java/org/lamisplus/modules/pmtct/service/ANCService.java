@@ -22,7 +22,9 @@ import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,8 @@ public class ANCService {
     private final ApplicationCodesetRepository applicationCodesetRepository;
     private final OrganisationUnitRepository organisationUnitRepository;
     private final EncounterRepository encounterRepository;
+    private final PMTCTEnrollmentService pmtctEnrollmentService;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
 
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
@@ -303,12 +307,11 @@ public class ANCService {
 
         }
 
-        List <Person>  personList = persons.getContent();
+        List<Person> personList = persons.getContent();
         ArrayList<PersonResponseDto> personResponseDtos = new ArrayList<>();
         personList.forEach(person -> {
-            if(!(this.activeOnANC(person.getUuid())))
-            {
-                PersonResponseDto personResponseDto =  getDtoFromPerson(person);
+            if (!(this.activeOnANC(person.getUuid()))) {
+                PersonResponseDto personResponseDto = getDtoFromPerson(person);
                 personResponseDtos.add(personResponseDto);
             }
 
@@ -316,7 +319,7 @@ public class ANCService {
 
         PageDTO pageDTO = personService.generatePagination(persons);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(pageDTO.getTotalRecords());
+        personMetaDataDto.setTotalRecords(personResponseDtos.size());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
@@ -345,13 +348,21 @@ public class ANCService {
         } else {
             persons = personRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
         }
+        List<Person> personList = persons.getContent();
+        ArrayList<ANCRespondDto> ancResponseDtos = new ArrayList<>();
+        personList.forEach(person -> {
+            ANCRespondDto ancResponseDto = getANCRespondDtoFromPerson(person);
+            ancResponseDtos.add(ancResponseDto);
+        });
+
         PageDTO pageDTO = personService.generatePagination(persons);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(pageDTO.getTotalRecords());
+        personMetaDataDto.setTotalRecords(ancResponseDtos.size());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
-        personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
+        personMetaDataDto.setRecords(ancResponseDtos);
+        //personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
         return personMetaDataDto;
         //return checkedInPeople;
     }
@@ -412,14 +423,14 @@ public class ANCService {
         personResponseDto.setDeceasedDateTime(person.getDeceasedDateTime());
         personResponseDto.setOrganization(person.getOrganization());
         personResponseDto.setUuid(person.getUuid());
-        personResponseDto.setAncNo(this.myRecentAncNo(person.getUuid()));
+        //personResponseDto.setAncNo(this.myRecentAncNo(person.getUuid()));
         //personResponseDto.setBiometricStatus(getPatientBiometricStatus(person.getUuid()));
 
 
         return personResponseDto;
     }
-    public String myRecentAncNo (String personUuid)
-    {
+
+    public String myRecentAncNo(String personUuid) {
         String ancNo = "";
         Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
         if (ancs.isPresent()) {
@@ -430,7 +441,7 @@ public class ANCService {
         return ancNo;
     }
 
-    public boolean activeOnANC(String personUuid){
+    public boolean activeOnANC(String personUuid) {
         boolean ancNo = false;
         Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
         if (ancs.isPresent()) {
@@ -726,6 +737,59 @@ public class ANCService {
             }
         }
         return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
+    }
+
+    public ANCRespondDto getANCRespondDtoFromPerson(Person person) {
+        ANCRespondDto ancRespondDto = new ANCRespondDto();
+        String ancNo = "";
+        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getUuid(), 0L);
+        if (ancs.isPresent()) {
+            ANC anc = ancs.get();
+            ancNo = anc.getAncNo();
+            ancRespondDto.setId(anc.getId());
+            ancRespondDto.setAncNo(anc.getAncNo());
+            ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
+            ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
+            ancRespondDto.setAncUuid(anc.getUuid());
+            ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
+            ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
+            ancRespondDto.setGravida(anc.getGravida());
+            ancRespondDto.setParity(anc.getParity());
+            ancRespondDto.setLMP(anc.getLMP());
+            ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
+            ancRespondDto.setGAWeeks(anc.getGAWeeks());
+            ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
+            ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+            ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
+            ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
+        }
+        ancRespondDto.setPerson_uuid(person.getUuid());
+        ancRespondDto.setAddress(person.getAddress());
+        ancRespondDto.setHivStatus(this.getHivStatus(person.getUuid()));
+        if (activeOnPMTCT(ancNo)) {
+            PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancNo);
+            ancRespondDto.setPmtctRegStatus(true);
+            ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
+        } else {
+            ancRespondDto.setPmtctRegStatus(false);
+        }
+        return ancRespondDto;
+    }
+
+    String getHivStatus(String uuid) {
+        String status = "Positive";
+        return status;
+    }
+
+    public boolean activeOnPMTCT(String ancNo) {
+        boolean active = false;
+        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByAncNo(ancNo);//.findANCByPersonUuidAndArchived(personUuid, 0L);
+        if (pmtctEnrollment.isPresent()) {
+            active = true;
+        } else {
+            active = false;
+        }
+        return active;
     }
 
 }

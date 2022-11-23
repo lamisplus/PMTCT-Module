@@ -70,32 +70,33 @@ public class PMTCTEnrollmentService {
   
   public PMTCTEnrollmentRespondDto convertEntitytoRespondDto(PMTCTEnrollment pmtctEnrollment) {
        PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = new PMTCTEnrollmentRespondDto();
-     pmtctEnrollmentRespondDto.setId(pmtctEnrollment.getId());
-     pmtctEnrollmentRespondDto.setAncNo(pmtctEnrollment.getAncNo());
-     pmtctEnrollmentRespondDto.setGAWeeks(pmtctEnrollment.getGAWeeks());
-      pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
-      pmtctEnrollmentRespondDto.setPmtctEnrollmentDate(pmtctEnrollment.getPmtctEnrollmentDate());
-      pmtctEnrollmentRespondDto.setSystolic(pmtctEnrollment.getSystolic());
-     pmtctEnrollmentRespondDto.setDiastolic(pmtctEnrollment.getDiastolic());
-      pmtctEnrollmentRespondDto.setBodyWeight(pmtctEnrollment.getBodyWeight());
-      pmtctEnrollmentRespondDto.setFundalHeight(pmtctEnrollment.getFundalHeight());
-      pmtctEnrollmentRespondDto.setFetalPresentation(pmtctEnrollment.getFetalPresentation());
-     pmtctEnrollmentRespondDto.setVisitStatus(pmtctEnrollment.getVisitStatus());
-      pmtctEnrollmentRespondDto.setVisitType(pmtctEnrollment.getVisitType());
-     pmtctEnrollmentRespondDto.setTbStatus(pmtctEnrollment.getTbStatus());
-      pmtctEnrollmentRespondDto.setNextAppointmentDate(pmtctEnrollment.getNextAppointmentDate());
-      pmtctEnrollmentRespondDto.setNutritionalSupport(pmtctEnrollment.getNutritionalSupport());
-       pmtctEnrollmentRespondDto.setInfantFeeding(pmtctEnrollment.getInfantFeeding());
-      pmtctEnrollmentRespondDto.setFpl(pmtctEnrollment.getFpl());
-     pmtctEnrollmentRespondDto.setReferredTo(pmtctEnrollment.getReferredTo());
-      pmtctEnrollmentRespondDto.setAgreed2PartnerNotification(pmtctEnrollment.getAgreed2PartnerNotification());
-     pmtctEnrollmentRespondDto.setViralLoadSample(pmtctEnrollment.getViralLoadSample());
-       pmtctEnrollmentRespondDto.setViralLoadSampleDate(pmtctEnrollment.getViralLoadSampleDate());
-     pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
-      pmtctEnrollmentRespondDto.setFullName(getFullName(pmtctEnrollment.getHospitalNumber()));
-      pmtctEnrollmentRespondDto.setAge(calculateAge(pmtctEnrollment.getHospitalNumber()));
-     pmtctEnrollmentRespondDto.setUuid(pmtctEnrollment.getUuid());
-    
+       if(pmtctEnrollment != null) {
+           pmtctEnrollmentRespondDto.setId(pmtctEnrollment.getId());
+           pmtctEnrollmentRespondDto.setAncNo(pmtctEnrollment.getAncNo());
+           pmtctEnrollmentRespondDto.setGAWeeks(pmtctEnrollment.getGAWeeks());
+           pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
+           pmtctEnrollmentRespondDto.setPmtctEnrollmentDate(pmtctEnrollment.getPmtctEnrollmentDate());
+           pmtctEnrollmentRespondDto.setSystolic(pmtctEnrollment.getSystolic());
+           pmtctEnrollmentRespondDto.setDiastolic(pmtctEnrollment.getDiastolic());
+           pmtctEnrollmentRespondDto.setBodyWeight(pmtctEnrollment.getBodyWeight());
+           pmtctEnrollmentRespondDto.setFundalHeight(pmtctEnrollment.getFundalHeight());
+           pmtctEnrollmentRespondDto.setFetalPresentation(pmtctEnrollment.getFetalPresentation());
+           pmtctEnrollmentRespondDto.setVisitStatus(pmtctEnrollment.getVisitStatus());
+           pmtctEnrollmentRespondDto.setVisitType(pmtctEnrollment.getVisitType());
+           pmtctEnrollmentRespondDto.setTbStatus(pmtctEnrollment.getTbStatus());
+           pmtctEnrollmentRespondDto.setNextAppointmentDate(pmtctEnrollment.getNextAppointmentDate());
+           pmtctEnrollmentRespondDto.setNutritionalSupport(pmtctEnrollment.getNutritionalSupport());
+           pmtctEnrollmentRespondDto.setInfantFeeding(pmtctEnrollment.getInfantFeeding());
+           pmtctEnrollmentRespondDto.setFpl(pmtctEnrollment.getFpl());
+           pmtctEnrollmentRespondDto.setReferredTo(pmtctEnrollment.getReferredTo());
+           pmtctEnrollmentRespondDto.setAgreed2PartnerNotification(pmtctEnrollment.getAgreed2PartnerNotification());
+           pmtctEnrollmentRespondDto.setViralLoadSample(pmtctEnrollment.getViralLoadSample());
+           pmtctEnrollmentRespondDto.setViralLoadSampleDate(pmtctEnrollment.getViralLoadSampleDate());
+           pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
+           pmtctEnrollmentRespondDto.setFullName(getFullName(pmtctEnrollment.getHospitalNumber()));
+           pmtctEnrollmentRespondDto.setAge(calculateAge(pmtctEnrollment.getHospitalNumber()));
+           pmtctEnrollmentRespondDto.setUuid(pmtctEnrollment.getUuid());
+       }
      return pmtctEnrollmentRespondDto;
   }
   
@@ -150,5 +151,10 @@ public class PMTCTEnrollmentService {
     public PMTCTEnrollment getSinglePmtctEnrollment(Long id) {
         return this.pmtctEnrollmentReporsitory.findById(id)
                 .orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
+    }
+    @SneakyThrows
+    public PMTCTEnrollmentRespondDto getSinglePmtctEnrollmentByAncNo(String ancNo) {
+        return convertEntitytoRespondDto(this.pmtctEnrollmentReporsitory.findByAncNo(ancNo));
+                //.orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
     }
 }
