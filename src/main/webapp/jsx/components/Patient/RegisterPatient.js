@@ -206,6 +206,7 @@ const UserRegistration = (props) => {
     const locationState = location.state;
     let patientId = null;
     patientId = locationState ? locationState.patientId : null;
+    let temp = { ...errors }
 
     useEffect(() => { 
         loadGenders();
@@ -383,7 +384,8 @@ const UserRegistration = (props) => {
     }
     //End of Date of Birth and Age handling 
     //Handle Input Change for Basic Infor
-    const handleInputChangeBasic = e => {        
+    const handleInputChangeBasic = e => {  
+        setErrors({...temp, [e.target.name]:""})      
         setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value}); 
         //manupulate inpute fields base on gender/sex 
         if(e.target.name==='sexId' && e.target.value==='377') {
@@ -479,7 +481,7 @@ const UserRegistration = (props) => {
     }
     /*****  Validation  */
     const validate = () => {
-        let temp = { ...errors }
+        
             temp.firstName = basicInfo.firstName ? "" : "First Name is required"
             temp.hospitalNumber = basicInfo.hospitalNumber ? "" : "Hospital Number  is required."
             //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
@@ -493,16 +495,16 @@ const UserRegistration = (props) => {
             temp.countryId = basicInfo.countryId ? "" : "Country is required."    
             temp.stateId = basicInfo.stateId ? "" : "State is required."  
             temp.district = basicInfo.district ? "" : "Province/LGA is required." 
-            //HIV FORM VALIDATION
-            // temp.targetGroupId = objValues.targetGroupId ? "" : "Target group is required."
-            // {objValues.statusAtRegistrationId!=='55' &&( temp.dateConfirmedHiv = objValues.dateConfirmedHiv ? "" : "date confirm HIV is required.")}
-            // temp.sourceOfReferrerId = objValues.sourceOfReferrerId ? "" : "Source of referrer is required."
-            // temp.enrollmentSettingId = objValues.enrollmentSettingId ? "" : "Enrollment Setting Number  is required."
-            // temp.tbStatusId = objValues.tbStatusId ? "" : "TB status is required."    
-            // temp.statusAtRegistrationId = objValues.statusAtRegistrationId ? "" : "Status at Registration is required."  
-            // temp.entryPointId = objValues.entryPointId ? "" : "Care Entry Point is required." 
-            // temp.dateOfRegistration = objValues.dateOfRegistration ? "" : "Date of Registration is required."  
-            // temp.uniqueId = objValues.uniqueId ? "" : "Unique ID is required."
+            //ANC FORM VALIDATION
+            temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
+            temp.gravida = objValues.gravida ? "" : "This field is required"
+            temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
+            temp.lmp = objValues.lmp ? "" : "This field is required"
+            temp.parity = objValues.parity ? "" : "This field is required"
+            temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
+            temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
+            temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
+            temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -719,7 +721,8 @@ const UserRegistration = (props) => {
         //console.log(error);
         });    
     }
-    const handleInputChange = e => {        
+    const handleInputChange = e => {  
+        setErrors({...temp, [e.target.name]:""})        
         setObjValues ({...objValues,  [e.target.name]: e.target.value});          
     }      
     const checkPhoneNumber=(e, inputName)=>{
@@ -1527,7 +1530,9 @@ const UserRegistration = (props) => {
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.ancNo !=="" ? (
+                                                    <span className={classes.error}>{errors.ancNo}</span>
+                                            ) : "" }           
                                             </FormGroup>
                                     </div>
                                     
@@ -1536,7 +1541,7 @@ const UserRegistration = (props) => {
                                             <Label >Gravida</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="gravida"
                                                     id="gravida"
                                                     onChange={handleInputChange}
@@ -1544,7 +1549,9 @@ const UserRegistration = (props) => {
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.gravida !=="" ? (
+                                                    <span className={classes.error}>{errors.gravida}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -1552,7 +1559,7 @@ const UserRegistration = (props) => {
                                             <Label >Parity</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="parity"
                                                     id="parity"
                                                     onChange={handleInputChange}
@@ -1560,7 +1567,9 @@ const UserRegistration = (props) => {
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.parity !=="" ? (
+                                                    <span className={classes.error}>{errors.parity}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -1573,10 +1582,13 @@ const UserRegistration = (props) => {
                                                     id="lmp"
                                                     onChange={handleInputChange}
                                                     value={objValues.lmp} 
+                                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.lmp !=="" ? (
+                                                    <span className={classes.error}>{errors.lmp}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                    
@@ -1585,7 +1597,7 @@ const UserRegistration = (props) => {
                                             <Label >Gestational Age (Weeks)</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="gaweeks"
                                                     id="gaweeks"
                                                     onChange={handleInputChange}
@@ -1593,7 +1605,9 @@ const UserRegistration = (props) => {
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.gaweeks !=="" ? (
+                                                    <span className={classes.error}>{errors.gaweeks}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     
@@ -1603,14 +1617,16 @@ const UserRegistration = (props) => {
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
+                                                    name="sourceOfReferral"
+                                                    id="sourceOfReferral"
                                                     onChange={handleInputChange}
-                                                    value={objValues.encounterDate} 
+                                                    value={objValues.sourceOfReferral} 
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.sourceOfReferral !=="" ? (
+                                                    <span className={classes.error}>{errors.sourceOfReferral}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>                                
                                     <div className="form-group mb-3 col-md-6">
@@ -1628,7 +1644,10 @@ const UserRegistration = (props) => {
                                                     <option value="Positive" >Positive</option>
                                                     <option value="Negative" >Negative</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.testedSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.testedSyphilis}</span>
+                                            ) : "" }                                       
                                             </FormGroup>
                                     </div>
                                 
@@ -1647,7 +1666,10 @@ const UserRegistration = (props) => {
                                                     <option value="Positive" >Positive</option>
                                                     <option value="Negative" >Negative</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.testResultSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.testResultSyphilis}</span>
+                                            ) : "" }                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -1665,7 +1687,10 @@ const UserRegistration = (props) => {
                                                     <option value="Yes" >Yes</option>
                                                     <option value="No" >No</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.treatedSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.treatedSyphilis}</span>
+                                            ) : "" }                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -1683,7 +1708,10 @@ const UserRegistration = (props) => {
                                                     <option value="Yes" >Yes</option>
                                                     <option value="No" >No</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup>
+                                            {errors.referredSyphilisTreatment !=="" ? (
+                                                    <span className={classes.error}>{errors.referredSyphilisTreatment}</span>
+                                            ) : "" }                                         
                                             </FormGroup>
                                     </div>
                                    

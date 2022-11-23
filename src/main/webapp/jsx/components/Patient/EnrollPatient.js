@@ -24,6 +24,7 @@ import {  Modal } from "react-bootstrap";
 
 
 
+
 library.add(faCheckSquare, faCoffee, faEdit, faTrash);
 
 const useStyles = makeStyles((theme) => ({
@@ -154,7 +155,8 @@ const UserRegistration = (props) => {
             personDto:{},
             pmtctHtsInfo:{},
             syphilisInfo:{},
-            partnerNotification:{}
+            partnerNotification:{},
+            sourceOfReferral:""
     });
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
@@ -239,14 +241,7 @@ const UserRegistration = (props) => {
                 }
                 return age_now ;
     };
-     //fetch province
-    const handleDateOfBirthChange = (e) => {
-        if (e.target.value == "Actual") {
-            setAgeDisabled(true);
-        } else if (e.target.value == "Estimated") {
-            setAgeDisabled(false);
-        }
-    }
+
     const handleAgeChange = (e) => {
         const ageNumber = e.target.value.replace(/\D/g, '')
         if (!ageDisabled && ageNumber) {
@@ -273,25 +268,22 @@ const UserRegistration = (props) => {
      /*****  Validation  */
      const validate = () => {
         let temp = { ...errors }
-            // temp.firstName = basicInfo.firstName ? "" : "First Name is required"
-            // temp.hospitalNumber = basicInfo.hospitalNumber ? "" : "Hospital Number  is required."
-
-            // temp.lastName = basicInfo.lastName ? "" : "Last Name  is required."
-            // temp.sexId = basicInfo.sexId ? "" : "Sex is required."
-            // temp.dateOfRegistration1 = basicInfo.dateOfRegistration ? "" : "Date of Registration is required."
-            // temp.educationId = basicInfo.educationId ? "" : "Education is required."
-            // temp.address = basicInfo.address ? "" : "Address is required."
-            // temp.phoneNumber = basicInfo.phoneNumber ? "" : "Phone Number  is required."
-            // temp.countryId = basicInfo.countryId ? "" : "Country is required."    
-            // temp.stateId = basicInfo.stateId ? "" : "State is required."  
-            // temp.district = basicInfo.district ? "" : "Province/LGA is required." 
-
+            temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
+            temp.gravida = objValues.gravida ? "" : "This field is required"
+            temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
+            temp.lmp = objValues.lmp ? "" : "This field is required"
+            temp.parity = objValues.parity ? "" : "This field is required"
+            temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
+            temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
+            temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
+            temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
     }
     //Handle Input Change for Basic Infor
     const handleInputChangeBasic = e => { 
+        
         setErrors({...errors, [e.target.name]: ""})        
         setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value});              
     } 
@@ -452,11 +444,10 @@ console.log(errors)
                                         </div>                                     
                                     </div>
                                 </div>
-                            {/* </div> */}
-
+                           
                             </div>
 
-                            {/* Adding HIV ENROLLEMENT FORM HERE */}
+                            {/* Adding  ENROLLEMENT FORM HERE */}
                             <div className="card">
                             <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder', borderRadius:"0.2rem"}}>
                                 <h5 className="card-title"  style={{color:'#fff'}}>ANC  Enrollment</h5>
@@ -477,7 +468,9 @@ console.log(errors)
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.ancNo !=="" ? (
+                                                    <span className={classes.error}>{errors.ancNo}</span>
+                                            ) : "" }           
                                             </FormGroup>
                                     </div>
                                     
@@ -486,7 +479,7 @@ console.log(errors)
                                             <Label >Gravida</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="gravida"
                                                     id="gravida"
                                                     onChange={handleInputChange}
@@ -494,7 +487,9 @@ console.log(errors)
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.gravida !=="" ? (
+                                                    <span className={classes.error}>{errors.gravida}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -502,7 +497,7 @@ console.log(errors)
                                             <Label >Parity</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="parity"
                                                     id="parity"
                                                     onChange={handleInputChange}
@@ -510,7 +505,9 @@ console.log(errors)
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.parity !=="" ? (
+                                                    <span className={classes.error}>{errors.parity}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -523,10 +520,13 @@ console.log(errors)
                                                     id="lmp"
                                                     onChange={handleInputChange}
                                                     value={objValues.lmp} 
+                                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.lmp !=="" ? (
+                                                    <span className={classes.error}>{errors.lmp}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                    
@@ -535,7 +535,7 @@ console.log(errors)
                                             <Label >Gestational Age (Weeks)</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="number"
                                                     name="gaweeks"
                                                     id="gaweeks"
                                                     onChange={handleInputChange}
@@ -543,7 +543,9 @@ console.log(errors)
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.gaweeks !=="" ? (
+                                                    <span className={classes.error}>{errors.gaweeks}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                     
@@ -553,14 +555,16 @@ console.log(errors)
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
-                                                    name="encounterDate"
-                                                    id="encounterDate"
+                                                    name="sourceOfReferral"
+                                                    id="sourceOfReferral"
                                                     onChange={handleInputChange}
-                                                    value={objValues.encounterDate} 
+                                                    value={objValues.sourceOfReferral} 
                                                 />
 
                                             </InputGroup>
-                                        
+                                            {errors.sourceOfReferral !=="" ? (
+                                                    <span className={classes.error}>{errors.sourceOfReferral}</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>                                
                                     <div className="form-group mb-3 col-md-6">
@@ -578,7 +582,10 @@ console.log(errors)
                                                     <option value="Positive" >Positive</option>
                                                     <option value="Negative" >Negative</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.testedSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.testedSyphilis}</span>
+                                            ) : "" }                                       
                                             </FormGroup>
                                     </div>
                                 
@@ -597,7 +604,10 @@ console.log(errors)
                                                     <option value="Positive" >Positive</option>
                                                     <option value="Negative" >Negative</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.testResultSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.testResultSyphilis}</span>
+                                            ) : "" }                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -615,7 +625,10 @@ console.log(errors)
                                                     <option value="Yes" >Yes</option>
                                                     <option value="No" >No</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup> 
+                                            {errors.treatedSyphilis !=="" ? (
+                                                    <span className={classes.error}>{errors.treatedSyphilis}</span>
+                                            ) : "" }                                        
                                             </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
@@ -633,7 +646,10 @@ console.log(errors)
                                                     <option value="Yes" >Yes</option>
                                                     <option value="No" >No</option>
                                                 </Input>
-                                            </InputGroup>                                        
+                                            </InputGroup>
+                                            {errors.referredSyphilisTreatment !=="" ? (
+                                                    <span className={classes.error}>{errors.referredSyphilisTreatment}</span>
+                                            ) : "" }                                         
                                             </FormGroup>
                                     </div>
                                    
