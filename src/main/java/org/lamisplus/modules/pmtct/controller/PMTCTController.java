@@ -106,10 +106,10 @@ public class PMTCTController {
 //        return ResponseEntity.ok(this.pmtctEnrollmentService.getAllPmtctEnrollment());
 //    }
 //
-//    @PostMapping(value = "/pmtct-visit")
-//    public PmtctVisitResponseDto pmtctVisit(@RequestBody PmtctVisitRequestDto pmtctVisitRequestDto) {
-//        return this.pmtctVisitService.save(pmtctVisitRequestDto);
-//    }
+    @PostMapping(value = "/pmtct-visit")
+    public PmtctVisitResponseDto pmtctVisit(@RequestBody PmtctVisitRequestDto pmtctVisitRequestDto) {
+        return this.pmtctVisitService.save(pmtctVisitRequestDto);
+    }
 //
 //    @GetMapping(value = "/get-all-pmtct-visit")
 //    public ResponseEntity<List<PmtctVisitResponseDto>> getAllPmtctVisit() {

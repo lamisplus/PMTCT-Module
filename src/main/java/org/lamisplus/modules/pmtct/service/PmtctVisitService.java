@@ -1,4 +1,5 @@
 package org.lamisplus.modules.pmtct.service;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -29,12 +30,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class PmtctVisitService
-{
+public class PmtctVisitService {
     private final ANCRepository ancRepository;
     private final PersonRepository personRepository;
     private final PmtctVisitRepository pmtctVisitRepository;
 
+    private final ANCService ancService;
     private final UserService userService;
     ObjectMapper mapper = new ObjectMapper();
 
@@ -45,39 +46,62 @@ public class PmtctVisitService
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
-        pmtctVisit.setDiastolic(pmtctVisitRequestDto.getDiastolic());
-        pmtctVisit.setBodyWeight(pmtctVisitRequestDto.getBodyWeight());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
-        pmtctVisit.setSystolic(pmtctVisitRequestDto.getSystolic());
-        pmtctVisit.setPulse(pmtctVisitRequestDto.getPulse());
-        pmtctVisit.setRespiratoryRate(pmtctVisitRequestDto.getRespiratoryRate());
-        pmtctVisit.setTemperature(pmtctVisitRequestDto.getTemperature());
-        pmtctVisit.setHeight(pmtctVisitRequestDto.getHeight());
-        pmtctVisit.setClinicalNotes(pmtctVisitRequestDto.getClinicalNotes());
-        pmtctVisit.setWhoStaging(pmtctVisitRequestDto.getWhoStaging());
-        pmtctVisit.setFunctionalStatus(pmtctVisitRequestDto.getFunctionalStatus());
-        List<Adr> ardList = pmtctVisitRequestDto.getAdr();
-        List<OpportunisticInfection> opportunisticInfectionList = pmtctVisitRequestDto.getOpportunisticInfection();
-        if (ardList != null && !ardList.isEmpty()) {
-            ArrayNode ardArrayNode = mapper.valueToTree(ardList);
-            JsonNode ardJsonNode = mapper.createObjectNode().set("ard", ardArrayNode);
-            pmtctVisit.setAdr(ardJsonNode);
-        }
-        if (opportunisticInfectionList != null && !opportunisticInfectionList.isEmpty()) {
-            ArrayNode opportunisticInfectionArrayNode = mapper.valueToTree(opportunisticInfectionList);
-            JsonNode opportunisticInfectionJsonNode = mapper.createObjectNode().set("opportunisticInfection", opportunisticInfectionArrayNode);
-            pmtctVisit.setOpportunisticInfection(opportunisticInfectionJsonNode);
-        }
-        
         pmtctVisit.setUuid(UUID.randomUUID().toString());
-        ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctVisitRequestDto.getAncNo(), Long.valueOf(0L));
-        if (anc != null)
-        { 
-            pmtctVisit.setHospitalNumber(anc.getHospitalNumber());
-            pmtctVisit.setFacilityId(anc.getFacilityId()); }
-        else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
+        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
+        pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
+        pmtctVisit.setDateOfViralLoad32(pmtctVisitRequestDto.getDateOfViralLoad32());
+        pmtctVisit.setGaOfViralLoad32(pmtctVisitRequestDto.getGaOfViralLoad32());
+        pmtctVisit.setResultOfViralLoad32(pmtctVisitRequestDto.getResultOfViralLoad32());
 
-        return (PmtctVisit)this.pmtctVisitRepository.save(pmtctVisit);
+        pmtctVisit.setDateOfViralLoadOt(pmtctVisitRequestDto.getDateOfViralLoadOt());
+        pmtctVisit.setGaOfViralLoadOt(pmtctVisitRequestDto.getGaOfViralLoadOt());
+        pmtctVisit.setResultOfViralLoadOt(pmtctVisitRequestDto.getResultOfViralLoadOt());
+
+        pmtctVisit.setDsd(pmtctVisitRequestDto.isDsd());
+
+        pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
+        pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
+        pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
+        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
+        pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
+        pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
+        pmtctVisit.setNextAppointmentDate(pmtctVisitRequestDto.getNextAppointmentDate());
+        String visitStatus = pmtctVisitRequestDto.getVisitStatus();
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = (User) currentUser.get();
+            Long facilityId = user.getCurrentOrganisationUnitId();
+            System.out.println("facilityId = "+facilityId);
+            System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
+            if (persons.isPresent()) {
+                Person person = persons.get();
+                pmtctVisit.setHospitalNumber(person.getHospitalNumber());
+                pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                //System.out.println("visitStatus = " + visitStatus);
+                if (visitStatus != null) {
+                    System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
+                    Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
+                    if(ancs.isPresent()) {
+                        ANC anc = ancs.get();
+                        if (!((visitStatus.equalsIgnoreCase("A")) || (visitStatus.equalsIgnoreCase("SB")) ||
+                                (visitStatus.equalsIgnoreCase("TI")))) {
+
+                            ancService.graduateFromANC(anc, visitStatus);
+                        } else {
+                            ancService.updateANC(anc, visitStatus);
+                        }
+                    }
+
+                }
+
+
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return this.pmtctVisitRepository.save(pmtctVisit);
     }
 
 
@@ -85,21 +109,47 @@ public class PmtctVisitService
         PmtctVisitResponseDto pmtctVisitResponseDto = new PmtctVisitResponseDto();
         pmtctVisitResponseDto.setId(pmtctVisit.getId());
         pmtctVisitResponseDto.setAncNo(pmtctVisit.getAncNo());
-        pmtctVisitResponseDto.setHospitalNumber(pmtctVisit.getHospitalNumber());
-        pmtctVisitResponseDto.setSystolic(pmtctVisit.getSystolic());
-        pmtctVisitResponseDto.setDiastolic(pmtctVisit.getDiastolic());
-        pmtctVisitResponseDto.setBodyWeight(pmtctVisit.getBodyWeight());
-        pmtctVisitResponseDto.setHospitalNumber(pmtctVisit.getHospitalNumber());
-        pmtctVisitResponseDto.setFullName(getFullName(pmtctVisit.getHospitalNumber()));
-        pmtctVisitResponseDto.setAge(calculateAge(pmtctVisit.getHospitalNumber()));
-        pmtctVisitResponseDto.setUuid(pmtctVisit.getUuid());
-        pmtctVisitResponseDto.setPulse(pmtctVisit.getPulse());
-        pmtctVisitResponseDto.setRespiratoryRate(pmtctVisit.getRespiratoryRate());
-        pmtctVisitResponseDto.setTemperature(pmtctVisit.getTemperature());
-        pmtctVisitResponseDto.setHeight(pmtctVisit.getHeight());
-        pmtctVisitResponseDto.setClinicalNotes(pmtctVisit.getClinicalNotes());
-        pmtctVisitResponseDto.setWhoStaging(pmtctVisit.getWhoStaging());
-        pmtctVisitResponseDto.setFunctionalStatus(pmtctVisit.getFunctionalStatus());
+        pmtctVisitResponseDto.setDateOfVisit(pmtctVisit.getDateOfVisit());
+        pmtctVisitResponseDto.setEnteryPoint(pmtctVisit.getEntryPoint());
+        pmtctVisitResponseDto.setFpCounseling(pmtctVisit.getFpCounseling());
+        pmtctVisitResponseDto.setFpMethod(pmtctVisit.getFpMethod());
+        pmtctVisitResponseDto.setDateOfViralLoad32(pmtctVisit.getDateOfViralLoad32());
+        pmtctVisitResponseDto.setGaOfViralLoad32(pmtctVisit.getGaOfViralLoad32());
+        pmtctVisitResponseDto.setResultOfViralLoad32(pmtctVisit.getResultOfViralLoad32());
+
+        pmtctVisitResponseDto.setDateOfViralLoadOt(pmtctVisit.getDateOfViralLoadOt());
+        pmtctVisitResponseDto.setGaOfViralLoadOt(pmtctVisit.getGaOfViralLoadOt());
+        pmtctVisitResponseDto.setResultOfViralLoadOt(pmtctVisit.getResultOfViralLoadOt());
+
+        pmtctVisitResponseDto.setDsd(pmtctVisit.isDsd());
+
+        pmtctVisitResponseDto.setDsdOption(pmtctVisit.getDsdOption());
+        pmtctVisitResponseDto.setDsdModel(pmtctVisit.getDsdModel());
+        pmtctVisitResponseDto.setMaternalOutcome(pmtctVisit.getMaternalOutcome());
+        pmtctVisitResponseDto.setDateOfmeternalOutcome(pmtctVisit.getDateOfMaternalOutcome());
+        pmtctVisitResponseDto.setVisitStatus(pmtctVisit.getVisitStatus());
+        pmtctVisitResponseDto.setTransferTo(pmtctVisit.getTransferTo());
+        pmtctVisitResponseDto.setNextAppointmentDate(pmtctVisit.getNextAppointmentDate());
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = (User) currentUser.get();
+            Long facilityId = user.getCurrentOrganisationUnitId();
+            System.out.println("facilityId = "+facilityId);
+            System.out.println("pmtctVisit.getPersonUuid() = "+pmtctVisit.getPersonUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisit.getPersonUuid(), facilityId, 0);
+            if (persons.isPresent()) {
+                System.out.println("Doc check me out here 1");
+                Person person = persons.get();
+                pmtctVisitResponseDto.setHospitalNumber(person.getHospitalNumber());
+                pmtctVisitResponseDto.setFullName(this.getFullName(pmtctVisit.getPersonUuid()));
+                pmtctVisitResponseDto.setSex(person.getSex());
+                pmtctVisitResponseDto.setAge(this.calculateAge(pmtctVisit.getPersonUuid()));
+                pmtctVisitResponseDto.setDateOfBirth(person.getDateOfBirth());
+                pmtctVisitResponseDto.setPersonUuid(person.getUuid());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
         return pmtctVisitResponseDto;
@@ -108,30 +158,33 @@ public class PmtctVisitService
     private String getFullName(String uuid) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Long facilityId = 0L;
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+        Long facilityId = user.getCurrentOrganisationUnitId();
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
 
         String fullName = "";
-        if (persons.isPresent())
-        { Person person = persons.get();
+        if (persons.isPresent()) {
+            Person person = persons.get();
             String fn = person.getFirstName();
             String sn = person.getSurname();
             String on = person.getOtherName();
             if (fn == null) fn = "";
             if (sn == null) sn = "";
             if (on == null) on = "";
-            fullName = sn + ", " + fn + " " + on; }
-        else { fullName = ""; }
+            fullName = sn + ", " + fn + " " + on;
+        } else {
+            fullName = "";
+        }
         return fullName;
     }
+
     public int calculateAge(String uuid) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Long facilityId = 0L;
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+        Long facilityId = user.getCurrentOrganisationUnitId();
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
 
         int age = 0;
-        System.out.println("HostpitalNumber in Age " + uuid);
+        //System.out.println("HostpitalNumber in Age " + uuid);
         if (persons.isPresent()) {
             Person person = persons.get();
             LocalDate dob = person.getDateOfBirth();
@@ -142,7 +195,7 @@ public class PmtctVisitService
                 age = 0;
             }
         }
-        System.out.println("Age " + age);
+       // System.out.println("Age " + age);
         return age;
     }
     public List<PmtctVisitResponseDto> getAllPmtctVisits() {
@@ -151,11 +204,9 @@ public class PmtctVisitService
         pmtctVisitList.forEach(pmtctVisit -> PmtctVisitResponseDtoList.add(convertEntitytoRespondDto(pmtctVisit)));
         return PmtctVisitResponseDtoList;
     }
-
     @SneakyThrows
     public PmtctVisit getSinglePmtctVisit(Long id) {
         return this.pmtctVisitRepository.findById(id)
                 .orElseThrow(() -> new Exception("ANC NOT FOUND"));
-
     }
 }

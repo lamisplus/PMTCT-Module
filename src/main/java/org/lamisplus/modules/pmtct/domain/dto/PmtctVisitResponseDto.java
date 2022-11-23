@@ -8,29 +8,31 @@ import java.util.List;
 
 @Data
 @RequiredArgsConstructor
-public class PmtctVisitResponseDto implements Serializable
-{
+public class PmtctVisitResponseDto implements Serializable {
     private Long id;
-    private String hospitalNumber;
-    private String uuid;
     private String ancNo;
+    private String hospitalNumber;
     private String fullName;
+    private String sex;
     private int age;
-    private Long facilityId;
+    private LocalDate dateOfBirth;
+    private Long enteryPoint;
     private LocalDate dateOfVisit;
-    private String pulse;
-    private String respiratoryRate;
-    private String temperature;
-    private String bodyWeight;
-    private String height;
-    private String systolic;
-    private String diastolic;
-    private String clinicalNotes;
-    private String whoStaging;
-    private String functionalStatus;
-    private String levelOfAdherence;
-    private String onAntiTbDrugs;
-    private LocalDate nextClinicalAppointmentDate;
-    private Object opportunisticInfection;
-    private Object adr;
+    private String fpCounseling;
+    private String fpMethod;
+    private LocalDate dateOfViralLoad32;
+    private Integer gaOfViralLoad32;
+    private Integer resultOfViralLoad32;
+    private LocalDate dateOfViralLoadOt;
+    private Integer gaOfViralLoadOt;
+    private Integer resultOfViralLoadOt;
+    private boolean dsd;
+    private String dsdOption;
+    private String dsdModel;
+    private String maternalOutcome;
+    private LocalDate dateOfmeternalOutcome;
+    private String visitStatus;
+    private String transferTo;
+    private LocalDate nextAppointmentDate;
+    private String personUuid;
 }
