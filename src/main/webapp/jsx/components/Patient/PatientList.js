@@ -175,7 +175,7 @@ const Patients = (props) => {
                         axios.get(`${baseUrl}pmtct/anc/pmtct-from-person?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`, { headers: {"Authorization" : `Bearer ${token}`} })
                             .then(response => response)
                             .then(result => {
-                                console.log(result.data.records)
+                                //console.log(result.data.records)
                                 resolve({
                                     data: result.data.records.map((row) => ({
                                         

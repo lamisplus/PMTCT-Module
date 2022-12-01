@@ -130,9 +130,7 @@ const AncEnrollement = (props) => {
                   setSaving(false);
                   props.patientObj.commenced=true
                   toast.success("Vital signs save successful");
-                  props.toggle()
-                  props.patientsVitalsSigns()
-
+                  props.setActiveContent({...props.activeContent, route:'recent-history'})
               })
               .catch(error => {
                   setSaving(false);
@@ -303,7 +301,7 @@ const AncEnrollement = (props) => {
                             <Label >Tested for syphilis?</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
+                                    type="select"
                                     name="encounterDate"
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}

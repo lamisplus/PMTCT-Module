@@ -1538,7 +1538,7 @@ const UserRegistration = (props) => {
                                     
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Gravida</Label>
+                                            <Label >Gravida *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="number"
@@ -1556,7 +1556,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Parity</Label>
+                                            <Label >Parity *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="number"
@@ -1594,7 +1594,7 @@ const UserRegistration = (props) => {
                                    
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Gestational Age (Weeks)</Label>
+                                            <Label >Gestational Age (Weeks)*</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="number"
@@ -1613,7 +1613,7 @@ const UserRegistration = (props) => {
                                     
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Source of Referral</Label>
+                                            <Label >Source of Referral*</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="text"
@@ -1631,18 +1631,18 @@ const UserRegistration = (props) => {
                                     </div>                                
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Tested for syphilis</Label>
+                                            <Label >Tested for syphilis *</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="select"
                                                     name="testedSyphilis"
                                                     id="testedSyphilis"
                                                     onChange={handleInputChange}
                                                     value={objValues.testedSyphilis} 
                                                 >
                                                      <option value="" >Select</option>
-                                                    <option value="Positive" >Positive</option>
-                                                    <option value="Negative" >Negative</option>
+                                                    <option value="Yes" >Yes</option>
+                                                    <option value="No" >No</option>
                                                 </Input>
                                             </InputGroup> 
                                             {errors.testedSyphilis !=="" ? (
@@ -1653,7 +1653,7 @@ const UserRegistration = (props) => {
                                 
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Syphilis test result</Label>
+                                            <Label >Syphilis test result *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -1674,7 +1674,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Treated for syphilis (penicillin)</Label>
+                                            <Label >Treated for syphilis (penicillin) *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -1695,7 +1695,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Referred Syphilis +ve client</Label>
+                                            <Label >Referred Syphilis +ve client *</Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"

@@ -209,7 +209,7 @@ function PatientCard(props) {
                     <Row className={"mt-1"}>
                     <Col md={12} className={classes.root2}>
                         <b style={{fontSize: "25px"}}>
-                        {patientObj.firstName + " " + patientObj.surname }
+                        {patientObj.fullname}
                         </b>
                         <Link to={"/"} >
                         <ButtonMui
@@ -228,32 +228,32 @@ function PatientCard(props) {
                     <Col md={4} className={classes.root2}>
                     <span>
                         {" "}
-                        Patient ID : <b>{getHospitalNumber(patientObj.identifier) }</b>
+                        Patient ID : <b>{patientObj.hospitalNumber }</b>
                     </span>
                     </Col>
 
                     <Col md={4} className={classes.root2}>
                     <span>
-                        Date Of Birth : <b>{patientObj.dateOfBirth }</b>
+                        {/* Date Of Birth : <b>{patientObj.dateOfBirth }</b> */}
                     </span>
                     </Col>
                     <Col md={4} className={classes.root2}>
                     <span>
                         {" "}
-                        Age : <b>{calculate_age(moment(patientObj.dateOfBirth).format("DD-MM-YYYY"))}</b>
+                        Age : <b>{patientObj.age}</b>
                     </span>
                     </Col>
                     <Col md={4}>
                     <span>
                         {" "}
                         Gender :{" "}
-                        <b>{patientObj.sex && patientObj.sex!==null ?  patientObj.sex : '' }</b>
+                        <b>{patientObj.sex && patientObj.sex!==null ?  patientObj.sex : 'Female' }</b>
                     </span>
                     </Col>
                     <Col md={4} className={classes.root2}>
                     <span>
                         {" "}
-                        Phone Number : <b>{getPhoneNumber(patientObj.contactPoint)}</b>
+                        {/* Phone Number : <b>{getPhoneNumber(patientObj.contactPoint)}</b> */}
                     </span>
                     </Col>
                     <Col md={4} className={classes.root2}>

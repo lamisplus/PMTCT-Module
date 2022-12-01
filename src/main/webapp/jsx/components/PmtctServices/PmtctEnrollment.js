@@ -186,12 +186,13 @@ const AncPnc = (props) => {
             .then(response => {
                 setSaving(false);
                 //props.patientObj.commenced=true
-                toast.success("Enrollment save successful");
+                toast.success("Enrollment save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
 
             })
             .catch(error => {
                 setSaving(false);
-                toast.error("Something went wrong");
+                toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
                 
             });
         
