@@ -68,7 +68,7 @@ const ClinicVisit = (props) => {
   const [clinicalStage, setClinicalStage] = useState([]);
   const [functionalStatus, setFunctionalStatus] = useState([]);
   const [adherenceLevel, setAdherenceLevel] = useState([]);
-
+  const [dsdModelType, setDsdModelType] = useState([]);
 
   const [currentVitalSigns, setcurrentVitalSigns] = useState({})
   const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
@@ -330,6 +330,22 @@ const handleInputValueCheckTemperature =(e)=>{
     }else{
     setVitalClinicalSupport({...vitalClinicalSupport, temperature:""})
     }
+}
+//Get list of DSD Model Type
+function DsdModelType (dsdmodel) {
+  const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
+  axios
+     .get(`${baseUrl}application-codesets/v2/${dsd}`,
+         { headers: {"Authorization" : `Bearer ${token}`} }
+     )
+     .then((response) => {
+         console.log(response.data);
+         setDsdModelType(response.data);
+     })
+     .catch((error) => {
+     //console.log(error);
+     });
+ 
 }
   //Validations of the forms
   const validate = () => {        
@@ -602,7 +618,7 @@ const handleInputValueCheckTemperature =(e)=>{
                     </div>
               </div>
               <div className="row">
-              <div className="form-group mb-3 col-md-8">
+              <div className="form-group mb-3 col-md-12">
                   <FormGroup>
                   <FormLabelName >Blood Pressure</FormLabelName>
                   <InputGroup>
@@ -654,29 +670,11 @@ const handleInputValueCheckTemperature =(e)=>{
 
               </div>
             </div>
-            <Label as='a' color='black'  style={{width:'106%', height:'35px'}} ribbon>
-              <h4 style={{color:'#fff'}}>CONSULTATION</h4>
-            </Label>
-            <br /><br />
-
-            <div className=" mb-3">
-              <FormLabelName >Clinical Notes</FormLabelName>
-              <textarea
-                name="clinicalNotes"
-                className="form-control"
-                value={objValues.clinicalNotes}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-              ></textarea>
-              {errors.clinicalNotes !=="" ? (
-                      <span className={classes.error}>{errors.clinicalNotes}</span>
-                  ) : "" }
-            </div>
             <div className="row">
-
-              <div className=" mb-3 col-md-6">
+              
+              <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >WHO Staging *</FormLabelName>
+                  <FormLabelName >Point of Entry*</FormLabelName>
                   <Input
                     type="select"
                     name="whoStaging"
@@ -699,9 +697,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   ) : "" }
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-6">
+              <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >Functional Status *</FormLabelName>
+                  <FormLabelName >Date of Delivery *</FormLabelName>
                   <Input
                     type="select"
                     name="functionalStatus"
@@ -724,9 +722,9 @@ const handleInputValueCheckTemperature =(e)=>{
                   ) : "" }
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-6">
+              <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >Level of Adherence *</FormLabelName>
+                  <FormLabelName >FP Counselling *</FormLabelName>
                   <Input
                     type="select"
                     name="levelOfAdherence"
@@ -749,29 +747,283 @@ const handleInputValueCheckTemperature =(e)=>{
                   ) : "" }
                 </FormGroup>
               </div>
+              <div className=" mb-3 col-md-3">
+                <FormGroup>
+                  <FormLabelName >FP Method *</FormLabelName>
+                  <Input
+                    type="select"
+                    name="levelOfAdherence"
+                    id="levelOfAdherence"
+                    value={objValues.levelOfAdherence}
+                    onChange={handleInputChange}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    required
+                  >
+                    <option value="select">Select </option>
 
+                    {adherenceLevel.map((value) => (
+                      <option key={value.id} value={value.id}>
+                        {value.display}
+                      </option>
+                    ))}
+                  </Input>
+                  {errors.levelOfAdherence !=="" ? (
+                      <span className={classes.error}>{errors.levelOfAdherence}</span>
+                  ) : "" }
+                </FormGroup>
+              </div>
             </div>
             <br />
-
             <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>NEXT CLINICAL APPOINTMENT DATE </h4>
+            <h4 style={{color:'#fff'}}>VIRAL LOAD AT 32-36 WEEKS GA </h4>
             </Label>
             <br /><br />
             {/* TB Screening Form */}
-            <Input
-                    type="date"
-                    name="nextAppointment"
-                    id="nextAppointment"
-                    className="col-md-6"
-                    value={vital.nextAppointment}
-                    onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    min={vital.encounterDate}
-                    
-                  />
+            <div className="row">
+
+              <div className=" mb-3 col-md-4">
+              <FormGroup>
+                <FormLabelName >Viral Load Collection Date*</FormLabelName>
+              <Input
+                type="date"
+                name="nextAppointment"
+                id="nextAppointment"
+                value={vital.nextAppointment}
+                onChange={handleInputChange}
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                min={vital.encounterDate}   
+              />
               {errors.nextAppointment !=="" ? (
                       <span className={classes.error}>{errors.nextAppointment}</span>
                   ) : "" }
+            </FormGroup>   
+              </div>
+              <div className=" mb-3 col-md-4">
+              <FormGroup>
+                <FormLabelName >GA at VL Collection*</FormLabelName>
+                <Input
+                  type="number"
+                  name="nextAppointment"
+                  id="nextAppointment"
+                  value={vital.nextAppointment}
+                  onChange={handleInputChange}
+                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  min={vital.encounterDate}   
+                />
+              {errors.nextAppointment !=="" ? (
+                  <span className={classes.error}>{errors.nextAppointment}</span>
+              ) : "" }
+            </FormGroup>   
+              </div>
+              <div className=" mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName >Result *</FormLabelName>
+                  <Input
+                    type="date"
+                    name="nextAppointment"
+                    id="nextAppointment"
+                    value={vital.nextAppointment}
+                    onChange={handleInputChange}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    min={vital.encounterDate}   
+                  />
+                {errors.nextAppointment !=="" ? (
+                    <span className={classes.error}>{errors.nextAppointment}</span>
+                ) : "" }
+              </FormGroup>   
+              </div>
+           </div>
+            <br />
+            <br />
+            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}>VIRAL LOAD - Other AT ANY TIME POINT DURING PMTCT</h4>
+            </Label>
+            <br /><br />
+            {/* TB Screening Form */}
+            <div className="row">
+
+              <div className=" mb-3 col-md-4">
+              <FormGroup>
+                <FormLabelName >Viral Load Collection Date*</FormLabelName>
+              <Input
+                type="date"
+                name="nextAppointment"
+                id="nextAppointment"
+                value={vital.nextAppointment}
+                onChange={handleInputChange}
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                min={vital.encounterDate}   
+              />
+              {errors.nextAppointment !=="" ? (
+                      <span className={classes.error}>{errors.nextAppointment}</span>
+                  ) : "" }
+            </FormGroup>   
+              </div>
+              <div className=" mb-3 col-md-4">
+              <FormGroup>
+                <FormLabelName >GA at VL Collection*</FormLabelName>
+                <Input
+                  type="number"
+                  name="nextAppointment"
+                  id="nextAppointment"
+                  value={vital.nextAppointment}
+                  onChange={handleInputChange}
+                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  min={vital.encounterDate}   
+                />
+              {errors.nextAppointment !=="" ? (
+                  <span className={classes.error}>{errors.nextAppointment}</span>
+              ) : "" }
+            </FormGroup>   
+              </div>
+              <div className=" mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName >Result *</FormLabelName>
+                  <Input
+                    type="date"
+                    name="nextAppointment"
+                    id="nextAppointment"
+                    value={vital.nextAppointment}
+                    onChange={handleInputChange}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    min={vital.encounterDate}   
+                  />
+                {errors.nextAppointment !=="" ? (
+                    <span className={classes.error}>{errors.nextAppointment}</span>
+                ) : "" }
+              </FormGroup>   
+              </div>
+           </div>
+            <br />
+            <Label as='a' color='black' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}> DSD MODEL & OUTCOME</h4>
+            </Label>
+            <br /><br />
+            {/*  */}
+            <div className="row">
+              <div className="form-group mb-3 col-md-6">
+                  <FormGroup>
+                      <FormLabelName >DSD Model</FormLabelName>
+                      <Input
+                          type="select"
+                          name="dsdModel"
+                          id="dsdModel"
+                          value={objValues.dsdModel}
+                          onChange={handleInputChange} 
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          >
+                          <option value="">Select </option>
+                          <option value="Facility">Facility </option>
+                          <option value="Community">Community </option>
+                          
+                      </Input>
+                      
+                  </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-6">
+                  <FormGroup>
+                      <FormLabelName >DSD Model Type</FormLabelName>
+                      <Input
+                          type="select"
+                          name="dsdModelType"
+                          id="dsdModelType"
+                          value={objValues.dsdModelType}
+                          onChange={handleInputChange} 
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          >
+                          <option value="">Select </option>
+                          {dsdModelType.map((value) => (
+                              <option key={value.code} value={value.code}>
+                                  {value.display}
+                              </option>
+                          ))}
+                          
+                      </Input>
+                      
+                  </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-3">
+                  <FormGroup>
+                      <FormLabelName >Maternal Outcome </FormLabelName>
+                      <Input
+                          type="select"
+                          name="dsdModelType"
+                          id="dsdModelType"
+                          value={objValues.dsdModelType}
+                          onChange={handleInputChange} 
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          >
+                          <option value="">Select </option>
+                          {dsdModelType.map((value) => (
+                              <option key={value.code} value={value.code}>
+                                  {value.display}
+                              </option>
+                          ))}
+                          
+                      </Input>
+                      
+                  </FormGroup>
+              </div>
+              <div className=" mb-3 col-md-3">
+              <FormGroup>
+                <FormLabelName >Date of Outcome*</FormLabelName>
+                <Input
+                  type="date"
+                  name="nextAppointment"
+                  id="nextAppointment"
+                  value={vital.nextAppointment}
+                  onChange={handleInputChange}
+                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  min={vital.encounterDate}   
+                />
+                {errors.nextAppointment !=="" ? (
+                    <span className={classes.error}>{errors.nextAppointment}</span>
+                ) : "" }
+              </FormGroup>   
+              </div>
+              <div className="form-group mb-3 col-md-3">
+                  <FormGroup>
+                      <FormLabelName >Name of ART Facility</FormLabelName>
+                      <Input
+                      type="text"
+                      name="nextAppointment"
+                      id="nextAppointment"
+                      value={vital.nextAppointment}
+                      onChange={handleInputChange}
+                      style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                      min={vital.encounterDate}
+                      
+                    />
+                  {errors.nextAppointment !=="" ? (
+                          <span className={classes.error}>{errors.nextAppointment}</span>
+                      ) : "" }
+                      
+                  </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-3">
+                  <FormGroup>
+                      <FormLabelName >Client Visit Status</FormLabelName>
+                      <Input
+                          type="select"
+                          name="dsdModelType"
+                          id="dsdModelType"
+                          value={objValues.dsdModelType}
+                          onChange={handleInputChange} 
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          >
+                          <option value="">Select </option>
+                          {dsdModelType.map((value) => (
+                              <option key={value.code} value={value.code}>
+                                  {value.display}
+                              </option>
+                          ))}
+                          
+                      </Input>
+                      
+                  </FormGroup>
+              </div>
+              
+            </div>  
             <br />
             <MatButton
               type="submit"
