@@ -32,6 +32,7 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private JsonNode partnerNotification;
     private String personUuid;
     private Long archived;
+    private String status;
 
     @Override
     public boolean isNew() {

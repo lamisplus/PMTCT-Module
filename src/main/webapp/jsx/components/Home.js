@@ -3,7 +3,6 @@ import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
 import NotEnrollPatients from './Patient/PatientList'
 import ActiveANCPatients from './Patient/ActiveANCPatientList'
 import VisualisationHome from './Visualisation/Index'
-import LostToFollowUp from './Patient/PatientListIit'
 import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 import { FaUserPlus } from "react-icons/fa";

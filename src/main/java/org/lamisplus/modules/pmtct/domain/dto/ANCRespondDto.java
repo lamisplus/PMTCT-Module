@@ -30,8 +30,12 @@ public class ANCRespondDto implements Serializable {
     private Object partnerNotification;
     private String person_uuid;
     private Object address;
+    private  Object contactPoint;
     private String hivStatus;
     private boolean pmtctRegStatus;
+    private LocalDate dateOfBirth;
+    private String sex;
+    private Long personId;
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
 
 }

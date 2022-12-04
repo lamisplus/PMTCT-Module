@@ -1,5 +1,6 @@
 package org.lamisplus.modules.pmtct.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -7,7 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.hibernate.annotations.Type;
 import org.jetbrains.annotations.NotNull;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
 import org.lamisplus.modules.base.domain.entities.OrganisationUnit;
 import org.lamisplus.modules.base.domain.entities.User;
@@ -26,13 +29,17 @@ import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.Column;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -647,6 +654,7 @@ public class ANCService {
             anc.setHospitalNumber(person.getHospitalNumber());
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
+            anc.setStatus("NV");
             SyphilisInfo syphilisInfo = ancEnrollementRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
                 JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
@@ -716,6 +724,7 @@ public class ANCService {
             anc.setHospitalNumber(person.getHospitalNumber());
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
+            anc.setStatus("NV");
             SyphilisInfo syphilisInfo = ancWithPersonRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
                 JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
@@ -751,6 +760,12 @@ public class ANCService {
             ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
             ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
             ancRespondDto.setAncUuid(anc.getUuid());
+            ancRespondDto.setPerson_uuid(person.getUuid());
+            ancRespondDto.setPersonId(person.getId());
+            ancRespondDto.setAddress(person.getAddress());
+            ancRespondDto.setContactPoint(person.getContactPoint());
+            ancRespondDto.setSex(person.getSex());
+            ancRespondDto.setDateOfBirth(person.getDateOfBirth());
             ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
             ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
             ancRespondDto.setGravida(anc.getGravida());
@@ -763,8 +778,9 @@ public class ANCService {
             ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         }
-        ancRespondDto.setPerson_uuid(person.getUuid());
-        ancRespondDto.setAddress(person.getAddress());
+
+
+
         ancRespondDto.setHivStatus(this.getHivStatus(person.getUuid()));
         if (activeOnPMTCT(ancNo)) {
             PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancNo);
@@ -792,5 +808,71 @@ public class ANCService {
         return active;
     }
 
+    private ANC getExistingANC(Long id) {
+        return ancRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(ANC.class, "id", "" + id));
+    }
+    public void graduateFromANC(ANC anc, String visitStatus) {
+        System.out.println("Doc I got here ANC No = "+anc.getAncNo());
+        ANC existingAnc = this.getExistingANC(anc.getId());
+        existingAnc.setFirstAncDate(anc.getFirstAncDate());
+        existingAnc.setGravida(anc.getGravida());
+        existingAnc.setParity(anc.getParity());
+        existingAnc.setLMP(anc.getLMP());
+        existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
+        existingAnc.setGAWeeks(anc.getGAWeeks());
+        existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
+        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
+        existingAnc.setPartnerNotification(anc.getPartnerNotification());
+        existingAnc.setPersonUuid(anc.getPersonUuid());
+        existingAnc.setArchived(1L);
+        existingAnc.setStatus(visitStatus);
+
+        existingAnc.setHospitalNumber(anc.getHospitalNumber());
+        existingAnc.setUuid(anc.getUuid());
+        existingAnc.setAncNo(anc.getAncNo());
+        existingAnc.setCreatedBy(anc.getCreatedBy());
+        existingAnc.setCreatedBy(anc.getCreatedBy());
+        existingAnc.setLastModifiedDate(LocalDateTime.now());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        existingAnc.setLastModifiedBy(user.getUserName());
+
+        existingAnc.setFacilityId(user.getCurrentOrganisationUnitId());
+        ancRepository.save(existingAnc);
+    }
+
+    public void updateANC(ANC anc, String visitStatus) {
+        System.out.println("Doc I got here ANC No1 = "+anc.getAncNo());
+        ANC existingAnc = this.getExistingANC(anc.getId());
+        existingAnc.setFirstAncDate(anc.getFirstAncDate());
+        existingAnc.setGravida(anc.getGravida());
+        existingAnc.setParity(anc.getParity());
+        existingAnc.setLMP(anc.getLMP());
+        existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
+        existingAnc.setGAWeeks(anc.getGAWeeks());
+        existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
+        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
+        existingAnc.setPartnerNotification(anc.getPartnerNotification());
+        existingAnc.setPersonUuid(anc.getPersonUuid());
+        existingAnc.setArchived(0L);
+        existingAnc.setStatus(visitStatus);
+
+        existingAnc.setHospitalNumber(anc.getHospitalNumber());
+        existingAnc.setUuid(anc.getUuid());
+        existingAnc.setAncNo(anc.getAncNo());
+        existingAnc.setCreatedBy(anc.getCreatedBy());
+        existingAnc.setCreatedBy(anc.getCreatedBy());
+        existingAnc.setLastModifiedDate(LocalDateTime.now());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
+        existingAnc.setLastModifiedBy(user.getUserName());
+
+        existingAnc.setFacilityId(user.getCurrentOrganisationUnitId());
+        ancRepository.save(existingAnc);
+    }
 }
 

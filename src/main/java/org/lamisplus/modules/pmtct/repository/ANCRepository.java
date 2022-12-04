@@ -12,7 +12,9 @@ import java.util.Optional;
 public interface ANCRepository extends CommonJpaRepository<ANC, Long>
 {
     ANC findByAncNoAndArchived (String ancNo, Long archived);
+    Optional<ANC> getByAncNoAndArchived (String ancNo, Long archived);
 
+    Optional<ANC> getByAncNo(String ancNo);
     List<ANC> findByArchived(Long archived);
 
     Optional<ANC> findByHospitalNumberAndArchived (String hospitalNumber, Long archived);

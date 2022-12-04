@@ -143,7 +143,8 @@ const Patients = (props) => {
                 return age_now + " year(s)";
         };
     
-    const getHospitalNumber = (identifier) => {     
+    const getHospitalNumber = (identifier) => { 
+        console.log(identifier)    
         const identifiers = identifier;
         const hospitalNumber = identifiers.identifier.find(obj => obj.type == 'HospitalNumber');       
         return hospitalNumber ? hospitalNumber.value : '';
@@ -189,15 +190,9 @@ const Patients = (props) => {
                                         > {row.firstName + " " + row.surname}
                                         </Link>,
                                         
-                                hospital_number: getHospitalNumber(row.identifier),
-                                gender:row && row.sex ? row.sex : "",
-                                age: (row.dateOfBirth === 0 ||
-                                    row.dateOfBirth === undefined ||
-                                    row.dateOfBirth === null ||
-                                    row.dateOfBirth === "" )
-                                        ? 0
-                                        : calculate_age(moment(row.dateOfBirth).format("DD-MM-YYYY")),
-                                
+                                hospital_number: row.hospitalNumber,
+                                gender:row && row.sex ? row.sex : "Female",
+                                age: row.age,
                                 actions:<div>
                                             <Link
                                                 to={{
