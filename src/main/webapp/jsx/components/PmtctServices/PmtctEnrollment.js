@@ -85,99 +85,89 @@ const AncPnc = (props) => {
     console.log(patientObj)
     let history = useHistory();
     const classes = useStyles()
-    //const [values, setValues] = useState([]);
+    const [pointOfEntry, setPointOfEntry] = useState([]);
+    const [tbStatus, setTbStatus] = useState([]);
+    const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
 
     const [enroll, setEnrollDto]= useState({
-
-                    agreed2PartnerNotification: "",
-                    ancNo: patientObj.ancNo,
-                    bodyWeight: "",
-                    diastolic: "",
-                    fetalPresentation: "",
-                    fpl: "",
-                    fundalHeight: "",
-                    id: "",
-                    infantFeeding: "",
-                    nextAppointmentDate: "",
-                    nutritionalSupport: "",
-                    pmtctEnrollmentDate: "",
-                    referredTo: "",
-                    systolic: "",
-                    tbStatus: "",
-                    viralLoadSample: "",
-                    viralLoadSampleDate: "",
-                    visitStatus: "",
-                    visitType: ""
+            ancNo: patientObj.ancNo,
+            pmtctEnrollmentDate:"",
+            pointOfEntry: "",
+            ga: props.patientObj.gaweeks,
+            gravida: props.patientObj.gravida,
+            artStartDate: "",
+            timingOfArtInitiation: "",
+            id: "",
+            tbStatus:""            
     })
-    
+    useEffect(() => { 
+        POINT_ENTRY_PMTCT();
+        TIME_ART_INITIATION_PMTCT();
+        TB_STATUS();
+    }, []);
+    const POINT_ENTRY_PMTCT =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            setPointOfEntry(response.data)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });        
+    }
+    const TIME_ART_INITIATION_PMTCT =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            setTimingOfArtInitiation(response.data)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });        
+    }
+    const TB_STATUS =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/TB_STATUS`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            setTbStatus(response.data)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });        
+    }
     const handleInputChangeEnrollmentDto = e => {            
         setEnrollDto ({...enroll,  [e.target.name]: e.target.value});
     }
 
     //FORM VALIDATION
     const validate = () => {
-        let temp = { ...errors }
-        //temp.name = details.name ? "" : "This field is required"
-        //temp.description = details.description ? "" : "This field is required"
+        let temp = { ...errors }        
+        temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
+        temp.pointOfEntry = enroll.pointOfEntry ? "" : "This field is required"
+        temp.ga = enroll.ga ? "" : "This field is required"
+        temp.gravida = enroll.gravida ? "" : "This field is required"
+        temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
+        temp.artStartDate = enroll.artStartDate ? "" : "This field is required"
+        temp.timingOfArtInitiation = enroll.timingOfArtInitiation ? "" : "This field is required"
+        temp.tbStatus = enroll.tbStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
         return Object.values(temp).every(x => x == "")
     }
-    //Vital signs clinical decision support 
-  const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
-    bodyWeight: "",
-    diastolic: "",
-    fundalHeight: "",
-    systolic: "",
-  })
-     //to check the input value for clinical decision 
-  const handleInputValueCheckHeight =(e)=>{
-    if(e.target.name==="fundalHeight" && (e.target.value < 48.26 || e.target.value>216.408)){
-      const message ="Height cannot be greater than 216.408 and less than 48.26"
-      setVitalClinicalSupport({...vitalClinicalSupport, fundalHeight:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, fundalHeight:""})
-    }
-  }
-  const handleInputValueCheckBodyWeight =(e)=>{
-    if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
-      const message ="Body weight must not be greater than 150 and less than 3"
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
-    }
-  }
-  const handleInputValueCheckSystolic =(e)=>{
-    if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
-      const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
-      setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
-    }
-  }
-  const handleInputValueCheckDiastolic =(e)=>{
-    if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
-      const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
-      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
-    }
-  }
-  const handleInputValueCheckPulse =(e)=>{
-    if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
-    const message ="Pulse must not be greater than 120 and less than 40"
-    setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
-    }else{
-    setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
-    }
-  }      
+    
     /**** Submit Button Processing  */
     const handleSubmit = (e) => {        
-        e.preventDefault();        
-        
+        e.preventDefault();
+        if (validate()){             
         setSaving(true);
         axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
         { headers: {"Authorization" : `Bearer ${token}`}},
@@ -185,7 +175,7 @@ const AncPnc = (props) => {
         )
             .then(response => {
                 setSaving(false);
-                //props.patientObj.commenced=true
+                props.patientObj.pmtctRegStatus=true
                 toast.success("Enrollment save successful", {position: toast.POSITION.BOTTOM_CENTER});
                 props.setActiveContent({...props.activeContent, route:'recent-history'})
 
@@ -195,34 +185,8 @@ const AncPnc = (props) => {
                 toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
                 
             });
-        
+        }
     }
-
-    function BmiCal (bmi){
-        if(bmi<18.5){
-          return (
-            <Message        
-             size='mini'
-             color='brown'
-              content='Underweight'
-            />
-          )      
-        }else if(bmi >=18.5 && bmi<=24.9){
-          <Message        
-             size='mini'
-             color='olive'
-              content='Well nourished'
-            />
-        }
-        else if( bmi>25){
-          <Message        
-             size='mini'
-             color='blue'
-              content='Overweight/Obese'
-            />
-        }
-        
-      }
 
   return (      
       <div >
@@ -232,7 +196,7 @@ const AncPnc = (props) => {
             <form >
                 <div className="row">
                 <h2>PMTCT Enrollment</h2>
-                <div className="form-group mb-3 col-md-6">
+                <div className="form-group mb-3 col-md-4">
                             <FormGroup>
                             <Label >ANC ID *</Label>
                             <InputGroup> 
@@ -246,12 +210,14 @@ const AncPnc = (props) => {
                                 />
 
                             </InputGroup>
-                        
+                            {errors.ancNo !=="" ? (
+                                <span className={classes.error}>{errors.ancNo}</span>
+                        ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
+                    <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Date of Enrollment</Label>
+                            <Label >Date of Enrollment *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -263,351 +229,142 @@ const AncPnc = (props) => {
                                 />
 
                             </InputGroup>
-                        
+                            {errors.pmtctEnrollmentDate !=="" ? (
+                                <span className={classes.error}>{errors.pmtctEnrollmentDate}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
-
-                    <div className="row">
-                    <div className="form-group mb-3 col-md-12">
+                    <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                        <FormLabelName >Blood Pressure</FormLabelName>
-                        <InputGroup>
-                        <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                                systolic(mmHg)
-                        </InputGroupText> 
-                            <Input 
-                                type="text"
-                                name="systolic"
-                                id="systolic"
-                                min="90"
-                                max="240"
-                                onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.systolic}
-                                onKeyUp={handleInputValueCheckSystolic}
-                                style={{border: "1px solid #014D88", borderRadius:"0rem"}} 
-                            />
-                            
-                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                            diastolic(mmHg)
-                            </InputGroupText>
-                            
-                                <Input 
-                                type="text"
-                                name="diastolic"
-                                id="diastolic"
-                                min={0}
-                                max={140}
-                                onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.diastolic}
-                                onKeyUp={handleInputValueCheckDiastolic} 
-                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
-                                />
-                            
-                            
-                        </InputGroup>
-                        {vitalClinicalSupport.systolic !=="" ? (
-                            <span className={classes.error}>{vitalClinicalSupport.systolic}</span>
-                            ) : ""}
-                            {errors.systolic !=="" ? (
-                                <span className={classes.error}>{errors.systolic}</span>
-                            ) : "" }  
-                            {vitalClinicalSupport.diastolic !=="" ? (
-                            <span className={classes.error} >{vitalClinicalSupport.diastolic}</span>
-                            ) : ""}
-                            {errors.diastolic !=="" ? (
-                                <span className={'float-end'}><span className={classes.error} >{errors.diastolic}</span></span>
-                            ) : "" }       
-                        </FormGroup>
-                    </div>
-                    </div>
-                    <div className="row">                  
-                    <div className=" mb-3 col-md-4">
-                        <FormGroup>
-                        <FormLabelName >Body Weight</FormLabelName>
+                        <Label >Point of Entry *</Label>
                         <InputGroup> 
                             <Input 
-                                type="text"
-                                name="bodyWeight"
-                                id="bodyWeight"
+                                type="select"
+                                name="pointOfEntry"
+                                id="pointOfEntry"
                                 onChange={handleInputChangeEnrollmentDto}
-                                min="3"
-                                max="150"
-                                value={enroll.bodyWeight}
-                                onKeyUp={handleInputValueCheckBodyWeight} 
-                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
-                            />
-                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                                kg
-                            </InputGroupText>
+                                value={enroll.pointOfEntry} 
+                            >
+                                <option value="">Select</option>
+                                {pointOfEntry.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.name}
+                                    </option>
+                                ))}
+                            </Input>
+
                         </InputGroup>
-                        {vitalClinicalSupport.bodyWeight !=="" ? (
-                                <span className={classes.error}>{vitalClinicalSupport.bodyWeight}</span>
-                        ) : ""}
-                        {errors.bodyWeight !=="" ? (
-                            <span className={classes.error}>{errors.bodyWeight}</span>
+                        {errors.pointOfEntry !=="" ? (
+                                <span className={classes.error}>{errors.pointOfEntry}</span>
                         ) : "" }
                         </FormGroup>
-                    </div>                                   
-                    <div className="form-group mb-3 col-md-5">
-                        <FormGroup>
-                        <FormLabelName >Fundal Height</FormLabelName>
-                        <InputGroup> 
-                        <InputGroupText
-                                addonType="append"
-                                
-                                style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}
-                                >
-                                cm
-                        </InputGroupText>
-                            <Input 
-                                type="text"
-                                name="fundalHeight"
-                                id="fundalHeight"
-                                onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.fundalHeight}
-                                min="48.26"
-                                max="216.408"
-                                onKeyUp={handleInputValueCheckHeight} 
-                                style={{border: "1px solid #014D88", borderRadius:"0rem"}}
-                            />
-                                <InputGroupText
-                                addonType="append"
-                               
-                                style={{ backgroundColor:"#992E62", color:"#fff", border: "1px solid #992E62", borderRadius:"0rem"}}
-                                >
-                                {enroll.fundalHeight!=='' && enroll.fundalHeight!=='NaN' ? (enroll.fundalHeight/100).toFixed(2) + "m" : "m"}
-                            </InputGroupText>
-                        </InputGroup>
-                        {vitalClinicalSupport.fundalHeight !=="" ? (
-                            <span className={classes.error}>{vitalClinicalSupport.fundalHeight}</span>
-                        ) : ""}
-                        {errors.fundalHeight !=="" ? (
-                            <span className={classes.error}>{errors.fundalHeight}</span>
-                        ) : "" }
-                        </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 mt-2 col-md-3">
-                        {enroll.bodyWeight!=="" && enroll.fundalHeight!=='' && (
+                    </div> 
+                    <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label > {" "}</Label>
-                            <InputGroup> 
-                            <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                                BMI : {(enroll.bodyWeight/(((enroll.fundalHeight/100) * (enroll.fundalHeight/100)))).toFixed(2)}
-                            </InputGroupText>                   
-                           
-                            </InputGroup>                
-                            </FormGroup>
-                        )}
-                    </div>
-                    {enroll.bodyWeight!=='' && enroll.fundalHeight!=='' && (
-                      <div className="form-group mb-3 mt-2 col-md-12">
-                            {
-                              BmiCal((enroll.bodyWeight/(((enroll.fundalHeight/100) * (enroll.fundalHeight/100)))).toFixed(2))
-                            }
-                      </div>
-                     )}
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Fetal Presentation</Label>
+                            <Label >GA *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="fetalPresentation"
-                                    id="fetalPresentation"
+                                    name="ga"
+                                    id="ga"
                                     onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.fetalPresentation} 
+                                    value={enroll.ga} 
+                                    disabled
                                 />
 
                             </InputGroup>
-                        
+                            {errors.ga !=="" ? (
+                                <span className={classes.error}>{errors.ga}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
+                    <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Gestational Age(weeks) *</Label>
+                            <Label >Gravida *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="gAge"
-                                    id="encounterDate"
+                                    name="gravida"
+                                    id="gravida"
                                     onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.encounterDate} 
+                                    value={enroll.gravida} 
+                                    disabled
                                 />
 
                             </InputGroup>
-                        
+                            {errors.gravida !=="" ? (
+                                <span className={classes.error}>{errors.gravida}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
+                    <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Type of Visit</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="visitType"
-                                    id="visitType"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.visitType} 
-                                />
-
-                            </InputGroup>
-                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Visit Status</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="visitStatus"
-                                    id="visitStatus"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.visitStatus} 
-                                />
-
-                            </InputGroup>
-                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Viral Load Sample Collected?</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="viralLoadSample"
-                                    id="viralLoadSample"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.viralLoadSample} 
-                                />
-
-                            </InputGroup>
-                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Date Sample Collected*</Label>
+                            <Label >Art Start Date *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="viralLoadSampleDate"
-                                    id="viralLoadSampleDate"
+                                    name="artStartDate"
+                                    id="artStartDate"
                                     onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.viralLoadSampleDate} 
+                                    value={enroll.artStartDate} 
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >TB Status</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="tbStatus"
-                                    id="tbStatus"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.tbStatus} 
                                 />
 
                             </InputGroup>
-                        
+                            {errors.artStartDate !=="" ? (
+                                <span className={classes.error}>{errors.artStartDate}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Date of next appointment*</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="date"
-                                    name="nextAppointmentDate"
-                                    id="nextAppointmentDate"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.nextAppointmentDate} 
-                                    max= {moment(new Date()).format("YYYY-MM-DD") }
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <hr/>
-                    <h3>Counseling/Other Services Provided</h3>
-                    <hr/>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Nutritional Support</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="nutritionalSupport"
-                                    id="nutritionalSupport"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.nutritionalSupport} 
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Infant Feeding</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="infantFeeding"
-                                    id="infantFeeding"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.infantFeeding} 
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Family Planing Method Used</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="fpl"
-                                    id="fpl"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.fpl} 
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Referred to</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="referredTo"
-                                    id="referredTo"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.referredTo} 
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
-                    </div>
-                    <hr/>
-                    <h3>Partner Information</h3>
-                    <hr/>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Agreed to partner notification</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="agreed2PartnerNotification"
-                                    id="agreed2PartnerNotification"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.agreed2PartnerNotification} 
-                                />
-                            </InputGroup>                                        
-                            </FormGroup>
+                    <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                        <Label >Timing of ART Initiation *</Label>
+                        <InputGroup> 
+                            <Input 
+                                type="select"
+                                name="timingOfArtInitiation"
+                                id="timingOfArtInitiation"
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.timingOfArtInitiation} 
+                            >
+                                <option value="">Select</option>
+                                {timingOfArtInitiation.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.name}
+                                    </option>
+                                ))}
+                            </Input>
+
+                        </InputGroup>
+                        {errors.timingOfArtInitiation !=="" ? (
+                                <span className={classes.error}>{errors.timingOfArtInitiation}</span>
+                        ) : "" }
+                        </FormGroup>
+                    </div> 
+                    <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                        <Label >TB Status *</Label>
+                        <InputGroup> 
+                            <Input 
+                                type="select"
+                                name="tbStatus"
+                                id="tbStatus"
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.tbStatus} 
+                            >
+                                <option value="">Select</option>
+                                {tbStatus.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.name}
+                                    </option>
+                                ))}
+                            </Input>
+
+                        </InputGroup>
+                        {errors.tbStatus !=="" ? (
+                                <span className={classes.error}>{errors.tbStatus}</span>
+                        ) : "" }
+                        </FormGroup>
                     </div>
                 </div>
                 

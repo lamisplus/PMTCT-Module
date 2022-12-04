@@ -187,7 +187,7 @@ const Patients = (props) => {
                                         }}
             
                                         title={"Click to view patient dashboard"}
-                                        > {row.firstName + " " + row.surname}
+                                        > {row.fullname}
                                         </Link>,
                                         
                                 hospital_number: row.hospitalNumber,

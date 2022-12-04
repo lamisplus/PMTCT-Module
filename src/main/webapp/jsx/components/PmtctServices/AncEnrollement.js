@@ -102,43 +102,43 @@ const AncEnrollement = (props) => {
                                                 visitId:""
                                             })
     
-        const handleInputChangeVitalSignDto = e => {            
-            setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
-        }
+    const handleInputChangeVitalSignDto = e => {            
+        setVitalSignDto ({...vital,  [e.target.name]: e.target.value});
+    }
 
-        //FORM VALIDATION
-        const validate = () => {
-            let temp = { ...errors }
-            //temp.name = details.name ? "" : "This field is required"
-            //temp.description = details.description ? "" : "This field is required"
-            setErrors({
-                ...temp
-                })    
-            return Object.values(temp).every(x => x == "")
-        }
-          
-        /**** Submit Button Processing  */
-        const handleSubmit = (e) => {        
-            e.preventDefault();        
-            
-            setSaving(true);
-            axios.post(`${baseUrl}patient/vital-sign/`, vital,
-            { headers: {"Authorization" : `Bearer ${token}`}},
-            
-            )
-              .then(response => {
-                  setSaving(false);
-                  props.patientObj.commenced=true
-                  toast.success("Vital signs save successful");
-                  props.setActiveContent({...props.activeContent, route:'recent-history'})
-              })
-              .catch(error => {
-                  setSaving(false);
-                  toast.error("Something went wrong");
-                 
-              });
-          
-        }
+    //FORM VALIDATION
+    const validate = () => {
+        let temp = { ...errors }
+        //temp.name = details.name ? "" : "This field is required"
+        //temp.description = details.description ? "" : "This field is required"
+        setErrors({
+            ...temp
+            })    
+        return Object.values(temp).every(x => x == "")
+    }
+        
+    /**** Submit Button Processing  */
+    const handleSubmit = (e) => {        
+        e.preventDefault();        
+        
+        setSaving(true);
+        axios.post(`${baseUrl}patient/vital-sign/`, vital,
+        { headers: {"Authorization" : `Bearer ${token}`}},
+        
+        )
+            .then(response => {
+                setSaving(false);
+                props.patientObj.commenced=true
+                toast.success("Vital signs save successful");
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
+            })
+            .catch(error => {
+                setSaving(false);
+                toast.error("Something went wrong");
+                
+            });
+        
+    }
 
   return (      
       <div >

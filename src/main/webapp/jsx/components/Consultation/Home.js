@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Segment, Label, Icon, List, Button, Card,Feed } from 'semantic-ui-react'
 // Page titie
-import { FormGroup, Label as FormLabelName, InputGroup,
-          InputGroupText,
+import { FormGroup, Label as FormLabelName, 
           Input,
         } from "reactstrap";
 import { url as baseUrl, token } from "../../../api";
@@ -12,6 +11,7 @@ import SaveIcon from '@material-ui/icons/Save'
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
+
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -58,64 +58,53 @@ const useStyles = makeStyles(theme => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
+  console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
-  const [clinicVisitList, setClinicVisitList] = useState([])
   const [loading, setLoading] = useState(true)
   let temp = { ...errors }
   const classes = useStyles()
-  const [getPatientObj, setGetPatientObj] = useState({});
   const [saving, setSaving] = useState(false);
   const [clinicalStage, setClinicalStage] = useState([]);
-  const [functionalStatus, setFunctionalStatus] = useState([]);
-  const [adherenceLevel, setAdherenceLevel] = useState([]);
   const [dsdModelType, setDsdModelType] = useState([]);
-
   const [currentVitalSigns, setcurrentVitalSigns] = useState({})
   const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
-
-  //ADR array Object 
-  const [adrObj, setAdrObj] = useState({ adr: "", adrOnsetDate: "" });
-  const [adrList, setAdrList] = useState([]);
+  const [visitStatus, setVisitStatus] = useState([]);
+  const [maternalCome, setMaternalCome] = useState([]);
+  const [fp, setFp] = useState([]);
   //Vital signs clinical decision support 
-  const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
-                                                                    bodyWeight: "",
-                                                                    diastolic: "",
-                                                                    height: "",
-                                                                    systolic: "",
-                                                                    pulse:"",
-                                                                    temperature:"",
-                                                                    respiratoryRate:"" 
-                                                                  })
+  const [vitalClinicalSupport, setVitalClinicalSupport] = useState(
+          {
+            bodyWeight: "",
+            diastolic: "",
+            height: "",
+            systolic: "",
+            pulse:"",
+            temperature:"",
+            respiratoryRate:"" 
+          })
   const [objValues, setObjValues] = useState({
-
-      adr: [
-        {
-          ard: "",
-          onSetDate: ""
-        }
-      ],
-      ancNo: "",
-      bodyWeight: "",
-      clinicalNotes: "",
-      dateOfVisit: "",
-      diastolic: "",
-      functionalStatus: "",
-      height: "",
-      levelOfAdherence: "",
-      nextClinicalAppointmentDate: "",
-      onAntiTbDrugs: "",
-      opportunisticInfection: [
-        {
-          illness: "",
-          onSetDate: ""
-        }
-      ],
-      pulse: "",
-      respiratoryRate: "",
-      systolic: "",
-      temperature: "",
-      whoStaging: ""
-    }
+    ancNo: "",
+    dateOfViralLoad32: "",
+    dateOfViralLoadOt: "",
+    dateOfVisit: "",
+    dateOfmeternalOutcome: "",
+    dsd: "",
+    dsdModel: "",
+    dsdOption: "",
+    enteryPoint: "",
+    fpCounseling: "",
+    fpMethod: "",
+    gaOfViralLoad32: "",
+    gaOfViralLoadOt: "",
+    id: "",
+    maternalOutcome: "",
+    nextAppointmentDate: "",
+    personUuid: "",
+    resultOfViralLoad32: "",
+    resultOfViralLoadOt: "",
+    transferTo: "",
+    visitStatus: ""
+  }
   );
   const [vital, setVitalSignDto] = useState({
     bodyWeight: "",
@@ -130,33 +119,13 @@ const ClinicVisit = (props) => {
     temperature:"",
     respiratoryRate:"" 
   })
-
-
   useEffect(() => {
-    FunctionalStatus();
-    WhoStaging();
-    AdherenceLevel();
     VitalSigns();
-    GetPatientObj();
-    ClinicVisitList();
-    PatientDetaild();
-    //hiv/patient/3
+    VISIT_STATUS_PMTCT()
+    MATERNAL_OUTCOME();
+    FAMILY_PLANNING_METHOD();
   }, []);
-     //GET LIST Drug Refill
-     async function ClinicVisitList() {
-      setLoading(true)
-      axios
-          .get(`${baseUrl}hiv/art/clinic-visit/person?pageNo=0&pageSize=10&personId=${props.patientObj.id}`,
-          { headers: {"Authorization" : `Bearer ${token}`} }
-          )
-          .then((response) => {
-              setLoading(false)
-              setClinicVisitList(response.data);                
-          })
-          .catch((error) => {  
-              setLoading(false)  
-          });        
-    }
+
     //Check for the last Vital Signs
     const VitalSigns = () => {
     axios
@@ -175,78 +144,53 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
     }
-    //Check for the Patient Object
-    const PatientDetaild = () => {
+    const VISIT_STATUS_PMTCT = () => {
       axios
-        .get(`${baseUrl}hiv/patient/${props.patientObj.id}`,
+        .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`,
           { headers: { "Authorization": `Bearer ${token}` } }
         )
         .then((response) => {
-            patientObj=response.data
+          //console.log(response.data);
+          setVisitStatus(response.data);
         })
         .catch((error) => {
           //console.log(error);
         });
-      }
-    //Get The updated patient objeect
-    const GetPatientObj = () => {
+  
+    }
+    const FAMILY_PLANNING_METHOD = () => {
       axios
-        .get(`${baseUrl}hiv/patients`,
+        .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
           { headers: { "Authorization": `Bearer ${token}` } }
         )
         .then((response) => {
-          const patObJ= response.data.filter((x)=> x.id===props.patientObj.id)
-
-          setGetPatientObj(patObJ[0])
+          //console.log(response.data);
+          setFp(response.data);
         })
         .catch((error) => {
           //console.log(error);
         });
+  
+    }
+    const MATERNAL_OUTCOME = () => {
+      axios
+        .get(`${baseUrl}application-codesets/v2/MATERNAL_OUTCOME`,
+          { headers: { "Authorization": `Bearer ${token}` } }
+        )
+        .then((response) => {
+          //console.log(response.data);
+          setMaternalCome(response.data);
+        })
+        .catch((error) => {
+          //console.log(error);
+        });
+  
     }
 
-  //Get list of WhoStaging
-  const WhoStaging = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/CLINICAL_STAGE`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
-        //console.log(response.data);
-        setClinicalStage(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-
-  }
-  ///GET LIST OF FUNCTIONAL%20_STATUS
-  async function FunctionalStatus() {
-    axios
-      .get(`${baseUrl}application-codesets/v2/FUNCTIONAL%20_STATUS`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
-
-        setFunctionalStatus(response.data);
-        //setValues(response.data)
-      })
-      .catch((error) => {
-      });
-  }
-  ///Level of Adherence
-  async function AdherenceLevel() {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PrEP_LEVEL_OF_ADHERENCE`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
-        setAdherenceLevel(response.data);
-
-      })
-      .catch((error) => {
-      });
-  }
   const handleInputChange = e => {
+    if(e.target.name ==='dsdModel'){
+      DsdModelType(e.target.value)
+    }
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
   }
@@ -254,83 +198,83 @@ const ClinicVisit = (props) => {
     setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
   } 
   //Handle CheckBox 
-  const handleCheckBox = e => {
-    if (e.target.checked) {
-      //currentVitalSigns.personId === null ? props.patientObj.id : currentVitalSigns.personId
-      setVitalSignDto({ ...currentVitalSigns })
-    } else {
-      setVitalSignDto({
-        bodyWeight: "",
-        diastolic: "",
-        encounterDate: "",
-        facilityId: "",
-        height: "",
-        personId: props.patientObj.id,
-        serviceTypeId: "",
-        systolic: "",
-        pulse:"",
-        temperature:"",
-        respiratoryRate:"" 
-      })
-    }
-  }
+  // const handleCheckBox = e => {
+  //   if (e.target.checked) {
+  //     //currentVitalSigns.personId === null ? props.patientObj.id : currentVitalSigns.personId
+  //     setVitalSignDto({ ...currentVitalSigns })
+  //   } else {
+  //     setVitalSignDto({
+  //       bodyWeight: "",
+  //       diastolic: "",
+  //       encounterDate: "",
+  //       facilityId: "",
+  //       height: "",
+  //       personId: props.patientObj.id,
+  //       serviceTypeId: "",
+  //       systolic: "",
+  //       pulse:"",
+  //       temperature:"",
+  //       respiratoryRate:"" 
+  //     })
+  //   }
+  // }
   //to check the input value for clinical decision 
-  const handleInputValueCheckHeight =(e)=>{
-    if(e.target.name==="height" && (e.target.value < 48.26 || e.target.value>216.408)){
-      const message ="Height cannot be greater than 216.408 and less than 48.26"
-      setVitalClinicalSupport({...vitalClinicalSupport, height:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, height:""})
-    }
-  }
-  const handleInputValueCheckBodyWeight =(e)=>{
-    if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
-      const message ="Body weight must not be greater than 150 and less than 3"
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
-    }
-  }
-  const handleInputValueCheckSystolic =(e)=>{
-    if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
-      const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
-      setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
-    }
-  }
-  const handleInputValueCheckDiastolic =(e)=>{
-    if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
-      const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
-      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
-    }
-  }
-  const handleInputValueCheckPulse =(e)=>{
-    if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
-    const message ="Pulse must not be greater than 120 and less than 40"
-    setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
-    }else{
-    setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
-    }
-}
-const handleInputValueCheckRespiratoryRate =(e)=>{
-    if(e.target.name==="respiratoryRate" && (e.target.value < 10 || e.target.value>70)){      
-    const message ="Respiratory Rate must not be greater than 70 and less than 10"
-    setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:message})
-    }else{
-    setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:""})
-    }
-}
-const handleInputValueCheckTemperature =(e)=>{
-    if(e.target.name==="temperature" && (e.target.value < 35 || e.target.value>47)){      
-    const message ="Temperature must not be greater than 47 and less than 35"
-    setVitalClinicalSupport({...vitalClinicalSupport, temperature:message})
-    }else{
-    setVitalClinicalSupport({...vitalClinicalSupport, temperature:""})
-    }
-}
+  // const handleInputValueCheckHeight =(e)=>{
+  //   if(e.target.name==="height" && (e.target.value < 48.26 || e.target.value>216.408)){
+  //     const message ="Height cannot be greater than 216.408 and less than 48.26"
+  //     setVitalClinicalSupport({...vitalClinicalSupport, height:message})
+  //   }else{
+  //     setVitalClinicalSupport({...vitalClinicalSupport, height:""})
+  //   }
+  // }
+  // const handleInputValueCheckBodyWeight =(e)=>{
+  //   if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
+  //     const message ="Body weight must not be greater than 150 and less than 3"
+  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
+  //   }else{
+  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
+  //   }
+  // }
+//   const handleInputValueCheckSystolic =(e)=>{
+//     if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
+//       const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
+//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
+//     }else{
+//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
+//     }
+//   }
+//   const handleInputValueCheckDiastolic =(e)=>{
+//     if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
+//       const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
+//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
+//     }else{
+//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
+//     }
+//   }
+//   const handleInputValueCheckPulse =(e)=>{
+//     if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
+//     const message ="Pulse must not be greater than 120 and less than 40"
+//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
+//     }else{
+//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
+//     }
+// }
+// const handleInputValueCheckRespiratoryRate =(e)=>{
+//     if(e.target.name==="respiratoryRate" && (e.target.value < 10 || e.target.value>70)){      
+//     const message ="Respiratory Rate must not be greater than 70 and less than 10"
+//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:message})
+//     }else{
+//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:""})
+//     }
+// }
+// const handleInputValueCheckTemperature =(e)=>{
+//     if(e.target.name==="temperature" && (e.target.value < 35 || e.target.value>47)){      
+//     const message ="Temperature must not be greater than 47 and less than 35"
+//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:message})
+//     }else{
+//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:""})
+//     }
+// }
 //Get list of DSD Model Type
 function DsdModelType (dsdmodel) {
   const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
@@ -339,7 +283,7 @@ function DsdModelType (dsdmodel) {
          { headers: {"Authorization" : `Bearer ${token}`} }
      )
      .then((response) => {
-         console.log(response.data);
+         //console.log(response.data);
          setDsdModelType(response.data);
      })
      .catch((error) => {
@@ -348,17 +292,15 @@ function DsdModelType (dsdmodel) {
  
 }
   //Validations of the forms
-  const validate = () => {        
-    temp.encounterDate = vital.encounterDate ? "" : "This field is required"
-    temp.nextAppointment = objValues.nextAppointment ? "" : "This field is required"
-    temp.whoStaging = objValues.whoStaging ? "" : "This field is required"
-    temp.clinicalNotes = objValues.clinicalNotes ? "" : "This field is required"
-    temp.functionalStatus = objValues.functionalStatus ? "" : "This field is required"
-    temp.levelOfAdherence = objValues.levelOfAdherence ? "" : "This field is required"
-    //temp.labTestGroupId = vital.diastolic ? "" : "This field is required"
-    temp.systolic = vital.systolic ? "" : "This field is required"
-    temp.height = vital.height ? "" : "This field is required"
-    temp.bodyWeight = vital.bodyWeight ? "" : "This field is required"
+  const validate = () => {       
+    temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
+    temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
+    temp.dsd = objValues.dsd ? "" : "This field is required"
+    temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
+    temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
+    temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
+    temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
+    temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
     setErrors({
         ...temp
     })
@@ -371,26 +313,23 @@ function DsdModelType (dsdmodel) {
     e.preventDefault();
     if(validate()){
     setSaving(true)
-    objValues.visitDate = vital.encounterDate
-    objValues['vitalSignDto'] = vital
-    axios.post(`${baseUrl}hiv/art/clinic-visit/`, objValues,
+    axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
       { headers: { "Authorization": `Bearer ${token}` } },
 
     )
       .then(response => {
-        PatientDetaild();
         setSaving(false);
-        toast.success("Clinic Visit save successful");
+        toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
         props.setActiveContent({...props.activeContent, route:'recent-history'})
       })
       .catch(error => {
         setSaving(false);
         if(error.response && error.response.data){
           let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-          toast.error(errorMessage);
+          toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
         }
         else{
-          toast.error("Something went wrong. Please try again...");
+          toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
         }
        
       });
@@ -421,22 +360,22 @@ function DsdModelType (dsdmodel) {
                   <FormLabelName >Date of Visit *</FormLabelName>
                   <Input
                     type="date"
-                    name="encounterDate"
-                    id="encounterDate"
-                    value={vital.encounterDate}
+                    name="dateOfVisit"
+                    id="dateOfVisit"
+                    value={vital.dateOfVisit}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     onChange={handleInputChangeVitalSignDto}
-                    min={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
+                    //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     required
                   />
-                 {errors.encounterDate !=="" ? (
-                      <span className={classes.error}>{errors.encounterDate}</span>
+                 {errors.dateOfVisit !=="" ? (
+                      <span className={classes.error}>{errors.dateOfVisit}</span>
                   ) : "" }
 
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
+              {/* <div className="form-group mb-3 col-md-6">
                 {showCurrentVitalSigns && (
                   <div className="form-check custom-checkbox ml-1 ">
                     <input
@@ -618,57 +557,56 @@ function DsdModelType (dsdmodel) {
                     </div>
               </div>
               <div className="row">
-              <div className="form-group mb-3 col-md-12">
-                  <FormGroup>
-                  <FormLabelName >Blood Pressure</FormLabelName>
-                  <InputGroup>
-                  <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                          systolic(mmHg)
-                  </InputGroupText> 
-                      <Input 
-                          type="number"
-                          name="systolic"
-                          id="systolic"
-                          min="90"
-                          max="240"
-                          onChange={handleInputChangeVitalSignDto}
-                          value={vital.systolic}
-                          onKeyUp={handleInputValueCheckSystolic}
-                          style={{border: "1px solid #014D88", borderRadius:"0rem"}} 
-                      />
-                      <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
-                      diastolic(mmHg)
-                      </InputGroupText>
-                          <Input 
-                          type="number"
-                          name="diastolic"
-                          id="diastolic"
-                          min={0}
-                          max={140}
-                          onChange={handleInputChangeVitalSignDto}
-                          value={vital.diastolic}
-                          onKeyUp={handleInputValueCheckDiastolic} 
-                          style={{border: "1px solid #014D88", borderRadius:"0rem"}}
-                          />
-                      
-                      
-                  </InputGroup>
-                  {vitalClinicalSupport.systolic !=="" ? (
-                  <span className={classes.error}>{vitalClinicalSupport.systolic}</span>
-                  ) : ""}
-                  {errors.systolic !=="" ? (
-                      <span className={classes.error}>{errors.systolic}</span>
-                  ) : "" }  
-                  {vitalClinicalSupport.diastolic !=="" ? (
-                  <span className={classes.error}>{vitalClinicalSupport.diastolic}</span>
-                  ) : ""}
-                  {errors.diastolic !=="" ? (
-                      <span className={classes.error}>{errors.diastolic}</span>
-                  ) : "" }          
-                  </FormGroup>
-              </div>
-
-              </div>
+                <div className="form-group mb-3 col-md-12">
+                    <FormGroup>
+                    <FormLabelName >Blood Pressure</FormLabelName>
+                    <InputGroup>
+                    <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                            systolic(mmHg)
+                    </InputGroupText> 
+                        <Input 
+                            type="number"
+                            name="systolic"
+                            id="systolic"
+                            min="90"
+                            max="240"
+                            onChange={handleInputChangeVitalSignDto}
+                            value={vital.systolic}
+                            onKeyUp={handleInputValueCheckSystolic}
+                            style={{border: "1px solid #014D88", borderRadius:"0rem"}} 
+                        />
+                        <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
+                        diastolic(mmHg)
+                        </InputGroupText>
+                            <Input 
+                            type="number"
+                            name="diastolic"
+                            id="diastolic"
+                            min={0}
+                            max={140}
+                            onChange={handleInputChangeVitalSignDto}
+                            value={vital.diastolic}
+                            onKeyUp={handleInputValueCheckDiastolic} 
+                            style={{border: "1px solid #014D88", borderRadius:"0rem"}}
+                            />
+                        
+                        
+                    </InputGroup>
+                    {vitalClinicalSupport.systolic !=="" ? (
+                    <span className={classes.error}>{vitalClinicalSupport.systolic}</span>
+                    ) : ""}
+                    {errors.systolic !=="" ? (
+                        <span className={classes.error}>{errors.systolic}</span>
+                    ) : "" }  
+                    {vitalClinicalSupport.diastolic !=="" ? (
+                    <span className={classes.error}>{vitalClinicalSupport.diastolic}</span>
+                    ) : ""}
+                    {errors.diastolic !=="" ? (
+                        <span className={classes.error}>{errors.diastolic}</span>
+                    ) : "" }          
+                    </FormGroup>
+                </div>
+              </div> */}
             </div>
             <div className="row">
               
@@ -677,9 +615,9 @@ function DsdModelType (dsdmodel) {
                   <FormLabelName >Point of Entry*</FormLabelName>
                   <Input
                     type="select"
-                    name="whoStaging"
-                    id="whoStaging"
-                    value={objValues.whoStaging}
+                    name="enteryPoint"
+                    id="enteryPoint"
+                    value={objValues.enteryPoint}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
@@ -687,38 +625,13 @@ function DsdModelType (dsdmodel) {
                     <option value="select">Select </option>
 
                     {clinicalStage.map((value) => (
-                      <option key={value.id} value={value.id}>
+                      <option key={value.id} value={value.code}>
                         {value.display}
                       </option>
                     ))}
                   </Input>
-                  {errors.whoStaging !=="" ? (
-                      <span className={classes.error}>{errors.whoStaging}</span>
-                  ) : "" }
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName >Date of Delivery *</FormLabelName>
-                  <Input
-                    type="select"
-                    name="functionalStatus"
-                    id="functionalStatus"
-                    value={objValues.functionalStatus}
-                    onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
-                  >
-                    <option value="select">Select </option>
-
-                    {functionalStatus.map((value) => (
-                      <option key={value.id} value={value.id}>
-                        {value.display}
-                      </option>
-                    ))}
-                  </Input>
-                  {errors.functionalStatus !=="" ? (
-                      <span className={classes.error}>{errors.functionalStatus}</span>
+                  {errors.enteryPoint !=="" ? (
+                      <span className={classes.error}>{errors.enteryPoint}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -727,23 +640,20 @@ function DsdModelType (dsdmodel) {
                   <FormLabelName >FP Counselling *</FormLabelName>
                   <Input
                     type="select"
-                    name="levelOfAdherence"
-                    id="levelOfAdherence"
-                    value={objValues.levelOfAdherence}
+                    name="fpCounseling"
+                    id="fpCounseling"
+                    value={objValues.fpCounseling}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
-                    <option value="select">Select </option>
-
-                    {adherenceLevel.map((value) => (
-                      <option key={value.id} value={value.id}>
-                        {value.display}
-                      </option>
-                    ))}
+                    <option value="">Select </option>
+                    <option value="YES">YES </option>
+                    <option value="NO">NO </option>
+                   
                   </Input>
-                  {errors.levelOfAdherence !=="" ? (
-                      <span className={classes.error}>{errors.levelOfAdherence}</span>
+                  {errors.fpCounseling !=="" ? (
+                      <span className={classes.error}>{errors.fpCounseling}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -752,23 +662,22 @@ function DsdModelType (dsdmodel) {
                   <FormLabelName >FP Method *</FormLabelName>
                   <Input
                     type="select"
-                    name="levelOfAdherence"
-                    id="levelOfAdherence"
-                    value={objValues.levelOfAdherence}
+                    name="fpMethod"
+                    id="fpMethod"
+                    value={objValues.fpMethod}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
                     <option value="select">Select </option>
-
-                    {adherenceLevel.map((value) => (
+                    {fp.map((value) => (
                       <option key={value.id} value={value.id}>
                         {value.display}
                       </option>
                     ))}
                   </Input>
-                  {errors.levelOfAdherence !=="" ? (
-                      <span className={classes.error}>{errors.levelOfAdherence}</span>
+                  {errors.fpMethod !=="" ? (
+                      <span className={classes.error}>{errors.fpMethod}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -780,21 +689,22 @@ function DsdModelType (dsdmodel) {
             <br /><br />
             {/* TB Screening Form */}
             <div className="row">
-
+            
               <div className=" mb-3 col-md-4">
               <FormGroup>
                 <FormLabelName >Viral Load Collection Date*</FormLabelName>
               <Input
                 type="date"
-                name="nextAppointment"
-                id="nextAppointment"
-                value={vital.nextAppointment}
+                name="dateOfViralLoad32"
+                id="dateOfViralLoad32"
+                value={objValues.dateOfViralLoad32}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
+                //min={vital.encounterDate} 
+                max={moment(new Date()).format("YYYY-MM-DD")}  
               />
-              {errors.nextAppointment !=="" ? (
-                      <span className={classes.error}>{errors.nextAppointment}</span>
+              {errors.dateOfViralLoad32 !=="" ? (
+                      <span className={classes.error}>{errors.dateOfViralLoad32}</span>
                   ) : "" }
             </FormGroup>   
               </div>
@@ -803,15 +713,15 @@ function DsdModelType (dsdmodel) {
                 <FormLabelName >GA at VL Collection*</FormLabelName>
                 <Input
                   type="number"
-                  name="nextAppointment"
-                  id="nextAppointment"
-                  value={vital.nextAppointment}
+                  name="gaOfViralLoad32"
+                  id="gaOfViralLoad32"
+                  value={objValues.gaOfViralLoad32}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   min={vital.encounterDate}   
                 />
-              {errors.nextAppointment !=="" ? (
-                  <span className={classes.error}>{errors.nextAppointment}</span>
+              {errors.gaOfViralLoad32 !=="" ? (
+                  <span className={classes.error}>{errors.gaOfViralLoad32}</span>
               ) : "" }
             </FormGroup>   
               </div>
@@ -819,16 +729,15 @@ function DsdModelType (dsdmodel) {
                 <FormGroup>
                   <FormLabelName >Result *</FormLabelName>
                   <Input
-                    type="date"
-                    name="nextAppointment"
-                    id="nextAppointment"
+                    type="text"
+                    name="resultOfViralLoad32"
+                    id="resultOfViralLoad32"
                     value={vital.nextAppointment}
                     onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    min={vital.encounterDate}   
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
                   />
-                {errors.nextAppointment !=="" ? (
-                    <span className={classes.error}>{errors.nextAppointment}</span>
+                {errors.resultOfViralLoad32 !=="" ? (
+                    <span className={classes.error}>{errors.resultOfViralLoad32}</span>
                 ) : "" }
               </FormGroup>   
               </div>
@@ -847,15 +756,16 @@ function DsdModelType (dsdmodel) {
                 <FormLabelName >Viral Load Collection Date*</FormLabelName>
               <Input
                 type="date"
-                name="nextAppointment"
-                id="nextAppointment"
-                value={vital.nextAppointment}
+                name="dateOfViralLoadOt"
+                id="dateOfViralLoadOt"
+                value={objValues.dateOfViralLoadOt}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
+                //min={vital.encounterDate}
+                max={moment(new Date()).format("YYYY-MM-DD")}   
               />
-              {errors.nextAppointment !=="" ? (
-                      <span className={classes.error}>{errors.nextAppointment}</span>
+              {errors.dateOfViralLoadOt !=="" ? (
+                      <span className={classes.error}>{errors.dateOfViralLoadOt}</span>
                   ) : "" }
             </FormGroup>   
               </div>
@@ -880,16 +790,15 @@ function DsdModelType (dsdmodel) {
                 <FormGroup>
                   <FormLabelName >Result *</FormLabelName>
                   <Input
-                    type="date"
-                    name="nextAppointment"
-                    id="nextAppointment"
-                    value={vital.nextAppointment}
+                    type="text"
+                    name="resultOfViralLoadOt"
+                    id="resultOfViralLoadOt"
+                    value={objValues.resultOfViralLoadOt}
                     onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    min={vital.encounterDate}   
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}   
                   />
-                {errors.nextAppointment !=="" ? (
-                    <span className={classes.error}>{errors.nextAppointment}</span>
+                {errors.resultOfViralLoadOt !=="" ? (
+                    <span className={classes.error}>{errors.resultOfViralLoadOt}</span>
                 ) : "" }
               </FormGroup>   
               </div>
@@ -901,7 +810,30 @@ function DsdModelType (dsdmodel) {
             <br /><br />
             {/*  */}
             <div className="row">
-              <div className="form-group mb-3 col-md-6">
+            <div className=" mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName >DSD *</FormLabelName>
+                  <Input
+                    type="select"
+                    name="dsd"
+                    id="dsd"
+                    value={objValues.dsd}
+                    onChange={handleInputChange}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    required
+                  >
+                    <option value="">Select </option>
+                    <option value="YES">YES </option>
+                    <option value="NO">NO </option>
+                   
+                  </Input>
+                  {errors.fpCounseling !=="" ? (
+                      <span className={classes.error}>{errors.fpCounseling}</span>
+                  ) : "" }
+                </FormGroup>
+              </div>
+              {objValues.dsd==='YES' && (<>
+              <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                       <FormLabelName >DSD Model</FormLabelName>
                       <Input
@@ -920,14 +852,14 @@ function DsdModelType (dsdmodel) {
                       
                   </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
+              <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                       <FormLabelName >DSD Model Type</FormLabelName>
                       <Input
                           type="select"
-                          name="dsdModelType"
-                          id="dsdModelType"
-                          value={objValues.dsdModelType}
+                          name="dsdOption"
+                          id="dsdOption"
+                          value={objValues.dsdOption}
                           onChange={handleInputChange} 
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
                           >
@@ -942,19 +874,20 @@ function DsdModelType (dsdmodel) {
                       
                   </FormGroup>
               </div>
+              </>)}
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
-                      <FormLabelName >Maternal Outcome </FormLabelName>
+                      <FormLabelName >Maternal Outcome *</FormLabelName>
                       <Input
                           type="select"
-                          name="dsdModelType"
-                          id="dsdModelType"
-                          value={objValues.dsdModelType}
+                          name="maternalOutcome"
+                          id="maternalOutcome"
+                          value={objValues.maternalOutcome}
                           onChange={handleInputChange} 
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
                           >
                           <option value="">Select </option>
-                          {dsdModelType.map((value) => (
+                          {maternalCome.map((value) => (
                               <option key={value.code} value={value.code}>
                                   {value.display}
                               </option>
@@ -966,60 +899,63 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-3">
               <FormGroup>
-                <FormLabelName >Date of Outcome*</FormLabelName>
+                <FormLabelName >Date of Outcome *</FormLabelName>
                 <Input
                   type="date"
-                  name="nextAppointment"
-                  id="nextAppointment"
-                  value={vital.nextAppointment}
+                  name="dateOfmeternalOutcome"
+                  id="dateOfmeternalOutcome"
+                  value={vital.dateOfmeternalOutcome}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={vital.encounterDate}   
+                  //min={vital.encounterDate}  
+                  max={moment(new Date()).format("YYYY-MM-DD")} 
                 />
-                {errors.nextAppointment !=="" ? (
-                    <span className={classes.error}>{errors.nextAppointment}</span>
+                {errors.dateOfmeternalOutcome !=="" ? (
+                    <span className={classes.error}>{errors.dateOfmeternalOutcome}</span>
                 ) : "" }
               </FormGroup>   
               </div>
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
-                      <FormLabelName >Name of ART Facility</FormLabelName>
+                      <FormLabelName >Name of ART Facility </FormLabelName>
                       <Input
                       type="text"
-                      name="nextAppointment"
-                      id="nextAppointment"
-                      value={vital.nextAppointment}
+                      name="transferTo"
+                      id="transferTo"
+                      value={objValues.transferTo}
                       onChange={handleInputChange}
                       style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                      min={vital.encounterDate}
+                      //min={vital.encounterDate}
                       
                     />
-                  {errors.nextAppointment !=="" ? (
-                          <span className={classes.error}>{errors.nextAppointment}</span>
+                  {errors.transferTo !=="" ? (
+                          <span className={classes.error}>{errors.transferTo}</span>
                       ) : "" }
                       
                   </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
-                      <FormLabelName >Client Visit Status</FormLabelName>
+                      <FormLabelName >Client Visit Status *</FormLabelName>
                       <Input
                           type="select"
-                          name="dsdModelType"
-                          id="dsdModelType"
-                          value={objValues.dsdModelType}
+                          name="visitStatus"
+                          id="visitStatus"
+                          value={objValues.visitStatus}
                           onChange={handleInputChange} 
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
                           >
                           <option value="">Select </option>
-                          {dsdModelType.map((value) => (
+                          {visitStatus.map((value) => (
                               <option key={value.code} value={value.code}>
                                   {value.display}
                               </option>
                           ))}
                           
                       </Input>
-                      
+                      {errors.visitStatus !=="" ? (
+                          <span className={classes.error}>{errors.visitStatus}</span>
+                      ) : "" }
                   </FormGroup>
               </div>
               

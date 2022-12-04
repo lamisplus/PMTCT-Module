@@ -124,7 +124,6 @@ const UserRegistration = (props) => {
 
             }
     )
-
     const [saving, setSaving] = useState(false);
     const [disabledAgeBaseOnAge, setDisabledAgeBaseOnAge] = useState(false);
     const [ageDisabled, setAgeDisabled] = useState(true);
@@ -168,7 +167,7 @@ const UserRegistration = (props) => {
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
     patientObj = locationState ? locationState.patientObj : {}; 
-
+    const [sourceOfReferral, setSourceOfReferral] = useState([]);
     useEffect(() => { 
         loadGenders();
         getSex();
@@ -194,9 +193,21 @@ const UserRegistration = (props) => {
         if(basicInfo.dateOfRegistration < basicInfo.dob){
             alert('Date of registration can not be earlier than date of birth')
         }
-        
+        SOURCE_REFERRAL_PMTCT() 
     }, [patientObj, patientId, basicInfo.dateOfRegistration]);
     //Get list of Source of Referral
+    const SOURCE_REFERRAL_PMTCT =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL_PMTCT`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            setSourceOfReferral(response.data)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });        
+    }
     const getSex =()=>{
         axios
         .get(`${baseUrl}application-codesets/v2/SEX`,
@@ -216,7 +227,7 @@ const UserRegistration = (props) => {
         .catch((error) => {
         //console.log(error);
         });        
-}
+    }
     const loadGenders = useCallback(async () => {
         try {
             const response = await axios.get(`${baseUrl}application-codesets/v2/SEX`, { headers: {"Authorization" : `Bearer ${token}`} });
@@ -554,12 +565,19 @@ console.log(errors)
                                             <Label >Source of Referral *</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="select"
                                                     name="sourceOfReferral"
                                                     id="sourceOfReferral"
                                                     onChange={handleInputChange}
                                                     value={objValues.sourceOfReferral} 
-                                                />
+                                                >
+                                                     <option value="">Select</option>
+                                                    {sourceOfReferral.map((value, index) => (
+                                                        <option key={index} value={value.code}>
+                                                            {value.name}
+                                                        </option>
+                                                    ))}
+                                                </Input>
 
                                             </InputGroup>
                                             {errors.sourceOfReferral !=="" ? (
