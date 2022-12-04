@@ -367,6 +367,7 @@ function DsdModelType (dsdmodel) {
                     onChange={handleInputChangeVitalSignDto}
                     //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
+                    min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
                   />
                  {errors.dateOfVisit !=="" ? (
@@ -700,7 +701,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoad32}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={vital.encounterDate} 
+                min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
               />
               {errors.dateOfViralLoad32 !=="" ? (
@@ -761,7 +762,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoadOt}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={vital.encounterDate}
+                min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}   
               />
               {errors.dateOfViralLoadOt !=="" ? (
@@ -907,7 +908,7 @@ function DsdModelType (dsdmodel) {
                   value={vital.dateOfmeternalOutcome}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  //min={vital.encounterDate}  
+                  min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                   max={moment(new Date()).format("YYYY-MM-DD")} 
                 />
                 {errors.dateOfmeternalOutcome !=="" ? (
