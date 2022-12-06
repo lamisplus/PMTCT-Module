@@ -58,9 +58,9 @@ const useStyles = makeStyles(theme => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
-  console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
+  //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(true)
+  //const [loading, setLoading] = useState(true)
   let temp = { ...errors }
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
@@ -367,7 +367,7 @@ function DsdModelType (dsdmodel) {
                     onChange={handleInputChangeVitalSignDto}
                     //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
-                    min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                    //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
                   />
                  {errors.dateOfVisit !=="" ? (
@@ -701,7 +701,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoad32}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
               />
               {errors.dateOfViralLoad32 !=="" ? (
@@ -762,7 +762,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoadOt}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}   
               />
               {errors.dateOfViralLoadOt !=="" ? (
@@ -908,7 +908,7 @@ function DsdModelType (dsdmodel) {
                   value={vital.dateOfmeternalOutcome}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                  //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                   max={moment(new Date()).format("YYYY-MM-DD")} 
                 />
                 {errors.dateOfmeternalOutcome !=="" ? (
