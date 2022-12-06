@@ -926,7 +926,6 @@ function DsdModelType (dsdmodel) {
                       value={objValues.transferTo}
                       onChange={handleInputChange}
                       style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                      //min={vital.encounterDate}
                       
                     />
                   {errors.transferTo !=="" ? (
