@@ -244,9 +244,9 @@ const PmtctHts = (props) => {
         //setCompleted({...completed, ...completedMenu})
     }
     useEffect(() => { 
-        if(locationState && locationState.patientObj){
-            setPatientObj(locationState.patientObject)           
-        }
+        // if(locationState && locationState.patientObj){
+        //     setPatientObj(locationState.patientObject)           
+        // }
     }, []);
 
 

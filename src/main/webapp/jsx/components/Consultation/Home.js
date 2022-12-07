@@ -71,6 +71,7 @@ const ClinicVisit = (props) => {
   const [visitStatus, setVisitStatus] = useState([]);
   const [maternalCome, setMaternalCome] = useState([]);
   const [fp, setFp] = useState([]);
+  const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support 
   const [vitalClinicalSupport, setVitalClinicalSupport] = useState(
           {
@@ -83,7 +84,7 @@ const ClinicVisit = (props) => {
             respiratoryRate:"" 
           })
   const [objValues, setObjValues] = useState({
-    ancNo: "",
+    ancNo: patientObj.ancNo,
     dateOfViralLoad32: "",
     dateOfViralLoadOt: "",
     dateOfVisit: "",
@@ -99,7 +100,7 @@ const ClinicVisit = (props) => {
     id: "",
     maternalOutcome: "",
     nextAppointmentDate: "",
-    personUuid: "",
+    personUuid: patientObj.person_uuid,
     resultOfViralLoad32: "",
     resultOfViralLoadOt: "",
     transferTo: "",
@@ -124,6 +125,7 @@ const ClinicVisit = (props) => {
     VISIT_STATUS_PMTCT()
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
+    POINT_ENTRY_PMTCT();
   }, []);
 
     //Check for the last Vital Signs
@@ -158,6 +160,21 @@ const ClinicVisit = (props) => {
         });
   
     }
+    const POINT_ENTRY_PMTCT = () => {
+      axios
+        .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`,
+          { headers: { "Authorization": `Bearer ${token}` } }
+        )
+        .then((response) => {
+          //console.log(response.data);
+          setEntryPoint(response.data);
+        })
+        .catch((error) => {
+          //console.log(error);
+        });
+  
+    }
+    
     const FAMILY_PLANNING_METHOD = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
@@ -188,6 +205,7 @@ const ClinicVisit = (props) => {
     }
 
   const handleInputChange = e => {
+    setErrors({...temp, [e.target.name]:""}) 
     if(e.target.name ==='dsdModel'){
       DsdModelType(e.target.value)
     }
@@ -362,9 +380,9 @@ function DsdModelType (dsdmodel) {
                     type="date"
                     name="dateOfVisit"
                     id="dateOfVisit"
-                    value={vital.dateOfVisit}
+                    value={objValues.dateOfVisit}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    onChange={handleInputChangeVitalSignDto}
+                    onChange={handleInputChange}
                     //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
@@ -625,7 +643,7 @@ function DsdModelType (dsdmodel) {
                   >
                     <option value="select">Select </option>
 
-                    {clinicalStage.map((value) => (
+                    {entryPoint.map((value) => (
                       <option key={value.id} value={value.code}>
                         {value.display}
                       </option>
@@ -828,8 +846,8 @@ function DsdModelType (dsdmodel) {
                     <option value="NO">NO </option>
                    
                   </Input>
-                  {errors.fpCounseling !=="" ? (
-                      <span className={classes.error}>{errors.fpCounseling}</span>
+                  {errors.dsd !=="" ? (
+                      <span className={classes.error}>{errors.dsd}</span>
                   ) : "" }
                 </FormGroup>
               </div>
@@ -916,24 +934,7 @@ function DsdModelType (dsdmodel) {
                 ) : "" }
               </FormGroup>   
               </div>
-              <div className="form-group mb-3 col-md-3">
-                  <FormGroup>
-                      <FormLabelName >Name of ART Facility </FormLabelName>
-                      <Input
-                      type="text"
-                      name="transferTo"
-                      id="transferTo"
-                      value={objValues.transferTo}
-                      onChange={handleInputChange}
-                      style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                      
-                    />
-                  {errors.transferTo !=="" ? (
-                          <span className={classes.error}>{errors.transferTo}</span>
-                      ) : "" }
-                      
-                  </FormGroup>
-              </div>
+              
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
                       <FormLabelName >Client Visit Status *</FormLabelName>
@@ -958,7 +959,24 @@ function DsdModelType (dsdmodel) {
                       ) : "" }
                   </FormGroup>
               </div>
-              
+              <div className="form-group mb-3 col-md-3">
+                  <FormGroup>
+                      <FormLabelName >Name of ART Facility </FormLabelName>
+                      <Input
+                      type="text"
+                      name="transferTo"
+                      id="transferTo"
+                      value={objValues.transferTo}
+                      onChange={handleInputChange}
+                      style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                      
+                    />
+                  {errors.transferTo !=="" ? (
+                          <span className={classes.error}>{errors.transferTo}</span>
+                      ) : "" }
+                      
+                  </FormGroup>
+              </div>
             </div>  
             <br />
             <MatButton
