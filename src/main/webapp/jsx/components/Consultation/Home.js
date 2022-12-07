@@ -959,6 +959,7 @@ function DsdModelType (dsdmodel) {
                       ) : "" }
                   </FormGroup>
               </div>
+              {objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT' && (
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
                       <FormLabelName >Name of ART Facility </FormLabelName>
@@ -977,6 +978,7 @@ function DsdModelType (dsdmodel) {
                       
                   </FormGroup>
               </div>
+              )}
             </div>  
             <br />
             <MatButton
