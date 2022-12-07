@@ -98,7 +98,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 const BasicInfo = (props) => {
-    //console.log(props)
+    console.log(props)
     const classes = useStyles();
     const history = useHistory();
     const [errors, setErrors] = useState({});
@@ -404,7 +404,7 @@ const BasicInfo = (props) => {
                                     id="clientCode"
                                     value={objValues.clientCode}
                                     onChange={handleInputChange}
-                                    disabled={props.clientCode!=="" && props.clientCode!==null? true : false}
+                                    //disabled={props.clientCode!=="" && props.clientCode!==null? true : false}
                                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                                    
                                 />

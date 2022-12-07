@@ -38,7 +38,6 @@ const PmtctHts = (props) => {
     const history = useHistory();
     const location = useLocation();
     const locationState = location.state;
-    console.log(props)
     const [saving, setSaving] = useState(false);
     const [activeItem, setactiveItem] = useState('risk');
     const [completed, setCompleted] = useState([]);
@@ -162,7 +161,7 @@ const PmtctHts = (props) => {
         numChildren: "",
         numWives: "",
         others: {},
-        personId: "",
+        personId: props.patientObj.personId,
         personResponseDto: {
           active: true,
           
