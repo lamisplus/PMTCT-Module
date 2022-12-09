@@ -51,13 +51,11 @@ public class PmtctVisitService {
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
         pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
         pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
-        pmtctVisit.setDateOfViralLoad32(pmtctVisitRequestDto.getDateOfViralLoad32());
-        pmtctVisit.setGaOfViralLoad32(pmtctVisitRequestDto.getGaOfViralLoad32());
-        pmtctVisit.setResultOfViralLoad32(pmtctVisitRequestDto.getResultOfViralLoad32());
+        pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
+        pmtctVisit.setGaOfViralLoad(pmtctVisitRequestDto.getGaOfViralLoad());
+        pmtctVisit.setResultOfViralLoad(pmtctVisitRequestDto.getResultOfViralLoad());
 
-        pmtctVisit.setDateOfViralLoadOt(pmtctVisitRequestDto.getDateOfViralLoadOt());
-        pmtctVisit.setGaOfViralLoadOt(pmtctVisitRequestDto.getGaOfViralLoadOt());
-        pmtctVisit.setResultOfViralLoadOt(pmtctVisitRequestDto.getResultOfViralLoadOt());
+        pmtctVisit.setTimeOfViralLoad(pmtctVisitRequestDto.getTimeOfViralLoad());
 
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
 
@@ -112,14 +110,11 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setEnteryPoint(pmtctVisit.getEntryPoint());
         pmtctVisitResponseDto.setFpCounseling(pmtctVisit.getFpCounseling());
         pmtctVisitResponseDto.setFpMethod(pmtctVisit.getFpMethod());
-        pmtctVisitResponseDto.setDateOfViralLoad32(pmtctVisit.getDateOfViralLoad32());
-        pmtctVisitResponseDto.setGaOfViralLoad32(pmtctVisit.getGaOfViralLoad32());
-        pmtctVisitResponseDto.setResultOfViralLoad32(pmtctVisit.getResultOfViralLoad32());
+        pmtctVisitResponseDto.setDateOfViralLoad(pmtctVisit.getDateOfViralLoad());
+        pmtctVisitResponseDto.setGaOfViralLoad(pmtctVisit.getGaOfViralLoad());
+        pmtctVisitResponseDto.setResultOfViralLoad(pmtctVisit.getResultOfViralLoad());
 
-        pmtctVisitResponseDto.setDateOfViralLoadOt(pmtctVisit.getDateOfViralLoadOt());
-        pmtctVisitResponseDto.setGaOfViralLoadOt(pmtctVisit.getGaOfViralLoadOt());
-        pmtctVisitResponseDto.setResultOfViralLoadOt(pmtctVisit.getResultOfViralLoadOt());
-
+        pmtctVisitResponseDto.setTimeOfViralLoad(pmtctVisit.getTimeOfViralLoad());
         pmtctVisitResponseDto.setDsd(pmtctVisit.getDsd());
 
         pmtctVisitResponseDto.setDsdOption(pmtctVisit.getDsdOption());

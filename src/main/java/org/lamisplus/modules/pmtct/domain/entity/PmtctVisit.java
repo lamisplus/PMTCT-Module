@@ -28,12 +28,10 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private LocalDate dateOfVisit;
     private String fpCounseling;
     private String fpMethod;
-    private LocalDate dateOfViralLoad32;
-    private Integer gaOfViralLoad32;
-    private Integer resultOfViralLoad32;
-    private LocalDate dateOfViralLoadOt;
-    private Integer gaOfViralLoadOt;
-    private Integer resultOfViralLoadOt;
+    private String timeOfViralLoad;
+    private LocalDate dateOfViralLoad;
+    private Integer gaOfViralLoad;
+    private Integer resultOfViralLoad;
     private String dsd;
     private String dsdOption;
     private String dsdModel;
