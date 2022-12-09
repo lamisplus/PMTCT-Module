@@ -640,7 +640,7 @@ const UserRegistration = (props) => {
     //Get list of Source of Referral
     const SourceReferral =()=>{
             axios
-            .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL`,
+            .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL_PMTCT`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
             )
             .then((response) => {
@@ -1616,13 +1616,20 @@ const UserRegistration = (props) => {
                                             <Label >Source of Referral*</Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="text"
+                                                    type="select"
                                                     name="sourceOfReferral"
                                                     id="sourceOfReferral"
                                                     onChange={handleInputChange}
                                                     value={objValues.sourceOfReferral} 
-                                                />
-
+                                                >
+                                                {/* sourceReferral */}
+                                                <option value="">Select</option>
+                                                {sourceReferral.map((value, index) => (
+                                                    <option key={index} value={value.code}>
+                                                        {value.display}
+                                                    </option>
+                                                ))}
+                                            </Input>
                                             </InputGroup>
                                             {errors.sourceOfReferral !=="" ? (
                                                     <span className={classes.error}>{errors.sourceOfReferral}</span>

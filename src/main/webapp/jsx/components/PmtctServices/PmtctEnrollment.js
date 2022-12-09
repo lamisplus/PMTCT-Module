@@ -82,7 +82,7 @@ const useStyles = makeStyles(theme => ({
 
 const AncPnc = (props) => {
     const patientObj = props.patientObj;
-    console.log(patientObj)
+    //console.log(patientObj)
     let history = useHistory();
     const classes = useStyles()
     const [pointOfEntry, setPointOfEntry] = useState([]);
