@@ -24,7 +24,7 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String hospitalNumber;
     private String personUuid;
     private String uuid;
-    private Long entryPoint;
+    private String entryPoint;
     private LocalDate dateOfVisit;
     private String fpCounseling;
     private String fpMethod;
@@ -34,7 +34,7 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private LocalDate dateOfViralLoadOt;
     private Integer gaOfViralLoadOt;
     private Integer resultOfViralLoadOt;
-    private boolean dsd;
+    private String dsd;
     private String dsdOption;
     private String dsdModel;
     private String  maternalOutcome;

@@ -59,7 +59,7 @@ public class PmtctVisitService {
         pmtctVisit.setGaOfViralLoadOt(pmtctVisitRequestDto.getGaOfViralLoadOt());
         pmtctVisit.setResultOfViralLoadOt(pmtctVisitRequestDto.getResultOfViralLoadOt());
 
-        pmtctVisit.setDsd(pmtctVisitRequestDto.isDsd());
+        pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
 
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
@@ -86,12 +86,11 @@ public class PmtctVisitService {
                     Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
                     if(ancs.isPresent()) {
                         ANC anc = ancs.get();
-                        if (!((visitStatus.equalsIgnoreCase("A")) || (visitStatus.equalsIgnoreCase("SB")) ||
-                                (visitStatus.equalsIgnoreCase("TI")))) {
+                        if (visitStatus.contains("_IN")) {
 
-                            ancService.graduateFromANC(anc, visitStatus);
-                        } else {
                             ancService.updateANC(anc, visitStatus);
+                        } else {
+                            ancService.graduateFromANC(anc, visitStatus);
                         }
                     }
 
@@ -121,7 +120,7 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setGaOfViralLoadOt(pmtctVisit.getGaOfViralLoadOt());
         pmtctVisitResponseDto.setResultOfViralLoadOt(pmtctVisit.getResultOfViralLoadOt());
 
-        pmtctVisitResponseDto.setDsd(pmtctVisit.isDsd());
+        pmtctVisitResponseDto.setDsd(pmtctVisit.getDsd());
 
         pmtctVisitResponseDto.setDsdOption(pmtctVisit.getDsdOption());
         pmtctVisitResponseDto.setDsdModel(pmtctVisit.getDsdModel());

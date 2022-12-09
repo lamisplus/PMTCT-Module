@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
 import liquibase.pro.packaged.O;
+import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Query;
@@ -24,4 +25,6 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long>
 
     @Query(value = "SELECT count(*) FROM pmtct_anc pa", nativeQuery = true)
     Integer getTotalAnc();
+
+    List<ANC>  getANCByAncNo(String ancNo);
 }

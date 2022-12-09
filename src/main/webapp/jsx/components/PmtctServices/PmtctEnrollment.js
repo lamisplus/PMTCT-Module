@@ -248,7 +248,7 @@ const AncPnc = (props) => {
                                 <option value="">Select</option>
                                 {pointOfEntry.map((value, index) => (
                                     <option key={index} value={value.code}>
-                                        {value.name}
+                                        {value.display}
                                     </option>
                                 ))}
                             </Input>
@@ -330,7 +330,7 @@ const AncPnc = (props) => {
                                 <option value="">Select</option>
                                 {timingOfArtInitiation.map((value, index) => (
                                     <option key={index} value={value.code}>
-                                        {value.name}
+                                        {value.display}
                                     </option>
                                 ))}
                             </Input>
@@ -355,7 +355,7 @@ const AncPnc = (props) => {
                                 <option value="">Select</option>
                                 {tbStatus.map((value, index) => (
                                     <option key={index} value={value.code}>
-                                        {value.name}
+                                        {value.display}
                                     </option>
                                 ))}
                             </Input>

@@ -140,4 +140,10 @@ public class PMTCTController {
 //    public ResponseEntity<Delivery> getSinglePMTCTDelivery(@PathVariable Long id) {
 //        return ResponseEntity.ok(this.deliveryService.getSingleDelivery(id));
 //    }
+
+    @PostMapping("/exist/anc-number/{ancNo}")
+    public boolean isANCNumberExisting(@PathVariable("ancNo") String ancNo) {
+        return ancService.isANCExisting(ancNo);
+    }
+
 }

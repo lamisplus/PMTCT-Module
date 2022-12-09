@@ -20,7 +20,7 @@ import java.util.List;
 public class PmtctVisitRequestDto implements Serializable {
     private Long id;
     private String ancNo;
-    private Long enteryPoint;
+    private String enteryPoint;
     private LocalDate dateOfVisit;
     private String fpCounseling;
     private String fpMethod;
@@ -30,7 +30,7 @@ public class PmtctVisitRequestDto implements Serializable {
     private LocalDate dateOfViralLoadOt;
     private Integer gaOfViralLoadOt;
     private Integer resultOfViralLoadOt;
-    private boolean dsd;
+    private String dsd;
     private String dsdOption;
     private String dsdModel;
     private String  maternalOutcome;

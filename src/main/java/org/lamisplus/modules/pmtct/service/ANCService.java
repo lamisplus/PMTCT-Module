@@ -874,5 +874,15 @@ public class ANCService {
         existingAnc.setFacilityId(user.getCurrentOrganisationUnitId());
         ancRepository.save(existingAnc);
     }
+
+    public boolean isANCExisting(String ancNO) {
+        System.out.println("ANCNO "+ancNO );
+        List<ANC> anc = ancRepository.getANCByAncNo(ancNO);
+        boolean reply = false;
+        if (anc.isEmpty()) reply = false;
+        else reply = true;
+        return reply;
+    }
+
 }
 

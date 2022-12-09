@@ -32,42 +32,33 @@ public class PMTCTEnrollmentService {
   private final PersonService personService;
   
   public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+      System.out.println(pmtctEnrollmentRequestDto);
      return convertEntitytoRespondDto(convertEntitytoRespondDto(pmtctEnrollmentRequestDto));
   }
   
   public PMTCTEnrollment convertEntitytoRespondDto(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
       PMTCTEnrollment pmtctEnrollment = new PMTCTEnrollment();
      pmtctEnrollment.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
-      pmtctEnrollment.setDiastolic(pmtctEnrollmentRequestDto.getDiastolic());
-      pmtctEnrollment.setBodyWeight(pmtctEnrollmentRequestDto.getBodyWeight());
       pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
-      pmtctEnrollment.setFpl(pmtctEnrollmentRequestDto.getFpl());
-      pmtctEnrollment.setAgreed2PartnerNotification(pmtctEnrollmentRequestDto.getAgreed2PartnerNotification());
-      pmtctEnrollment.setFundalHeight(pmtctEnrollmentRequestDto.getFundalHeight());
-      pmtctEnrollment.setInfantFeeding(pmtctEnrollmentRequestDto.getInfantFeeding());
-      pmtctEnrollment.setFetalPresentation(pmtctEnrollmentRequestDto.getFetalPresentation());
-     pmtctEnrollment.setNextAppointmentDate(pmtctEnrollmentRequestDto.getNextAppointmentDate());
-      pmtctEnrollment.setSystolic(pmtctEnrollmentRequestDto.getSystolic());
-     pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
-       pmtctEnrollment.setVisitStatus(pmtctEnrollmentRequestDto.getVisitStatus());
-      pmtctEnrollment.setVisitType(pmtctEnrollmentRequestDto.getVisitType());
-     pmtctEnrollment.setAgreed2PartnerNotification(pmtctEnrollmentRequestDto.getAgreed2PartnerNotification());
-      pmtctEnrollment.setReferredTo(pmtctEnrollmentRequestDto.getReferredTo());
-      pmtctEnrollment.setNutritionalSupport(pmtctEnrollmentRequestDto.getNutritionalSupport());
-     pmtctEnrollment.setViralLoadSample(pmtctEnrollmentRequestDto.getViralLoadSample());
-       pmtctEnrollment.setViralLoadSampleDate(pmtctEnrollmentRequestDto.getViralLoadSampleDate());
-     pmtctEnrollment.setUuid(UUID.randomUUID().toString());
+      pmtctEnrollment.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
+      pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
+      pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
+      pmtctEnrollment.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
+      pmtctEnrollment.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
+      pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
+      pmtctEnrollment.setUuid(UUID.randomUUID().toString());
       ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
        if (anc != null)
       { pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
-       pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
-        pmtctEnrollment.setFacilityId(anc.getFacilityId()); }
+        pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
+        pmtctEnrollment.setFacilityId(anc.getFacilityId());
+        pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
+        pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
+      }
      else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
     
       return (PMTCTEnrollment)this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
   }
-
-  
   public PMTCTEnrollmentRespondDto convertEntitytoRespondDto(PMTCTEnrollment pmtctEnrollment) {
        PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = new PMTCTEnrollmentRespondDto();
        if(pmtctEnrollment != null) {
@@ -76,26 +67,18 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setGAWeeks(pmtctEnrollment.getGAWeeks());
            pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
            pmtctEnrollmentRespondDto.setPmtctEnrollmentDate(pmtctEnrollment.getPmtctEnrollmentDate());
-           pmtctEnrollmentRespondDto.setSystolic(pmtctEnrollment.getSystolic());
-           pmtctEnrollmentRespondDto.setDiastolic(pmtctEnrollment.getDiastolic());
-           pmtctEnrollmentRespondDto.setBodyWeight(pmtctEnrollment.getBodyWeight());
-           pmtctEnrollmentRespondDto.setFundalHeight(pmtctEnrollment.getFundalHeight());
-           pmtctEnrollmentRespondDto.setFetalPresentation(pmtctEnrollment.getFetalPresentation());
-           pmtctEnrollmentRespondDto.setVisitStatus(pmtctEnrollment.getVisitStatus());
-           pmtctEnrollmentRespondDto.setVisitType(pmtctEnrollment.getVisitType());
            pmtctEnrollmentRespondDto.setTbStatus(pmtctEnrollment.getTbStatus());
-           pmtctEnrollmentRespondDto.setNextAppointmentDate(pmtctEnrollment.getNextAppointmentDate());
-           pmtctEnrollmentRespondDto.setNutritionalSupport(pmtctEnrollment.getNutritionalSupport());
-           pmtctEnrollmentRespondDto.setInfantFeeding(pmtctEnrollment.getInfantFeeding());
-           pmtctEnrollmentRespondDto.setFpl(pmtctEnrollment.getFpl());
-           pmtctEnrollmentRespondDto.setReferredTo(pmtctEnrollment.getReferredTo());
-           pmtctEnrollmentRespondDto.setAgreed2PartnerNotification(pmtctEnrollment.getAgreed2PartnerNotification());
-           pmtctEnrollmentRespondDto.setViralLoadSample(pmtctEnrollment.getViralLoadSample());
-           pmtctEnrollmentRespondDto.setViralLoadSampleDate(pmtctEnrollment.getViralLoadSampleDate());
-           pmtctEnrollmentRespondDto.setHospitalNumber(pmtctEnrollment.getHospitalNumber());
-           pmtctEnrollmentRespondDto.setFullName(getFullName(pmtctEnrollment.getHospitalNumber()));
-           pmtctEnrollmentRespondDto.setAge(calculateAge(pmtctEnrollment.getHospitalNumber()));
            pmtctEnrollmentRespondDto.setUuid(pmtctEnrollment.getUuid());
+           pmtctEnrollmentRespondDto.setEntryPoint(pmtctEnrollment.getEntryPoint());
+           pmtctEnrollmentRespondDto.setGravida(pmtctEnrollment.getGravida());
+           pmtctEnrollmentRespondDto.setArtStartDate(pmtctEnrollment.getArtStartDate());
+           pmtctEnrollmentRespondDto.setArtStartTime(pmtctEnrollment.getArtStartTime());
+           ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollment.getAncNo(), Long.valueOf(0L));
+           if (anc != null) {
+               pmtctEnrollmentRespondDto.setHospitalNumber(anc.getHospitalNumber());
+               pmtctEnrollmentRespondDto.setFullName(getFullName(anc.getPersonUuid()));
+               pmtctEnrollmentRespondDto.setAge(calculateAge(anc.getPersonUuid()));
+           }
        }
      return pmtctEnrollmentRespondDto;
   }
@@ -103,7 +86,7 @@ public class PMTCTEnrollmentService {
   private String getFullName(String uuid) {
       Optional<User> currentUser = this.userService.getUserWithRoles();
       User user = (User) currentUser.get();
-      Long facilityId = 0L;
+      Long facilityId = user.getCurrentOrganisationUnitId();
       Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
       String fullName = "";
       if (persons.isPresent())
@@ -122,7 +105,7 @@ public class PMTCTEnrollmentService {
   public int calculateAge(String uuid) {
       Optional<User> currentUser = this.userService.getUserWithRoles();
       User user = (User) currentUser.get();
-      Long facilityId = 0L;
+      Long facilityId = user.getCurrentOrganisationUnitId();
       Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
       int age = 0;
       if (persons.isPresent()) {

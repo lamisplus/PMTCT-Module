@@ -25,7 +25,7 @@ const Elicitation = (props) => {
         }
     }
     const handleDone=()=>{
-      props.setActivePage({...props.activePage, activePage:"home",})
+      props.setActivePage({...props.activePage, activePage:"recent-history",})
     }
 
   return (
