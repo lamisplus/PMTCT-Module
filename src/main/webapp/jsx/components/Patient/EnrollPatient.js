@@ -574,7 +574,7 @@ console.log(errors)
                                                      <option value="">Select</option>
                                                     {sourceOfReferral.map((value, index) => (
                                                         <option key={index} value={value.code}>
-                                                            {value.name}
+                                                            {value.display}
                                                         </option>
                                                     ))}
                                                 </Input>

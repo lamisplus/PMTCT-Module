@@ -703,7 +703,7 @@ function DsdModelType (dsdmodel) {
             </div>
             <br />
             <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>VIRAL LOAD AT 32-36 WEEKS GA </h4>
+            <h4 style={{color:'#fff'}}>VIRAL LOAD AT 32-36  <input type="radio" value="option2" /> VIRAL LOAD AT Other Time<input type="radio" value="option2" /> </h4>
             </Label>
             <br /><br />
             {/* TB Screening Form */}
@@ -762,66 +762,7 @@ function DsdModelType (dsdmodel) {
               </div>
            </div>
             <br />
-            <br />
-            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>VIRAL LOAD - Other AT ANY TIME POINT DURING PMTCT</h4>
-            </Label>
-            <br /><br />
-            {/* TB Screening Form */}
-            <div className="row">
-
-              <div className=" mb-3 col-md-4">
-              <FormGroup>
-                <FormLabelName >Viral Load Collection Date*</FormLabelName>
-              <Input
-                type="date"
-                name="dateOfViralLoadOt"
-                id="dateOfViralLoadOt"
-                value={objValues.dateOfViralLoadOt}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                max={moment(new Date()).format("YYYY-MM-DD")}   
-              />
-              {errors.dateOfViralLoadOt !=="" ? (
-                      <span className={classes.error}>{errors.dateOfViralLoadOt}</span>
-                  ) : "" }
-            </FormGroup>   
-              </div>
-              <div className=" mb-3 col-md-4">
-              <FormGroup>
-                <FormLabelName >GA at VL Collection*</FormLabelName>
-                <Input
-                  type="number"
-                  name="nextAppointment"
-                  id="nextAppointment"
-                  value={vital.nextAppointment}
-                  onChange={handleInputChange}
-                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={vital.encounterDate}   
-                />
-              {errors.nextAppointment !=="" ? (
-                  <span className={classes.error}>{errors.nextAppointment}</span>
-              ) : "" }
-            </FormGroup>   
-              </div>
-              <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName >Result *</FormLabelName>
-                  <Input
-                    type="text"
-                    name="resultOfViralLoadOt"
-                    id="resultOfViralLoadOt"
-                    value={objValues.resultOfViralLoadOt}
-                    onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}   
-                  />
-                {errors.resultOfViralLoadOt !=="" ? (
-                    <span className={classes.error}>{errors.resultOfViralLoadOt}</span>
-                ) : "" }
-              </FormGroup>   
-              </div>
-           </div>
+           
             <br />
             <Label as='a' color='black' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}> DSD MODEL & OUTCOME</h4>
