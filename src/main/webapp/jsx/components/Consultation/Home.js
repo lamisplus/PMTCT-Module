@@ -85,8 +85,7 @@ const ClinicVisit = (props) => {
           })
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
-    dateOfViralLoad32: "",
-    dateOfViralLoadOt: "",
+    dateOfViralLoad: "",
     dateOfVisit: "",
     dateOfmeternalOutcome: "",
     dsd: "",
@@ -95,16 +94,15 @@ const ClinicVisit = (props) => {
     enteryPoint: "",
     fpCounseling: "",
     fpMethod: "",
-    gaOfViralLoad32: "",
-    gaOfViralLoadOt: "",
+    gaOfViralLoad: "",
     id: "",
     maternalOutcome: "",
     nextAppointmentDate: "",
     personUuid: patientObj.person_uuid,
-    resultOfViralLoad32: "",
-    resultOfViralLoadOt: "",
+    resultOfViralLoad: "",
     transferTo: "",
-    visitStatus: ""
+    visitStatus: "",
+    timeOfViralLoad: "",
   }
   );
   const [vital, setVitalSignDto] = useState({
@@ -209,6 +207,7 @@ const ClinicVisit = (props) => {
     if(e.target.name ==='dsdModel'){
       DsdModelType(e.target.value)
     }
+    //console.log(e.target.name)
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
   }
@@ -702,8 +701,8 @@ function DsdModelType (dsdmodel) {
               </div>
             </div>
             <br />
-            <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>VIRAL LOAD AT 32-36  <input type="radio" value="option2" /> VIRAL LOAD AT Other Time<input type="radio" value="option2" /> </h4>
+            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}><input type="radio" name="timeOfViralLoad" value="viralLoadAt32" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAt32' ? true : false}/> VIRAL LOAD AT 32-36 {"  "} {"  "} <input type="radio" name="timeOfViralLoad" value="viralLoadAtAnyTime" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAtAnyTime' ? true : false}/> VIRAL LOAD AT Other Time </h4>
             </Label>
             <br /><br />
             {/* TB Screening Form */}
@@ -714,16 +713,16 @@ function DsdModelType (dsdmodel) {
                 <FormLabelName >Viral Load Collection Date*</FormLabelName>
               <Input
                 type="date"
-                name="dateOfViralLoad32"
-                id="dateOfViralLoad32"
-                value={objValues.dateOfViralLoad32}
+                name="dateOfViralLoad"
+                id="dateOfViralLoad"
+                value={objValues.dateOfViralLoad}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                 //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
               />
-              {errors.dateOfViralLoad32 !=="" ? (
-                      <span className={classes.error}>{errors.dateOfViralLoad32}</span>
+              {errors.dateOfViralLoad !=="" ? (
+                      <span className={classes.error}>{errors.dateOfViralLoad}</span>
                   ) : "" }
             </FormGroup>   
               </div>
@@ -732,15 +731,15 @@ function DsdModelType (dsdmodel) {
                 <FormLabelName >GA at VL Collection*</FormLabelName>
                 <Input
                   type="number"
-                  name="gaOfViralLoad32"
-                  id="gaOfViralLoad32"
-                  value={objValues.gaOfViralLoad32}
+                  name="gaOfViralLoad"
+                  id="gaOfViralLoad"
+                  value={objValues.gaOfViralLoad}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   min={vital.encounterDate}   
                 />
-              {errors.gaOfViralLoad32 !=="" ? (
-                  <span className={classes.error}>{errors.gaOfViralLoad32}</span>
+              {errors.gaOfViralLoad !=="" ? (
+                  <span className={classes.error}>{errors.gaOfViralLoad}</span>
               ) : "" }
             </FormGroup>   
               </div>
@@ -749,14 +748,14 @@ function DsdModelType (dsdmodel) {
                   <FormLabelName >Result *</FormLabelName>
                   <Input
                     type="text"
-                    name="resultOfViralLoad32"
-                    id="resultOfViralLoad32"
+                    name="resultOfViralLoad"
+                    id="resultOfViralLoad"
                     value={vital.nextAppointment}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
                   />
-                {errors.resultOfViralLoad32 !=="" ? (
-                    <span className={classes.error}>{errors.resultOfViralLoad32}</span>
+                {errors.resultOfViralLoad !=="" ? (
+                    <span className={classes.error}>{errors.resultOfViralLoad}</span>
                 ) : "" }
               </FormGroup>   
               </div>
