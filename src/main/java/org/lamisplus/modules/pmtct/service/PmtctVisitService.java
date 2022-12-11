@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.dto.ContactDto;
+import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.pmtct.domain.dto.*;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -202,5 +204,12 @@ public class PmtctVisitService {
     public PmtctVisit getSinglePmtctVisit(Long id) {
         return this.pmtctVisitRepository.findById(id)
                 .orElseThrow(() -> new Exception("ANC NOT FOUND"));
+    }
+
+    public List<PmtctVisitResponseDto> getVisitByAncNo(String ancNo) {
+        List<PmtctVisit> pmtctVisitList = this.pmtctVisitRepository.findByAncNoOrderByDateOfVisitDesc(ancNo);
+        List<PmtctVisitResponseDto> PmtctVisitResponseDtoList = new ArrayList<>();
+        pmtctVisitList.forEach(pmtctVisit -> PmtctVisitResponseDtoList.add(convertEntitytoRespondDto(pmtctVisit)));
+        return PmtctVisitResponseDtoList;
     }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
+import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
@@ -145,5 +146,11 @@ public class PMTCTController {
     public boolean isANCNumberExisting(@PathVariable("ancNo") String ancNo) {
         return ancService.isANCExisting(ancNo);
     }
+
+    @GetMapping(value ="/mother-visit-by-ancno/{ancNo}")
+    public ResponseEntity<List<PmtctVisitResponseDto>> getMotherVisitByAncNo(@PathVariable("ancNo") String ancNo) {
+        return ResponseEntity.ok (pmtctVisitService.getVisitByAncNo (ancNo));
+    }
+
 
 }
