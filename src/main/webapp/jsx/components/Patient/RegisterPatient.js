@@ -193,11 +193,10 @@ const UserRegistration = (props) => {
      const [kP, setKP] = useState([]);
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
-     const [transferIn, setTransferIn] = useState(false);
+     const [ancNumberCheck, setAncNumberCheck] = useState(false);
      // display the OVC number if patient is enrolled into OVC 
      const [ovcEnrolled, setOvcEnrolled] = useState(false);
-     //Input fields to hidden base on some conditions
-     const [hideTargetGroup, setHideTargetGroup]= useState("false");
+
      //status for hospital Number 
      const [hospitalNumStatus, setHospitalNumStatus]= useState(false);
      const [hospitalNumStatus2, setHospitalNumStatus2]= useState(false);
@@ -217,10 +216,6 @@ const UserRegistration = (props) => {
         loadTopLevelCountry();        
         CareEntryPoint();
         SourceReferral();
-        HivStatus();
-        EnrollmentSetting();
-        TBStatus();
-        KP();
         PregnancyStatus();
         GetCountry();
     
@@ -407,25 +402,23 @@ const UserRegistration = (props) => {
             const ninNumberValue = checkNINLimit(e.target.value)
             setBasicInfo ({...basicInfo,  [e.target.name]: ninNumberValue});
         }
-        if(e.target.name==='hospitalNumber' && e.target.value!==''){
-        async function getHosiptalNumber() {
-            const hosiptalNumber=e.target.value
-            const response = await axios.post(`${baseUrl}patient/exist/hospital-number`, hosiptalNumber,
+        if(e.target.name==='ancNo' && e.target.value!==''){
+
+        async function getAncNumber() {
+            const ancNumber=e.target.value
+            const response = await axios.get(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,
                     { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                 );
-            if(response.data!==true){
-                setHospitalNumStatus(false)
-                errors.hospitalNumber=""
-                setObjValues ({...objValues,  uniqueId: e.target.value});
-                setHospitalNumStatus2(true)
+            if(response.data===true){
+                console.log(response.data)
+                
+                toast.error("ANC number already exist")
+                setAncNumberCheck(response.data)
             }else{
-                errors.hospitalNumber=""
-                toast.error("Error! Hosiptal Number already exist");
-                setHospitalNumStatus(true)
-                setHospitalNumStatus2(false)
+                setAncNumberCheck(false)
             }
         }
-        getHosiptalNumber();
+        getAncNumber();
         } 
                 
     } 
@@ -479,6 +472,7 @@ const UserRegistration = (props) => {
     const handleInputChangeRelatives = e => {        
         setRelatives ({...relatives,  [e.target.name]: e.target.value});               
     }
+
     /*****  Validation  */
     const validate = () => {
         
@@ -505,6 +499,7 @@ const UserRegistration = (props) => {
             temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
             temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
+            temp.ancNo = objValues.ancNo ? "" : "This field is required"
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -599,7 +594,7 @@ const UserRegistration = (props) => {
                 patientForm.id = patientId;
                 objValues.personDto=patientForm;
                 //patientDTO.personDto=objValues;
-                console.log(objValues)
+                //console.log(objValues)
                 const response = await axios.post(`${baseUrl}pmtct/anc/anc-new-registration`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
@@ -651,62 +646,6 @@ const UserRegistration = (props) => {
             //console.log(error);
             });        
     }
-    //Get list of HIV STATUS ENROLLMENT
-    const HivStatus =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/HIV_STATUS_ENROL`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setHivStatus(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const EnrollmentSetting =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setEnrollSetting(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const TBStatus =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TB_STATUS`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setTbStatus(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of KP
-    const KP =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TARGET_GROUP`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setKP(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
     //Get list of KP
     const PregnancyStatus =()=>{
         axios
@@ -739,13 +678,13 @@ const UserRegistration = (props) => {
         return  acceptedNumber   
     }
     //Handle CheckBox 
-    const handleCheckBox =e =>{
-        if(e.target.checked){
-            setOvcEnrolled(true)
-        }else{
-            setOvcEnrolled(false)
-        }
-    }
+    // const handleCheckBox =e =>{
+    //     if(e.target.checked){
+    //         setOvcEnrolled(true)
+    //     }else{
+    //         setOvcEnrolled(false)
+    //     }
+    // }
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
@@ -1532,7 +1471,10 @@ const UserRegistration = (props) => {
                                             </InputGroup>
                                             {errors.ancNo !=="" ? (
                                                     <span className={classes.error}>{errors.ancNo}</span>
-                                            ) : "" }           
+                                            ) : "" }  
+                                            {ancNumberCheck===true ? (
+                                                        <span className={classes.error}>{"ANC number already exist"}</span>
+                                                    ) : "" }         
                                             </FormGroup>
                                     </div>
                                     

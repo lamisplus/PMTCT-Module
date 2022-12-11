@@ -306,7 +306,7 @@ const BasicInfo = (props) => {
         }
         getIndexClientCode();
                           
-}
+    }
     const handleSubmit =(e)=>{
         e.preventDefault();
         const patientForm ={

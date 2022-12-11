@@ -127,12 +127,9 @@ const UserRegistration = (props) => {
     const [saving, setSaving] = useState(false);
     const [disabledAgeBaseOnAge, setDisabledAgeBaseOnAge] = useState(false);
     const [ageDisabled, setAgeDisabled] = useState(true);
-
     const [genders, setGenders]= useState([]);
-
-
+    const [ancNumberCheck, setAncNumberCheck] = useState(false);
     const [errors, setErrors] = useState({})
-
     const userDetail = props.location && props.location.state ? props.location.state.user : null;
     const classes = useStyles();
     const history = useHistory();
@@ -314,7 +311,27 @@ const UserRegistration = (props) => {
         });    
     }
     const handleInputChange = e => { 
-        setErrors({...errors, [e.target.name]: ""})       
+        setErrors({...errors, [e.target.name]: ""}) 
+        if(e.target.name==='ancNo' && e.target.value!==''){
+
+            async function getAncNumber() {
+                const ancNumber=e.target.value
+                const ancNo= {
+                    ancNo:ancNumber
+                }
+                const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data===true){
+                    
+                    toast.error("ANC number already exist")
+                    setAncNumberCheck(response.data)
+                }else{
+                    setAncNumberCheck(false)
+                }
+            }
+            getAncNumber();
+            }       
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    
 
@@ -481,7 +498,10 @@ console.log(errors)
                                             </InputGroup>
                                             {errors.ancNo !=="" ? (
                                                     <span className={classes.error}>{errors.ancNo}</span>
-                                            ) : "" }           
+                                            ) : "" }  
+                                            {ancNumberCheck===true ? (
+                                                        <span className={classes.error}>{"ANC number already exist"}</span>
+                                                    ) : "" }         
                                             </FormGroup>
                                     </div>
                                     

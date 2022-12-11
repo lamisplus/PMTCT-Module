@@ -86,7 +86,7 @@ function SubMenu(props) {
                     }               
                     
                 </>)}
-                {patientObj.hivStatus!==null && patientObj.hivStatus!=='Negative' && (<>
+                {patientObj.hivStatus!==null && patientObj.hivStatus==='Negative' && (<>
                     <Menu.Item onClick={() => loadPmtctHts()} >PMTCT-HTS</Menu.Item>
                 </>)}                  
             </Menu>             
