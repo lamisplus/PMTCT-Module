@@ -10,6 +10,7 @@ import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
@@ -153,5 +154,19 @@ public class DeliveryService
     public Delivery getSingleDelivery(Long id) {
         return this.deliveryRepository.findById(id)
                 .orElseThrow(() -> new Exception("Delivery NOT FOUND"));
+    }
+
+    public Delivery viewDeliveryById(Long id) {
+        Delivery delivery = this.deliveryRepository.getDeliveryById(id);
+        return delivery;
+    }
+    //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
+    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        Delivery delivery = this.converRequestDtotoEntity(deliveryRequestDto);
+        delivery.setId(id);
+        //pmtctVisit.setArchived(0);
+        deliveryRepository.save(delivery);
+        return deliveryRequestDto;
     }
 }

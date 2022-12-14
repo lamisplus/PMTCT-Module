@@ -369,7 +369,7 @@ const PatientnHistory = (props) => {
             icons={tableIcons}
               title="Patient History "
               columns={[
-                { title: "Name", field: "name" },
+                { title: "Description", field: "name" },
                 {
                   title: "Encounter Date",
                   field: "date",
@@ -378,8 +378,8 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={recentActivities && recentActivities.map((row) => ({
-                   name: row.name,
+              data={[].map((row) => ({
+                   name: row.title,
                    date: row.date,
                    actions:
             

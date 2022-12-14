@@ -23,9 +23,11 @@ import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.EncounterRepository;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
+import org.lamisplus.modules.patient.service.VisitService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
@@ -186,6 +188,13 @@ public class ANCService {
         return anc;
     }
 
+    public ANCRequestDto entityToDto(ANC anc) {
+        ANCRequestDto ancRequestDto = new ANCRequestDto();
+        BeanUtils.copyProperties(anc, ancRequestDto);
+        return ancRequestDto;
+    }
+
+
     public ANCRespondDto convertEntityToDto(ANC anc) {
         ANCRespondDto ancdto = new ANCRespondDto();
         BeanUtils.copyProperties(anc, ancdto);
@@ -211,8 +220,26 @@ public class ANCService {
         return ancRespondDtoList;
 
     }
+    private ANC getExistAnc(Long id) {
+        return ancRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(VisitService.class, "errorMessage", "No visit was found with given Id " + id));
+    }
 
-    public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
+    public ANCRequestDto viewANCById(Long id) {
+        ANC anc = this.ancRepository.getANCById(id);
+        return entityToDto(anc);
+    }
+    public ANCRequestDto updateAnc(Long id, ANCRequestDto ancRequestDto) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        ANC anc = convertDtoToEntity(ancRequestDto);
+        anc.setId(id);
+        //pmtctVisit.setArchived(0);
+        ancRepository.save(anc);
+        return ancRequestDto;
+    }
+
+        public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
         ancRespondDto.setAncNo(anc.getAncNo());
         ancRespondDto.setId(anc.getId());
@@ -883,6 +910,7 @@ public class ANCService {
         else reply = true;
         return reply;
     }
+    //entityToDto
 
 }
 

@@ -152,5 +152,45 @@ public class PMTCTController {
         return ResponseEntity.ok (pmtctVisitService.getVisitByAncNo (ancNo));
     }
 
+    @PutMapping(value = "update-mother-visit/{id}")
+    public ResponseEntity<PmtctVisitResponseDto> updateMotherVisit(@PathVariable("id") Long id, @RequestBody PmtctVisitRequestDto pmtctVisitRequestDtoPmtctVisit) {
+        return ResponseEntity.ok (pmtctVisitService.updatePmtctVisit (id, pmtctVisitRequestDtoPmtctVisit));
+    }
+
+    @GetMapping(value = "view-mother-visit/{id}")
+    public ResponseEntity<PmtctVisitResponseDto> viewMotherVisit(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (pmtctVisitService.viewPmtctVisit(id));
+    }
+
+
+    @PutMapping(value = "update-anc/{id}")
+    public ResponseEntity<ANCRequestDto> updateANC(@PathVariable("id") Long id, @RequestBody ANCRequestDto ancRequestDto) {
+        return ResponseEntity.ok (ancService.updateAnc(id, ancRequestDto));
+    }
+
+    @GetMapping(value = "view-anc/{id}")
+    public ResponseEntity<ANCRequestDto> viewANC(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (ancService.viewANCById(id));
+    }
+
+    @PutMapping(value = "update-pmtct-enrollment/{id}")
+    public ResponseEntity<PMTCTEnrollmentRequestDto> updatePmtctEnrollment(@PathVariable("id") Long id, @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+        return ResponseEntity.ok (pmtctEnrollmentService.updatePMTCTEnrollment(id, pmtctEnrollmentRequestDto));
+    }
+
+    @GetMapping(value = "view-pmtct-enrollment/{id}")
+    public ResponseEntity<PMTCTEnrollment> viewPmtctEnrollment(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (pmtctEnrollmentService.viewPMTCTEnrollmentById(id));
+    }
+
+    @PutMapping(value = "update-delivery/{id}")
+    public ResponseEntity<DeliveryRequestDto> updateDelivery(@PathVariable("id") Long id, @RequestBody DeliveryRequestDto deliveryRequestDto) {
+        return ResponseEntity.ok (deliveryService.updateDelivery(id, deliveryRequestDto));
+    }
+
+    @GetMapping(value = "view-delivery/{id}")
+    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (deliveryService.viewDeliveryById(id));
+    }
 
 }

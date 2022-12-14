@@ -10,4 +10,6 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
    PMTCTEnrollment findByAncNo(String ancNo);
 
   Optional  <PMTCTEnrollment> getByAncNo(String ancNo);
+  PMTCTEnrollment getPMTCTEnrollmentById(Long id);
+
 }

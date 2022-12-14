@@ -13,6 +13,7 @@ import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
+import org.lamisplus.modules.pmtct.domain.dto.ANCRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRespondDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
@@ -139,5 +140,19 @@ public class PMTCTEnrollmentService {
     public PMTCTEnrollmentRespondDto getSinglePmtctEnrollmentByAncNo(String ancNo) {
         return convertEntitytoRespondDto(this.pmtctEnrollmentReporsitory.findByAncNo(ancNo));
                 //.orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
+    }
+
+    public PMTCTEnrollment viewPMTCTEnrollmentById(Long id) {
+        PMTCTEnrollment pmtctEnrollment = this.pmtctEnrollmentReporsitory.getPMTCTEnrollmentById(id);
+        return pmtctEnrollment;
+    }
+    //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
+    public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        PMTCTEnrollment pmtctEnrollment = convertEntitytoRespondDto(pmtctEnrollmentRequestDto);
+        pmtctEnrollment.setId(id);
+        //pmtctVisit.setArchived(0);
+        pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+        return pmtctEnrollmentRequestDto;
     }
 }

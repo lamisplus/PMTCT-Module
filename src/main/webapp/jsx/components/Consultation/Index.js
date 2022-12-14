@@ -1,7 +1,7 @@
 import React, {useState, Fragment, useEffect } from "react";
 import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
 import ConsultationPage from './Home';
-import ClinicHistoryPage from "./ViewUpdate/ClinicHistory";
+import InfantVisit from "./InfantVisit";
 
 const divStyle = {
   borderRadius: "2px",
@@ -35,8 +35,8 @@ const ClinicVisitPage = (props) => {
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">                   
                     <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
                   </Tab>  
-                  <Tab eventKey="history" title=" CHILD FOLLOW UP VISIT">                   
-                   <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
+                  <Tab eventKey="history" title="CHILD FOLLOW UP VISIT">                   
+                   <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent}/>
                   </Tab>                   
                 </Tabs>
               </div>

@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
 {
     Optional<Delivery> findByAncNo (String ancNo);
+
+    Delivery getDeliveryById(Long id);
 }

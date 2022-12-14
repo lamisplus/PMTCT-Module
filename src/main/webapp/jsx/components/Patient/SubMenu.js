@@ -63,6 +63,15 @@ function SubMenu(props) {
     const loadPmtctHts = (row) =>{        
         props.setActiveContent({...props.activeContent, route:'pmtct-hts'})
     }
+    const onClickInfant = (row) =>{        
+        props.setActiveContent({...props.activeContent, route:'infants'})
+    }
+    const onClickPartner = (row) =>{        
+        props.setActiveContent({...props.activeContent, route:'partners'})
+    }
+    const loadPatientHistory = ()=>{
+        props.setActiveContent({...props.activeContent, route:'patient-history'})
+    }
     //
 
     return (
@@ -81,6 +90,8 @@ function SubMenu(props) {
                             <>
                             <Menu.Item onClick={() => onClickConsultation()} >Follow Up Visit</Menu.Item>                
                             <Menu.Item onClick={() => loadLabourDelivery()} >Labour and Delivery</Menu.Item>
+                            <Menu.Item onClick={() => onClickPartner()} > Partners</Menu.Item>
+                            <Menu.Item onClick={() => onClickInfant()} > Infant Information</Menu.Item>
                             </>
                         )
                     }               
@@ -88,7 +99,8 @@ function SubMenu(props) {
                 </>)}
                 {patientObj.hivStatus!==null && patientObj.hivStatus==='Negative' && (<>
                     <Menu.Item onClick={() => loadPmtctHts()} >PMTCT-HTS</Menu.Item>
-                </>)}                  
+                </>)}  
+                <Menu.Item onClick={() => loadPatientHistory()} >History</Menu.Item>                
             </Menu>             
         </div>
     );
