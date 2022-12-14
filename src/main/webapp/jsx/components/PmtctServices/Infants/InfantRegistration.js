@@ -201,13 +201,14 @@ const LabourDelivery = (props) => {
             <form >
                 <div className="row">
                     <h2>New Infant Registration</h2>
+                    <div className="row">
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >ANC Number *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="givenName"
+                                    name="ancNo"
                                     id="ancNo"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.ancNo} 
@@ -219,6 +220,7 @@ const LabourDelivery = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
+                    </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >Infant Given Name *</Label>
@@ -226,10 +228,10 @@ const LabourDelivery = (props) => {
                                 <Input 
                                     type="text"
                                     name="givenName"
-                                    id="ancNo"
+                                    id="givenName"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.ancNo} 
-                                    disabled
+                                    value={""} 
+                                    //disabled
                                 />
                             </InputGroup>
                             {errors.ancNo !=="" ? (
@@ -246,7 +248,7 @@ const LabourDelivery = (props) => {
                                     name="surname"
                                     id="surname"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.surname} 
+                                    value={""} 
                                 >
                                
                                </Input>

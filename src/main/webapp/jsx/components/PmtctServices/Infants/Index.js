@@ -144,50 +144,9 @@ const PatientnHistory = (props) => {
         }
         
     }
-    const LoadDeletePage =(row)=>{
-        
-        if(row.path==='Mental-health'){        
-            //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
-            axios
-            .delete(`${baseUrl}observation/${row.id}`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                toast.success("Record Deleted Successfully");
-                PatientHistory()
-            })
-            .catch((error) => {
-                if(error.response && error.response.data){
-                    let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                    toast.error(errorMessage);
-                  }
-                  else{
-                    toast.error("Something went wrong. Please try again...");
-                  }
-            });  
-        }else if(row.path==='Art-commence'){
-            //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
-            axios
-            .delete(`${baseUrl}hiv/art/commencement/${row.id}`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                toast.success("Record Deleted Successfully");
-                PatientHistory()
-            })
-            .catch((error) => {
-                if(error.response && error.response.data){
-                    let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                    toast.error(errorMessage);
-                  }
-                  else{
-                    toast.error("Something went wrong. Please try again...");
-                  }
-            });
-
-        }
-        
-    }
+    const LoadPage =()=>{    
+        props.setActiveContent({...props.activeContent, route:'add-infant', id:"", actionType:""})
+}
 
   return (
     <div>
@@ -195,14 +154,13 @@ const PatientnHistory = (props) => {
             variant="contained"
             color="primary"
             className=" float-end  mr-2 mt-2"
-            //onClick={()=>handleItemClickPage('add')}
+            onClick={()=>LoadPage()}
             style={{backgroundColor:"#014d88"}}
             startIcon={<FaUserPlus size="10"/>}
         >
             <span style={{ textTransform: "capitalize" }}>New Infant</span>
         </Button>
-        <br/><br/><br/><br/>
-       
+        <br/><br/><br/>
             <MaterialTable
             icons={tableIcons}
               title="List of Infants "
@@ -235,8 +193,8 @@ const PatientnHistory = (props) => {
 
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
                                 {row.viewable && ( <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>)}
-                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
-                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)} 
+                                {/* {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
+                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)}  */}
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>
