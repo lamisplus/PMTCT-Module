@@ -189,7 +189,6 @@ const PatientnHistory = (props) => {
         
     }
 
-
   return (
     <div>
     <Button

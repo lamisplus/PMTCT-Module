@@ -13,10 +13,13 @@ import ClinicVisit from '../Consultation/Index'
 import PmtctEnrollment from './../PmtctServices/PmtctEnrollment';
 import AncEnrollement from './../PmtctServices/AncEnrollement';
 import LabourDelivery from './../PmtctServices/LabourDelivery';
-import Biometrics from './Biometric'
 import PmtctHts from './../PMTCTHTSEnrollment/Index'
 import Partners from './../PmtctServices/Partners/Index'
 import Infants from './../PmtctServices/Infants/Index'
+import AddPartners from './../PmtctServices/Partners/AddNewPartner'
+import AddInfants from './../PmtctServices/Infants/InfantRegistration'
+import PatientHistory from './../History/PatientHistory'
+import RecentHistory from './../History/RecentHistory';
 
 const styles = theme => ({
   root: {
@@ -74,8 +77,8 @@ function PatientCard(props) {
             <PatientCardDetail patientObj={patientObj} setArt={setArt} setActiveContent={setActiveContent}/>            
             <SubMenu patientObj={patientObj} art={art} setActiveContent={setActiveContent}/>
             <br/>
-          {/* {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)} */}
-          {activeContent.route==='biometrics' &&(<Biometrics patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+
           {activeContent.route==='consultation' &&( <ClinicVisit patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='anc-pnc' &&( <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='anc-enrollment' &&( <AncEnrollement patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
@@ -83,6 +86,9 @@ function PatientCard(props) {
           {activeContent.route==='pmtct-hts' &&( <PmtctHts patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='partners' &&( <Partners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='infants' &&( <Infants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='add-partner' &&( <AddPartners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='add-infants' &&( <AddInfants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='patient-history' &&( <PatientHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}         
           {/* History Pages */}
          
          </CardContent>

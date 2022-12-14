@@ -507,7 +507,7 @@ const redirectLink=()=>{
             <h4 className="card-title">Visit Chart</h4>
           </div>
           <div className="card-body">
-            <PerfectScrollbar
+            {/* <PerfectScrollbar
               style={{ height: "370px" }}
               id="DZ_W_TimeLine"
               className="widget-timeline dz-scroll height370 ps ps--active-y"
@@ -561,7 +561,7 @@ const redirectLink=()=>{
                   </Alert>
                 }
               </ul>
-            </PerfectScrollbar>
+            </PerfectScrollbar> */}
           </div>
         </div>
       </div>
