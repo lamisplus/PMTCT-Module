@@ -27,4 +27,6 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long>
     Integer getTotalAnc();
 
     List<ANC>  getANCByAncNo(String ancNo);
+
+    ANC getANCById(Long id);
 }

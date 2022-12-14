@@ -7,12 +7,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.dto.ContactDto;
 import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.patient.domain.entity.Person;
+import org.lamisplus.modules.patient.domain.entity.Visit;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.lamisplus.modules.patient.service.VisitService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
@@ -212,4 +215,23 @@ public class PmtctVisitService {
         pmtctVisitList.forEach(pmtctVisit -> PmtctVisitResponseDtoList.add(convertEntitytoRespondDto(pmtctVisit)));
         return PmtctVisitResponseDtoList;
     }
+
+    private PmtctVisit getExistVisit(Long id) {
+        return pmtctVisitRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(VisitService.class, "errorMessage", "No visit was found with given Id " + id));
+    }
+    public PmtctVisitResponseDto updatePmtctVisit(Long id, PmtctVisitRequestDto pmtctVisitRequestDto) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        PmtctVisit pmtctVisit = converRequestDtotoEntity(pmtctVisitRequestDto);
+        pmtctVisit.setId(id);
+        //pmtctVisit.setArchived(0);
+        return convertEntitytoRespondDto(pmtctVisitRepository.save(pmtctVisit));
+    }
+
+    public PmtctVisitResponseDto viewPmtctVisit(Long id) {
+        PmtctVisit pmtctVisit = getExistVisit(id);
+        return convertEntitytoRespondDto(pmtctVisit);
+    }
+
 }
