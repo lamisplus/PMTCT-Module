@@ -267,11 +267,6 @@ const UserRegistration = (props) => {
         const response = await axios.get(`${baseUrl}organisation-units/parent-organisation-units/0`, { headers: {"Authorization" : `Bearer ${token}`} });
         settopLevelUnitCountryOptions(response.data);
     }, []);
-    const loadOrganisationUnitsByParentId = async (parentId) => {
-        const response = await axios.get(`${baseUrl}organisation-units/parent-organisation-units/${parentId}`, { headers: {"Authorization" : `Bearer ${token}`} });
-        return response.data;
-    };
-
     //Country List
       const GetCountry =()=>{
         axios

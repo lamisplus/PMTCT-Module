@@ -85,7 +85,7 @@ const LabourDelivery = (props) => {
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
-    const [bookingStatus, setBookingStatus] = useState([]);
+    const [genders, setGenders] = useState([]);
     const [delivery, setDelivery]= useState({
 
                 ancNo: patientObj.ancNo,
@@ -109,9 +109,21 @@ const LabourDelivery = (props) => {
                 vaginalTear: ""
     })
     useEffect(() => {           
-
+        SEX();
     }, [props.patientObj.id, ]);
-
+    const SEX =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/SEX`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            //console.log(response.data);
+            setGenders(response.data);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });    
+    }
     const handleInputChangeDeliveryDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
         setDelivery ({...delivery,  [e.target.name]: e.target.value});
@@ -137,7 +149,7 @@ const LabourDelivery = (props) => {
         temp.dateOfDelivery = delivery.dateOfDelivery ? "" : "This field is required"
         temp.childStatus = delivery.childStatus ? "" : "This field is required"
         temp.childGivenArvWithin72 = delivery.childGivenArvWithin72 ? "" : "This field is required"
-        temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required"
+        //temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
@@ -230,15 +242,34 @@ const LabourDelivery = (props) => {
                             <Label >Infant Surname</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="select"
-                                    name="bookingStatus"
-                                    id="bookingStatus"
+                                    type="input"
+                                    name="surname"
+                                    id="surname"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.bookingStatus} 
+                                    value={delivery.surname} 
+                                >
+                               
+                               </Input>
+                            </InputGroup>
+                            {errors.surname !=="" ? (
+                                    <span className={classes.error}>{errors.surname}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Sex *</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="select"
+                                    name="sex"
+                                    id="sex"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.sex} 
                                 >
                                 <option value="">Select </option>
                                     
-                                    {bookingStatus.map((value) => (
+                                    {genders.map((value) => (
                                         <option key={value.id} value={value.code}>
                                             {value.display}
                                         </option>
@@ -246,8 +277,8 @@ const LabourDelivery = (props) => {
 
                                </Input>
                             </InputGroup>
-                            {errors.bookingStatus !=="" ? (
-                                    <span className={classes.error}>{errors.bookingStatus}</span>
+                            {errors.sex !=="" ? (
+                                    <span className={classes.error}>{errors.sex}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
