@@ -15,7 +15,8 @@ import AncEnrollement from './../PmtctServices/AncEnrollement';
 import LabourDelivery from './../PmtctServices/LabourDelivery';
 import Biometrics from './Biometric'
 import PmtctHts from './../PMTCTHTSEnrollment/Index'
-
+import Partners from './../PmtctServices/Partners/Index'
+import Infants from './../PmtctServices/Infants/Index'
 
 const styles = theme => ({
   root: {
@@ -80,6 +81,8 @@ function PatientCard(props) {
           {activeContent.route==='anc-enrollment' &&( <AncEnrollement patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='labour-delivery' &&( <LabourDelivery patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {activeContent.route==='pmtct-hts' &&( <PmtctHts patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='partners' &&( <Partners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+          {activeContent.route==='infants' &&( <Infants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
           {/* History Pages */}
          
          </CardContent>

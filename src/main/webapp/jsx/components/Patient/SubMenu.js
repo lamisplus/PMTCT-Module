@@ -63,6 +63,12 @@ function SubMenu(props) {
     const loadPmtctHts = (row) =>{        
         props.setActiveContent({...props.activeContent, route:'pmtct-hts'})
     }
+    const onClickInfant = (row) =>{        
+        props.setActiveContent({...props.activeContent, route:'infants'})
+    }
+    const onClickPartner = (row) =>{        
+        props.setActiveContent({...props.activeContent, route:'partners'})
+    }
     //
 
     return (
@@ -81,6 +87,8 @@ function SubMenu(props) {
                             <>
                             <Menu.Item onClick={() => onClickConsultation()} >Follow Up Visit</Menu.Item>                
                             <Menu.Item onClick={() => loadLabourDelivery()} >Labour and Delivery</Menu.Item>
+                            <Menu.Item onClick={() => onClickPartner()} > Partners</Menu.Item>
+                            <Menu.Item onClick={() => onClickInfant()} > Infant Information</Menu.Item>
                             </>
                         )
                     }               
