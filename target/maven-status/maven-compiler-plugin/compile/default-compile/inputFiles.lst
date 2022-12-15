@@ -2,6 +2,7 @@ C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\enti
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\ANCRespondDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\DeliveryService.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PmtctVisitRequestDto.java
+C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\ANCAcivityTracker.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\DeliveryRequestDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PmtctHtsInfo.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\extensions\EntityScanConfiguration.java
@@ -10,6 +11,7 @@ C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\entity\enums\TestedForSyphilis.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\config\DomainConfiguration.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\ANCRequestDto.java
+C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\ActivityTracker.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\repository\PMTCTEnrollmentReporsitory.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PMTCTPersonDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\repository\DeliveryRepository.java
@@ -18,6 +20,7 @@ C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\enti
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\PMTCTEnrollmentService.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\ANCWithPersonRequestDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\installers\PMTCTInstaller.java
+C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PatientActivity.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\entity\PMTCTEnrollment.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\ANCService.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\Adr.java

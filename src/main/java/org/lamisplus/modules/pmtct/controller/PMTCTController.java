@@ -10,10 +10,7 @@ import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
-import org.lamisplus.modules.pmtct.service.ANCService;
-import org.lamisplus.modules.pmtct.service.DeliveryService;
-import org.lamisplus.modules.pmtct.service.PMTCTEnrollmentService;
-import org.lamisplus.modules.pmtct.service.PmtctVisitService;
+import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +28,8 @@ public class PMTCTController {
     private final PmtctVisitService pmtctVisitService;
 
     private final DeliveryService deliveryService;
+
+    private final ANCAcivityTracker ancAcivityTracker;
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
         System.out.println("Doc I got here nau");
@@ -191,6 +190,11 @@ public class PMTCTController {
     @GetMapping(value = "view-delivery/{id}")
     public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") Long id) {
         return ResponseEntity.ok (deliveryService.viewDeliveryById(id));
+    }
+
+    @GetMapping(value = "activities/{ancNo}")
+    public List<ActivityTracker> getActivitiesByANC(@PathVariable("ancNo") String ancNo) {
+        return ancAcivityTracker.getANCActivities(ancNo);
     }
 
 }
