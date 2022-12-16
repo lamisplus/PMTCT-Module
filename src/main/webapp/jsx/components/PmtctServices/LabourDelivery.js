@@ -627,8 +627,8 @@ const LabourDelivery = (props) => {
                                     value={delivery.hbstatus} 
                                     >
                                     <option value="" >Select</option>
-                                    <option value="Positive" >Yes</option>
-                                    <option value="Negative" >No</option>
+                                    <option value="Positive" >Positive</option>
+                                    <option value="Negative" >Negative</option>
                                     </Input>
                             </InputGroup>
                             {errors.hbstatus !=="" ? (
@@ -648,8 +648,8 @@ const LabourDelivery = (props) => {
                                     value={delivery.hcstatus} 
                                 >
                                 <option value="" >Select</option>
-                                <option value="Positive" >Yes</option>
-                                <option value="Negative" >No</option>
+                                <option value="Positive" >Positive</option>
+                                <option value="Negative" >Negative</option>
                                 </Input>
                             </InputGroup> 
                             {errors.hcstatus !=="" ? (

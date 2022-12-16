@@ -495,24 +495,24 @@ const index=0;
                 <div className="card overflow-hidden">
                   <div className="social-graph-wrapper widget-facebook">
                     <span className="s-icon">
-                      <span style={{fontSize:"14px"}}>Total Clinic Visit</span>
+                      <span style={{fontSize:"16px"}}>Total Clinic Visit</span>
                     </span>
                   </div>
                   <div className="row">
                     <div className="col-6 border-right">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">7</span> 
+                          <span className="counter"><b>4</b></span> 
                         </h4>
-                        <p className="m-0">ANC</p>
+                        <p className="m-0"><b>ANC</b></p>
                       </div>
                     </div>
                     <div className="col-6">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">11</span>
+                          <span className="counter"><b>8</b></span>
                         </h4>
-                        <p className="m-0">PNC</p>
+                        <p className="m-0"><b>PNC</b></p>
                       </div>
                     </div>
                   </div>
@@ -548,7 +548,7 @@ const index=0;
             </div>
             <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
-              <h3>Current Infant's</h3>
+              <h3>Current Infant's Details</h3>
             <PerfectScrollbar
               style={{ height: "370px" }}
               id="DZ_W_TimeLine1"

@@ -140,6 +140,7 @@ const UserRegistration = (props) => {
             gaweeks: "",
             gravida: "",
             expectedDeliveryDate:"",
+            firstAncDate:"",
             lmp: "",
             parity: "",
             person_uuid:"",
@@ -276,6 +277,8 @@ const UserRegistration = (props) => {
      /*****  Validation  */
      const validate = () => {
         let temp = { ...errors }
+        
+            //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
             temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
@@ -503,129 +506,146 @@ console.log(errors)
                                                         <span className={classes.error}>{"ANC number already exist"}</span>
                                                     ) : "" }         
                                             </FormGroup>
-                                    </div>
-                                    
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Gravida *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="number"
-                                                    name="gravida"
-                                                    id="gravida"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.gravida} 
-                                                />
+                                </div>
+                                <div className="form-group mb-3 col-md-6">
+                                    <FormGroup>
+                                    <Label >Date of Enrollment *</Label>
+                                    <InputGroup> 
+                                        <Input 
+                                            type="date"
+                                            name="firstAncDate"
+                                            id="firstAncDate"
+                                            onChange={handleInputChange}
+                                            value={objValues.firstAncDate} 
+                                        />
+                                    </InputGroup>
+                                    {errors.firstAncDate !=="" ? (
+                                            <span className={classes.error}>{errors.firstAncDate}</span>
+                                    ) : "" }  
+                                            
+                                    </FormGroup>
+                                </div>  
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Gravida *</Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="gravida"
+                                                id="gravida"
+                                                onChange={handleInputChange}
+                                                value={objValues.gravida} 
+                                            />
 
-                                            </InputGroup>
-                                            {errors.gravida !=="" ? (
-                                                    <span className={classes.error}>{errors.gravida}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Parity *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="number"
-                                                    name="parity"
-                                                    id="parity"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.parity} 
-                                                />
+                                        </InputGroup>
+                                        {errors.gravida !=="" ? (
+                                                <span className={classes.error}>{errors.gravida}</span>
+                                        ) : "" }
+                                        </FormGroup>
+                                </div>
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Parity *</Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="parity"
+                                                id="parity"
+                                                onChange={handleInputChange}
+                                                value={objValues.parity} 
+                                            />
 
-                                            </InputGroup>
-                                            {errors.parity !=="" ? (
-                                                    <span className={classes.error}>{errors.parity}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Date Of Last Menstrual Period * </Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="date"
-                                                    name="lmp"
-                                                    id="lmp"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.lmp} 
-                                                    max= {moment(new Date()).format("YYYY-MM-DD") }
-                                                />
+                                        </InputGroup>
+                                        {errors.parity !=="" ? (
+                                                <span className={classes.error}>{errors.parity}</span>
+                                        ) : "" }
+                                        </FormGroup>
+                                </div>
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Date Of Last Menstrual Period * </Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="date"
+                                                name="lmp"
+                                                id="lmp"
+                                                onChange={handleInputChange}
+                                                value={objValues.lmp} 
+                                                max= {moment(new Date()).format("YYYY-MM-DD") }
+                                            />
 
-                                            </InputGroup>
-                                            {errors.lmp !=="" ? (
-                                                    <span className={classes.error}>{errors.lmp}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>
-                                   
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Gestational Age (Weeks) *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="number"
-                                                    name="gaweeks"
-                                                    id="gaweeks"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.gaweeks} 
-                                                />
+                                        </InputGroup>
+                                        {errors.lmp !=="" ? (
+                                                <span className={classes.error}>{errors.lmp}</span>
+                                        ) : "" }
+                                        </FormGroup>
+                                </div>
+                                
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Gestational Age (Weeks) *</Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="gaweeks"
+                                                id="gaweeks"
+                                                onChange={handleInputChange}
+                                                value={objValues.gaweeks} 
+                                            />
 
-                                            </InputGroup>
-                                            {errors.gaweeks !=="" ? (
-                                                    <span className={classes.error}>{errors.gaweeks}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>
-                                    
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Source of Referral *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="select"
-                                                    name="sourceOfReferral"
-                                                    id="sourceOfReferral"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.sourceOfReferral} 
-                                                >
-                                                     <option value="">Select</option>
-                                                    {sourceOfReferral.map((value, index) => (
-                                                        <option key={index} value={value.code}>
-                                                            {value.display}
-                                                        </option>
-                                                    ))}
-                                                </Input>
+                                        </InputGroup>
+                                        {errors.gaweeks !=="" ? (
+                                                <span className={classes.error}>{errors.gaweeks}</span>
+                                        ) : "" }
+                                        </FormGroup>
+                                </div>
+                                
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Source of Referral *</Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="select"
+                                                name="sourceOfReferral"
+                                                id="sourceOfReferral"
+                                                onChange={handleInputChange}
+                                                value={objValues.sourceOfReferral} 
+                                            >
+                                                    <option value="">Select</option>
+                                                {sourceOfReferral.map((value, index) => (
+                                                    <option key={index} value={value.code}>
+                                                        {value.display}
+                                                    </option>
+                                                ))}
+                                            </Input>
 
-                                            </InputGroup>
-                                            {errors.sourceOfReferral !=="" ? (
-                                                    <span className={classes.error}>{errors.sourceOfReferral}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>                                
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Tested for syphilis *</Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="select"
-                                                    name="testedSyphilis"
-                                                    id="testedSyphilis"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.testedSyphilis} 
-                                                >
-                                                     <option value="" >Select</option>
-                                                    <option value="Yes" >Yes</option>
-                                                    <option value="No" >No</option>
-                                                </Input>
-                                            </InputGroup> 
-                                            {errors.testedSyphilis !=="" ? (
-                                                    <span className={classes.error}>{errors.testedSyphilis}</span>
-                                            ) : "" }                                       
-                                            </FormGroup>
-                                    </div>
+                                        </InputGroup>
+                                        {errors.sourceOfReferral !=="" ? (
+                                                <span className={classes.error}>{errors.sourceOfReferral}</span>
+                                        ) : "" }
+                                        </FormGroup>
+                                </div>                                
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Tested for syphilis *</Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="select"
+                                                name="testedSyphilis"
+                                                id="testedSyphilis"
+                                                onChange={handleInputChange}
+                                                value={objValues.testedSyphilis} 
+                                            >
+                                                    <option value="" >Select</option>
+                                                <option value="Yes" >Yes</option>
+                                                <option value="No" >No</option>
+                                            </Input>
+                                        </InputGroup> 
+                                        {errors.testedSyphilis !=="" ? (
+                                                <span className={classes.error}>{errors.testedSyphilis}</span>
+                                        ) : "" }                                       
+                                        </FormGroup>
+                                </div>
                                 
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>

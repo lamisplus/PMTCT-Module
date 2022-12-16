@@ -173,6 +173,7 @@ const UserRegistration = (props) => {
             gaweeks: "",
             gravida: "",
             expectedDeliveryDate:"",
+            firstAncDate:"",
             lmp: "",
             parity: "",
             hivDiognosicTime:"",
@@ -495,6 +496,7 @@ const UserRegistration = (props) => {
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
             temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
+            //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -1472,7 +1474,24 @@ const UserRegistration = (props) => {
                                                     ) : "" }         
                                             </FormGroup>
                                     </div>
-                                    
+                                    <div className="form-group mb-3 col-md-6">
+                                    <FormGroup>
+                                    <Label >Date of Enrollment *</Label>
+                                    <InputGroup> 
+                                        <Input 
+                                            type="date"
+                                            name="firstAncDate"
+                                            id="firstAncDate"
+                                            onChange={handleInputChange}
+                                            value={objValues.firstAncDate} 
+                                        />
+                                    </InputGroup>
+                                    {errors.firstAncDate !=="" ? (
+                                            <span className={classes.error}>{errors.firstAncDate}</span>
+                                    ) : "" }  
+                                            
+                                    </FormGroup>
+                                </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Gravida *</Label>
