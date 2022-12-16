@@ -29,6 +29,7 @@ const RecentHistory = (props) => {
   const [refillList, setRefillList] = useState([])
   const [clinicVisitList, setClinicVisitList] = useState([])
   const [recentActivities, setRecentActivities] = useState([])
+  console.log()
   const [loading, setLoading] = useState(true)
   let history = useHistory();
   const [
@@ -46,7 +47,7 @@ const RecentHistory = (props) => {
   //Get list of LaboratoryHistory
   const RecentActivities =()=>{
     axios
-       .get(`${baseUrl}hiv/patients/${props.patientObj.id}/activities?full=false`,
+       .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {
@@ -377,7 +378,7 @@ const LoadDeletePage =(row)=>{
 const redirectLink=()=>{
   props.setActiveContent({...props.activeContent, route:'recent-history'})
 }
-
+const index=0;
 
   return (
     <Fragment>
@@ -400,7 +401,7 @@ const redirectLink=()=>{
                     defaultActiveKey="0"
                   >
                     <>
-                    {[].map((data, i)=>
+                    {recentActivities.map((data, i)=>
                     <div className="accordion-item" key={i}>
                       <Accordion.Toggle
                           as={Card.Text}
@@ -415,7 +416,7 @@ const redirectLink=()=>{
                           }
                       >
                       <span className="accordion-header-icon"></span>
-                      <span className="accordion-header-text">Visit Date : <span className="">{data.date}</span> </span>
+                      <span className="accordion-header-text">Visit Date : <span className="">{data.activityDate}</span> </span>
                       <span className="accordion-header-indicator"></span>
                     </Accordion.Toggle>
                     <Accordion.Collapse
@@ -424,16 +425,14 @@ const redirectLink=()=>{
                     >
                       <div className="accordion-body-text">
                       <ul className="timeline">
-                        {data.activities && data.activities.map((activity,index) => ( 
-                         
-                          <>
+
                             <li>
                               <div className="timeline-panel">
-                              <div className={index % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{ActivityName(activity.name)}</div>
+                              <div className={i % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{"RA"}</div>
                               <div className="media-body">
-                                <h5 className="mb-1">{activity.name}</h5>
+                                <h5 className="mb-1">{data.activityName}</h5>
                                 <small className="d-block">
-                                {activity.date}
+                                {data.activityDate}
                                 </small>
                               </div>
                               <Dropdown className="dropdown">
@@ -461,34 +460,17 @@ const redirectLink=()=>{
                                 </svg>
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="dropdown-menu">
-                                {activity.viewable && ( <Dropdown.Item
+                                 <Dropdown.Item
                                   className="dropdown-item"
-                                  onClick={()=>LoadViewPage(activity,'view')}
+                                  //onClick={()=>LoadViewPage(activity,'view')}
                                   >
-                                  View
+                                    View
                                   </Dropdown.Item>
-                                )}
-                                {activity.viewable && ( <Dropdown.Item
-                                  className="dropdown-item"
-                                  onClick={()=>LoadViewPage(activity,'update')}
-                                  >
-                                  Update
-                                  </Dropdown.Item>
-                                )}
-                                  {activity.deletable && (<Dropdown.Item
-                                  className="dropdown-item"
-                                  to="/widget-basic"
-                                  onClick={()=>LoadDeletePage(activity)}
-                                  >
-                                  Delete
-                                  </Dropdown.Item>
-                                  )}
                                 </Dropdown.Menu>
                               </Dropdown>
                               </div>
                             </li>
-                          </>
-                        ))}                          
+                                                 
                       </ul>
                       </div>
                     </Accordion.Collapse>
@@ -504,64 +486,127 @@ const redirectLink=()=>{
       <div className="col-xl-8 col-xxl-8 col-lg-8">
         <div className="card">
           <div className="card-header border-0 pb-0">
-            <h4 className="card-title">Visit Chart</h4>
+            <h4 className="card-title">Patient Chart</h4>
           </div>
-          <div className="card-body">
-            {/* <PerfectScrollbar
+          <br/>
+          <div className="row">
+            <div className="col-sm-6 col-md-6 col-lg-6">
+              <div className="col-xl-12 col-xxl-12 col-sm-12">
+                <div className="card overflow-hidden">
+                  <div className="social-graph-wrapper widget-facebook">
+                    <span className="s-icon">
+                      <span style={{fontSize:"14px"}}>Total Clinic Visit</span>
+                    </span>
+                  </div>
+                  <div className="row">
+                    <div className="col-6 border-right">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">7</span> 
+                        </h4>
+                        <p className="m-0">ANC</p>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">11</span>
+                        </h4>
+                        <p className="m-0">PNC</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xl-12 col-xxl-12 col-sm-12">
+                <div className="card overflow-hidden">
+                  <div className="social-graph-wrapper widget-linkedin">
+                    <span className="s-icon">
+                    <span style={{fontSize:"14px"}}>No. of Infants</span>
+                    </span>
+                  </div>
+                  <div className="row">
+                    <div className="col-6 border-right">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">1</span> 
+                        </h4>
+                        <p className="m-0"><b>HIV <sup style={{color:"red"}}>+</sup></b></p>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="pt-3 pb-3 ps-0 pe-0 text-center">
+                        <h4 className="m-1">
+                          <span className="counter">2</span>
+                        </h4>
+                        <p className="m-0"><b>HIV <sup style={{color:"green"}}>-</sup></b></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-md-6 col-lg-6">
+            <div className="card-body">
+              <h3>Current Infant's</h3>
+            <PerfectScrollbar
               style={{ height: "370px" }}
-              id="DZ_W_TimeLine"
-              className="widget-timeline dz-scroll height370 ps ps--active-y"
+              id="DZ_W_TimeLine1"
+              className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
             >
               <ul className="timeline">
-                {vitaLoad.length >0 ? (
-                  <>
-                    {vitaLoad.map((test,index) => ( 
-                    <>
+             
                       <li key={index}>
-                      <div className={labStatus(test.labTestOrderStatus)}></div>
-                      <span
-                        className="timeline-panel text-muted"
-                        onClick={()=>redirectLink()}
-                        //to=""
-                      >
-                        <h6 className="mb-0">
-                          Test Order Date{" "}<br/>
-                          <strong className="text-primary">{test.orderDate}</strong>
-                        </h6>
-                        {test.labTestGroupName!=='others' &&(<h6 className="mb-0">
-                          Test Order{" "}<br/>
-                          <strong className="text-primary">{test.labTestGroupName + " - " + test.labTestName}</strong>.
-                        </h6>
-                          )}
-                          {test.labTestGroupName==='others' &&(<h6 className="mb-0">
-                          Test Order{" "}<br/>
-                          <strong className="text-primary">{test.labTestName + " - " + test.viralLoadIndicationName}</strong>.
-                        </h6>
-                          )}
-                        
-                        <h6 className="mb-0">
-                          Status{" "}<br/>
-                          <strong className="text-primary">{test.labTestOrderStatusName}</strong>.
-                        </h6>
-                        
-                      </span>
-                      </li>
-                    </>
+                        <div className={index % 2 == 0 ? "timeline-badge info" : "timeline-badge success"}></div>
+                        <span
+                          className="timeline-panel text-muted"
+                          //onClick={()=>redirectLink()}
+                          //to=""
+                        >
+                          <h6 className="mb-0">
+                            Infant Given Name
+                            <br/>
+                            Abudllahi
+                          </h6>
+                          <strong className="text-teal">
+                            Infant DOB<br/>
+                              12-15-2022
+                          </strong><br/> 
+                          <strong className="text-warning">
+                              Gender<br/>
+                              Male
+                          </strong>                    
 
-                    ))}
-                  
-                  </>
-                  ) 
-                  :
-                  <Alert
-                    variant="info"
-                    className="alert-dismissible solid fade show"
-                  >
-                    <p>No visit yet</p>
-                  </Alert>
-                }
+                        </span>
+                      </li>
+                      <li key={index}>
+                        <div className={index % 2 !== 0 ? "timeline-badge info" : "timeline-badge success"}></div>
+                        <span
+                          className="timeline-panel text-muted"
+                          //onClick={()=>redirectLink()}
+                          //to=""
+                        >
+                          <h6 className="mb-0">
+                            Infant Given Name
+                            <br/>
+                            Joyce
+                          </h6>
+                          <strong className="text-teal">
+                            Infant DOB<br/>
+                              12-15-2022
+                          </strong><br/> 
+                          <strong className="text-warning">
+                              Gender<br/>
+                              Female
+                          </strong>                    
+
+                        </span>
+                      </li>
+
               </ul>
-            </PerfectScrollbar> */}
+            </PerfectScrollbar>
+            </div>
+            </div>
           </div>
         </div>
       </div>

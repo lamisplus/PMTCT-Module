@@ -193,7 +193,7 @@ const LabourDelivery = (props) => {
             style={{backgroundColor:"#014d88"}}
             //startIcon={<FaUserPlus size="10"/>}
         >
-            <span style={{ textTransform: "capitalize" }}>New Partner</span>
+            <span style={{ textTransform: "capitalize" }}>Back</span>
         </Button>
         <br/><br/><br/><br/>         
         <Card className={classes.root}>

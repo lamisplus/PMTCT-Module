@@ -100,6 +100,7 @@ function SubMenu(props) {
                 {patientObj.hivStatus!==null && patientObj.hivStatus==='Negative' && (<>
                     <Menu.Item onClick={() => loadPmtctHts()} >PMTCT-HTS</Menu.Item>
                 </>)}  
+                <Menu.Item onClick={() => loadPmtctHts()} >PMTCT-HTS</Menu.Item>
                 <Menu.Item onClick={() => loadPatientHistory()} >History</Menu.Item>                
             </Menu>             
         </div>
