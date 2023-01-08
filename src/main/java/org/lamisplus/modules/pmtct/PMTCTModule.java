@@ -6,6 +6,9 @@ import com.foreach.across.core.context.configurer.ComponentScanConfigurer;
 import com.foreach.across.modules.hibernate.jpa.AcrossHibernateJpaModule;
 import org.lamisplus.modules.patient.PatientModule;
 import org.lamisplus.modules.patient.PatientModule;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+
+@EntityScan
 
 @AcrossApplication(
         modules = {

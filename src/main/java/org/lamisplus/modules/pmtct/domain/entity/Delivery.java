@@ -31,8 +31,8 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String HBStatus;
     private String HCStatus;
     private String referalSource;
-
-
+    private Integer numberOfInfantsAlive;
+    private Integer numberOfInfantsDead;
     @Override
     public boolean isNew() {
         return false;

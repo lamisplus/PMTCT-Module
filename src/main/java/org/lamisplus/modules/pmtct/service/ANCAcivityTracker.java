@@ -42,28 +42,37 @@ public class ANCAcivityTracker {
     public List<ActivityTracker> getANCActivities(String ancNo)
     {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
-        Optional<ANC> ancs = this.ancRepository.getByAncNo(ancNo);
-        if (ancs.isPresent())
+        LocalDate deliveryDate = this.getDeliveryDate(ancNo);
+        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisits(ancNo, deliveryDate);
+        if (!(pmtctVisits1.isEmpty()))
         {
             ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("ANC Enrollment");
-            activityTracker.setTableId(1);
-            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
-            activityTracker.setRecordId(ancs.get().getId());
-            activityTrackers.add(activityTracker);
+            pmtctVisits1.forEach(pmtctVisit ->{
+                activityTracker.setActivityName("PNC Visit");
+                activityTracker.setPath("anc-mother-visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctVisit.getId());
+                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
+                activityTrackers.add(activityTracker);
+            } );
+
         }
 
-        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByAncNo(ancNo);
-        if (pmtctEnrollments.isPresent())
+        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByAncNo(ancNo);
+        if (deliveries.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("PMTCT Enrollment");
-            activityTracker.setTableId(2);
-            activityTracker.setRecordId(pmtctEnrollments.get().getId());
-            activityTracker.setActivityDate(pmtctEnrollments.get().getPmtctEnrollmentDate());
+            activityTracker.setActivityName("Labour and Delivery");
+            activityTracker.setPath("anc-delivery");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setRecordId(deliveries.get().getId());
+            activityTracker.setActivityDate(deliveries.get().getDateOfDelivery());
             activityTrackers.add(activityTracker);
         }
-        LocalDate deliveryDate = this.getDeliveryDate(ancNo);
 
         List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisits(ancNo, deliveryDate);
         if (!(pmtctVisits.isEmpty()))
@@ -71,37 +80,42 @@ public class ANCAcivityTracker {
             ActivityTracker activityTracker = new ActivityTracker();
             pmtctVisits.forEach(pmtctVisit ->{
                 activityTracker.setActivityName("ANC Visit");
-                activityTracker.setTableId(3);
+                activityTracker.setPath("anc-mother-visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
                 activityTracker.setRecordId(pmtctVisit.getId());
                 activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
                 activityTrackers.add(activityTracker);
             } );
         }
-        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByAncNo(ancNo);
-        if (deliveries.isPresent())
+        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByAncNo(ancNo);
+        if (pmtctEnrollments.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("Labour and Delivery");
-            activityTracker.setTableId(4);
-            activityTracker.setRecordId(deliveries.get().getId());
-            activityTracker.setActivityDate(deliveries.get().getDateOfDelivery());
+            activityTracker.setActivityName("PMTCT Enrollment");
+            activityTracker.setPath("pmtct-enrollment");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setRecordId(pmtctEnrollments.get().getId());
+            activityTracker.setActivityDate(pmtctEnrollments.get().getPmtctEnrollmentDate());
             activityTrackers.add(activityTracker);
         }
 
-        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisits(ancNo, deliveryDate);
-        if (!(pmtctVisits1.isEmpty()))
+        Optional<ANC> ancs = this.ancRepository.getByAncNo(ancNo);
+        if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
-            pmtctVisits1.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("PNC Visit");
-                activityTracker.setTableId(3);
-                activityTracker.setRecordId(pmtctVisit.getId());
-                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
-                activityTrackers.add(activityTracker);
-            } );
+            activityTracker.setActivityName("ANC Enrollment");
+            activityTracker.setPath("anc-enrollment");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
+            activityTracker.setRecordId(ancs.get().getId());
+            activityTrackers.add(activityTracker);
         }
-
-
 
         return activityTrackers;
 

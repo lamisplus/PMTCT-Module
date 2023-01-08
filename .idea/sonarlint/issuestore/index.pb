@@ -2,8 +2,6 @@
 :
 
 src/App.js,1\e\1e43fa63aecd2127be034b3fb9d4caa172275714
-p
-@src/main/java/org/lamisplus/modules/pmtct/domain/entity/ANC.java,6\a\6a60bedc3ea14855ce07151991046e62bb208a93
 <
 .eslintcache,2\1\21d5732e90750915458158e179e86c3b1690252c
 F

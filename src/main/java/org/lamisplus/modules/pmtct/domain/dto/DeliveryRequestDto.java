@@ -26,4 +26,6 @@ public class DeliveryRequestDto implements Serializable {
     private String HBStatus;
     private String HCStatus;
     private String referalSource;
+    private Integer numberOfInfantsAlive;
+    private Integer numberOfInfantsDead;
 }

@@ -28,6 +28,7 @@ public class ANCRespondDto implements Serializable {
     private Object syphilisInfo;
     private Object pmtctHtsInfo;
     private Object partnerNotification;
+    private Object partnerInformation;
     private String person_uuid;
     private Object address;
     private  Object contactPoint;

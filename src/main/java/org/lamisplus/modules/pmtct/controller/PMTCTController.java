@@ -6,10 +6,7 @@ import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
 import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.Delivery;
-import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
+import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,6 +27,8 @@ public class PMTCTController {
     private final DeliveryService deliveryService;
 
     private final ANCAcivityTracker ancAcivityTracker;
+
+    private final InfantService infantService;
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
         System.out.println("Doc I got here nau");
@@ -195,6 +194,26 @@ public class PMTCTController {
     @GetMapping(value = "activities/{ancNo}")
     public List<ActivityTracker> getActivitiesByANC(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getANCActivities(ancNo);
+    }
+
+    @PostMapping(value = "add-infants")
+    public ResponseEntity<Infant> AddInfants(@RequestBody InfantDto infantDto) {
+         return ResponseEntity.ok(infantService.save(infantDto));
+    }
+
+    @GetMapping(value = "view-infant/{id}")
+    public ResponseEntity<Infant> viewInfant(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantService.getSingleInfant(id));
+    }
+
+    @PutMapping(value = "update-infant/{id}")
+    public ResponseEntity<Infant> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
+        return ResponseEntity.ok (infantService.updateInfant(id, infantDto));
+    }
+
+    @PutMapping(value = "update-partnerinformation-in-anc/{id}")
+    public PartnerInformation updatePartnerInformation(@PathVariable("id") Long id, @RequestBody PartnerInformation partnerInformation) {
+        return ancService.updateAncWithPartnerInfo(id, partnerInformation);
     }
 
 }

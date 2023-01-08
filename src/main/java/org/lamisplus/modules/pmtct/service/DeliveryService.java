@@ -40,6 +40,8 @@ public class DeliveryService
 
     public Delivery converRequestDtotoEntity(DeliveryRequestDto deliveryRequestDto) {
         Delivery delivery = new Delivery();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = (User) currentUser.get();
 
         delivery.setAncNo(deliveryRequestDto.getAncNo());
         delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
@@ -60,8 +62,11 @@ public class DeliveryService
         delivery.setHBStatus(deliveryRequestDto.getHBStatus());
         delivery.setHCStatus(deliveryRequestDto.getHCStatus());
         delivery.setReferalSource(deliveryRequestDto.getReferalSource());
-
+        delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
+        delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
         delivery.setUuid(UUID.randomUUID().toString());
+        delivery.setCreatedBy(user.getUserName());
+        delivery.setLastModifiedBy(user.getUserName());
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
         if (anc != null)
         {

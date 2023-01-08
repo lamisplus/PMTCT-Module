@@ -253,6 +253,7 @@ public class ANCService {
         ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
+        ancRespondDto.setPartnerInformation(anc.getPartnerInformation());
         //ancRespondDto.setPersonDto(getDtoFromPerson(person));
 
 
@@ -911,6 +912,18 @@ public class ANCService {
         return reply;
     }
     //entityToDto
+
+    public PartnerInformation updateAncWithPartnerInfo(Long id, PartnerInformation partnerInformation) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        ANC anc = this.getExistingANC(id);
+        PartnerInformation partnerInformation2 = partnerInformation;
+        if (partnerInformation2 != null) {
+            JsonNode partnerInformation2JsonNode = mapper.valueToTree(partnerInformation2);
+            anc.setPartnerInformation(partnerInformation2JsonNode);
+        }
+        ancRepository.save(anc);
+        return partnerInformation;
+    }
 
 }
 
