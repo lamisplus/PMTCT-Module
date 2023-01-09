@@ -444,32 +444,6 @@ const LabourDelivery = (props) => {
                                 ) : "" }  
                             </FormGroup>
                     </div>
-                   
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Maternal Outcome</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="select"
-                                    name="maternalOutcome"
-                                    id="maternalOutcome"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.maternalOutcome} 
-                                >
-                                    <option value="">Select </option>    
-                                    {maternalOutCome.map((value) => (
-                                        <option key={value.id} value={value.code}>
-                                            {value.display}
-                                        </option>
-                                    ))}
-                                </Input>
-                            </InputGroup> 
-                            {errors.maternalOutcome !=="" ? (
-                                    <span className={classes.error}>{errors.maternalOutcome}</span>
-                                ) : "" }                                       
-                            </FormGroup>
-                    </div>
-                   
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >Child given ARV within 72 hrs</Label>
@@ -655,6 +629,91 @@ const LabourDelivery = (props) => {
                             {errors.hcstatus !=="" ? (
                                     <span className={classes.error}>{errors.hcstatus}</span>
                                 ) : "" }                                        
+                            </FormGroup>
+                    </div>
+            <h3>Maternal Outcome</h3>
+            <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Maternal Outcome - Mother</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="select"
+                                    name="maternalOutcomeMother"
+                                    id="maternalOutcomeMother"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.maternalOutcomeMother} 
+                                >
+                                    <option value="">Select </option>    
+                                    {maternalOutCome.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
+                                </Input>
+                            </InputGroup> 
+                            {errors.maternalOutcomeMother !=="" ? (
+                                    <span className={classes.error}>{errors.maternalOutcomeMother}</span>
+                                ) : "" }                                       
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label > Maternal Outcome - Child</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="select"
+                                    name="maternalOutcome"
+                                    id="maternalOutcome"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.maternalOutcome} 
+                                >
+                                    <option value="">Select </option>    
+                                    {maternalOutCome.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
+                                </Input>
+                            </InputGroup> 
+                            {errors.maternalOutcome !=="" ? (
+                                    <span className={classes.error}>{errors.maternalOutcome}</span>
+                                ) : "" }                                       
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Number of Child Alive </Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="Number"
+                                    name="alive"
+                                    id="alive"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.alive} 
+                                    
+                                />
+                            </InputGroup>
+                            {errors.ancNo !=="" ? (
+                                    <span className={classes.error}>{errors.ancNo}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Number of Child Dead </Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="Number"
+                                    name="dead"
+                                    id="dead"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.dead} 
+                                    
+                                />
+                            </InputGroup>
+                            {errors.dead !=="" ? (
+                                    <span className={classes.error}>{errors.dead}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
   

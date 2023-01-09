@@ -88,24 +88,14 @@ const LabourDelivery = (props) => {
     const [delivery, setDelivery]= useState({
 
                 ancNo: patientObj.ancNo,
-                artStartedLdWard: "",
-                bookingStatus: "",
-                childGivenArvWithin72: "",
-                childStatus: "",
-                dateOfDelivery: "",
-                deliveryTime: "",
-                episiotomy: "",
-                feedingDecision: "",
-                gaweeks: "",
-                hbstatus: "",
-                hcstatus: "",
-                hivExposedInfantGivenHbWithin24hrs: "",
-                maternalOutcome: "",
-                modeOfDelivery: "",
-                onArt: "",
-                referalSource: "",
-                romDeliveryInterval: "",
-                vaginalTear: ""
+                age: "",
+                dateOfBirth: "",
+                fullName: "",
+                hbStatus: "",
+                hcStatus: "",
+                postTestCounseled: "",
+                referredTo: "",
+                syphillsStatus: "",
     })
     useEffect(() => {           
     }, [props.patientObj.id, ]);
@@ -122,20 +112,7 @@ const LabourDelivery = (props) => {
         temp.referalSource = delivery.referalSource ? "" : "This field is required"
         temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
         temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required"
-        temp.onArt = delivery.onArt ? "" : "This field is required"
-        temp.modeOfDelivery = delivery.modeOfDelivery ? "" : "This field is required"
-        temp.maternalOutcome = delivery.maternalOutcome ? "" : "This field is required"
-        temp.hivExposedInfantGivenHbWithin24hrs = delivery.hivExposedInfantGivenHbWithin24hrs ? "" : "This field is required"
-        temp.hcstatus = delivery.hcstatus ? "" : "This field is required"
-        temp.hbstatus = delivery.hbstatus ? "" : "This field is required"
-        temp.gaweeks = delivery.gaweeks ? "" : "This field is required"
-        temp.feedingDecision = delivery.feedingDecision ? "" : "This field is required"
-        temp.episiotomy = delivery.episiotomy ? "" : "This field is required"
-        temp.deliveryTime = delivery.deliveryTime ? "" : "This field is required"
-        temp.dateOfDelivery = delivery.dateOfDelivery ? "" : "This field is required"
-        temp.childStatus = delivery.childStatus ? "" : "This field is required"
-        temp.childGivenArvWithin72 = delivery.childGivenArvWithin72 ? "" : "This field is required"
-        temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required"
+
         setErrors({
             ...temp
             })    
@@ -166,7 +143,7 @@ const LabourDelivery = (props) => {
         } 
     }
     const LoadPage =()=>{    
-        props.setActiveContent({...props.activeContent, route:'add-partner', id:"", actionType:""})
+        props.setActiveContent({...props.activeContent, route:'partners', id:"", actionType:""})
     }
 
   return (      
@@ -187,9 +164,10 @@ const LabourDelivery = (props) => {
             <form >
                 <div className="row">
                     <h2>New Partner </h2>
+                    
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Partner  age *</Label>
+                            <Label >ANC Number *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
@@ -198,6 +176,42 @@ const LabourDelivery = (props) => {
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.ancNo} 
                                     disabled
+                                />
+                            </InputGroup>
+                            {errors.ancNo !=="" ? (
+                                    <span className={classes.error}>{errors.ancNo}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Partner  Full Name *</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="text"
+                                    name="fulName"
+                                    id="fulName"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.fulName} 
+                                    
+                                />
+                            </InputGroup>
+                            {errors.fulName !=="" ? (
+                                    <span className={classes.error}>{errors.fulName}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Partner  age *</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="Number"
+                                    name="age"
+                                    id="age"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.age} 
+                                    
                                 />
                             </InputGroup>
                             {errors.ancNo !=="" ? (
