@@ -79,34 +79,24 @@ const useStyles = makeStyles(theme => ({
     },
 }))
 
-const LabourDelivery = (props) => {
+const LabourinfantInfo = (props) => {
     const patientObj = props.patientObj;
     //let history = useHistory();
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
     const [genders, setGenders] = useState([]);
-    const [delivery, setDelivery]= useState({
-
-                ancNo: patientObj.ancNo,
-                artStartedLdWard: "",
-                bookingStatus: "",
-                childGivenArvWithin72: "",
-                childStatus: "",
-                dateOfDelivery: "",
-                deliveryTime: "",
-                episiotomy: "",
-                feedingDecision: "",
-                gaweeks: "",
-                hbstatus: "",
-                hcstatus: "",
-                hivExposedInfantGivenHbWithin24hrs: "",
-                maternalOutcome: "",
-                modeOfDelivery: "",
-                onArt: "",
-                referalSource: "",
-                romDeliveryInterval: "",
-                vaginalTear: ""
+    const [infantInfo, setInfantInfo]= useState({
+            ancNo: patientObj.ancNo,
+            dateOfinfantInfo: "",
+            firstName: "",
+            hospitalNumber: "",
+            middleName: "",
+            nin: "",
+            sex: "",
+            surname: "",
+            uuid: patientObj.ancUuid
+          
     })
     useEffect(() => {           
         SEX();
@@ -124,32 +114,20 @@ const LabourDelivery = (props) => {
         //console.log(error);
         });    
     }
-    const handleInputChangeDeliveryDto = e => {  
+    const handleInputChangeinfantInfoDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
-        setDelivery ({...delivery,  [e.target.name]: e.target.value});
+        setInfantInfo ({...infantInfo,  [e.target.name]: e.target.value});
     }
 
     //FORM VALIDATION
     const validate = () => {
         let temp = { ...errors }
-        temp.artStartedLdWard = delivery.artStartedLdWard ? "" : "This field is required"
-        temp.referalSource = delivery.referalSource ? "" : "This field is required"
-        temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
-        temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required"
-        temp.onArt = delivery.onArt ? "" : "This field is required"
-        temp.modeOfDelivery = delivery.modeOfDelivery ? "" : "This field is required"
-        temp.maternalOutcome = delivery.maternalOutcome ? "" : "This field is required"
-        temp.hivExposedInfantGivenHbWithin24hrs = delivery.hivExposedInfantGivenHbWithin24hrs ? "" : "This field is required"
-        temp.hcstatus = delivery.hcstatus ? "" : "This field is required"
-        temp.hbstatus = delivery.hbstatus ? "" : "This field is required"
-        temp.gaweeks = delivery.gaweeks ? "" : "This field is required"
-        temp.feedingDecision = delivery.feedingDecision ? "" : "This field is required"
-        temp.episiotomy = delivery.episiotomy ? "" : "This field is required"
-        temp.deliveryTime = delivery.deliveryTime ? "" : "This field is required"
-        temp.dateOfDelivery = delivery.dateOfDelivery ? "" : "This field is required"
-        temp.childStatus = delivery.childStatus ? "" : "This field is required"
-        temp.childGivenArvWithin72 = delivery.childGivenArvWithin72 ? "" : "This field is required"
-        //temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required"
+        temp.firstName = infantInfo.firstName ? "" : "This field is required"
+        temp.surname = infantInfo.surname ? "" : "This field is required"
+        temp.hospitalNumber = infantInfo.hospitalNumber ? "" : "This field is required"
+        temp.dateOfDelivery = infantInfo.dateOfDelivery ? "" : "This field is required"
+        temp.sex = infantInfo.sex ? "" : "This field is required"
+        //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
@@ -160,7 +138,7 @@ const LabourDelivery = (props) => {
         e.preventDefault();        
         if(validate()){
         setSaving(true);
-        axios.post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery,
+        axios.post(`${baseUrl}pmtct/anc/add-infants`, infantInfo,
         { headers: {"Authorization" : `Bearer ${token}`}},
         
         )
@@ -180,7 +158,7 @@ const LabourDelivery = (props) => {
         } 
     }
     const LoadPage =()=>{    
-        props.setActiveContent({...props.activeContent, route:'infant', id:"", actionType:""})
+        props.setActiveContent({...props.activeContent, route:'infants', id:"", actionType:""})
     }
 
   return (      
@@ -210,8 +188,8 @@ const LabourDelivery = (props) => {
                                     type="text"
                                     name="ancNo"
                                     id="ancNo"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.ancNo} 
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={patientObj.ancNo} 
                                     disabled
                                 />
                             </InputGroup>
@@ -227,15 +205,15 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="givenName"
-                                    id="givenName"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={""} 
+                                    name="firstName"
+                                    id="firstName"
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.firstName} 
                                     //disabled
                                 />
                             </InputGroup>
-                            {errors.ancNo !=="" ? (
-                                    <span className={classes.error}>{errors.ancNo}</span>
+                            {errors.firstName !=="" ? (
+                                    <span className={classes.error}>{errors.firstName}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -247,8 +225,8 @@ const LabourDelivery = (props) => {
                                     type="input"
                                     name="surname"
                                     id="surname"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={""} 
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.surname} 
                                 >
                                
                                </Input>
@@ -266,8 +244,8 @@ const LabourDelivery = (props) => {
                                     type="select"
                                     name="sex"
                                     id="sex"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.sex} 
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.sex} 
                                 >
                                 <option value="">Select </option>
                                     
@@ -286,14 +264,14 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of Delivery</Label>
+                            <Label >Date of infantInfo</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
                                     name="dateOfDelivery"
                                     id="dateOfDelivery"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.dateOfDelivery} 
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.dateOfDelivery} 
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
@@ -309,15 +287,15 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="gaweeks"
-                                    id="gaweeks"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.gaweeks} 
+                                    name="hospitalNumber"
+                                    id="hospitalNumber"
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.hospitalNumber} 
                                 />
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.hospitalNumber !=="" ? (
+                                    <span className={classes.error}>{errors.hospitalNumber}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -327,20 +305,18 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="gaweeks"
-                                    id="gaweeks"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.gaweeks} 
+                                    name="nin"
+                                    id="nin"
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.nin} 
                                 />
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.nin !=="" ? (
+                                    <span className={classes.error}>{errors.nin}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
-                    
-  
             </div>
                 
                 {saving ? <Spinner /> : ""}
@@ -379,4 +355,4 @@ const LabourDelivery = (props) => {
   );
 }
 
-export default LabourDelivery;
+export default LabourinfantInfo;

@@ -123,8 +123,8 @@
     "yup": "^0.32.8"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts --max-old-space-size=15096 build && xcopy /s /y build src\\main\\resources\\views\\static\\pmtct",
+    "start": "react-scripts --max-old-space-size=8096 --openssl-legacy-provider start",
+    "build": "react-scripts --max-old-space-size=8096 build && xcopy /s /y build src\\main\\resources\\views\\static\\pmtct",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

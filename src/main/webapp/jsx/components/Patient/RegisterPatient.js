@@ -1484,6 +1484,7 @@ const UserRegistration = (props) => {
                                             id="firstAncDate"
                                             onChange={handleInputChange}
                                             value={objValues.firstAncDate} 
+                                            max= {moment(new Date()).format("YYYY-MM-DD") }
                                         />
                                     </InputGroup>
                                     {errors.firstAncDate !=="" ? (
