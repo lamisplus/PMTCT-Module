@@ -78,16 +78,14 @@ const useStyles = makeStyles(theme => ({
     },
 }))
 
-const LabourDelivery = (props) => {
+const Labourpartner = (props) => {
     const patientObj = props.patientObj;
     //let history = useHistory();
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
 
-    const [delivery, setDelivery]= useState({
-
-                ancNo: patientObj.ancNo,
+    const [partner, setpartner]= useState({
                 age: "",
                 dateOfBirth: "",
                 fullName: "",
@@ -100,18 +98,18 @@ const LabourDelivery = (props) => {
     useEffect(() => {           
     }, [props.patientObj.id, ]);
     //Get list 
-    const handleInputChangeDeliveryDto = e => {  
+    const handleInputChangepartnerDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
-        setDelivery ({...delivery,  [e.target.name]: e.target.value});
+        setpartner ({...partner,  [e.target.name]: e.target.value});
     }
 
     //FORM VALIDATION
     const validate = () => {
         let temp = { ...errors }
-        temp.artStartedLdWard = delivery.artStartedLdWard ? "" : "This field is required"
-        temp.referalSource = delivery.referalSource ? "" : "This field is required"
-        temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
-        temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required"
+        temp.age = partner.age ? "" : "This field is required"
+        temp.hbStatus = partner.hbStatus ? "" : "This field is required"
+        temp.hcStatus = partner.hcStatus ? "" : "This field is required"
+        temp.postTestCounseled = partner.postTestCounseled ? "" : "This field is required"
 
         setErrors({
             ...temp
@@ -123,7 +121,7 @@ const LabourDelivery = (props) => {
         e.preventDefault();        
         if(validate()){
         setSaving(true);
-        axios.post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery,
+        axios.put(`${baseUrl}pmtct/anc/update-partnerinformation-in-anc/${props.patientObj.id}`, partner,
         { headers: {"Authorization" : `Bearer ${token}`}},
         
         )
@@ -170,11 +168,11 @@ const LabourDelivery = (props) => {
                             <Label >ANC Number *</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="Number"
-                                    name="givenName"
+                                    type="text"
+                                    name="ancNo"
                                     id="ancNo"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.ancNo} 
+                                    onChange={handleInputChangepartnerDto}
+                                    value={props.patientObj.ancNo} 
                                     disabled
                                 />
                             </InputGroup>
@@ -189,15 +187,15 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="fulName"
-                                    id="fulName"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.fulName} 
+                                    name="fullName"
+                                    id="fullName"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.fullName} 
                                     
                                 />
                             </InputGroup>
-                            {errors.fulName !=="" ? (
-                                    <span className={classes.error}>{errors.fulName}</span>
+                            {errors.fullName !=="" ? (
+                                    <span className={classes.error}>{errors.fullName}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -209,8 +207,8 @@ const LabourDelivery = (props) => {
                                     type="Number"
                                     name="age"
                                     id="age"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.age} 
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.age} 
                                     
                                 />
                             </InputGroup>
@@ -221,22 +219,22 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Pre-test counseled *</Label>
+                            <Label >Pre-test Counseled *</Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="preTestCounseled"
+                                    id="preTestCounseled"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.preTestCounseled} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
                                     <option value="No" >No</option>
                                 </Input>
                             </InputGroup>
-                            {errors.ancNo !=="" ? (
-                                    <span className={classes.error}>{errors.ancNo}</span>
+                            {errors.preTestCounseled !=="" ? (
+                                    <span className={classes.error}>{errors.preTestCounseled}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -246,18 +244,18 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="acceptHivTest"
+                                    id="acceptHivTest"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.acceptHivTest} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
                                     <option value="No" >No</option>
                                 </Input>
                             </InputGroup>
-                            {errors.bookingStatus !=="" ? (
-                                    <span className={classes.error}>{errors.bookingStatus}</span>
+                            {errors.acceptHivTest !=="" ? (
+                                    <span className={classes.error}>{errors.acceptHivTest}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -267,10 +265,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="postTestCounseled"
+                                    id="postTestCounseled"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.postTestCounseled} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -278,8 +276,8 @@ const LabourDelivery = (props) => {
                                 </Input>
 
                             </InputGroup>
-                            {errors.dateOfDelivery !=="" ? (
-                                    <span className={classes.error}>{errors.dateOfDelivery}</span>
+                            {errors.postTestCounseled !=="" ? (
+                                    <span className={classes.error}>{errors.postTestCounseled}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -289,10 +287,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="hbStatus"
+                                    id="hbStatus"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.hbStatus} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -300,8 +298,8 @@ const LabourDelivery = (props) => {
                                 </Input>
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.hbStatus !=="" ? (
+                                    <span className={classes.error}>{errors.hbStatus}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -311,10 +309,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="hcStatus"
+                                    id="hcStatus"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.hcStatus} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -322,8 +320,8 @@ const LabourDelivery = (props) => {
                                 </Input>
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.hcStatus !=="" ? (
+                                    <span className={classes.error}>{errors.hcStatus}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -333,10 +331,10 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                             <Input 
                                     type="select"
-                                    name="episiotomy"
-                                    id="episiotomy"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.episiotomy} 
+                                    name="syphillisStatus"
+                                    id="syphillisStatus"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.syphillisStatus} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -344,8 +342,8 @@ const LabourDelivery = (props) => {
                                 </Input>
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.syphillisStatus !=="" ? (
+                                    <span className={classes.error}>{errors.syphillisStatus}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -355,15 +353,15 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="gaweeks"
-                                    id="gaweeks"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.gaweeks} 
+                                    name="referredTo"
+                                    id="referredTo"
+                                    onChange={handleInputChangepartnerDto}
+                                    value={partner.referredTo} 
                                 />
 
                             </InputGroup>
-                            {errors.gaweeks !=="" ? (
-                                    <span className={classes.error}>{errors.gaweeks}</span>
+                            {errors.referredTo !=="" ? (
+                                    <span className={classes.error}>{errors.referredTo}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -406,4 +404,4 @@ const LabourDelivery = (props) => {
   );
 }
 
-export default LabourDelivery;
+export default Labourpartner;

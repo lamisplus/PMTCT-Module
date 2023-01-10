@@ -106,11 +106,14 @@ const LabourDelivery = (props) => {
                 hcstatus: "",
                 hivExposedInfantGivenHbWithin24hrs: "",
                 maternalOutcome: "",
+                maternalOutcomeChild:"",
                 modeOfDelivery: "",
                 onArt: "",
                 referalSource: "",
                 romDeliveryInterval: "",
-                vaginalTear: ""
+                vaginalTear: "",
+                numberOfInfantsAlive:"",
+                numberOfInfantsDead:"",
     })
     useEffect(() => {           
         MODE_DELIVERY();
@@ -211,6 +214,9 @@ const LabourDelivery = (props) => {
         temp.childStatus = delivery.childStatus ? "" : "This field is required"
         temp.childGivenArvWithin72 = delivery.childGivenArvWithin72 ? "" : "This field is required"
         temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required"
+        delivery.maternalOutcomeChild!=="" && (temp.numberOfInfantsAlive = delivery.numberOfInfantsAlive ? "" : "This field is required")
+        delivery.maternalOutcomeChild!=="" && (temp.numberOfInfantsDead = delivery.numberOfInfantsDead ? "" : "This field is required")
+        
         setErrors({
             ...temp
             })    
@@ -638,30 +644,6 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="select"
-                                    name="maternalOutcomeMother"
-                                    id="maternalOutcomeMother"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.maternalOutcomeMother} 
-                                >
-                                    <option value="">Select </option>    
-                                    {maternalOutCome.map((value) => (
-                                        <option key={value.id} value={value.code}>
-                                            {value.display}
-                                        </option>
-                                    ))}
-                                </Input>
-                            </InputGroup> 
-                            {errors.maternalOutcomeMother !=="" ? (
-                                    <span className={classes.error}>{errors.maternalOutcomeMother}</span>
-                                ) : "" }                                       
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label > Maternal Outcome - Child</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="select"
                                     name="maternalOutcome"
                                     id="maternalOutcome"
                                     onChange={handleInputChangeDeliveryDto}
@@ -682,19 +664,44 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
+                            <Label > Maternal Outcome - Child</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="select"
+                                    name="maternalOutcomeChild"
+                                    id="maternalOutcomeChild"
+                                    onChange={handleInputChangeDeliveryDto}
+                                    value={delivery.maternalOutcomeChild} 
+                                >
+                                    <option value="">Select </option>    
+                                    {maternalOutCome.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
+                                </Input>
+                            </InputGroup> 
+                            {errors.maternalOutcomeChild !=="" ? (
+                                    <span className={classes.error}>{errors.maternalOutcomeChild}</span>
+                                ) : "" }                                       
+                            </FormGroup>
+                    </div>
+                    {delivery.maternalOutcomeChild!=="" && (<>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
                             <Label >Number of Child Alive </Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
-                                    name="alive"
-                                    id="alive"
+                                    name="numberOfInfantsAlive"
+                                    id="numberOfInfantsAlive"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.alive} 
+                                    value={delivery.numberOfInfantsAlive} 
                                     
                                 />
                             </InputGroup>
-                            {errors.ancNo !=="" ? (
-                                    <span className={classes.error}>{errors.ancNo}</span>
+                            {errors.numberOfInfantsAlive !=="" ? (
+                                    <span className={classes.error}>{errors.numberOfInfantsAlive}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -704,19 +711,19 @@ const LabourDelivery = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="Number"
-                                    name="dead"
-                                    id="dead"
+                                    name="numberOfInfantsDead"
+                                    id="numberOfInfantsDead"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.dead} 
+                                    value={delivery.numberOfInfantsDead} 
                                     
                                 />
                             </InputGroup>
-                            {errors.dead !=="" ? (
-                                    <span className={classes.error}>{errors.dead}</span>
+                            {errors.numberOfInfantsDead !=="" ? (
+                                    <span className={classes.error}>{errors.numberOfInfantsDead}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
-  
+                </>)}
             </div>
                 
                 {saving ? <Spinner /> : ""}

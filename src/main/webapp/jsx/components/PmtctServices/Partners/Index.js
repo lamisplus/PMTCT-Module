@@ -98,10 +98,9 @@ const useStyles = makeStyles(theme => ({
 
 
 const PatientnHistory = (props) => {
-    const [recentActivities, setRecentActivities] = useState([])
+    const [partners, setPartners] = useState([])
     const [loading, setLoading] = useState(true)
-    let history = useHistory();
-    let patientHistoryObject = []
+
     useEffect(() => {
         PatientHistory()
       }, [props.patientObj.id]);
@@ -109,22 +108,13 @@ const PatientnHistory = (props) => {
         const PatientHistory =()=>{
             setLoading(true)
             axios
-               .get(`${baseUrl}hiv/patients/${props.patientObj.id}/history/activities`,
+               .get(`${baseUrl}pmtct/anc/${props.patientObj.id}`,
                    { headers: {"Authorization" : `Bearer ${token}`} }
                )
                .then((response) => {
                 setLoading(false)
-                        // let HistoryObject= []
-                        // response.data.forEach(function(value, index, array) {
-                        //     const dataObj = value.activities 
-                        //     console.log(dataObj)                 
-                        //     if(dataObj[index]) {
-                        //         dataObj.forEach(function(value, index, array) {
-                        //             HistoryObject.push(value)
-                        //         })                       
-                        //     }                   
-                        // });
-                    setRecentActivities(response.data)
+                console.log(response.data.partnerInformation)
+                setPartners(response.data.partnerInformation)
                 })
 
                .catch((error) => {
@@ -200,6 +190,7 @@ const PatientnHistory = (props) => {
               title="List Of Partners "
               columns={[
                 { title: "Partner Name", field: "name" },
+                { title: "Partner Name", field: "age" },
                 { title: "Pre-test Counseled", field: "pre" },
                 { title: "Partner Accept HIV Test", field: "hiv" },             
                 { title: "Post-Test Counseled", field: "post" },
@@ -210,15 +201,16 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={[].map((row) => ({
-                   name: row.name,
-                   pre: row.pre,
-                   hiv: row.name,
-                   post: row.date,
-                   hbv: row.name,
-                   hcv: row.date,
-                   syphillis: row.name,
-                   referred: row.date,
+              data={[partners].map((row) => ({
+                   name: row.fullName,
+                   age: row.age,
+                   pre: row.preTestCounseled,
+                   hiv: row.acceptHivTest,
+                   post: row.postTestCounseled,
+                   hbv: row.hbStatus,
+                   hcv: row.hbStatus,
+                   syphillis: row.syphillisStatus,
+                   referred: row.referredTo,
                    actions:
             
                     <div>

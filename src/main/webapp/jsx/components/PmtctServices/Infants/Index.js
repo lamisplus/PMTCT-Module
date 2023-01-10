@@ -98,18 +98,17 @@ const useStyles = makeStyles(theme => ({
 
 
 const PatientnHistory = (props) => {
-    const [recentActivities, setRecentActivities] = useState([])
+    const [infants, setInfants] = useState([])
     const [loading, setLoading] = useState(true)
-    let history = useHistory();
-    let patientHistoryObject = []
+
     useEffect(() => {
         PatientHistory()
-      }, [props.patientObj.id]);
+      }, []);
         ///GET LIST OF Patients
         const PatientHistory =()=>{
             setLoading(true)
             axios
-               .get(`${baseUrl}hiv/patients/${props.patientObj.id}/history/activities`,
+               .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
                    { headers: {"Authorization" : `Bearer ${token}`} }
                )
                .then((response) => {
@@ -124,7 +123,7 @@ const PatientnHistory = (props) => {
                         //         })                       
                         //     }                   
                         // });
-                    setRecentActivities(response.data)
+                        setInfants(response.data)
                 })
 
                .catch((error) => {
@@ -173,16 +172,17 @@ const PatientnHistory = (props) => {
                 { title: "ANC NO.", field: "anc" }, 
                 { title: "NIN Number", field: "nin" },             
                 { title: "Date of Delivery", field: "date" },
-                // { title: "Status", field: "status", filtering: false },        
+                { title: "Sex", field: "sex", filtering: false },        
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={[].map((row) => ({
-                   name: row.name,
+              data={infants.map((row) => ({
+                   name: row.firstName + " " + row.surname,
                    hospital: row.hospitalNumber,
-                   anc: row.anc,
-                   nin: row.non,
-                   date: row.date,
+                   anc: row.ancNo,
+                   nin: row.nin,
+                   sex: row.sex,
+                   date: row.dateOfDelivery,
                    actions:
             
                     <div>
