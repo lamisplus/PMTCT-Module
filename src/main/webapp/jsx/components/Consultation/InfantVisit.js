@@ -11,6 +11,7 @@ import SaveIcon from '@material-ui/icons/Save'
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
+import { Pointer } from "highcharts";
 
 
 const useStyles = makeStyles(theme => ({
@@ -60,18 +61,12 @@ const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
   //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
-  //const [loading, setLoading] = useState(true)
+  const [infantObj, setInfantObj] = useState()
   let temp = { ...errors }
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
-  const [clinicalStage, setClinicalStage] = useState([]);
-  const [dsdModelType, setDsdModelType] = useState([]);
-  const [currentVitalSigns, setcurrentVitalSigns] = useState({})
-  const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
-  const [visitStatus, setVisitStatus] = useState([]);
-  const [maternalCome, setMaternalCome] = useState([]);
+  const [infants, setInfants] = useState([])
   const [fp, setFp] = useState([]);
-  const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support 
   const [vitalClinicalSupport, setVitalClinicalSupport] = useState(
           {
@@ -119,94 +114,43 @@ const ClinicVisit = (props) => {
     respiratoryRate:"" 
   })
   useEffect(() => {
-    VitalSigns();
-    VISIT_STATUS_PMTCT()
-    MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
-    POINT_ENTRY_PMTCT();
-  }, []);
+    InfantInfo();
+  }, [props.patientObj.ancNo]);
+    ///GET LIST OF Infants
+    const InfantInfo =()=>{
+      //setLoading(true)
+      axios
+          .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+              { headers: {"Authorization" : `Bearer ${token}`} }
+          )
+          .then((response) => {
+          //setLoading(false)
+                  setInfants(response.data)
+          })
 
-    //Check for the last Vital Signs
-    const VitalSigns = () => {
+          .catch((error) => {
+          //console.log(error);
+          });
+      
+  }
+  const FAMILY_PLANNING_METHOD = () => {
     axios
-      .get(`${baseUrl}patient/vital-sign/person/${props.patientObj.id}`,
+      .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
         { headers: { "Authorization": `Bearer ${token}` } }
       )
       .then((response) => {
-
-        const lastVitalSigns = response.data[response.data.length - 1]
-        if (lastVitalSigns.encounterDate === moment(new Date()).format("YYYY-MM-DD") === true) {
-          setcurrentVitalSigns(lastVitalSigns)
-          setShowCurrentVitalSigns(true)
-        }
+        //console.log(response.data);
+        setFp(response.data);
       })
       .catch((error) => {
         //console.log(error);
       });
-    }
-    const VISIT_STATUS_PMTCT = () => {
-      axios
-        .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`,
-          { headers: { "Authorization": `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //console.log(response.data);
-          setVisitStatus(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-  
-    }
-    const POINT_ENTRY_PMTCT = () => {
-      axios
-        .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`,
-          { headers: { "Authorization": `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //console.log(response.data);
-          setEntryPoint(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-  
-    }
-    
-    const FAMILY_PLANNING_METHOD = () => {
-      axios
-        .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
-          { headers: { "Authorization": `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //console.log(response.data);
-          setFp(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-  
-    }
-    const MATERNAL_OUTCOME = () => {
-      axios
-        .get(`${baseUrl}application-codesets/v2/MATERNAL_OUTCOME`,
-          { headers: { "Authorization": `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //console.log(response.data);
-          setMaternalCome(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-  
-    }
 
+  }
   const handleInputChange = e => {
     setErrors({...temp, [e.target.name]:""}) 
-    if(e.target.name ==='dsdModel'){
-      DsdModelType(e.target.value)
-    }
+    
     //console.log(e.target.name)
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
@@ -214,100 +158,7 @@ const ClinicVisit = (props) => {
   const handleInputChangeVitalSignDto = e => {
     setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
   } 
-  //Handle CheckBox 
-  // const handleCheckBox = e => {
-  //   if (e.target.checked) {
-  //     //currentVitalSigns.personId === null ? props.patientObj.id : currentVitalSigns.personId
-  //     setVitalSignDto({ ...currentVitalSigns })
-  //   } else {
-  //     setVitalSignDto({
-  //       bodyWeight: "",
-  //       diastolic: "",
-  //       encounterDate: "",
-  //       facilityId: "",
-  //       height: "",
-  //       personId: props.patientObj.id,
-  //       serviceTypeId: "",
-  //       systolic: "",
-  //       pulse:"",
-  //       temperature:"",
-  //       respiratoryRate:"" 
-  //     })
-  //   }
-  // }
-  //to check the input value for clinical decision 
-  // const handleInputValueCheckHeight =(e)=>{
-  //   if(e.target.name==="height" && (e.target.value < 48.26 || e.target.value>216.408)){
-  //     const message ="Height cannot be greater than 216.408 and less than 48.26"
-  //     setVitalClinicalSupport({...vitalClinicalSupport, height:message})
-  //   }else{
-  //     setVitalClinicalSupport({...vitalClinicalSupport, height:""})
-  //   }
-  // }
-  // const handleInputValueCheckBodyWeight =(e)=>{
-  //   if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
-  //     const message ="Body weight must not be greater than 150 and less than 3"
-  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
-  //   }else{
-  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
-  //   }
-  // }
-//   const handleInputValueCheckSystolic =(e)=>{
-//     if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
-//       const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
-//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
-//     }else{
-//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
-//     }
-//   }
-//   const handleInputValueCheckDiastolic =(e)=>{
-//     if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
-//       const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
-//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
-//     }else{
-//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
-//     }
-//   }
-//   const handleInputValueCheckPulse =(e)=>{
-//     if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
-//     const message ="Pulse must not be greater than 120 and less than 40"
-//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
-//     }
-// }
-// const handleInputValueCheckRespiratoryRate =(e)=>{
-//     if(e.target.name==="respiratoryRate" && (e.target.value < 10 || e.target.value>70)){      
-//     const message ="Respiratory Rate must not be greater than 70 and less than 10"
-//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:""})
-//     }
-// }
-// const handleInputValueCheckTemperature =(e)=>{
-//     if(e.target.name==="temperature" && (e.target.value < 35 || e.target.value>47)){      
-//     const message ="Temperature must not be greater than 47 and less than 35"
-//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:""})
-//     }
-// }
-//Get list of DSD Model Type
-function DsdModelType (dsdmodel) {
-  const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
-  axios
-     .get(`${baseUrl}application-codesets/v2/${dsd}`,
-         { headers: {"Authorization" : `Bearer ${token}`} }
-     )
-     .then((response) => {
-         //console.log(response.data);
-         setDsdModelType(response.data);
-     })
-     .catch((error) => {
-     //console.log(error);
-     });
- 
-}
+
   //Validations of the forms
   const validate = () => {       
     temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
@@ -360,31 +211,40 @@ function DsdModelType (dsdmodel) {
     }
   }
 
+  function GetInfantDetail(obj){
+          console.log(obj)
+          setInfantObj(obj)
+          //alert(obj)
+  }
 
   return (
     <div>
       <h2>Clinic Follow-up Visit</h2>
       <Grid columns='equal'>
         <Grid.Column>
-          {[] && (
+
             <Segment>
               <Label as='a' color='blue' ribbon>
                 Infant's
               </Label>
               <br />
               <List celled>
-                {currentVitalSigns.pulse!==null ? <List.Item>Infant 1 <span className="float-end"><b>{currentVitalSigns.pulse}Visit</b></span></List.Item> :""}
-                {currentVitalSigns.respiratoryRate!==null ?<List.Item>Infant 2<span className="float-end"><b>{currentVitalSigns.respiratoryRate}Visit</b></span></List.Item> :""}
-                
-              </List>
+                  <List.Item >Given Name<span className="float-end"><b>Hospital Number</b></span></List.Item>
+                  </List>
+              {infants.map((row) =>
+                  <List celled>
+                  <List.Item onClick={()=>GetInfantDetail(row)} style={{cursor: "pointer"}}>{row.firstName} <span className="float-end"><b>{row.hospitalNumber}</b></span></List.Item>
+                  </List>
+               
+              )}
             </Segment>
-          )}
+
           
         </Grid.Column>
         <Grid.Column width={12}>
         <Segment>
             <Label as='a' color='blue'  style={{width:'106%', height:'35px'}} ribbon>
-              <h4 style={{color:'#fff'}}>Infant Clinic Visit  - </h4>
+              <h4 style={{color:'#fff'}}>Infant Clinic Visit  - {infantObj && infantObj.hospitalNumber ? infantObj.hospitalNumber : " "}</h4>
             </Label>
             <br /><br />
             <div className="row">
@@ -471,11 +331,7 @@ function DsdModelType (dsdmodel) {
                   >
                     <option value="select">Select </option>
 
-                    {entryPoint.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
+                   
                   </Input>
                   {errors.enteryPoint !=="" ? (
                       <span className={classes.error}>{errors.enteryPoint}</span>
@@ -852,22 +708,25 @@ function DsdModelType (dsdmodel) {
             </div>
             <br />
             <br />
-            <MatButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              disabled={saving}
-              startIcon={<SaveIcon />}
-              style={{backgroundColor:"#014d88"}}
-              onClick={handleSubmit}
-            >
-              {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-              ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-              )}
-            </MatButton>
+            {infantObj && infantObj.hospitalNumber ? (
+                <MatButton
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  disabled={saving}
+                  startIcon={<SaveIcon />}
+                  style={{backgroundColor:"#014d88"}}
+                  onClick={handleSubmit}
+                >
+                  {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Save</span>
+                  ) : (
+                    <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                  )}
+                </MatButton>
+              ) : ""
+            }
           </Segment>
         </Grid.Column>
 

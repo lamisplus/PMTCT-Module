@@ -39,7 +39,7 @@ const PmtctHts = (props) => {
     const location = useLocation();
     const locationState = location.state;
     const [saving, setSaving] = useState(false);
-    const [activeItem, setactiveItem] = useState('risk');
+    const [activeItem, setactiveItem] = useState('hiv-test');
     const [completed, setCompleted] = useState([]);
     const [hideOtherMenu, setHideOtherMenu] = useState(true);
     const [patientObj, setPatientObj] = useState({
@@ -224,6 +224,7 @@ const PmtctHts = (props) => {
         targetGroup: "",
         tbScreening: {},
         test1: {},
+        test2: {},
         testingSetting: "",
         tieBreakerTest: {},
         typeCounseling: "",
@@ -257,7 +258,7 @@ const PmtctHts = (props) => {
                 <CardBody>
                 <form >
                     <div className="row">
-                    <h3>HIV COUNSELLING AND TESTING 
+                    <h3>PMTCT - HIV COUNSELLING AND TESTING 
                     </h3>
                         <br/>
                         <br/>

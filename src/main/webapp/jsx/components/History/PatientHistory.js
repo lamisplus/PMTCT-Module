@@ -102,7 +102,6 @@ const PatientnHistory = (props) => {
     const [recentActivities, setRecentActivities] = useState([])
     const [loading, setLoading] = useState(true)
     let history = useHistory();
-    let patientHistoryObject = []
     useEffect(() => {
         PatientHistory()
       }, [props.patientObj.id]);
@@ -110,7 +109,7 @@ const PatientnHistory = (props) => {
         const PatientHistory =()=>{
             setLoading(true)
             axios
-               .get(`${baseUrl}hiv/patients/${props.patientObj.id}/history/activities`,
+               .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`,
                    { headers: {"Authorization" : `Bearer ${token}`} }
                )
                .then((response) => {
@@ -378,9 +377,9 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={[].map((row) => ({
-                   name: row.title,
-                   date: row.date,
+              data={recentActivities.map((row) => ({
+                   name: row.activityName,
+                   date: row.activityDate,
                    actions:
             
                     <div>

@@ -183,12 +183,12 @@ const HivTestResult = (props) => {
         if(e.target.value==='No'){
             setInitailTest2 ({...initialTest12,  [e.target.name]: e.target.value});  
             setConfirmatoryTest2({
-                date :"",
-                result  :"",            
+                date2 :"",
+                result2  :"",            
             })
             setTieBreakerTest2({
-                date :"",
-                result  :"",            
+                date2 :"",
+                result2  :"",            
             })
             //This is to show cd4 count section
             setShowCD4Count(false)
@@ -307,16 +307,16 @@ const HivTestResult = (props) => {
                 setHivTestDate("")
             }
             setCd4Count(props.patientObj  && props.patientObj.cd4!==null? props.patientObj.cd4 : {})
-            setInitailTest(props.patientObj  && props.patientObj.test1!==null? props.patientObj.test1 : {})
-            setConfirmatoryTest(props.patientObj  && props.patientObj.confirmatoryTest!==null? props.patientObj.confirmatoryTest : {})
+            //setInitailTest(props.patientObj  && props.patientObj.test1!==null? props.patientObj.test1 : {})
+            //setConfirmatoryTest(props.patientObj  && props.patientObj.confirmatoryTest!==null? props.patientObj.confirmatoryTest : {})
             setTieBreakerTest(props.patientObj && props.patientObj.tieBreakerTest!==null ? props.patientObj.tieBreakerTest : {})
             setSyphills(props.patientObj  && props.patientObj.syphilisTesting!==null ? props.patientObj.syphilisTesting : {})
             setHepatitis(props.patientObj  && props.patientObj.hepatitisTesting!==null ? props.patientObj.hepatitisTesting : {})
             setOthers(props.patientObj  && props.patientObj.others!==null ? props.patientObj.others : {})
             
-            setInitailTest2(props.patientObj  && props.patientObj.test2!==null? props.patientObj.test2 : {})
-            setConfirmatoryTest2(props.patientObj  && props.patientObj.confirmatoryTest2!==null? props.patientObj.confirmatoryTest2 : {})
-            setTieBreakerTest2(props.patientObj && props.patientObj.tieBreakerTest2!==null ? props.patientObj.tieBreakerTest2 : {})
+            //setInitailTest2(props.patientObj  && props.patientObj.test2!==null? props.patientObj.test2 : {})
+            //setConfirmatoryTest2(props.patientObj  && props.patientObj.confirmatoryTest2!==null? props.patientObj.confirmatoryTest2 : {})
+            //setTieBreakerTest2(props.patientObj && props.patientObj.tieBreakerTest2!==null ? props.patientObj.tieBreakerTest2 : {})
         }
     }, [props.patientObj]);//initialTest12, tieBreakerTest2, confirmatoryTest2, 
 
@@ -870,7 +870,7 @@ const HivTestResult = (props) => {
                                 )}
                                  {/* END of  result for Test 1 */}
                                 {/* This is result for Test 2 */}
-                                {initialTest12.result2==='No' &&  (
+                                {initialTest12.result2 && initialTest12.result2==='No' &&  (
                                     <LabelRibbon color="green" >
                                         Negative
                                     </LabelRibbon>

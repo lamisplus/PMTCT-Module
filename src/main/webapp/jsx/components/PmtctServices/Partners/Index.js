@@ -113,7 +113,7 @@ const PatientnHistory = (props) => {
                )
                .then((response) => {
                 setLoading(false)
-                console.log(response.data.partnerInformation)
+                //console.log(response.data.partnerInformation)
                 setPartners(response.data.partnerInformation)
                 })
 
@@ -201,7 +201,7 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={[partners].map((row) => ({
+              data={partners && [partners].map((row) => ({
                    name: row.fullName,
                    age: row.age,
                    pre: row.preTestCounseled,
