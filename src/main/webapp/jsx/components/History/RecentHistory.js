@@ -14,36 +14,33 @@ import "react-widgets/dist/css/react-widgets.css";
 import { toast} from "react-toastify";
 
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-      width: '100%',
-  },
-  heading: {
-      fontSize: theme.typography.pxToRem(15),
-      fontWeight: 'bolder',
-  },
-}));
 const RecentHistory = (props) => {
-  const classes = useStyles();
-  const [vitaLoad, setViralLoad]=useState([])
-  const [refillList, setRefillList] = useState([])
-  const [clinicVisitList, setClinicVisitList] = useState([])
   const [recentActivities, setRecentActivities] = useState([])
-  console.log()
-  const [loading, setLoading] = useState(true)
-  let history = useHistory();
+  const [infants, setInfants] = useState([])
   const [
     activeAccordionHeaderShadow,
     setActiveAccordionHeaderShadow,
   ] = useState(0);
 
   useEffect(() => {
-    LaboratoryHistory();
-    PharmacyList();
-    ClinicVisitList();
+    InfantInfo();
     RecentActivities();
   }, [props.patientObj.id]);
+  ///GET LIST OF Infants
+  const InfantInfo =()=>{
+    axios
+        .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+                setInfants(response.data)
+        })
 
+        .catch((error) => {
+        //console.log(error);
+        });
+    
+  }
   //Get list of LaboratoryHistory
   const RecentActivities =()=>{
     axios
@@ -58,76 +55,7 @@ const RecentHistory = (props) => {
        });
    
   }
-  //Get list of LaboratoryHistory
-  const LaboratoryHistory =()=>{
-    axios
-       .get(`${baseUrl}laboratory/orders/patients/${props.patientObj.id}`,
-           { headers: {"Authorization" : `Bearer ${token}`} }
-       )
-       .then((response) => {
-           let LabObject= []
-                response.data.forEach(function(value, index, array) {
-                    const dataOrders = value.labOrder.tests                    
-                    if(dataOrders[index]) {
-                        dataOrders.forEach(function(value, index, array) {
-                            LabObject.push(value)
-                        })                       
-                    }                   
-                });
-              setViralLoad(LabObject)
-       })
-       .catch((error) => {
-       //console.log(error);
-       });
-   
-  }
-   //GET LIST Drug Refill
-   async function PharmacyList() {
-    setLoading(true)
-    axios
-        .get(`${baseUrl}hiv/art/pharmacy/patient?pageNo=0&pageSize=10&personId=${props.patientObj.id}`,
-        { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setLoading(false)
-            setRefillList(response.data);                
-        })
-        .catch((error) => {  
-            setLoading(false)  
-        });        
-  }
-   //GET LIST Drug Refill
-   async function ClinicVisitList() {
-    setLoading(true)
-    axios
-        .get(`${baseUrl}hiv/art/clinic-visit/person?pageNo=0&pageSize=10&personId=${props.patientObj.id}`,
-        { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setLoading(false)
-            setClinicVisitList(response.data);                
-        })
-        .catch((error) => {  
-            setLoading(false)  
-        });        
-  }
-  const labStatus =(status)=> {
-      if(status===0){
-        return "timeline-badge info"
-      }else if(status===1){
-        return "timeline-badge warning"
-      }else if(status===2){
-        return "timeline-badge success"
-      }else if(status===3){
-        return "timeline-badge danger"
-      }else if(status===4){
-        return "timeline-badge primary"
-      }else if(status===5){
-        return "timeline-badge info"
-      }else {
-        return "timeline-badge secondary"
-      }
-  }
+
   const ActivityName =(name)=> {
       if(name==='HIV Enrollment'){
         return "HE"
@@ -143,45 +71,11 @@ const RecentHistory = (props) => {
         return "RA"
       }
   }
-  const regimenName =(regimenObj)=> {
-    let regimenArr = []
-    regimenObj.forEach(function (value, index, array) {
-      //console.log(value)
-        regimenArr.push(value['name'])
-    })
-    return regimenArr.toString();
-  }
+
   const LoadViewPage =(row,action)=>{
         
     if(row.path==='Mental-health'){        
         props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id, actionType:action})
-
-    }else if(row.path==='Art-commence'){
-        props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id, actionType:action})
-
-    }else if(row.path==='Clinical-evaluation'){
-        props.setActiveContent({...props.activeContent, route:'adult-clinic-eveluation-view', id:row.id, actionType:action})
-
-    }else if(row.path==='eac1'){
-        props.setActiveContent({...props.activeContent, route:'first-eac-history', id:row.id, actionType:action})
-    }
-    else if(row.path==='eac2'){
-        props.setActiveContent({...props.activeContent, route:'second-eac-history', id:row.id, actionType:action})
-    }
-    else if(row.path==='eac3'){
-        props.setActiveContent({...props.activeContent, route:'completed-eac-history', id:row.id, actionType:action})
-    }else if(row.path==='hiv-enrollment'){
-        history.push({
-            pathname: '/update-patient',
-            state: { id: row.id, patientObj:props.patientObj, actionType:action }
-        });
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-    }else if(row.path==='pharmacy'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        props.setActiveContent({...props.activeContent, route:'pharmacy-update', id:row.id, activeTab:"history", actionType:action, obj:row})
-
-    }else if(row.path==='Laboratory'){
-        props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id, actionType:action})
 
     }else if(row.path==='clinic-visit'){
       props.setActiveContent({...props.activeContent, route:'consultation', id:row.id, activeTab:"history",actionType:action, })
@@ -191,193 +85,7 @@ const RecentHistory = (props) => {
     }
     
 }
-const LoadDeletePage =(row)=>{
-    
-    if(row.path==='Mental-health'){        
-        //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }else if(row.path==='Art-commence'){
-        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
-        axios
-        .delete(`${baseUrl}hiv/art/commencement/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });
 
-    }else if(row.path==='Clinical-evaluation'){
-        //props.setActiveContent({...props.activeContent, route:'adult-clinic-eveluation-view', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });
-
-    }else if(row.path==='eac1'){
-        //props.setActiveContent({...props.activeContent, route:'first-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }
-    else if(row.path==='eac2'){
-        //props.setActiveContent({...props.activeContent, route:'second-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }
-    else if(row.path==='eac3'){
-        //props.setActiveContent({...props.activeContent, route:'completed-eac-history', id:row.id})
-        axios
-        .delete(`${baseUrl}observation/eac/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-    }else if(row.path==='hiv-enrollment'){
-        axios
-        .delete(`${baseUrl}hiv/enrollment/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        });  
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-    }else if(row.path==='pharmacy'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        //props.setActiveContent({...props.activeContent, route:'pharmacy', id:row.id, activeTab:"home", actionType:"update", obj:row})
-        axios
-        .delete(`${baseUrl}art/pharmacy/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        }); 
-
-    }else if(row.path==='clinic-visit'){
-        //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        axios
-        .delete(`${baseUrl}hiv/art/clinic-visit/${row.id}`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            toast.success("Record Deleted Successfully");
-            RecentActivities()
-        })
-        .catch((error) => {
-            if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage);
-              }
-              else{
-                toast.error("Something went wrong. Please try again...");
-              }
-        }); 
-    }else{
-
-    }
-    
-}
-const redirectLink=()=>{
-  props.setActiveContent({...props.activeContent, route:'recent-history'})
-}
 const index=0;
 
   return (
@@ -502,7 +210,7 @@ const index=0;
                     <div className="col-6 border-right">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter"><b>4</b></span> 
+                          <span className="counter"><b>1</b></span> 
                         </h4>
                         <p className="m-0"><b>ANC</b></p>
                       </div>
@@ -510,7 +218,7 @@ const index=0;
                     <div className="col-6">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter"><b>8</b></span>
+                          <span className="counter"><b>0</b></span>
                         </h4>
                         <p className="m-0"><b>PNC</b></p>
                       </div>
@@ -522,14 +230,16 @@ const index=0;
                 <div className="card overflow-hidden">
                   <div className="social-graph-wrapper widget-linkedin">
                     <span className="s-icon">
-                    <span style={{fontSize:"14px"}}>No. of Infants</span>
+                    <span style={{fontSize:"16px"}}>No. of Infants  { infants.length > 0 ? (" - " + infants.length): ""}</span>
                     </span>
                   </div>
                   <div className="row">
+                    {infants.length > 0 ? (
+                      <>
                     <div className="col-6 border-right">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">1</span> 
+                          <span className="counter">0</span> 
                         </h4>
                         <p className="m-0"><b>HIV <sup style={{color:"red"}}>+</sup></b></p>
                       </div>
@@ -537,11 +247,15 @@ const index=0;
                     <div className="col-6">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">2</span>
+                          <span className="counter">{infants.length}</span>
                         </h4>
                         <p className="m-0"><b>HIV <sup style={{color:"green"}}>-</sup></b></p>
                       </div>
                     </div>
+                    </>
+                    ) :
+                    (<p>No Record</p>)
+                  }
                   </div>
                 </div>
               </div>
@@ -549,62 +263,49 @@ const index=0;
             <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
               <h3>Current Infant's Details</h3>
-            <PerfectScrollbar
-              style={{ height: "370px" }}
-              id="DZ_W_TimeLine1"
-              className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
-            >
-              <ul className="timeline">
-             
-                      <li key={index}>
-                        <div className={index % 2 == 0 ? "timeline-badge info" : "timeline-badge success"}></div>
-                        <span
-                          className="timeline-panel text-muted"
-                          //onClick={()=>redirectLink()}
-                          //to=""
-                        >
-                          <h6 className="mb-0">
-                            Infant Given Name
-                            <br/>
-                            Abudllahi
-                          </h6>
-                          <strong className="text-teal">
-                            Infant DOB<br/>
-                              12-15-2022
-                          </strong><br/> 
-                          <strong className="text-warning">
-                              Gender<br/>
-                              Male
-                          </strong>                    
+              {infants.length > 0 ? 
+                (
+                  <PerfectScrollbar
+                    style={{ height: "370px" }}
+                    id="DZ_W_TimeLine1"
+                    className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
+                  >
+                    <ul className="timeline">
+                      {infants.map((obj) => 
+                            <li key={index}>
+                              <div className={index % 2 == 0 ? "timeline-badge info" : "timeline-badge success"}></div>
+                              <span
+                                className="timeline-panel text-muted"
+                                //onClick={()=>redirectLink()}
+                                //to=""
+                              >
+                                <h6 className="mb-0">
+                                  Infant Given Name
+                                  <br/>
+                                  {obj.firstName}
+                                </h6>
+                                <strong className="text-teal">
+                                  Infant DOB<br/>
+                                  {obj.dateOfDelivery}
+                                </strong><br/> 
+                                <strong className="text-warning">
+                                    Gender<br/>
+                                    {obj.sex}
+                                </strong>                    
 
-                        </span>
-                      </li>
-                      <li key={index}>
-                        <div className={index % 2 !== 0 ? "timeline-badge info" : "timeline-badge success"}></div>
-                        <span
-                          className="timeline-panel text-muted"
-                          //onClick={()=>redirectLink()}
-                          //to=""
-                        >
-                          <h6 className="mb-0">
-                            Infant Given Name
-                            <br/>
-                            Joyce
-                          </h6>
-                          <strong className="text-teal">
-                            Infant DOB<br/>
-                              12-15-2022
-                          </strong><br/> 
-                          <strong className="text-warning">
-                              Gender<br/>
-                              Female
-                          </strong>                    
+                              </span>
+                            </li>
+                      )}
 
-                        </span>
-                      </li>
+                    </ul>
+                  </PerfectScrollbar>
+                )
+                :
+                (
+                  <p>No Record</p>
+                )
+              }
 
-              </ul>
-            </PerfectScrollbar>
             </div>
             </div>
           </div>

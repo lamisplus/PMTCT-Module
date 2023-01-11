@@ -5,8 +5,6 @@ import { url as baseUrl , token as token} from "./../../../../api";
 import { forwardRef } from 'react';
 import 'semantic-ui-css/semantic.min.css';
 import "react-widgets/dist/css/react-widgets.css";
-import { toast} from "react-toastify";
-
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowUpward from '@material-ui/icons/ArrowUpward';
 import Check from '@material-ui/icons/Check';
@@ -25,7 +23,6 @@ import ViewColumn from '@material-ui/icons/ViewColumn';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-widgets/dist/css/react-widgets.css';
 import { makeStyles } from '@material-ui/core/styles'
-import { useHistory } from "react-router-dom";
 //import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
 import "@reach/menu-button/styles.css";
 import {FaUserPlus} from 'react-icons/fa'
@@ -52,86 +49,51 @@ ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
 ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
 
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
-        }
-    },
-    input: {
-        display: 'none'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    }, 
-}))
-
-
-
-const PatientnHistory = (props) => {
+const InfantInformation = (props) => {
     const [infants, setInfants] = useState([])
+    //const [delivery, setDelivery] = useState([])
     const [loading, setLoading] = useState(true)
-
+    const [aliveChild, setAliveChild] = useState(0)
     useEffect(() => {
-        PatientHistory()
+        InfantInfo();
+        DeliveryInfo();
       }, []);
-        ///GET LIST OF Patients
-        const PatientHistory =()=>{
-            setLoading(true)
-            axios
-               .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
-                   { headers: {"Authorization" : `Bearer ${token}`} }
-               )
-               .then((response) => {
-                setLoading(false)
-                        // let HistoryObject= []
-                        // response.data.forEach(function(value, index, array) {
-                        //     const dataObj = value.activities 
-                        //     console.log(dataObj)                 
-                        //     if(dataObj[index]) {
-                        //         dataObj.forEach(function(value, index, array) {
-                        //             HistoryObject.push(value)
-                        //         })                       
-                        //     }                   
-                        // });
-                        setInfants(response.data)
-                })
+    ///GET LIST OF Infants
+    const InfantInfo =()=>{
+        setLoading(true)
+        axios
+            .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+                { headers: {"Authorization" : `Bearer ${token}`} }
+            )
+            .then((response) => {
+            setLoading(false)
+                    setInfants(response.data)
+            })
 
-               .catch((error) => {
-               //console.log(error);
-               });
-           
-          }
-    
+            .catch((error) => {
+            //console.log(error);
+            });
+        
+    }
+    ///GET Delivery Object
+    const DeliveryInfo =()=>{
+        setLoading(true)
+        axios
+            .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.id}`,
+                { headers: {"Authorization" : `Bearer ${token}`} }
+            )
+            .then((response) => {
+            setLoading(false)
+            //setDelivery(response.data)
+            setAliveChild(response.data && response.data.numberOfInfantsAlive ? response.data.numberOfInfantsAlive : 0)
+            })
+
+            .catch((error) => {
+            //console.log(error);
+            });
+        
+    }
     const LoadViewPage =(row,action)=>{
         
         if(row.path==='Mental-health'){        
@@ -149,7 +111,8 @@ const PatientnHistory = (props) => {
 
   return (
     <div>
-    <Button
+    {(infants.length  < aliveChild) && (aliveChild > infants.length ) && (<>
+        <Button
             variant="contained"
             color="primary"
             className=" float-end  mr-2 mt-2"
@@ -159,6 +122,7 @@ const PatientnHistory = (props) => {
         >
             <span style={{ textTransform: "capitalize" }}>New Infant</span>
         </Button>
+    </>)}
         <br/><br/><br/>
             <MaterialTable
             icons={tableIcons}
@@ -192,7 +156,7 @@ const PatientnHistory = (props) => {
                             <Dropdown item text='Action'>
 
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
-                                {row.viewable && ( <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>)}
+                                <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />Follow Up Visit  </Dropdown.Item>
                                 {/* {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
                                 {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)}  */}
                             </Dropdown.Menu>
@@ -219,13 +183,13 @@ const PatientnHistory = (props) => {
                           pageSizeOptions:[10,20,100],
                           pageSize:10,
                           debounceInterval: 400
-                      }}
+            }}
             />
          
     </div>
   );
 }
 
-export default PatientnHistory;
+export default InfantInformation;
 
 

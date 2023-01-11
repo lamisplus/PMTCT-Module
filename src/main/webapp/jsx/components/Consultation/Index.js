@@ -1,7 +1,9 @@
 import React, {useState, Fragment, useEffect } from "react";
+import axios from "axios";
 import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
 import ConsultationPage from './Home';
 import InfantVisit from "./InfantVisit";
+import { url as baseUrl , token as token} from "./../../../api";
 
 const divStyle = {
   borderRadius: "2px",
@@ -11,11 +13,26 @@ const divStyle = {
 const ClinicVisitPage = (props) => {
     const [key, setKey] = useState('home');
     const patientObj = props.patientObj
-    
+    const [aliveChild, setAliveChild] = useState(0)
     useEffect ( () => {
       setKey(props.activeContent.activeTab)
-    }, [props.activeContent.id]);
-
+      DeliveryInfo();
+    }, [props.patientObj.id, props.activeContent.activeTab]);
+    ///GET Delivery Object
+    const DeliveryInfo =()=>{
+      axios
+          .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.id}`,
+              { headers: {"Authorization" : `Bearer ${token}`} }
+          )
+          .then((response) => {
+          //setDelivery(response.data)
+          setAliveChild(response.data && response.data.numberOfInfantsAlive ? response.data.numberOfInfantsAlive : 0)
+          })
+          .catch((error) => {
+          //console.log(error);
+          });
+      
+  }
 
   return (
     <Fragment>  
@@ -34,10 +51,12 @@ const ClinicVisitPage = (props) => {
 
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">                   
                     <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
-                  </Tab>  
-                  <Tab eventKey="history" title="CHILD FOLLOW UP VISIT">                   
-                   <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent}/>
-                  </Tab>                   
+                  </Tab>
+                  {aliveChild > 0 && (  
+                    <Tab eventKey="history" title="CHILD FOLLOW UP VISIT">                   
+                    <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent}/>
+                    </Tab>
+                  )}                   
                 </Tabs>
               </div>
             </Card.Body>
