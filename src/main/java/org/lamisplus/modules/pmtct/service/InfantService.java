@@ -7,6 +7,8 @@ import lombok.SneakyThrows;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.patient.domain.dto.PageDTO;
+import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
@@ -16,9 +18,15 @@ import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,5 +85,38 @@ public class InfantService {
          infant.setLastModifiedBy(user.getUserName());
          infant.setId(id);
         return infantRepository.save(infant);
+    }
+
+    public List<Infant> getInfantByAncNo(String ancNo)
+    {
+        return infantRepository.findInfantByAncNo(ancNo);
+    }
+
+    public List<Infant> getAllInfant()
+    {
+        return infantRepository.findAll();
+    }
+
+    public PersonMetaDataDto getAllInfants(int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            User user = (User) currentUser.get();
+            currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
+
+        }
+        Page<Infant> infants =  infantRepository.getInfant(currentOrganisationUnitId, paging);
+
+
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords(infants.getTotalElements());
+        personMetaDataDto.setPageSize(paging.getPageSize());
+        personMetaDataDto.setTotalPages(infants.getTotalPages());
+        personMetaDataDto.setCurrentPage(infants.getNumber());
+        //personMetaDataDto.setRecords(ancResponseDtos);
+        personMetaDataDto.setRecords(infants.getContent());
+        return personMetaDataDto;
+        //return checkedInPeople;
     }
 }

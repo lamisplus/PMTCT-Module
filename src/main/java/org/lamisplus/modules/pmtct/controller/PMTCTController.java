@@ -216,4 +216,18 @@ public class PMTCTController {
         return ancService.updateAncWithPartnerInfo(id, partnerInformation);
     }
 
+    @GetMapping(value = "get-infant-by-ancno/{ancNo}")
+    public ResponseEntity<List<Infant>> getInfantByAncNo(@PathVariable("ancNo") String ancNo){
+        System.out.println("ANCNO "+ ancNo);
+        return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
+    }
+
+    @GetMapping(value = "/all-infants")
+    public ResponseEntity<PersonMetaDataDto> getAllInfants(
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize)  {
+        PersonMetaDataDto personMetaDataDto = infantService.getAllInfants(pageNo, pageSize);
+        return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
 }
