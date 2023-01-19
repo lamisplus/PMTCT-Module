@@ -683,6 +683,7 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
             SyphilisInfo syphilisInfo = ancEnrollementRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
                 JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
@@ -725,6 +726,7 @@ public class ANCService {
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         ancRespondDto.setPerson_uuid(persons.getUuid());
+        ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         return ancRespondDto;
     }
 
@@ -753,6 +755,7 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
             SyphilisInfo syphilisInfo = ancWithPersonRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
                 JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
@@ -805,6 +808,7 @@ public class ANCService {
             ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
             ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
+            ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         }
 
 
@@ -857,6 +861,7 @@ public class ANCService {
         existingAnc.setPersonUuid(anc.getPersonUuid());
         existingAnc.setArchived(1L);
         existingAnc.setStatus(visitStatus);
+        existingAnc.setStaticHivStatus(anc.getStaticHivStatus());
 
         existingAnc.setHospitalNumber(anc.getHospitalNumber());
         existingAnc.setUuid(anc.getUuid());

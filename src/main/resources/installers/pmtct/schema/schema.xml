@@ -33,6 +33,7 @@
         hiv_diognosic_time character varying(100) COLLATE pg_catalog."default",
         status character varying(100) COLLATE pg_catalog."default",
         partner_information jsonb,
+        static_hiv_status character varying(255) COLLATE pg_catalog."default",
         CONSTRAINT pmtct_anc_pkey PRIMARY KEY (id),
         CONSTRAINT anc_no UNIQUE (anc_no)
         )
