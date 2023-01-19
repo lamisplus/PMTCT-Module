@@ -24,6 +24,7 @@ public class ANCWithPersonRequestDto implements Serializable
     private LocalDate expectedDeliveryDate;
     private Integer gAWeeks;
     private String hivDiognosicTime;
+    private String staticHivStatus;
     private SyphilisInfo syphilisInfo;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;

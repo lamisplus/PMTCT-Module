@@ -33,6 +33,7 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String personUuid;
     private Long archived;
     private String status;
+    private String staticHivStatus;
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")
     private JsonNode partnerInformation;
