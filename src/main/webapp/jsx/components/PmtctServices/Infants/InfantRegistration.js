@@ -250,7 +250,7 @@ const LabourinfantInfo = (props) => {
                                 <option value="">Select </option>
                                     
                                     {genders.map((value) => (
-                                        <option key={value.id} value={value.code}>
+                                        <option key={value.id} value={value.display}>
                                             {value.display}
                                         </option>
                                     ))}
