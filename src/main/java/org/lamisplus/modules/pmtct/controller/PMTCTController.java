@@ -29,6 +29,8 @@ public class PMTCTController {
     private final ANCAcivityTracker ancAcivityTracker;
 
     private final InfantService infantService;
+
+    private final InfantVisitService infantVisitService;
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
         System.out.println("Doc I got here nau");
@@ -229,5 +231,74 @@ public class PMTCTController {
         PersonMetaDataDto personMetaDataDto = infantService.getAllInfants(pageNo, pageSize);
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
+
+    @PostMapping(value = "infant-visitations")
+    public ResponseEntity<InfantVisitResponseDto> InfantVisitation(@RequestBody InfantVisitRequestDto infantVisitRequestDto) {
+        System.out.println("Doc I got here nau");
+        return ResponseEntity.ok(infantVisitService.save(infantVisitRequestDto));
+    }
+
+    @GetMapping(value = "get-infantvisit-by-hospitalnumber/{hospitalNumber}")
+    public ResponseEntity<List<InfantVisit>> getInfantVisitByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber){
+        return ResponseEntity.ok (infantVisitService.getInfantVisitByHospitalNumber(hospitalNumber));
+    }
+    @GetMapping(value = "view-infantvisit/{id}")
+    public ResponseEntity<InfantVisit> viewInfantVisit(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantVisitService.getSingleInfantVisit(id));
+    }
+
+    @PostMapping(value = "infant-pcr-test")
+    public ResponseEntity<InfantPCRTest> InfantPCRTest(@RequestBody InfantPCRTestDto infantPCRTestDto) {
+        return ResponseEntity.ok(infantVisitService.save(infantPCRTestDto));
+    }
+
+    @GetMapping(value = "get-infant-prc-by-hospitalnumber/{hospitalNumber}")
+    public ResponseEntity<List<InfantPCRTest>> getInfantPCRTestByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber){
+        return ResponseEntity.ok (infantVisitService.getInfantPCRTestByHospitalNumber(hospitalNumber));
+    }
+    @GetMapping(value = "view-infant-prc/{id}")
+    public ResponseEntity<InfantPCRTest> viewInfantPCRTest(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantVisitService.getSingleInfantPCRTest(id));
+    }
+
+    @PostMapping(value = "infant-arv")
+    public ResponseEntity<InfantArv> InfantPCRTest(@RequestBody InfantArvDto infantArvDto) {
+        return ResponseEntity.ok(infantVisitService.save(infantArvDto));
+    }
+
+    @GetMapping(value = "get-infant-arv-by-hospitalnumber/{hospitalNumber}")
+    public ResponseEntity<List<InfantArv>> getInfantArvByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber){
+        return ResponseEntity.ok (infantVisitService.getInfantArvByHospitalNumber(hospitalNumber));
+    }
+    @GetMapping(value = "view-infant-avr/{id}")
+    public ResponseEntity<InfantArv> viewInfantArv(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantVisitService.getSingleInfantArv(id));
+    }
+
+    @PostMapping(value = "infant-mother-art")
+    public ResponseEntity<InfantMotherArt> createInfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
+        return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
+    }
+
+    @GetMapping(value = "get-infant-mother-art-by-anc-number/{ancNo}")
+    public ResponseEntity<List<InfantMotherArt>> getInfantMotherArtByAncNo(@PathVariable("ancNo") String ancNo){
+        return ResponseEntity.ok (infantVisitService.getInfantMotherArtByANCNumber(ancNo));
+    }
+    @GetMapping(value = "view-infant-mother-art/{id}")
+    public ResponseEntity<InfantMotherArt> viewInfantMotherArt(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantVisitService.getSingleInfantMotherArt(id));
+    }
+
+    @GetMapping(value = "view-infant-mother-art-captured/{ancNo}")
+    public boolean infantMotherArtDetailsCaptured(@PathVariable("ancNo") String ancNo) {
+        return infantVisitService.infantMotherArtDetailsCaptured(ancNo);
+    }
+
+    @GetMapping(value = "view-infant-arv-administered/{hospitalNumber}")
+    public boolean infantArvAdministered(@PathVariable("hospitalNumber") String hospitalNumber) {
+        return infantVisitService.infantArvAdministered(hospitalNumber);
+    }
+
+
 
 }
