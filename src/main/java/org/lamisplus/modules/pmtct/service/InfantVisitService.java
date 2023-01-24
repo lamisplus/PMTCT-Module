@@ -206,4 +206,30 @@ public class InfantVisitService
         List<InfantArv> infantArvList = this.getInfantArvByHospitalNumber(hospitalNumber);
         return (!infantArvList.isEmpty());
     }
+
+    public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto)
+    {
+        this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        if (!(infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime().equalsIgnoreCase("string")))
+        {
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
+
+            this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
+        }
+        if (!(infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType().equalsIgnoreCase("string"))) {
+            infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
+            infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+            this.save(infantVisitationConsolidatedDto.getInfantArvDto());
+        }
+        if (!(infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType().equalsIgnoreCase("string"))){
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+
+            this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
+        }
+        return infantVisitationConsolidatedDto;
+    }
 }

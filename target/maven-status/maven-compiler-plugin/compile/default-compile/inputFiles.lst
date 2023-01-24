@@ -43,6 +43,7 @@ C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\enti
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\HepatitisInfo.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PMTCTEnrollmentRespondDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\InfantService.java
+C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\InfantVisitationConsolidatedDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\ANCRequestDto.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\entity\InfantMotherArt.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\repository\InfantArvRepository.java

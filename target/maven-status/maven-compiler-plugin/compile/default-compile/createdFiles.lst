@@ -11,6 +11,7 @@ org\lamisplus\modules\pmtct\domain\dto\DeliveryResponseDto.class
 org\lamisplus\modules\pmtct\domain\dto\ANCEnrollementRequestDto$ANCEnrollementRequestDtoBuilder.class
 org\lamisplus\modules\pmtct\domain\dto\ANCEnrollementRequestDto.class
 org\lamisplus\modules\pmtct\domain\dto\InfantDto.class
+org\lamisplus\modules\pmtct\domain\dto\InfantVisitationConsolidatedDto.class
 org\lamisplus\modules\pmtct\domain\entity\ANC.class
 org\lamisplus\modules\pmtct\domain\dto\ANCWithPersonRequestDto.class
 org\lamisplus\modules\pmtct\domain\dto\InfantVisitRequestDto.class
@@ -43,6 +44,7 @@ org\lamisplus\modules\pmtct\repository\InfantArvRepository.class
 org\lamisplus\modules\pmtct\domain\entity\PmtctVisit.class
 org\lamisplus\modules\pmtct\domain\entity\PMTCTEnrollment.class
 org\lamisplus\modules\pmtct\domain\entity\InfantPCRTest.class
+org\lamisplus\modules\pmtct\domain\dto\InfantVisitationConsolidatedDto$InfantVisitationConsolidatedDtoBuilder.class
 org\lamisplus\modules\pmtct\repository\PmtctVisitRepository.class
 org\lamisplus\modules\pmtct\domain\dto\PartnerNotification.class
 org\lamisplus\modules\pmtct\repository\DeliveryRepository.class

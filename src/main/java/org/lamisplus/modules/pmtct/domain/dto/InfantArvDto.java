@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.io.Serializable;
 @Data
@@ -18,4 +20,5 @@ public class InfantArvDto implements Serializable
     private String arvDeliveryPoint;
     private String uuid;
     private String ageAtCtx;
+
 }
