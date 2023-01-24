@@ -298,6 +298,10 @@ public class PMTCTController {
     public boolean infantArvAdministered(@PathVariable("hospitalNumber") String hospitalNumber) {
         return infantVisitService.infantArvAdministered(hospitalNumber);
     }
+    @PostMapping(value = "infant-visit-consolidated")
+    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
+        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto));
+    }
 
 
 
