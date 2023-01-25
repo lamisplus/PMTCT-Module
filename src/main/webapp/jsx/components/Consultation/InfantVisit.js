@@ -62,57 +62,58 @@ const ClinicVisit = (props) => {
   //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
   const [infantObj, setInfantObj] = useState()
+  const [infantHospitalNumber, setInfantHospitalNumber] = useState()
   let temp = { ...errors }
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
   const [infants, setInfants] = useState([])
   const [fp, setFp] = useState([]);
-  //Vital signs clinical decision support 
-  const [vitalClinicalSupport, setVitalClinicalSupport] = useState(
-          {
-            bodyWeight: "",
-            diastolic: "",
-            height: "",
-            systolic: "",
-            pulse:"",
-            temperature:"",
-            respiratoryRate:"" 
-          })
+
   const [objValues, setObjValues] = useState({
-    ancNo: patientObj.ancNo,
-    dateOfViralLoad: "",
-    dateOfVisit: "",
-    dateOfmeternalOutcome: "",
-    dsd: "",
-    dsdModel: "",
-    dsdOption: "",
-    enteryPoint: "",
-    fpCounseling: "",
-    fpMethod: "",
-    gaOfViralLoad: "",
-    id: "",
-    maternalOutcome: "",
-    nextAppointmentDate: "",
-    personUuid: patientObj.person_uuid,
-    resultOfViralLoad: "",
-    transferTo: "",
-    visitStatus: "",
-    timeOfViralLoad: "",
-  }
-  );
-  const [vital, setVitalSignDto] = useState({
-    bodyWeight: "",
-    diastolic: "",
-    encounterDate: "",
-    facilityId: 1,
-    height: "",
-    personId: props.patientObj.id,
-    serviceTypeId: 1,
-    systolic: "",
-    pulse:"",
-    temperature:"",
-    respiratoryRate:"" 
-  })
+      infantVisitRequestDto: "",
+      infantArvDto: "",
+      infantMotherArtDto: "",
+      infantPCRTestDto: "",
+  });
+  const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
+      ageAtCtx: "",
+      ancNumber: props.patientObj.ancNo,
+      bodyWeight: "",
+      breastFeeding: "",
+      ctxStatus: "",
+      infantHospitalNumber: infantHospitalNumber,
+      uuid: "",
+      visitDate: "",
+      visitStatus: ""
+  });
+  const [infantArvDto, setInfantArvDto] = useState({
+      ageAtCtx: "",
+      ancNumber: props.patientObj.ancNo,
+      arvDeliveryPoint: "",
+      infantArvTime: "",
+      infantArvType: "",
+      infantHospitalNumber: infantHospitalNumber,
+
+});
+const [infantMotherArtDto, setInfantMotherArtDto] = useState({
+      ancNumber: props.patientObj.ancNo,
+      motherArtInitiationTime: "",
+      motherArtRegimen: "",
+
+});
+const [infantPCRTestDto, setInfantPCRTestDto] = useState({
+      ageAtTest: "",
+      ancNumber: props.patientObj.ancNo,
+      dateResultReceivedAtFacility: "",
+      dateResultReceivedByCaregiver: "",
+      dateSampleCollected: "",
+      dateSampleSent: "",
+      infantHospitalNumber: infantHospitalNumber,
+      results: "",
+      testType: "",
+  });
+
+
   useEffect(() => {
     FAMILY_PLANNING_METHOD();
     InfantInfo();
@@ -148,39 +149,35 @@ const ClinicVisit = (props) => {
       });
 
   }
-  const handleInputChange = e => {
-    setErrors({...temp, [e.target.name]:""}) 
-    
+  const handleInputChangeInfantVisitRequestDto = e => {
+    setErrors({...temp, [e.target.name]:""})   
     //console.log(e.target.name)
-    setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    
+    setInfantVisitRequestDto({ ...infantVisitRequestDto, [e.target.name]: e.target.value });    
   }
-  const handleInputChangeVitalSignDto = e => {
-    setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
-  } 
+  const handleInputChangeInfantArvDto = e => {
+    setErrors({...temp, [e.target.name]:""})   
+    //console.log(e.target.name), 
+    setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });    
+  }
+  const handleInputChangeInfantMotherArtDto = e => {
+    setErrors({...temp, [e.target.name]:""})   
+    //console.log(e.target.name), 
+    setInfantMotherArtDto({ ...infantMotherArtDto, [e.target.name]: e.target.value });    
+  }
+  const handleInputChangeInfantPCRTestDto= e => {
+    setErrors({...temp, [e.target.name]:""})   
+    //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
+    setInfantPCRTestDto({ ...infantPCRTestDto, [e.target.name]: e.target.value });    
+  }
 
   //Validations of the forms
   const validate = () => {       
-    temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
-    temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
-    temp.dsd = objValues.dsd ? "" : "This field is required"
-    temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
-    temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
-    temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
-    temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
-    temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
+    temp.visitDate = infantVisitRequestDto.visitDate ? "" : "This field is required"
+
     setErrors({
         ...temp
     })
-    return Object.values(temp).every(x => x == "")
-  }
-  const handleInputValueCheckBodyWeight =(e)=>{
-    if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
-      const message ="Body weight must not be greater than 150 and less than 3"
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
-    }else{
-      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
-    }
+    return Object.values(temp).every(x => x === "")
   }
 
   /**** Submit Button Processing  */
@@ -188,10 +185,14 @@ const ClinicVisit = (props) => {
     e.preventDefault();
     if(validate()){
     setSaving(true)
-    axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
-      { headers: { "Authorization": `Bearer ${token}` } },
+      objValues.infantVisitRequestDto=infantVisitRequestDto
+      objValues.infantArvDto=infantArvDto
+      objValues.infantMotherArtDto=infantMotherArtDto
+      objValues.infantPCRTestDto=infantPCRTestDto
+      axios.post(`${baseUrl}pmtct/anc/infant-visit-consolidated`, objValues,
+        { headers: { "Authorization": `Bearer ${token}` } },
 
-    )
+      )
       .then(response => {
         setSaving(false);
         toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
@@ -212,9 +213,8 @@ const ClinicVisit = (props) => {
   }
 
   function GetInfantDetail(obj){
-          console.log(obj)
+           setInfantHospitalNumber(obj.hospitalNumber)
           setInfantObj(obj)
-          //alert(obj)
   }
 
   return (
@@ -253,18 +253,18 @@ const ClinicVisit = (props) => {
                   <FormLabelName >Date of Visit *</FormLabelName>
                   <Input
                     type="date"
-                    name="dateOfVisit"
-                    id="dateOfVisit"
-                    value={objValues.dateOfVisit}
+                    name="visitDate"
+                    id="visitDate"
+                    value={infantVisitRequestDto.visitDate}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    onChange={handleInputChange}
+                    onChange={handleInputChangeInfantVisitRequestDto}
                     //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
                   />
-                 {errors.dateOfVisit !=="" ? (
-                      <span className={classes.error}>{errors.dateOfVisit}</span>
+                 {errors.visitDate !=="" ? (
+                      <span className={classes.error}>{errors.visitDate}</span>
                   ) : "" }
 
                 </FormGroup>
@@ -274,20 +274,20 @@ const ClinicVisit = (props) => {
                   <FormLabelName >Mother ANC number *</FormLabelName>
                   <Input
                     type="text"
-                    name="motherAncNumber"
-                    id="motherAncNumber"
-                    value={objValues.motherAncNumber}
+                    name="ancNumber"
+                    id="ancNumber"
+                    value={infantVisitRequestDto.ancNumber}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    onChange={handleInputChange}
+                    onChange={handleInputChangeInfantVisitRequestDto}
                     disabled
                   />
-                 {errors.motherAncNumber !=="" ? (
-                      <span className={classes.error}>{errors.motherAncNumber}</span>
+                 {errors.ancNumber !=="" ? (
+                      <span className={classes.error}>{errors.ancNumber}</span>
                   ) : "" }
 
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-4">
+              <div className=" mb-3 col-md-6">
                         <FormGroup>
                         <FormLabelName >Body Weight</FormLabelName>
                         <InputGroup> 
@@ -295,58 +295,128 @@ const ClinicVisit = (props) => {
                                 type="number"
                                 name="bodyWeight"
                                 id="bodyWeight"
-                                onChange={handleInputChangeVitalSignDto}
+                                onChange={handleInputChangeInfantVisitRequestDto}
                                 min="3"
                                 max="150"
-                                value={vital.bodyWeight}
-                                onKeyUp={handleInputValueCheckBodyWeight} 
+                                value={infantVisitRequestDto.bodyWeight}
                                 style={{border: "1px solid #014D88", borderRadius:"0rem"}}
                             />
                             <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
                                 kg
                             </InputGroupText>
                         </InputGroup>
-                        {vitalClinicalSupport.bodyWeight !=="" ? (
-                                <span className={classes.error}>{vitalClinicalSupport.bodyWeight}</span>
-                        ) : ""}
                         {errors.bodyWeight !=="" ? (
                             <span className={classes.error}>{errors.bodyWeight}</span>
                         ) : "" }
                         </FormGroup>
-                    </div>               
+                    </div> 
+                     <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <FormLabelName >Breast Feeding ?</FormLabelName>
+                        <Input
+                          type="select"
+                          name="breastFeeding"
+                          id="breastFeeding"
+                          value={infantVisitRequestDto.breastFeeding}
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                          onChange={handleInputChangeInfantVisitRequestDto}
+                          
+                        >
+                        <option value="">Select </option>
+                        <option value="YES">YES </option>
+                        <option value="NO">NO </option>
+                       
+                      </Input>
+                      {errors.breastFeeding !=="" ? (
+                            <span className={classes.error}>{errors.breastFeeding}</span>
+                        ) : "" }
+
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <FormLabelName >CTX Status</FormLabelName>
+                        <Input
+                          type="select"
+                          name="ctxStatus"
+                          id="ctxStatus"
+                          value={infantVisitRequestDto.ctxStatus}
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                          onChange={handleInputChangeInfantVisitRequestDto}
+                          
+                        >
+                        <option value="">Select </option>
+                        <option value="YES">YES </option>
+                        <option value="NO">NO </option>
+                       
+                      </Input>
+                      {errors.ctxStatus !=="" ? (
+                            <span className={classes.error}>{errors.ctxStatus}</span>
+                        ) : "" }
+
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <FormLabelName >Visit Status</FormLabelName>
+                        <Input
+                          type="select"
+                          name="visitStatus"
+                          id="visitStatus"
+                          value={infantVisitRequestDto.visitStatus}
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                          onChange={handleInputChangeInfantVisitRequestDto}
+                          
+                        >
+                        <option value="">Select </option>
+                        <option value="YES">YES </option>
+                        <option value="NO">NO </option>
+                       
+                      </Input>
+                      {errors.breastFeeding !=="" ? (
+                            <span className={classes.error}>{errors.breastFeeding}</span>
+                        ) : "" }
+
+                      </FormGroup>
+                    </div>              
             </div>
+           
+            <br />
+            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}>  Mother's ART </h4>
+            </Label>
+            <br /><br />
             <div className="row">
-              
-              <div className=" mb-3 col-md-4">
+              <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName >Timing of mother's ART Initiation </FormLabelName>
                   <Input
                     type="select"
-                    name="enteryPoint"
-                    id="enteryPoint"
-                    value={objValues.enteryPoint}
-                    onChange={handleInputChange}
+                    name="motherArtInitiationTime"
+                    id="motherArtInitiationTime"
+                    value={infantMotherArtDto.motherArtInitiationTime}
+                    onChange={handleInputChangeInfantMotherArtDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    
                   >
                     <option value="select">Select </option>
 
                    
                   </Input>
-                  {errors.enteryPoint !=="" ? (
-                      <span className={classes.error}>{errors.enteryPoint}</span>
+                  {errors.motherArtInitiationTime !=="" ? (
+                      <span className={classes.error}>{errors.motherArtInitiationTime}</span>
                   ) : "" }
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-4">
+              <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName >Mother's ART Regimen </FormLabelName>
                   <Input
                     type="select"
-                    name="fpCounseling"
-                    id="fpCounseling"
-                    value={objValues.fpCounseling}
-                    onChange={handleInputChange}
+                    name="motherArtRegimen"
+                    id="motherArtRegimen"
+                    value={infantMotherArtDto.motherArtRegimen}
+                    onChange={handleInputChangeInfantMotherArtDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
@@ -355,20 +425,48 @@ const ClinicVisit = (props) => {
                     <option value="NO">NO </option>
                    
                   </Input>
-                  {errors.fpCounseling !=="" ? (
-                      <span className={classes.error}>{errors.fpCounseling}</span>
+                  {errors.motherArtRegimen !=="" ? (
+                      <span className={classes.error}>{errors.motherArtRegimen}</span>
                   ) : "" }
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-4">
+             
+            </div>
+            <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}> Infant ARV & CTX</h4>
+            </Label>
+            <br /><br />
+            {/* LAB Screening Form */}
+            <div className="row">
+            <div className=" mb-3 col-md-4">
+                <FormGroup>
+                <FormLabelName >Age at CTX Initiation </FormLabelName>
+                <Input
+                type="number"
+                name="ageAtCtx"
+                id="ageAtCtx"
+                value={infantArvDto.ageAtCtx}
+                onChange={handleInputChangeInfantArvDto}
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}  
+                >
+                   <option value="select">Select </option>
+                    <option value="<2 Months"> {"<"} 2 Months </option>
+                    <option value=">=2 Months">{">"} 2 Months  </option>
+                  </Input>
+                {errors.ageAtCtx !=="" ? (
+                <span className={classes.error}>{errors.ageAtCtx}</span>
+                ) : "" }
+                </FormGroup>   
+            </div>
+            <div className=" mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName >Infant ARV Type </FormLabelName>
                   <Input
                     type="select"
-                    name="fpMethod"
-                    id="fpMethod"
-                    value={objValues.fpMethod}
-                    onChange={handleInputChange}
+                    name="infantArvType"
+                    id="infantArvType"
+                    value={infantArvDto.infantArvType}
+                    onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
@@ -379,329 +477,184 @@ const ClinicVisit = (props) => {
                       </option>
                     ))}
                   </Input>
-                  {errors.fpMethod !=="" ? (
-                      <span className={classes.error}>{errors.fpMethod}</span>
+                  {errors.infantArvType !=="" ? (
+                      <span className={classes.error}>{errors.infantArvType}</span>
                   ) : "" }
                 </FormGroup>
-              </div>
             </div>
-            {/* <div className="row">
-              
-              <div className=" mb-3 col-md-3">
+            <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >Point of Entry*</FormLabelName>
+                  <FormLabelName > Timing of ARV Prophylaxis </FormLabelName>
                   <Input
                     type="select"
-                    name="enteryPoint"
-                    id="enteryPoint"
-                    value={objValues.enteryPoint}
-                    onChange={handleInputChange}
+                    name="arvDeliveryPoint"
+                    id="arvDeliveryPoint"
+                    value={infantArvDto.arvDeliveryPoint}
+                    onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
                     <option value="select">Select </option>
-
-                    {entryPoint.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
+                    <option value="Within 72 hour">Within 72 hour </option>
+                    <option value="After 72 hour ">After 72 hour  </option>
                   </Input>
-                  {errors.enteryPoint !=="" ? (
-                      <span className={classes.error}>{errors.enteryPoint}</span>
+                  {errors.arvDeliveryPoint !=="" ? (
+                      <span className={classes.error}>{errors.arvDeliveryPoint}</span>
                   ) : "" }
                 </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-3">
+            </div>
+            <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >FP Counselling *</FormLabelName>
+                  <FormLabelName > Hours Outcome </FormLabelName>
                   <Input
                     type="select"
-                    name="fpCounseling"
-                    id="fpCounseling"
-                    value={objValues.fpCounseling}
-                    onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
-                  >
-                    <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
-                   
-                  </Input>
-                  {errors.fpCounseling !=="" ? (
-                      <span className={classes.error}>{errors.fpCounseling}</span>
-                  ) : "" }
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName >FP Method *</FormLabelName>
-                  <Input
-                    type="select"
-                    name="fpMethod"
-                    id="fpMethod"
-                    value={objValues.fpMethod}
-                    onChange={handleInputChange}
+                    name="infantArvTime"
+                    id="infantArvTime"
+                    value={infantArvDto.infantArvTime}
+                    onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     required
                   >
                     <option value="select">Select </option>
-                    {fp.map((value) => (
-                      <option key={value.id} value={value.id}>
-                        {value.display}
-                      </option>
-                    ))}
+                    <option value="Facility Delivery">Facility Delivery</option>
+                    <option value="Delivered outside facility">Delivered outside facility </option>
                   </Input>
-                  {errors.fpMethod !=="" ? (
-                      <span className={classes.error}>{errors.fpMethod}</span>
+                  {errors.infantArvTime !=="" ? (
+                      <span className={classes.error}>{errors.infantArvTime}</span>
+                  ) : "" }
+                </FormGroup>
+            </div>
+            
+            </div>
+            <br />
+            <Label as='a' color='black' style={{width:'106%', height:'35px'}} ribbon>
+            <h4 style={{color:'#fff'}}> Infant PCR </h4>
+            </Label>
+            <br />
+            {/* LAB Screening Form */}
+            <div className="row">
+                <div className=" mb-3 col-md-6">
+                <FormGroup>
+                <FormLabelName >Age at Test(months)</FormLabelName>
+                <Input
+                type="number"
+                name="ageAtTest"
+                id="ageAtTest"
+                value={infantPCRTestDto.ageAtTest}
+                onChange={handleInputChangeInfantPCRTestDto}
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                 
+                />
+                {errors.ageAtTest !=="" ? (
+                <span className={classes.error}>{errors.ageAtTest}</span>
+                ) : "" }
+                </FormGroup>   
+                </div>
+                <div className=" mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName > Sample Type</FormLabelName>
+                  <Input
+                    type="select"
+                    name="testType"
+                    id="testType"
+                    value={infantArvDto.testType}
+                    onChange={handleInputChangeInfantArvDto}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    required
+                  >
+                    <option value="select">Select </option>
+                    <option value="Frist PCR">Frist PCR</option>
+                    <option value="Second PCR">Second PCR</option>
+                    <option value="Confirmatory PCR">Confirmatory PCR</option>
+                    <option value="First Rapid Antibody">First Rapid Antibody </option>
+                    <option value="Second Rapid Antibody ">Second Rapid Antibody </option>
+                  </Input>
+                  {errors.testType !=="" ? (
+                      <span className={classes.error}>{errors.testType}</span>
                   ) : "" }
                 </FormGroup>
               </div>
-            </div> */}
-            <br />
-            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>Infant CTX</h4>
-            </Label>
-            <br />
-            {/* LAB Screening Form */}
-            <div className="row">
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Age at CTX Initiation</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Age at Test(months)</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
                 <FormLabelName >Date sample collected</FormLabelName>
                 <Input
                 type="date"
-                name="dateOfViralLoad"
-                id="dateOfViralLoad"
-                value={objValues.dateOfViralLoad}
-                onChange={handleInputChange}
+                name="dateSampleCollected"
+                id="dateSampleCollected"
+                value={infantPCRTestDto.dateSampleCollected}
+                onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
                 />
-                {errors.dateOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.dateOfViralLoad}</span>
+                {errors.dateSampleCollected !=="" ? (
+                <span className={classes.error}>{errors.dateSampleCollected}</span>
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
-                <FormLabelName >Date sample sent</FormLabelName>
+                <FormLabelName >Date Result Received</FormLabelName>
                 <Input
                 type="date"
-                name="dateOfViralLoad"
-                id="dateOfViralLoad"
-                value={objValues.dateOfViralLoad}
-                onChange={handleInputChange}
+                name="dateResultReceivedAtFacility"
+                id="dateResultReceivedAtFacility"
+                value={infantPCRTestDto.dateResultReceivedAtFacility}
+                onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                max={moment(new Date()).format("YYYY-MM-DD")}  
+                max={moment(new Date()).format("YYYY-MM-DD")}   
                 />
-                {errors.dateOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.dateOfViralLoad}</span>
+                {errors.dateResultReceivedAtFacility !=="" ? (
+                <span className={classes.error}>{errors.dateResultReceivedAtFacility}</span>
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
-                <FormLabelName >Date Result received at facility</FormLabelName>
+                <FormLabelName >Date Result Received By Caregiver</FormLabelName>
                 <Input
                 type="date"
-                name="dateOfViralLoad"
-                id="dateOfViralLoad"
-                value={objValues.dateOfViralLoad}
-                onChange={handleInputChange}
+                name="dateResultReceivedByCaregiver"
+                id="dateResultReceivedByCaregiver"
+                value={infantPCRTestDto.dateResultReceivedByCaregiver}
+                onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                max={moment(new Date()).format("YYYY-MM-DD")}  
+                max={moment(new Date()).format("YYYY-MM-DD")}   
                 />
-                {errors.dateOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.dateOfViralLoad}</span>
+                {errors.dateResultReceivedByCaregiver !=="" ? (
+                <span className={classes.error}>{errors.dateResultReceivedByCaregiver}</span>
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
-                <FormLabelName >Date caregiver given result</FormLabelName>
+                <FormLabelName >Date Sample Sent</FormLabelName>
                 <Input
                 type="date"
-                name="dateOfViralLoad"
-                id="dateOfViralLoad"
-                value={objValues.dateOfViralLoad}
-                onChange={handleInputChange}
+                name="dateSampleSent"
+                id="dateSampleSent"
+                value={infantPCRTestDto.dateSampleSent}
+                onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
                 />
-                {errors.dateOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.dateOfViralLoad}</span>
+                {errors.dateSampleSent !=="" ? (
+                <span className={classes.error}>{errors.dateSampleSent}</span>
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
                 <FormLabelName >Result *</FormLabelName>
                 <Input
                 type="text"
-                name="resultOfViralLoad"
-                id="resultOfViralLoad"
-                value={vital.nextAppointment}
-                onChange={handleInputChange}
+                name="results"
+                id="results"
+                value={infantPCRTestDto.results}
+                onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
                 />
-                {errors.resultOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.resultOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-            </div>
-            <br />
-            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}> 2nd PCR 12 weeks after cessation of breastfeeding or as indicated  </h4>
-            </Label>
-            <br />
-            {/* LAB Screening Form */}
-            <div className="row">
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Age at Test(months)</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Date sample collected</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Result *</FormLabelName>
-                <Input
-                type="text"
-                name="resultOfViralLoad"
-                id="resultOfViralLoad"
-                value={vital.nextAppointment}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
-                />
-                {errors.resultOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.resultOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-            </div>
-            <br />
-            <br />
-            <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}>    Infant Testing(Rapid test) - 1st Rapid Antibody Test 9 months of age or 1st contact after  </h4>
-            </Label>
-            <br />
-            {/* LAB Screening Form */}
-            <div className="row">
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Age at Test(months)</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Date sample collected</FormLabelName>
-                <Input
-                type="number"
-                name="gaOfViralLoad"
-                id="gaOfViralLoad"
-                value={objValues.gaOfViralLoad}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={vital.encounterDate}   
-                />
-                {errors.gaOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.gaOfViralLoad}</span>
-                ) : "" }
-                </FormGroup>   
-                </div>
-                <div className=" mb-3 col-md-4">
-                <FormGroup>
-                <FormLabelName >Result *</FormLabelName>
-                <Input
-                type="text"
-                name="resultOfViralLoad"
-                id="resultOfViralLoad"
-                value={vital.nextAppointment}
-                onChange={handleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
-                />
-                {errors.resultOfViralLoad !=="" ? (
-                <span className={classes.error}>{errors.resultOfViralLoad}</span>
+                {errors.results !=="" ? (
+                <span className={classes.error}>{errors.results}</span>
                 ) : "" }
                 </FormGroup>   
                 </div>

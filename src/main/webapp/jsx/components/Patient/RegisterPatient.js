@@ -184,7 +184,8 @@ const UserRegistration = (props) => {
             personDto:{},
             pmtctHtsInfo:{},
             syphilisInfo:{},
-            partnerNotification:{}
+            partnerNotification:{},
+            staticHivStatus:""
         });
      const [carePoints, setCarePoints] = useState([]);
      const [sourceReferral, setSourceReferral] = useState([]);
@@ -1675,6 +1676,28 @@ const UserRegistration = (props) => {
                                             </InputGroup>
                                             {errors.referredSyphilisTreatment !=="" ? (
                                                     <span className={classes.error}>{errors.referredSyphilisTreatment}</span>
+                                            ) : "" }                                         
+                                            </FormGroup>
+                                    </div>
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >HIV Status </Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="select"
+                                                    name="staticHivStatus"
+                                                    id="staticHivStatus"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.staticHivStatus} 
+                                                >
+                                                    <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
+                                                    <option value="Unknown" >Unknown</option>
+                                                </Input>
+                                            </InputGroup>
+                                            {errors.staticHivStatus !=="" ? (
+                                                    <span className={classes.error}>{errors.staticHivStatus}</span>
                                             ) : "" }                                         
                                             </FormGroup>
                                     </div>

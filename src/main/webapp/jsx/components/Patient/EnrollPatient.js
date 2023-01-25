@@ -153,7 +153,8 @@ const UserRegistration = (props) => {
             pmtctHtsInfo:{},
             syphilisInfo:{},
             partnerNotification:{},
-            sourceOfReferral:""
+            sourceOfReferral:"",
+            staticHivStatus:""
     });
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
@@ -370,7 +371,7 @@ const UserRegistration = (props) => {
         }
 
     }
-console.log(errors)
+
     return (
         <>
         <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>
@@ -711,7 +712,28 @@ console.log(errors)
                                             ) : "" }                                         
                                             </FormGroup>
                                     </div>
-                                   
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >HIV Status *</Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="select"
+                                                    name="staticHivStatus"
+                                                    id="staticHivStatus"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.staticHivStatus} 
+                                                >
+                                                    <option value="" >Select</option>
+                                                    <option value="Positive" >Positive</option>
+                                                    <option value="Negative" >Negative</option>
+                                                    <option value="Unknown" >Unknown</option>
+                                                </Input>
+                                            </InputGroup>
+                                            {errors.staticHivStatus !=="" ? (
+                                                    <span className={classes.error}>{errors.staticHivStatus}</span>
+                                            ) : "" }                                         
+                                            </FormGroup>
+                                    </div>
                             </div>
                             </div>
                             </div>
