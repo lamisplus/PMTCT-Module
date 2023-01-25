@@ -63,7 +63,6 @@ public class ANCService {
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
-        System.out.println("ancRequestDto.getPerson_uuid() = " + ancRequestDto.getPerson_uuid());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = 0L;
@@ -280,28 +279,19 @@ public class ANCService {
     public List<PMTCTPersonDto> getAllPMTCTPerson2() {
         List<Person> personList = this.personRepository.findAll();
         List<PMTCTPersonDto> pmtctPersonDtosList = new ArrayList<>();
-        System.out.println("How many person are in DB " + personList.size());
         personList.forEach(person -> {
             int age = this.calculateAge(person.getDateOfBirth());
-            System.out.println("1 " + age);
             String sex = person.getSex();
             if ((age >= 10) && (sex.contains("F")) && (person.getActive())) {
                 PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
                 pmtctPersonDto.setAge(age);
-                System.out.println(1);
                 pmtctPersonDto.setDescriptiveAddress(person.getAddress());
-                System.out.println(2);
                 pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
-                System.out.println("3 " + person.getHospitalNumber());
                 pmtctPersonDto.setOtherNames(person.getOtherName());
-                System.out.println(4);
                 pmtctPersonDto.setSurname(person.getSurname());
-                System.out.println("5a " + person.getHospitalNumber());
                 pmtctPersonDto.setContactPoint(person.getContactPoint());
                 try {
-                    //System.out.println("Before Oyibo");
                     Optional<ANC> ancs = ancRepository.findByHospitalNumber(person.getHospitalNumber());
-                    //System.out.println("After Oyibo");
                     if (ancs.isPresent()) {
                         pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
                     } else {
@@ -313,7 +303,6 @@ public class ANCService {
                 pmtctPersonDtosList.add(pmtctPersonDto);
             }
         });
-        System.out.println("I actually got here");
         return pmtctPersonDtosList;
     }
 
@@ -332,14 +321,11 @@ public class ANCService {
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
             persons = personRepository.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
-            System.out.println("searchValue = " + searchValue);
         } else {
             Integer rec = ancRepository.getTotalAnc();
             if (rec >= 1) {
                 persons = personRepository.findFemalePerson(0, currentOrganisationUnitId, paging);
             } else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
-            System.out.println("persons Size2 = " + persons.getTotalElements());
-
         }
 
         List<Person> personList = persons.getContent();
@@ -846,7 +832,6 @@ public class ANCService {
                 .orElseThrow(() -> new EntityNotFoundException(ANC.class, "id", "" + id));
     }
     public void graduateFromANC(ANC anc, String visitStatus) {
-        System.out.println("Doc I got here ANC No = "+anc.getAncNo());
         ANC existingAnc = this.getExistingANC(anc.getId());
         existingAnc.setFirstAncDate(anc.getFirstAncDate());
         existingAnc.setGravida(anc.getGravida());
@@ -878,7 +863,6 @@ public class ANCService {
     }
 
     public void updateANC(ANC anc, String visitStatus) {
-        System.out.println("Doc I got here ANC No1 = "+anc.getAncNo());
         ANC existingAnc = this.getExistingANC(anc.getId());
         existingAnc.setFirstAncDate(anc.getFirstAncDate());
         existingAnc.setGravida(anc.getGravida());
@@ -909,7 +893,7 @@ public class ANCService {
     }
 
     public boolean isANCExisting(String ancNO) {
-        System.out.println("ANCNO "+ancNO );
+
         List<ANC> anc = ancRepository.getANCByAncNo(ancNO);
         boolean reply = false;
         if (anc.isEmpty()) reply = false;
@@ -929,6 +913,8 @@ public class ANCService {
         ancRepository.save(anc);
         return partnerInformation;
     }
+
+
 
 }
 
