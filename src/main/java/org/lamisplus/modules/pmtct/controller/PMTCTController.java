@@ -303,6 +303,15 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto));
     }
 
+    @PostMapping(value = "get-form-filter")
+    public FormFilterResponseDto getFormFilter(@RequestBody FormFilterRequestDto formFilterRequestDto){
+        return infantVisitService.getFormFilter(formFilterRequestDto);
+    }
+
+    @GetMapping(value = "get-infant-activities/{hospitalNumber}")
+    public List<ActivityTracker> getInfantVisitActivities(@PathVariable("hospitalNumber") String hospitalNumber) {
+        return ancAcivityTracker.getInfanctVisitActivities(hospitalNumber);
+    }
 
 
 }

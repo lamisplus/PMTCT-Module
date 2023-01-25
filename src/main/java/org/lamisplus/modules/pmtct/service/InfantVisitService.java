@@ -210,20 +210,20 @@ public class InfantVisitService
     public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto)
     {
         this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
-        if (!(infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime().equalsIgnoreCase("string")))
+        if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
         {
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
 
             this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         }
-        if (!(infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType().equalsIgnoreCase("string"))) {
+        if ((infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType() != null)) {
             infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
-        if (!(infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType().equalsIgnoreCase("string"))){
+        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null)){
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
@@ -231,5 +231,12 @@ public class InfantVisitService
             this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
         }
         return infantVisitationConsolidatedDto;
+    }
+
+    public FormFilterResponseDto getFormFilter(FormFilterRequestDto formFilterRequestDto){
+        FormFilterResponseDto filterResponseDto = new FormFilterResponseDto();
+        filterResponseDto.setInfantArv(this.infantArvAdministered(formFilterRequestDto.getInfantHospitalNumber()));
+        filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(formFilterRequestDto.getAncNo()));
+        return filterResponseDto;
     }
 }
