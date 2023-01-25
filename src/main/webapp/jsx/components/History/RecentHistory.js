@@ -85,7 +85,7 @@ const RecentHistory = (props) => {
     }
     
 }
-
+//console.log(infants)
 const index=0;
 
   return (
@@ -230,7 +230,7 @@ const index=0;
                 <div className="card overflow-hidden">
                   <div className="social-graph-wrapper widget-linkedin">
                     <span className="s-icon">
-                    <span style={{fontSize:"16px"}}>No. of Infants  { infants.length > 0 ? (" - " + infants.length): ""}</span>
+                    <span style={{fontSize:"16px"}}>No. of Infants  { infants.length > 0 ? (" : " + infants.length): ""}</span>
                     </span>
                   </div>
                   <div className="row">
