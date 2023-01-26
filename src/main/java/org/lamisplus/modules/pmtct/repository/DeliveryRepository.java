@@ -14,4 +14,6 @@ public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
     Delivery getDeliveryByAncNo(String ancNo);
 
     Optional<Delivery> findDeliveryByAncNo(String ancNo);
+
+    Optional<Delivery> findDeliveryByHospitalNumber(String hospitalNumber);
 }

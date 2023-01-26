@@ -303,9 +303,9 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto));
     }
 
-    @PostMapping(value = "get-form-filter")
-    public FormFilterResponseDto getFormFilter(@RequestBody FormFilterRequestDto formFilterRequestDto){
-        return infantVisitService.getFormFilter(formFilterRequestDto);
+    @GetMapping(value = "get-form-filter/{hospitalNumber}")
+    public FormFilterResponseDto getFormFilter(@PathVariable("hospitalNumber") String hospitalNumber){
+        return infantVisitService.getFormFilter(hospitalNumber);
     }
 
     @GetMapping(value = "get-infant-activities/{hospitalNumber}")

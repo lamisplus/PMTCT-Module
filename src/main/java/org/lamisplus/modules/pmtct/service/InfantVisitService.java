@@ -24,6 +24,8 @@ public class InfantVisitService
     private  final InfantPCRTestRepository infantPCRTestRepository;
     private final InfantArvRepository infantArvRepository;
 
+    private final DeliveryRepository deliveryRepository;
+
     private InfantMotherArtRepository infantMotherArtRepository;
 
     public InfantVisitResponseDto save(InfantVisitRequestDto infantVisitRequestDto) {
@@ -233,10 +235,14 @@ public class InfantVisitService
         return infantVisitationConsolidatedDto;
     }
 
-    public FormFilterResponseDto getFormFilter(FormFilterRequestDto formFilterRequestDto){
+    public FormFilterResponseDto getFormFilter(String hospitalNumber){
         FormFilterResponseDto filterResponseDto = new FormFilterResponseDto();
-        filterResponseDto.setInfantArv(this.infantArvAdministered(formFilterRequestDto.getInfantHospitalNumber()));
-        filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(formFilterRequestDto.getAncNo()));
+        filterResponseDto.setInfantArv(this.infantArvAdministered(hospitalNumber));
+        Optional<Delivery> deliveryOptional = this.deliveryRepository.findDeliveryByHospitalNumber(hospitalNumber);
+        if (deliveryOptional.isPresent()){
+            filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(deliveryOptional.get().getAncNo()));
+        }
+        else filterResponseDto.setMotherArt(Boolean.FALSE);
         return filterResponseDto;
     }
 }
