@@ -400,7 +400,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     
                   >
                     <option value="select">Select </option>
-
+                    <option value="select">Select </option>
                    
                   </Input>
                   {errors.motherArtInitiationTime !=="" ? (
@@ -505,7 +505,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             </div>
             <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName > Hours Outcome </FormLabelName>
+                  <FormLabelName > Place of Delivery </FormLabelName>
                   <Input
                     type="select"
                     name="infantArvTime"
