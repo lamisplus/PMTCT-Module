@@ -2,6 +2,8 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
 
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -14,4 +16,5 @@ public class InfantMotherArtDto implements Serializable
     private String  motherArtInitiationTime;
     private String  motherArtRegimen;
     private String  uuid;
+
 }
