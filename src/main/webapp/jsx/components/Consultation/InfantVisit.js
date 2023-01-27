@@ -68,7 +68,7 @@ const ClinicVisit = (props) => {
   const [saving, setSaving] = useState(false);
   const [infants, setInfants] = useState([])
   const [fp, setFp] = useState([]);
-
+  const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
   const [objValues, setObjValues] = useState({
       infantVisitRequestDto: "",
       infantArvDto: "",
@@ -117,6 +117,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
   useEffect(() => {
     FAMILY_PLANNING_METHOD();
     InfantInfo();
+    TIME_ART_INITIATION_PMTCT();
   }, [props.patientObj.ancNo]);
     ///GET LIST OF Infants
     const InfantInfo =()=>{
@@ -135,6 +136,18 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
           });
       
   }
+  const TIME_ART_INITIATION_PMTCT =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setTimingOfArtInitiation(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+}
   const FAMILY_PLANNING_METHOD = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
@@ -215,6 +228,23 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
   function GetInfantDetail(obj){
            setInfantHospitalNumber(obj.hospitalNumber)
           setInfantObj(obj)
+          const InfantVisit =()=>{
+            //setLoading(true)
+            axios
+                .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+                    { headers: {"Authorization" : `Bearer ${token}`} }
+                )
+                .then((response) => {
+                //setLoading(false)
+                        setInfants(response.data)
+                })
+      
+                .catch((error) => {
+                //console.log(error);
+                });
+            
+        }
+        InfantVisit()
   }
 
   return (
@@ -400,8 +430,11 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     
                   >
                     <option value="select">Select </option>
-                    <option value="select">Select </option>
-                   
+                    {timingOfArtInitiation.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.display}
+                                    </option>
+                                ))}
                   </Input>
                   {errors.motherArtInitiationTime !=="" ? (
                       <span className={classes.error}>{errors.motherArtInitiationTime}</span>
@@ -442,7 +475,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 <FormGroup>
                 <FormLabelName >Age at CTX Initiation </FormLabelName>
                 <Input
-                type="number"
+                type="select"
                 name="ageAtCtx"
                 id="ageAtCtx"
                 value={infantArvDto.ageAtCtx}
