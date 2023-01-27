@@ -17,4 +17,5 @@ public class InfantDto implements Serializable
     private String hospitalNumber;
     private String uuid;
     private String ancNo;
+    private String infantOutcomeAt18Months;
 }

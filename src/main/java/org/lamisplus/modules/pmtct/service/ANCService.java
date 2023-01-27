@@ -12,11 +12,14 @@ import org.hibernate.annotations.Type;
 import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
+import org.lamisplus.modules.base.domain.entities.ApplicationUserOrganisationUnit;
 import org.lamisplus.modules.base.domain.entities.OrganisationUnit;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.domain.repositories.OrganisationUnitRepository;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.hts.domain.entity.HtsClient;
+import org.lamisplus.modules.hts.repository.HtsClientRepository;
 import org.lamisplus.modules.patient.domain.dto.*;
 import org.lamisplus.modules.patient.domain.entity.Encounter;
 import org.lamisplus.modules.patient.domain.entity.Person;
@@ -59,6 +62,7 @@ public class ANCService {
     private final EncounterRepository encounterRepository;
     private final PMTCTEnrollmentService pmtctEnrollmentService;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+    private final HtsClientRepository htsClientRepository;
 
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
@@ -162,7 +166,7 @@ public class ANCService {
         Person person = this.getPersonFromDto(personDto);
         this.getCurrentFacility(person);
         person.setUuid(UUID.randomUUID().toString());
-        person.setFullName(personService.getFullName(personDto.getFirstName(), personDto.getSurname()));
+        person.setFullName(personService.getFullName(personDto.getFirstName(), personDto.getOtherName(), personDto.getSurname()));
         this.personRepository.save(person);
         return person.getUuid();
     }
@@ -340,7 +344,7 @@ public class ANCService {
 
         PageDTO pageDTO = personService.generatePagination(persons);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(personResponseDtos.size());
+        personMetaDataDto.setTotalRecords(persons.getTotalElements());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
@@ -444,10 +448,11 @@ public class ANCService {
         personResponseDto.setDeceasedDateTime(person.getDeceasedDateTime());
         personResponseDto.setOrganization(person.getOrganization());
         personResponseDto.setUuid(person.getUuid());
-        //personResponseDto.setAncNo(this.myRecentAncNo(person.getUuid()));
-        //personResponseDto.setBiometricStatus(getPatientBiometricStatus(person.getUuid()));
-
-
+        String hivStatus = "Unknown";
+        try{
+            hivStatus = this.getDynamicHivStatus(person.getUuid());
+        }catch (Exception e){}
+        personResponseDto.setDynamicHivStatus(hivStatus);
         return personResponseDto;
     }
 
@@ -795,11 +800,16 @@ public class ANCService {
             ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
             ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
+
+            String hivStatus = "Unknown";
+            try{
+                hivStatus = this.getDynamicHivStatus(anc.getUuid());
+            }catch (Exception e){}
+            ancRespondDto.setDynamicHivStatus(hivStatus);
+            ancRespondDto.setHivStatus(hivStatus);
         }
 
 
-
-        ancRespondDto.setHivStatus(this.getHivStatus(person.getUuid()));
         if (activeOnPMTCT(ancNo)) {
             PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancNo);
             ancRespondDto.setPmtctRegStatus(true);
@@ -810,10 +820,10 @@ public class ANCService {
         return ancRespondDto;
     }
 
-    String getHivStatus(String uuid) {
-        String status = "Positive";
-        return status;
-    }
+//    String getHivStatus(String uuid) {
+//        String status = "Positive";
+//        return status;
+//    }
 
     public boolean activeOnPMTCT(String ancNo) {
         boolean active = false;
@@ -912,6 +922,31 @@ public class ANCService {
         }
         ancRepository.save(anc);
         return partnerInformation;
+    }
+
+    String getDynamicHivStatus (String personUuid){
+        String hivStatus = "Unknown";
+        Optional<String> uuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
+        if(uuid.isPresent())
+        {
+            hivStatus = "Positive";
+        }else{
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = (User) currentUser.get();
+            List<HtsClient> htsClientList = ancRepository.getHtsRecordsByPersonsUuidAAndFacilityId(personUuid, user.getCurrentOrganisationUnitId());
+            Iterator iterator = htsClientList.iterator();
+            while (iterator.hasNext())
+            {
+                HtsClient htsClient = (HtsClient)  iterator.next();
+                String firstResult = htsClient.getHivTestResult();
+                String secondResult = htsClient.getHivTestResult2();
+                if (secondResult == null) hivStatus= firstResult;
+                else hivStatus= secondResult;
+                break;
+            }
+
+        }
+        return  hivStatus;
     }
 
 

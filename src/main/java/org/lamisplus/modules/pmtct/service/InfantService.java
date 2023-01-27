@@ -114,9 +114,15 @@ public class InfantService {
         personMetaDataDto.setPageSize(paging.getPageSize());
         personMetaDataDto.setTotalPages(infants.getTotalPages());
         personMetaDataDto.setCurrentPage(infants.getNumber());
-        //personMetaDataDto.setRecords(ancResponseDtos);
         personMetaDataDto.setRecords(infants.getContent());
         return personMetaDataDto;
-        //return checkedInPeople;
+    }
+    public void updateInfant(String hospitalNo, String outCome) {
+        Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNo);
+        if (infants.isPresent()){
+            Infant infant = infants.get();
+            infant.setInfantOutcomeAt18Months(outCome);
+            infantRepository.save(infant);
+        }
     }
 }

@@ -38,6 +38,7 @@ public class ANCRespondDto implements Serializable {
     private String sex;
     private Long personId;
     private String staticHivStatus;
+    private String dynamicHivStatus;
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
 
 }

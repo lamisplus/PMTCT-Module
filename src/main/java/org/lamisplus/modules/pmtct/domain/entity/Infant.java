@@ -20,4 +20,5 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private String surname;
     private String sex;
     private String nin;
+    private String infantOutcomeAt18Months;
    }
