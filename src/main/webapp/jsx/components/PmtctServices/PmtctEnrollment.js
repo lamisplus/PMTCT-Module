@@ -85,7 +85,8 @@ const AncPnc = (props) => {
     //console.log(patientObj)
     let history = useHistory();
     const classes = useStyles()
-    const [pointOfEntry, setPointOfEntry] = useState([]);
+    const [disabledField, setSisabledField] = useState(false);
+    const [entryPoint, setentryPoint] = useState([]);
     const [tbStatus, setTbStatus] = useState([]);
     const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
     const [saving, setSaving] = useState(false);
@@ -94,7 +95,7 @@ const AncPnc = (props) => {
     const [enroll, setEnrollDto]= useState({
             ancNo: patientObj.ancNo,
             pmtctEnrollmentDate:"",
-            pointOfEntry: "",
+            entryPoint: "",
             ga: props.patientObj.gaweeks,
             gravida: props.patientObj.gravida,
             artStartDate: "",
@@ -106,14 +107,32 @@ const AncPnc = (props) => {
         POINT_ENTRY_PMTCT();
         TIME_ART_INITIATION_PMTCT();
         TB_STATUS();
+        if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
+            GetPatientPMTCT(props.activeContent.id)
+            setSisabledField(props.activeContent.actionType==='view'?true : false)
+        }
     }, []);
+console.log(props)
+    const GetPatientPMTCT =(id)=>{
+        axios
+           .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${id}`,
+               { headers: {"Authorization" : `Bearer ${token}`} }
+           )
+           .then((response) => {
+                //console.log(response.data.find((x)=> x.id===id));
+                setEnrollDto(response.data);
+           })
+           .catch((error) => {
+           //console.log(error);
+           });          
+    }
     const POINT_ENTRY_PMTCT =()=>{
         axios
         .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`,
             { headers: {"Authorization" : `Bearer ${token}`} }
         )
         .then((response) => {
-            setPointOfEntry(response.data)
+            setentryPoint(response.data)
         })
         .catch((error) => {
         //console.log(error);
@@ -151,8 +170,8 @@ const AncPnc = (props) => {
     const validate = () => {
         let temp = { ...errors }        
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
-        temp.pointOfEntry = enroll.pointOfEntry ? "" : "This field is required"
-        temp.ga = enroll.ga ? "" : "This field is required"
+        temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
+        //temp.ga = enroll.ga ? "" : "This field is required"
         temp.gravida = enroll.gravida ? "" : "This field is required"
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.artStartDate = enroll.artStartDate ? "" : "This field is required"
@@ -169,10 +188,27 @@ const AncPnc = (props) => {
         e.preventDefault();
         if (validate()){             
         setSaving(true);
-        axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
-        { headers: {"Authorization" : `Bearer ${token}`}},
-        
-        )
+        if(props.activeContent && props.activeContent.actionType){//Perform operation for updation action
+            axios.put(`${baseUrl}pmtct/anc/update-pmtct-enrollment/${props.activeContent.id}`, enroll,
+            { headers: {"Authorization" : `Bearer ${token}`}},
+            
+            )
+            .then(response => {
+                setSaving(false);
+                //props.patientObj.commenced=true
+                toast.success("Record updated successful", {position: toast.POSITION.BOTTOM_CENTER});
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
+            })
+            .catch(error => {
+                setSaving(false);
+                toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+                
+            });
+        }else{//perform opertaio for save action
+            axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
+            { headers: {"Authorization" : `Bearer ${token}`}},
+            
+            )
             .then(response => {
                 setSaving(false);
                 props.patientObj.pmtctRegStatus=true
@@ -185,6 +221,7 @@ const AncPnc = (props) => {
                 toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
                 
             });
+        }
         }
     }
 
@@ -226,6 +263,7 @@ const AncPnc = (props) => {
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.pmtctEnrollmentDate} 
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -240,13 +278,14 @@ const AncPnc = (props) => {
                         <InputGroup> 
                             <Input 
                                 type="select"
-                                name="pointOfEntry"
-                                id="pointOfEntry"
+                                name="entryPoint"
+                                id="entryPoint"
                                 onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.pointOfEntry} 
+                                value={enroll.entryPoint} 
+                                disabled={disabledField}
                             >
                                 <option value="">Select</option>
-                                {pointOfEntry.map((value, index) => (
+                                {entryPoint.map((value, index) => (
                                     <option key={index} value={value.code}>
                                         {value.display}
                                     </option>
@@ -254,30 +293,12 @@ const AncPnc = (props) => {
                             </Input>
 
                         </InputGroup>
-                        {errors.pointOfEntry !=="" ? (
-                                <span className={classes.error}>{errors.pointOfEntry}</span>
+                        {errors.entryPoint !=="" ? (
+                                <span className={classes.error}>{errors.entryPoint}</span>
                         ) : "" }
                         </FormGroup>
                     </div> 
-                    <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                            <Label >GA *</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="ga"
-                                    id="ga"
-                                    onChange={handleInputChangeEnrollmentDto}
-                                    value={enroll.ga} 
-                                    disabled
-                                />
 
-                            </InputGroup>
-                            {errors.ga !=="" ? (
-                                <span className={classes.error}>{errors.ga}</span>
-                            ) : "" }
-                            </FormGroup>
-                    </div>
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
                             <Label >Gravida *</Label>
@@ -308,6 +329,7 @@ const AncPnc = (props) => {
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.artStartDate} 
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -325,7 +347,8 @@ const AncPnc = (props) => {
                                 name="timingOfArtInitiation"
                                 id="timingOfArtInitiation"
                                 onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.timingOfArtInitiation} 
+                                value={enroll.timingOfArtInitiation}
+                                disabled={disabledField} 
                             >
                                 <option value="">Select</option>
                                 {timingOfArtInitiation.map((value, index) => (
@@ -351,6 +374,7 @@ const AncPnc = (props) => {
                                 id="tbStatus"
                                 onChange={handleInputChangeEnrollmentDto}
                                 value={enroll.tbStatus} 
+                                disabled={disabledField}
                             >
                                 <option value="">Select</option>
                                 {tbStatus.map((value, index) => (
@@ -369,32 +393,43 @@ const AncPnc = (props) => {
                 </div>
                 
                 {saving ? <Spinner /> : ""}
-            <br />
-            
-            <MatButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            startIcon={<SaveIcon />}
-            onClick={handleSubmit}
-            >
-                {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-                ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-                )}
-            </MatButton>
-            
-            <MatButton
-                variant="contained"
-                className={classes.button}
-                startIcon={<CancelIcon />}
-                
-            >
-                <span style={{ textTransform: "capitalize" }}>Cancel</span>
-            </MatButton>
-            
+                <br />
+                {props.activeContent && props.activeContent.actionType? (<>
+                    <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    hidden={disabledField}
+                    className={classes.button}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Update</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                        )}
+                </MatButton>
+                </>):(<>
+                    <MatButton
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        startIcon={<SaveIcon />}
+                        style={{backgroundColor:"#014d88"}}
+                        onClick={handleSubmit}
+                        disabled={saving}
+                        >
+                            {!saving ? (
+                            <span style={{ textTransform: "capitalize" }}>Save</span>
+                            ) : (
+                            <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                            )}
+                </MatButton>
+                </>)}
                 </form>
             </CardBody>
         </Card> 

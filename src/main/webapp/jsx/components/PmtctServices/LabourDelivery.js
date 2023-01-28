@@ -87,6 +87,7 @@ const LabourDelivery = (props) => {
     const [feedingDecision, setfeedingDecision] = useState([]);
     const [maternalOutCome, setmaternalOutCome] = useState([]);
     const [saving, setSaving] = useState(false);
+    const [disabledField, setSisabledField] = useState(false);
     const [errors, setErrors] = useState({});
     const [childStatus, setChildStatus] = useState([]);
     const [bookingStatus, setBookingStatus] = useState([]);
@@ -125,7 +126,25 @@ const LabourDelivery = (props) => {
         BOOKING_STATUS();
         ROM_DELIVERY_INTERVAL();
         TIME_HIV_DIAGNOSIS();
-    }, [props.patientObj.id, ]);
+        if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
+            GetPatientLabourDTO(props.activeContent.id)
+            setSisabledField(props.activeContent.actionType==='view'?true : false)
+        }
+    }, [props.patientObj.id,props.activeContent ]);
+
+    const GetPatientLabourDTO =(id)=>{
+        axios
+           .get(`${baseUrl}pmtct/anc/view-delivery/${props.activeContent.id}`,
+               { headers: {"Authorization" : `Bearer ${token}`} }
+           )
+           .then((response) => {
+                //console.log(response.data.find((x)=> x.id===id));
+                setDelivery(response.data);
+           })
+           .catch((error) => {
+           //console.log(error);
+           });          
+    }
     //Get list 
     const BOOKING_STATUS =()=>{
         axios
@@ -257,21 +276,40 @@ const LabourDelivery = (props) => {
         e.preventDefault();        
         if(validate()){
         setSaving(true);
-        axios.post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery,
-        { headers: {"Authorization" : `Bearer ${token}`}},
+        if(props.activeContent && props.activeContent.actionType){//Perform operation for updation action
+            axios.put(`${baseUrl}pmtct/anc/update-delivery/${props.activeContent.id}`, delivery,
+            { headers: {"Authorization" : `Bearer ${token}`}},
+            
+            )
+                .then(response => {
+                    setSaving(false);
+                    //props.patientObj.commenced=true
+                    toast.success("Record updated successful", {position: toast.POSITION.BOTTOM_CENTER});
+                    props.setActiveContent({...props.activeContent, route:'recent-history'})
+                })
+                .catch(error => {
+                    setSaving(false);
+                    toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+                    
+                });
+        }else{//perform opertaio for save action
+            axios.post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery,
+            { headers: {"Authorization" : `Bearer ${token}`}},
+            
+            )
+                .then(response => {
+                    setSaving(false);
+                    //props.patientObj.commenced=true
+                    toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                    props.setActiveContent({...props.activeContent, route:'recent-history'})
+                })
+                .catch(error => {
+                    setSaving(false);
+                    toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+                    
+                });
+        }
         
-        )
-            .then(response => {
-                setSaving(false);
-                //props.patientObj.commenced=true
-                toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
-                props.setActiveContent({...props.activeContent, route:'recent-history'})
-            })
-            .catch(error => {
-                setSaving(false);
-                toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
-                
-            });
         }else{
             toast.error("All field are required", {position: toast.POSITION.BOTTOM_CENTER});
         } 
@@ -314,6 +352,7 @@ const LabourDelivery = (props) => {
                                     id="bookingStatus"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.bookingStatus} 
+                                    disabled={disabledField}
                                 >
                                 <option value="">Select </option>
                                     
@@ -342,6 +381,7 @@ const LabourDelivery = (props) => {
                                     value={delivery.dateOfDelivery} 
                                     min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -360,6 +400,7 @@ const LabourDelivery = (props) => {
                                     id="gaweeks"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.gaweeks} 
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -377,7 +418,8 @@ const LabourDelivery = (props) => {
                                     name="romDeliveryInterval"
                                     id="romDeliveryInterval"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.romDeliveryInterval} 
+                                    value={delivery.romDeliveryInterval}
+                                    disabled={disabledField} 
                                 >
                                     <option value="">Select </option>
                                         
@@ -405,7 +447,7 @@ const LabourDelivery = (props) => {
                                     value={delivery.modeOfDelivery}
                                     onChange={handleInputChangeDeliveryDto}
                                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                                    required
+                                    disabled={disabledField}
                                 >
                                      <option value="">Select </option>
                                         
@@ -431,6 +473,7 @@ const LabourDelivery = (props) => {
                                     id="episiotomy"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.episiotomy} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -453,6 +496,7 @@ const LabourDelivery = (props) => {
                                     id="vaginalTear"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.vaginalTear} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -474,6 +518,7 @@ const LabourDelivery = (props) => {
                                     id="feedingDecision"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.feedingDecision} 
+                                    disabled={disabledField}
                                 >
                                     <option value="">Select </option>
                                         
@@ -500,6 +545,7 @@ const LabourDelivery = (props) => {
                                     id="childGivenArvWithin72"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.childGivenArvWithin72} 
+                                    disabled={disabledField}
                                 >
                                 <option value="" >Select</option>
                                 <option value="Yes" >Yes</option>
@@ -522,6 +568,7 @@ const LabourDelivery = (props) => {
                                     id="onArt"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.onArt} 
+                                    disabled={disabledField}
                                 >
                                 
                                 <option value="" >Select</option>
@@ -544,6 +591,7 @@ const LabourDelivery = (props) => {
                                     id="hivExposedInfantGivenHbWithin24hrs"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.hivExposedInfantGivenHbWithin24hrs} 
+                                    disabled={disabledField}
                                     >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -566,6 +614,7 @@ const LabourDelivery = (props) => {
                                     id="deliveryTime"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.deliveryTime} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     {timehiv.map((value) => (
@@ -591,6 +640,7 @@ const LabourDelivery = (props) => {
                                     id="artStartedLdWard"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.artStartedLdWard} 
+                                    disabled={disabledField}
                                 >
                                 <option value="" >Select</option>
                                 <option value="Yes" >Yes</option>
@@ -612,6 +662,7 @@ const LabourDelivery = (props) => {
                                     id="referalSource"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.referalSource} 
+                                    disabled={disabledField}
                                 />
                             </InputGroup>
                             {errors.referalSource !=="" ? (
@@ -629,6 +680,7 @@ const LabourDelivery = (props) => {
                                     id="hbstatus"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.hbstatus} 
+                                    disabled={disabledField}
                                     >
                                     <option value="" >Select</option>
                                     <option value="Positive" >Positive</option>
@@ -650,6 +702,7 @@ const LabourDelivery = (props) => {
                                     id="hcstatus"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.hcstatus} 
+                                    disabled={disabledField}
                                 >
                                 <option value="" >Select</option>
                                 <option value="Positive" >Positive</option>
@@ -671,7 +724,8 @@ const LabourDelivery = (props) => {
                                     name="maternalOutcome"
                                     id="maternalOutcome"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.maternalOutcome} 
+                                    value={delivery.maternalOutcome}
+                                    disabled={disabledField} 
                                 >
                                     <option value="">Select </option>    
                                     {maternalOutCome.map((value) => (
@@ -696,6 +750,7 @@ const LabourDelivery = (props) => {
                                     id="childStatus"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.childStatus} 
+                                    disabled={disabledField}
                                 >
                                 <option value="">Select </option>    
                                 {childStatus.map((value) => (
@@ -721,6 +776,7 @@ const LabourDelivery = (props) => {
                                     id="numberOfInfantsAlive"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.numberOfInfantsAlive} 
+                                    disabled={disabledField}
                                     
                                 />
                             </InputGroup>
@@ -739,7 +795,7 @@ const LabourDelivery = (props) => {
                                     id="numberOfInfantsDead"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.numberOfInfantsDead} 
-                                    
+                                    disabled={disabledField}
                                 />
                             </InputGroup>
                             {errors.numberOfInfantsDead !=="" ? (
@@ -750,34 +806,44 @@ const LabourDelivery = (props) => {
                 </>)}
             </div>
                 
-                {saving ? <Spinner /> : ""}
+            {saving ? <Spinner /> : ""}
             <br />
-            
-            <MatButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            startIcon={<SaveIcon />}
-            style={{backgroundColor:"#014d88"}}
-            onClick={handleSubmit}
-            disabled={saving}
-            >
-                {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-                ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-                )}
-            </MatButton>
-            
-            <MatButton
+            {props.activeContent && props.activeContent.actionType? (<>
+                <MatButton
+                type="submit"
                 variant="contained"
+                color="primary"
+                hidden={disabledField}
                 className={classes.button}
-                startIcon={<CancelIcon />}
-                style={{backgroundColor:'#992E62'}}
-            >
-                <span style={{ textTransform: "capitalize" }}>Cancel</span>
+                startIcon={<SaveIcon />}
+                style={{backgroundColor:"#014d88"}}
+                onClick={handleSubmit}
+                disabled={saving}
+                >
+                    {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Update</span>
+                    ) : (
+                    <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                    )}
             </MatButton>
+            </>):(<>
+                <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Save</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                        )}
+            </MatButton>
+            </>)}
             
                 </form>
             </CardBody>

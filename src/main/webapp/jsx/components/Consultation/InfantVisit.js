@@ -67,7 +67,7 @@ const ClinicVisit = (props) => {
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
   const [infants, setInfants] = useState([])
-  const [formFilter, setFormFilter] = useState({infantArv: false,  motherArt: false})
+  const [formFilter, setFormFilter] = useState({infantArv: false,  motherArt: false, outCome:false})
   const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
   const [childStatus, setChildStatus] = useState([]);
   const [timeMotherArt, setTimeMotherArt] = useState([]);
@@ -92,7 +92,8 @@ const ClinicVisit = (props) => {
       infantHospitalNumber: infantHospitalNumber,
       uuid: "",
       visitDate: "",
-      visitStatus: ""
+      visitStatus: "",
+      infantOutcomeAt18Months:""
   });
   const [infantArvDto, setInfantArvDto] = useState({
       ageAtCtx: "",
@@ -736,7 +737,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             <Label as='a' color='black' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}> Infant PCR </h4>
             </Label>
-            <br />
+            <br /><br />
             {/* LAB Screening Form */}
             <div className="row">
                 <div className=" mb-3 col-md-6">
@@ -756,7 +757,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName > Sample Type</FormLabelName>
                   <Input

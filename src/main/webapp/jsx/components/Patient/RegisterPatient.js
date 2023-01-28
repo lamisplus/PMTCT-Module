@@ -447,7 +447,30 @@ const UserRegistration = (props) => {
     const handleInputChangeRelatives = e => {        
         setRelatives ({...relatives,  [e.target.name]: e.target.value});               
     }
+    const handleInputChangeANC = e => { 
+        setErrors({...errors, [e.target.name]: ""}) 
+        if(e.target.name==='ancNo' && e.target.value!==''){
 
+            async function getAncNumber() {
+                const ancNumber=e.target.value
+                const ancNo= {
+                    ancNo:ancNumber
+                }
+                const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data===true){
+                    
+                    toast.error("ANC number already exist")
+                    setAncNumberCheck(response.data)
+                }else{
+                    setAncNumberCheck(false)
+                }
+            }
+            getAncNumber();
+            }       
+        setObjValues ({...objValues,  [e.target.name]: e.target.value});                
+    } 
     /*****  Validation  */
     const validate = () => {
         
@@ -1444,7 +1467,7 @@ const UserRegistration = (props) => {
                                                     type="text"
                                                     name="ancNo"
                                                     id="ancNo"
-                                                    onChange={handleInputChange}
+                                                    onChange={handleInputChangeANC}
                                                     value={objValues.ancNo} 
                                                 />
 

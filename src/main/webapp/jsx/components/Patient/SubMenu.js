@@ -79,7 +79,8 @@ function SubMenu(props) {
          <div>
             <Menu size="mini" color={"black"} inverted >
                 <Menu.Item onClick={() => onClickHome()} > Home</Menu.Item> 
-                {patientObj.dynamicHivStatus!=='Positive' && (<>
+                {/* patientObj.dynamicHivStatus!=='Positive' || patientObj.hivStatus!=='Positive' &&  */}
+                {patientObj.dynamicHivStatus==='Positive' || patientObj.hivStatus==='Positive' && (<>
                     {patientObj.pmtctRegStatus!==true ? (
                         <>
                         <Menu.Item onClick={() => loadAncPnc()} >PMTCT Enrollment</Menu.Item> 
