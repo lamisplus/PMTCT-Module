@@ -770,7 +770,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     required
                   >
                     <option value="select">Select </option>
-                    <option value="Frist PCR">Frist PCR</option>
+                    <option value="First PCR">First PCR</option>
                     <option value="Second PCR">Second PCR</option>
                     <option value="Confirmatory PCR">Confirmatory PCR</option>
                     <option value="First Rapid Antibody">First Rapid Antibody </option>

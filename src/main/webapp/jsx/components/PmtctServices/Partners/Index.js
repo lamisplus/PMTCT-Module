@@ -198,7 +198,7 @@ const PatientnHistory = (props) => {
                 { title: "HCV Status", field: "hcv" },
                 { title: "Syphillis Status", field: "syphillis" },
                 { title: "Referred To", field: "referred", filtering: false },        
-                { title: "Actions", field: "actions", filtering: false }, 
+                //{ title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
               data={partners && [partners].map((row) => ({
