@@ -90,6 +90,8 @@ const LabourDelivery = (props) => {
     const [errors, setErrors] = useState({});
     const [childStatus, setChildStatus] = useState([]);
     const [bookingStatus, setBookingStatus] = useState([]);
+    const [romdelivery, setRomdelivery] = useState([]);
+    const [timehiv, setTimehiv] = useState([]);
     const [delivery, setDelivery]= useState({
 
                 ancNo: patientObj.ancNo,
@@ -121,6 +123,8 @@ const LabourDelivery = (props) => {
         MATERNAL_OUTCOME();
         CHILD_STATUS_DELIVERY();
         BOOKING_STATUS();
+        ROM_DELIVERY_INTERVAL();
+        TIME_HIV_DIAGNOSIS();
     }, [props.patientObj.id, ]);
     //Get list 
     const BOOKING_STATUS =()=>{
@@ -131,6 +135,32 @@ const LabourDelivery = (props) => {
         .then((response) => {
             //console.log(response.data);
             setBookingStatus(response.data);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });    
+    }
+    const TIME_HIV_DIAGNOSIS =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            //console.log(response.data);
+            setTimehiv(response.data);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });    
+    }
+    const ROM_DELIVERY_INTERVAL =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/ROM_DELIVERY_INTERVAL`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            //console.log(response.data);
+            setRomdelivery(response.data);
         })
         .catch((error) => {
         //console.log(error);
@@ -247,6 +277,7 @@ const LabourDelivery = (props) => {
         } 
     }
 
+
   return (      
       <div >
                    
@@ -275,7 +306,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Booking Status</Label>
+                            <Label >Booking Status *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -301,7 +332,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of Delivery</Label>
+                            <Label >Date of Delivery *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -309,6 +340,7 @@ const LabourDelivery = (props) => {
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.dateOfDelivery} 
+                                    min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                 />
 
@@ -320,7 +352,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Gestational Age (weeks)</Label>
+                            <Label >Gestational Age (weeks) *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="number"
@@ -338,16 +370,24 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ROM to Delivery Interval </Label>
+                            <Label >ROM Delivery Interval * </Label>
                             <InputGroup> 
                                 <Input 
-                                    type="number"
+                                    type="select"
                                     name="romDeliveryInterval"
                                     id="romDeliveryInterval"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.romDeliveryInterval} 
-                                />
+                                >
+                                    <option value="">Select </option>
+                                        
+                                    {romdelivery.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
 
+                                </Input>
                             </InputGroup>
                             {errors.romDeliveryInterval !=="" ? (
                                     <span className={classes.error}>{errors.romDeliveryInterval}</span>
@@ -356,7 +396,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Mode of Delivery</Label>
+                            <Label >Mode of Delivery *</Label>
                             
                             <Input
                                     type="select"
@@ -383,7 +423,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Episiotomy</Label>
+                            <Label >Episiotomy *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -405,7 +445,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Vaginal Tear</Label>
+                            <Label >Vaginal Tear *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -426,7 +466,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Feeding decision</Label>
+                            <Label >Feeding decision *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -452,7 +492,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Child given ARV within 72 hrs</Label>
+                            <Label >Child given ARV within 72 hrs *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -471,33 +511,10 @@ const LabourDelivery = (props) => {
                                 ) : "" }                                        
                             </FormGroup>
                     </div>
+                   
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Child status</Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="select"
-                                    name="childStatus"
-                                    id="childStatus"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.childStatus} 
-                                >
-                                <option value="">Select </option>    
-                                {childStatus.map((value) => (
-                                    <option key={value.id} value={value.code}>
-                                        {value.display}
-                                    </option>
-                                ))}
-                                </Input>
-                            </InputGroup>
-                            {errors.childStatus !=="" ? (
-                                    <span className={classes.error}>{errors.childStatus}</span>
-                                ) : "" }                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >On ART?</Label>
+                            <Label >On ART? *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -519,7 +536,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HIV exposed infant given Hep B within 24 hrs of birth</Label>
+                            <Label >HIV exposed infant given Hep B within 24 hrs of birth *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -541,15 +558,22 @@ const LabourDelivery = (props) => {
                     
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Time of Diagnosis</Label>
+                            <Label >Time of Diagnosis *</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="time"
+                                    type="select"
                                     name="deliveryTime"
                                     id="deliveryTime"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.deliveryTime} 
-                                />
+                                >
+                                    <option value="" >Select</option>
+                                    {timehiv.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
+                                </Input>
                             </InputGroup>
                             {errors.deliveryTime !=="" ? (
                                     <span className={classes.error}>{errors.deliveryTime}</span>
@@ -559,7 +583,7 @@ const LabourDelivery = (props) => {
                    
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ART started in L&D ward</Label>
+                            <Label >ART started in L&D ward *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -580,7 +604,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Source of Referral</Label>
+                            <Label >Source of Referral *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -597,7 +621,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Hepatitis B Status</Label>
+                            <Label >Hepatitis B Status *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -618,7 +642,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Hepatitis C Status</Label>
+                            <Label >Hepatitis C Status *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -640,7 +664,7 @@ const LabourDelivery = (props) => {
             <h3>Maternal Outcome</h3>
             <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Maternal Outcome - Mother</Label>
+                            <Label >Maternal Outcome *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -664,32 +688,32 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label > Maternal Outcome - Child</Label>
+                            <Label >Child status *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
-                                    name="maternalOutcomeChild"
-                                    id="maternalOutcomeChild"
+                                    name="childStatus"
+                                    id="childStatus"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.maternalOutcomeChild} 
+                                    value={delivery.childStatus} 
                                 >
-                                    <option value="">Select </option>    
-                                    {maternalOutCome.map((value) => (
-                                        <option key={value.id} value={value.code}>
-                                            {value.display}
-                                        </option>
-                                    ))}
+                                <option value="">Select </option>    
+                                {childStatus.map((value) => (
+                                    <option key={value.id} value={value.code}>
+                                        {value.display}
+                                    </option>
+                                ))}
                                 </Input>
-                            </InputGroup> 
-                            {errors.maternalOutcomeChild !=="" ? (
-                                    <span className={classes.error}>{errors.maternalOutcomeChild}</span>
-                                ) : "" }                                       
+                            </InputGroup>
+                            {errors.childStatus !=="" ? (
+                                    <span className={classes.error}>{errors.childStatus}</span>
+                                ) : "" }                                        
                             </FormGroup>
-                    </div>
-                    {delivery.maternalOutcomeChild!=="" && (<>
+                    </div>           
+                    {delivery.childStatus==="CHILD_STATUS_DELIVERY_ALIVE" && (<>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Number of Child Alive </Label>
+                            <Label >Number of Child Alive *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
@@ -707,7 +731,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Number of Child Dead </Label>
+                            <Label >Number of Child Dead *</Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
@@ -737,6 +761,7 @@ const LabourDelivery = (props) => {
             startIcon={<SaveIcon />}
             style={{backgroundColor:"#014d88"}}
             onClick={handleSubmit}
+            disabled={saving}
             >
                 {!saving ? (
                 <span style={{ textTransform: "capitalize" }}>Save</span>

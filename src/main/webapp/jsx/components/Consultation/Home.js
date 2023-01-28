@@ -444,6 +444,7 @@ function DsdModelType (dsdmodel) {
                   ) : "" }
                 </FormGroup>
               </div>
+              {objValues.fpCounseling==="YES" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName >FP Method *</FormLabelName>
@@ -468,6 +469,7 @@ function DsdModelType (dsdmodel) {
                   ) : "" }
                 </FormGroup>
               </div>
+              )}
             </div>
             <br />
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>

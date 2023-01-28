@@ -137,7 +137,7 @@ const InfantInformation = (props) => {
                 { title: "NIN Number", field: "nin" },             
                 { title: "Date of Delivery", field: "date" },
                 { title: "Sex", field: "sex", filtering: false },        
-                { title: "Actions", field: "actions", filtering: false }, 
+                //{ title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
               data={infants.map((row) => ({

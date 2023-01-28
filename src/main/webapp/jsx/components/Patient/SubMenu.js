@@ -74,11 +74,12 @@ function SubMenu(props) {
     }
     //
 
+
     return (
          <div>
             <Menu size="mini" color={"black"} inverted >
                 <Menu.Item onClick={() => onClickHome()} > Home</Menu.Item> 
-                {patientObj.hivStatus!==null && patientObj.hivStatus==='Positive' && (<>
+                {patientObj.dynamicHivStatus!=='Positive' && (<>
                     {patientObj.pmtctRegStatus!==true ? (
                         <>
                         <Menu.Item onClick={() => loadAncPnc()} >PMTCT Enrollment</Menu.Item> 
@@ -97,10 +98,10 @@ function SubMenu(props) {
                     }               
                     
                 </>)}
-                {patientObj.staticHivStatus==='Negative' && (<>
+                {/* {patientObj.staticHivStatus==='Negative' && (<>
                     <Menu.Item onClick={() => loadPmtctHts()} >PMTCT-HTS</Menu.Item>
                 </>)}  
-                
+                 */}
                 <Menu.Item onClick={() => loadPatientHistory()} >History</Menu.Item>                
             </Menu>             
         </div>

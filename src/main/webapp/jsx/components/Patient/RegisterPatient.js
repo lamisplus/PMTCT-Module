@@ -122,10 +122,10 @@ const UserRegistration = (props) => {
                 phoneNumber:"",
                 altPhonenumber:"",
                 dob:"",
-                countryId:"",
+                countryId:1,
                 stateId:"",
                 district:"",
-                sexId:"",
+                sexId:377,
                 ninNumber:""
 
             }
@@ -142,14 +142,11 @@ const UserRegistration = (props) => {
                 }
                 
         )
-
-    const [today, setToday] = useState(new Date().toISOString().substr(0, 10).replace('T', ' '));
     const [contacts, setContacts] = useState([]);
     const [saving, setSaving] = useState(false);
     const [disabledAgeBaseOnAge, setDisabledAgeBaseOnAge] = useState(false);
     const [ageDisabled, setAgeDisabled] = useState(true);
     const [showRelative, setShowRelative] = useState(false);
-    const [editRelative, setEditRelative] = useState(null);
     const [genders, setGenders]= useState([]);
     const [maritalStatusOptions, setMaritalStatusOptions]= useState([]);
     const [educationOptions, setEducationOptions]= useState([]);
@@ -160,7 +157,7 @@ const UserRegistration = (props) => {
     const [provinces, setProvinces] = useState([]);
     const [errors, setErrors] = useState({})
     const [topLevelUnitCountryOptions, settopLevelUnitCountryOptions]= useState([]);
-    const [patientDTO, setPatientDTO]= useState({"person":"", "hivEnrollment":""})
+   
     const userDetail = props.location && props.location.state ? props.location.state.user : null;
     const classes = useStyles();
     const history = useHistory();
@@ -189,19 +186,11 @@ const UserRegistration = (props) => {
         });
      const [carePoints, setCarePoints] = useState([]);
      const [sourceReferral, setSourceReferral] = useState([]);
-     const [hivStatus, setHivStatus] = useState([]);
-     const [enrollSetting, setEnrollSetting] = useState([]);
-     const [tbStatus, setTbStatus] = useState([]);
-     const [kP, setKP] = useState([]);
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
      const [ancNumberCheck, setAncNumberCheck] = useState(false);
-     // display the OVC number if patient is enrolled into OVC 
-     const [ovcEnrolled, setOvcEnrolled] = useState(false);
-
      //status for hospital Number 
      const [hospitalNumStatus, setHospitalNumStatus]= useState(false);
-     const [hospitalNumStatus2, setHospitalNumStatus2]= useState(false);
      const [open, setOpen] = React.useState(false)
      const toggle = () => setOpen(!open);
     const locationState = location.state;
@@ -220,7 +209,7 @@ const UserRegistration = (props) => {
         SourceReferral();
         PregnancyStatus();
         GetCountry();
-    
+        setStateByCountryId()
         if(basicInfo.dateOfRegistration < basicInfo.dob){
             alert('Date of registration can not be earlier than date of birth')
         }
@@ -283,17 +272,11 @@ const UserRegistration = (props) => {
         //console.log(error);
         });        
     }
-     //Get States from selected country
-     const getStates = e => {
-        const getCountryId =e.target.value;
-        //console.log(getCountryId)
-            setStateByCountryId(getCountryId); 
-            setBasicInfo({ ...basicInfo, countryId: getCountryId });
-    };
+
     //Get list of State
-    function setStateByCountryId(getCountryId) {
+    const  setStateByCountryId=()=> {
         axios
-        .get(`${baseUrl}organisation-units/parent-organisation-units/${getCountryId}`,
+        .get(`${baseUrl}organisation-units/parent-organisation-units/1`,
             { headers: {"Authorization" : `Bearer ${token}`} }
         )
         .then((response) => {
@@ -326,12 +309,7 @@ const UserRegistration = (props) => {
             const birthDate = new Date(e.target.value);
             let age_now = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
-                if(m<18){
-                    alert("The child is less than 18months")
-                    setDisabledAgeBaseOnAge(true)
-                }else{
-                    setDisabledAgeBaseOnAge(false)
-                }
+                
                 if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                     age_now--;
                 }
@@ -507,6 +485,7 @@ const UserRegistration = (props) => {
     const handleSubmit = async (e) => {
         e.preventDefault(); 
          if(validate()){
+            setSaving(true)
             let newConatctsInfo=[]
             //Manipulate relatives contact  address:"",
             const actualcontacts=contacts && contacts.length>0 && contacts.map((x)=>{
@@ -596,7 +575,9 @@ const UserRegistration = (props) => {
                 const response = await axios.post(`${baseUrl}pmtct/anc/anc-new-registration`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
-            } catch (error) {                
+                setSaving(false)
+            } catch (error) { 
+                setSaving(false)               
                 if(error.response && error.response.data){
                     let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
                     if(error.response.data.apierror && error.response.data.apierror.message!=="" && error.response.data.apierror && error.response.data.apierror.subErrors[0].message!==""){
@@ -770,7 +751,7 @@ const UserRegistration = (props) => {
                                             </div>
                                             <div className="form-group mb-3 col-md-4">
                                                 <FormGroup>
-                                                    <Label for="patientId">EMR Number* </Label>
+                                                    <Label for="patientId">EMR Number </Label>
                                                     <input
                                                         className="form-control"
                                                         type="text"
@@ -851,10 +832,11 @@ const UserRegistration = (props) => {
                                                             onChange={handleInputChangeBasic}
                                                             value={basicInfo.sexId}
                                                             style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
+                                                            disabled
                                                         >
                                                             <option value={""}>Select</option>
                                                             {genders.map((gender, index) => (
-                                                            <option key={gender.id} value={gender.id}>{gender.display}</option>
+                                                            <option key={gender.id} value={gender.id} >{gender.display}</option>
                                                             ))}
                                                         </select>
                                                         {errors.sexId !=="" ? (
@@ -1097,7 +1079,7 @@ const UserRegistration = (props) => {
                                                     id="countryId"
                                                     style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                     value={basicInfo.countryId}
-                                                    onChange={getStates}
+                                                    //onChange={getStates}
                                                     >
                                                     <option value={""}>Select</option>
                                                     {countries.map((value, index) => (
@@ -1485,6 +1467,7 @@ const UserRegistration = (props) => {
                                             id="firstAncDate"
                                             onChange={handleInputChange}
                                             value={objValues.firstAncDate} 
+                                            min={basicInfo.dateOfRegistration}
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
                                         />
                                     </InputGroup>
@@ -1710,15 +1693,16 @@ const UserRegistration = (props) => {
 
                             <br />
 
-
+                            {basicInfo.age>= 10 && (
                             <MatButton
                                 type="submit"
                                 variant="contained"
                                 color="primary"
+                                hidden={disabledAgeBaseOnAge}
                                 className={classes.button}
                                 startIcon={<SaveIcon />}
                                 onClick={handleSubmit}
-                                disabled={disabledAgeBaseOnAge}
+                                disabled={saving}
                                 style={{backgroundColor:'#014d88',fontWeight:"bolder"}}
                             >
                                 {!saving ? (
@@ -1727,7 +1711,7 @@ const UserRegistration = (props) => {
                                     <span style={{ textTransform: "capitalize" }}>Saving...</span>
                                 )}
                             </MatButton>
-    
+                            )}
                             <MatButton
                                 variant="contained"
                                 className={classes.button}

@@ -11,7 +11,7 @@ import { Alert } from "react-bootstrap";
 import {  Card,Accordion } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import "react-widgets/dist/css/react-widgets.css";
-import { toast} from "react-toastify";
+//import { toast} from "react-toastify";
 
 
 const RecentHistory = (props) => {
@@ -191,7 +191,9 @@ const index=0;
             </div>
           </div>
       </div>
-      <div className="col-xl-8 col-xxl-8 col-lg-8">
+      {props.patientObj.dynamicHivStatus==='Positive' ? (
+        <>
+            <div className="col-xl-8 col-xxl-8 col-lg-8">
         <div className="card">
           <div className="card-header border-0 pb-0">
             <h4 className="card-title">Patient Chart</h4>
@@ -302,7 +304,10 @@ const index=0;
                 )
                 :
                 (
+                 
                   <p>No Record</p>
+                 
+                  
                 )
               }
 
@@ -311,6 +316,21 @@ const index=0;
           </div>
         </div>
       </div>
+        </>
+        )
+          : 
+          (
+            <>
+             <div className="col-sm-6 col-md-6 col-lg-6">
+                  <div className="card-body">
+                    <b>Patient has no HTS record. Please refer for testing...</b>
+                  </div>
+                  </div>
+
+            </>
+          )
+      }
+      
      
  </div>
       
