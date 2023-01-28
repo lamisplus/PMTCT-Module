@@ -183,7 +183,8 @@ public class InfantVisitService
         infantMotherArt.setUuid(UUID.randomUUID().toString());
         infantMotherArt.setVisitDate(infantMotherArtDto.getVisitDate());
         infantMotherArt.setMotherArtInitiationTime(infantMotherArtDto.getMotherArtInitiationTime());
-        infantMotherArt.setMotherArtRegimen(infantMotherArtDto.getMotherArtRegimen());
+        infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
+        infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
 

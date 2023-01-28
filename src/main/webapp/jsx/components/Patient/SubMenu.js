@@ -73,7 +73,7 @@ function SubMenu(props) {
         props.setActiveContent({...props.activeContent, route:'patient-history'})
     }
     //
-
+    console.log(patientObj)
 
     return (
          <div>

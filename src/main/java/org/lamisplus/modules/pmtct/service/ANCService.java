@@ -46,6 +46,7 @@ import javax.persistence.Column;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -121,7 +122,11 @@ public class ANCService {
                 anc.setGravida(ancRequestDto.getGravida());
                 anc.setParity(ancRequestDto.getParity());
                 anc.setLMP(ancRequestDto.getLMP());
-                anc.setExpectedDeliveryDate(ancRequestDto.getExpectedDeliveryDate());
+                try{
+                    LocalDate eed =  this.calculateEDD(ancRequestDto.getLMP());
+                    System.out.println("@ invocation "+ eed);
+                    anc.setExpectedDeliveryDate(eed);
+                }catch (Exception e){e.printStackTrace();}
                 anc.setGAWeeks(ancRequestDto.getGAWeeks());
                 anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
                 anc.setUuid(UUID.randomUUID().toString());
@@ -674,6 +679,11 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            try{
+                LocalDate eed =  this.calculateEDD(ancEnrollementRequestDto.getLMP());
+                System.out.println("@ invocation "+ eed);
+                anc.setExpectedDeliveryDate(eed);
+            }catch (Exception e){e.printStackTrace();}
             anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
             SyphilisInfo syphilisInfo = ancEnrollementRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
@@ -746,6 +756,11 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            try{
+                LocalDate eed =  this.calculateEDD(ancWithPersonRequestDto.getLMP());
+                System.out.println("@ invocation "+ eed);
+                anc.setExpectedDeliveryDate(eed);
+            }catch (Exception e){e.printStackTrace();}
             anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
             SyphilisInfo syphilisInfo = ancWithPersonRequestDto.getSyphilisInfo();
             if (syphilisInfo != null) {
@@ -949,7 +964,13 @@ public class ANCService {
         return  hivStatus;
     }
 
-
+    public LocalDate calculateEDD(LocalDate lmd){
+        LocalDate date = lmd;
+        date = date.plusDays(280);
+       // DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        System.out.println("in method "+ date);
+        return date;
+    }
 
 }
 
