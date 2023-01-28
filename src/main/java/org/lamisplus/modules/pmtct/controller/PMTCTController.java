@@ -33,7 +33,7 @@ public class PMTCTController {
     private final InfantVisitService infantVisitService;
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
-        System.out.println("Doc I got here nau");
+        //System.out.println("Doc I got here nau");
         return ResponseEntity.ok(ancService.ANCEnrollement(ancEnrollementRequestDto));
     }
 
@@ -289,15 +289,6 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.getSingleInfantMotherArt(id));
     }
 
-    @GetMapping(value = "view-infant-mother-art-captured/{ancNo}")
-    public boolean infantMotherArtDetailsCaptured(@PathVariable("ancNo") String ancNo) {
-        return infantVisitService.infantMotherArtDetailsCaptured(ancNo);
-    }
-
-    @GetMapping(value = "view-infant-arv-administered/{hospitalNumber}")
-    public boolean infantArvAdministered(@PathVariable("hospitalNumber") String hospitalNumber) {
-        return infantVisitService.infantArvAdministered(hospitalNumber);
-    }
     @PostMapping(value = "infant-visit-consolidated")
     public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null) this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());

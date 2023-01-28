@@ -14,7 +14,8 @@ public class InfantMotherArtDto implements Serializable
     private LocalDate visitDate;
     private String ancNumber;
     private String  motherArtInitiationTime;
-    private String  motherArtRegimen;
+    private Long regimenTypeId;
+    private Long regimenId;
     private String  uuid;
 
 }

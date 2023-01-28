@@ -191,7 +191,8 @@
                 visit_date date,
                 anc_number character varying COLLATE pg_catalog."default",
                 mother_art_initiation_time character varying COLLATE pg_catalog."default",
-                mother_art_regimen character varying COLLATE pg_catalog."default",
+                regimen_type_id bigint,
+                regimen_id bigint,
                 uuid character varying COLLATE pg_catalog."default" NOT NULL,
                 CONSTRAINT pmtct_infant_mother_art_pkey PRIMARY KEY (id)
                 )
