@@ -179,7 +179,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-pmtct-enrollment/{id}")
-    public ResponseEntity<PMTCTEnrollment> viewPmtctEnrollment(@PathVariable("id") Long id) {
+    public ResponseEntity<PMTCTEnrollmentRespondDto> viewPmtctEnrollment(@PathVariable("id") Long id) {
         return ResponseEntity.ok (pmtctEnrollmentService.viewPMTCTEnrollmentById(id));
     }
 

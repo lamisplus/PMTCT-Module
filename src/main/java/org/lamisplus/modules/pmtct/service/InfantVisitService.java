@@ -140,7 +140,7 @@ public class InfantVisitService
                 age = 0;
             }
         }
-        // System.out.println("Age " + age);
+        System.out.println("Age " + age);
         return age;
     }
 
@@ -243,6 +243,9 @@ public class InfantVisitService
             filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(deliveryOptional.get().getAncNo()));
         }
         else filterResponseDto.setMotherArt(Boolean.FALSE);
+        int infantAge = this.calculateAge(hospitalNumber);
+        if(infantAge>= 18) filterResponseDto.setOutCome(Boolean.TRUE);
+        else filterResponseDto.setOutCome(Boolean.FALSE);
         return filterResponseDto;
     }
 }

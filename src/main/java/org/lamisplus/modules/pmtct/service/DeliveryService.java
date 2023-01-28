@@ -128,13 +128,13 @@ public class DeliveryService
         return fullName;
     }
     public int calculateAge(String uuid) {
-        System.out.println("hostpitalNumber = " + uuid);
+        //System.out.println("hostpitalNumber = " + uuid);
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = 0L;
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
         int age = 0;
-        System.out.println("HostpitalNumber in Age " + uuid);
+        //System.out.println("HostpitalNumber in Age " + uuid);
         if (persons.isPresent()) {
             Person person = persons.get();
             LocalDate dob = person.getDateOfBirth();

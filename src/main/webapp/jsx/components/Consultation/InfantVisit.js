@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Segment, Label, Icon, List, Button, Card,Feed } from 'semantic-ui-react'
+import { Grid, Segment, Label, List, } from 'semantic-ui-react'
 // Page titie
 import { FormGroup, Label as FormLabelName, 
           Input,InputGroup, InputGroupText
@@ -11,7 +11,7 @@ import SaveIcon from '@material-ui/icons/Save'
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
-import { Pointer } from "highcharts";
+
 
 
 const useStyles = makeStyles(theme => ({
@@ -67,8 +67,16 @@ const ClinicVisit = (props) => {
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
   const [infants, setInfants] = useState([])
-  const [fp, setFp] = useState([]);
-
+  const [formFilter, setFormFilter] = useState({infantArv: false,  motherArt: false, outCome:false})
+  const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
+  const [childStatus, setChildStatus] = useState([]);
+  const [timeMotherArt, setTimeMotherArt] = useState([]);
+  const [regimenType, setRegimenType] = useState([]);
+  const [adultRegimenLine, setAdultRegimenLine] = useState([]);
+  const [infantArv, setInfantArv] = useState([]);
+  const [agectx, setAgeCTX] = useState([]);
+  const [pcrResult, setPcrResult] = useState([])
+  const [infantOutcome, setInfantOutcome] = useState([])
   const [objValues, setObjValues] = useState({
       infantVisitRequestDto: "",
       infantArvDto: "",
@@ -84,7 +92,8 @@ const ClinicVisit = (props) => {
       infantHospitalNumber: infantHospitalNumber,
       uuid: "",
       visitDate: "",
-      visitStatus: ""
+      visitStatus: "",
+      infantOutcomeAt18Months:""
   });
   const [infantArvDto, setInfantArvDto] = useState({
       ageAtCtx: "",
@@ -99,6 +108,8 @@ const [infantMotherArtDto, setInfantMotherArtDto] = useState({
       ancNumber: props.patientObj.ancNo,
       motherArtInitiationTime: "",
       motherArtRegimen: "",
+      regimenTypeId:"",
+      regimenId:""
 
 });
 const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -115,8 +126,15 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
 
 
   useEffect(() => {
-    FAMILY_PLANNING_METHOD();
     InfantInfo();
+    TIME_ART_INITIATION_PMTCT();
+    CHILD_FOLLOW_UP_VISIT_STATUS();
+    TIMING_MOTHERS_ART_INITIATION();
+    AdultRegimenLine();
+    AGE_CTX_INITIATION();
+    INFANT_ARV_PROPHYLAXIS_TYPE();
+    INFANT_PCR_RESULT();
+    INFANT_OUTCOME_AT_18_MONTHS()
   }, [props.patientObj.ancNo]);
     ///GET LIST OF Infants
     const InfantInfo =()=>{
@@ -135,20 +153,104 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
           });
       
   }
-  const FAMILY_PLANNING_METHOD = () => {
+  const TIME_ART_INITIATION_PMTCT =()=>{
     axios
-      .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
-        //console.log(response.data);
-        setFp(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-
+    .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setTimingOfArtInitiation(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
   }
+  const INFANT_OUTCOME_AT_18_MONTHS =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/INFANT_OUTCOME_AT_18_MONTHS`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setInfantOutcome(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  const INFANT_PCR_RESULT =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/INFANT_PCR_RESULT`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setPcrResult(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  const INFANT_ARV_PROPHYLAXIS_TYPE =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/INFANT_ARV_PROPHYLAXIS_TYPE`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setInfantArv(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  const AGE_CTX_INITIATION =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/AGE_CTX_INITIATION`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setAgeCTX(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  const TIMING_MOTHERS_ART_INITIATION =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setTimeMotherArt(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  const CHILD_FOLLOW_UP_VISIT_STATUS =()=>{
+    axios
+    .get(`${baseUrl}application-codesets/v2/CHILD_FOLLOW_UP_VISIT_STATUS`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+        setChildStatus(response.data)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });        
+  }
+  //GET AdultRegimenLine 
+  const AdultRegimenLine =()=>{
+    axios
+        .get(`${baseUrl}hiv/regimen/arv/adult`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            const artRegimen=response.data.filter((x)=> (x.id===1 || x.id===2 || x.id===14)) 
+            setAdultRegimenLine(artRegimen);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });        
+}
   const handleInputChangeInfantVisitRequestDto = e => {
     setErrors({...temp, [e.target.name]:""})   
     //console.log(e.target.name)
@@ -211,10 +313,48 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
       });
     }
   }
-
+  const handleSelecteRegimen = e => { 
+    let regimenID=  e.target.value
+    //regimenTypeId regimenId
+    setInfantMotherArtDto ({...infantMotherArtDto, regimenTypeId:regimenID});
+    RegimenType(regimenID)           
+    //setErrors({...temp, [e.target.name]:""})
+  }
+  //Get list of RegimenLine
+  const RegimenType =(id)=>{
+  axios
+      .get(`${baseUrl}hiv/regimen/types/${id}`,
+          { headers: {"Authorization" : `Bearer ${token}`} }
+      )
+      .then((response) => {
+          //console.log(response.data);
+          setRegimenType(response.data);
+      })
+      .catch((error) => {
+      //console.log(error);
+      });
+  
+  }
   function GetInfantDetail(obj){
            setInfantHospitalNumber(obj.hospitalNumber)
           setInfantObj(obj)
+          const InfantVisit =()=>{
+            //setLoading(true)
+            axios
+                .get(`${baseUrl}pmtct/anc/get-form-filter/${obj.hospitalNumber}`,
+                    { headers: {"Authorization" : `Bearer ${token}`} }
+                )
+                .then((response) => {
+                //setLoading(false)
+                  setFormFilter(response.data)
+                })
+      
+                .catch((error) => {
+                //console.log(error);
+                });
+            
+        }
+        InfantVisit()
   }
 
   return (
@@ -335,7 +475,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     </div>
                     <div className="form-group mb-3 col-md-6">
                       <FormGroup>
-                        <FormLabelName >CTX Status</FormLabelName>
+                        <FormLabelName >CTX </FormLabelName>
                         <Input
                           type="select"
                           name="ctxStatus"
@@ -369,25 +509,54 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                           
                         >
                         <option value="">Select </option>
-                        <option value="YES">YES </option>
-                        <option value="NO">NO </option>
-                       
+                        {childStatus.map((value, index) => (
+                                <option key={index} value={value.code}>
+                                    {value.display}
+                                </option>
+                            ))}
                       </Input>
-                      {errors.breastFeeding !=="" ? (
-                            <span className={classes.error}>{errors.breastFeeding}</span>
+                      {errors.visitStatus !=="" ? (
+                            <span className={classes.error}>{errors.visitStatus}</span>
                         ) : "" }
 
                       </FormGroup>
-                    </div>              
+                    </div> 
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <FormLabelName >Infant outcome at 18 months</FormLabelName>
+                        <Input
+                          type="select"
+                          name="infantOutcomeAt18Months"
+                          id="infantOutcomeAt18Months"
+                          value={infantVisitRequestDto.infantOutcomeAt18Months}
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                          onChange={handleInputChangeInfantVisitRequestDto}
+                          
+                        >
+                        <option value="">Select </option>
+                        {infantOutcome.map((value, index) => (
+                                <option key={index} value={value.code}>
+                                    {value.display}
+                                </option>
+                            ))}
+                       
+                      </Input>
+                      {errors.infantOutcomeAt18Months !=="" ? (
+                            <span className={classes.error}>{errors.infantOutcomeAt18Months}</span>
+                        ) : "" }
+
+                      </FormGroup>
+                    </div>             
             </div>
-           
+            
             <br />
+            {formFilter.motherArt===false && (<>
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}>  Mother's ART </h4>
             </Label>
             <br /><br />
             <div className="row">
-              <div className=" mb-3 col-md-6">
+              <div className=" mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName >Timing of mother's ART Initiation </FormLabelName>
                   <Input
@@ -400,38 +569,72 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     
                   >
                     <option value="select">Select </option>
-                    <option value="select">Select </option>
-                   
+                    {timeMotherArt.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.display}
+                                    </option>
+                                ))}
                   </Input>
                   {errors.motherArtInitiationTime !=="" ? (
                       <span className={classes.error}>{errors.motherArtInitiationTime}</span>
                   ) : "" }
                 </FormGroup>
               </div>
-              <div className=" mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName >Mother's ART Regimen </FormLabelName>
-                  <Input
-                    type="select"
-                    name="motherArtRegimen"
-                    id="motherArtRegimen"
-                    value={infantMotherArtDto.motherArtRegimen}
-                    onChange={handleInputChangeInfantMotherArtDto}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
-                  >
-                    <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
-                   
-                  </Input>
-                  {errors.motherArtRegimen !=="" ? (
-                      <span className={classes.error}>{errors.motherArtRegimen}</span>
-                  ) : "" }
-                </FormGroup>
-              </div>
              
+              <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                    <FormLabelName >Original Regimen Line </FormLabelName>
+                    <Input
+                            type="select"
+                            name="regimenTypeId"
+                            id="regimenTypeId"
+                            value={infantMotherArtDto.regimenTypeId}
+                            onChange={handleSelecteRegimen}
+                            required
+                            style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                            >
+                                <option value=""> Select</option>
+        
+                                    {adultRegimenLine.map((value) => (
+                                    <option key={value.id} value={value.id}>
+                                        {value.description}
+                                    </option>
+                                    ))}
+                              
+                        </Input>
+                        {errors.regimenTypeId !=="" ? (
+                            <span className={classes.error}>{errors.regimenTypeId}</span>
+                            ) : "" }
+                    </FormGroup>
+                    </div>                    
+                    <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                    <FormLabelName >Original Regimen </FormLabelName>
+                    <Input
+                            type="select"
+                            name="regimenId"
+                            id="regimenId"
+                            value={infantMotherArtDto.regimenId}
+                            onChange={handleInputChangeInfantMotherArtDto}
+                            style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                            required
+                            > 
+                                <option value=""> Select</option>    
+                                {regimenType.map((value) => (
+                                    <option key={value.id} value={value.id}>
+                                        {value.description}
+                                    </option>
+                                ))}
+                        </Input>
+                        {errors.regimenId !=="" ? (
+                            <span className={classes.error}>{errors.regimenId}</span>
+                            ) : "" }
+                    </FormGroup>
+                    </div>
             </div>
+            </>)}
+            <br/>
+            {formFilter.infantArv===false && (<>
             <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}> Infant ARV & CTX</h4>
             </Label>
@@ -442,7 +645,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 <FormGroup>
                 <FormLabelName >Age at CTX Initiation </FormLabelName>
                 <Input
-                type="number"
+                type="select"
                 name="ageAtCtx"
                 id="ageAtCtx"
                 value={infantArvDto.ageAtCtx}
@@ -450,8 +653,11 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}  
                 >
                    <option value="select">Select </option>
-                    <option value="<2 Months"> {"<"} 2 Months </option>
-                    <option value=">=2 Months">{">"} 2 Months  </option>
+                   {agectx.map((value, index) => (
+                        <option key={index} value={value.code}>
+                            {value.display}
+                        </option>
+                    ))}
                   </Input>
                 {errors.ageAtCtx !=="" ? (
                 <span className={classes.error}>{errors.ageAtCtx}</span>
@@ -471,7 +677,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     required
                   >
                     <option value="select">Select </option>
-                    {fp.map((value) => (
+                    {infantArv.map((value) => (
                       <option key={value.id} value={value.id}>
                         {value.display}
                       </option>
@@ -526,11 +732,12 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             </div>
             
             </div>
+            </>)}
             <br />
             <Label as='a' color='black' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}> Infant PCR </h4>
             </Label>
-            <br />
+            <br /><br />
             {/* LAB Screening Form */}
             <div className="row">
                 <div className=" mb-3 col-md-6">
@@ -550,7 +757,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 ) : "" }
                 </FormGroup>   
                 </div>
-                <div className=" mb-3 col-md-4">
+                <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName > Sample Type</FormLabelName>
                   <Input
@@ -563,7 +770,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     required
                   >
                     <option value="select">Select </option>
-                    <option value="Frist PCR">Frist PCR</option>
+                    <option value="First PCR">First PCR</option>
                     <option value="Second PCR">Second PCR</option>
                     <option value="Confirmatory PCR">Confirmatory PCR</option>
                     <option value="First Rapid Antibody">First Rapid Antibody </option>
@@ -629,14 +836,14 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 <FormGroup>
                 <FormLabelName >Date Sample Sent</FormLabelName>
                 <Input
-                type="date"
-                name="dateSampleSent"
-                id="dateSampleSent"
-                value={infantPCRTestDto.dateSampleSent}
-                onChange={handleInputChangeInfantPCRTestDto}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                max={moment(new Date()).format("YYYY-MM-DD")}  
-                />
+                  type="date"
+                  name="dateSampleSent"
+                  id="dateSampleSent"
+                  value={infantPCRTestDto.dateSampleSent}
+                  onChange={handleInputChangeInfantPCRTestDto}
+                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  max={moment(new Date()).format("YYYY-MM-DD")}  
+                  />
                 {errors.dateSampleSent !=="" ? (
                 <span className={classes.error}>{errors.dateSampleSent}</span>
                 ) : "" }
@@ -646,13 +853,19 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 <FormGroup>
                 <FormLabelName >Result *</FormLabelName>
                 <Input
-                type="text"
+                type="select"
                 name="results"
                 id="results"
                 value={infantPCRTestDto.results}
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
-                />
+                >
+                   {pcrResult.map((value) => (
+                      <option key={value.id} value={value.id}>
+                        {value.display}
+                      </option>
+                    ))}
+                </Input>
                 {errors.results !=="" ? (
                 <span className={classes.error}>{errors.results}</span>
                 ) : "" }

@@ -7,4 +7,6 @@ public class FormFilterResponseDto
 {
     private boolean MotherArt;
     private boolean InfantArv;
+
+    private boolean outCome;
 }

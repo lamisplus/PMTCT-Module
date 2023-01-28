@@ -134,39 +134,21 @@ const PatientnHistory = (props) => {
           }
     
     const LoadViewPage =(row,action)=>{
-        
-        if(row.path==='Mental-health'){        
-            props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id, actionType:action})
 
-        }else if(row.path==='Art-commence'){
-            props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id, actionType:action})
-
-        }else if(row.path==='Clinical-evaluation'){
-            props.setActiveContent({...props.activeContent, route:'adult-clinic-eveluation-view', id:row.id, actionType:action})
-
-        }else if(row.path==='eac1'){
-            props.setActiveContent({...props.activeContent, route:'first-eac-history', id:row.id, actionType:action})
-        }
-        else if(row.path==='eac2'){
-            props.setActiveContent({...props.activeContent, route:'second-eac-history', id:row.id, actionType:action})
-        }
-        else if(row.path==='eac3'){
-            props.setActiveContent({...props.activeContent, route:'completed-eac-history', id:row.id, actionType:action})
-        }else if(row.path==='hiv-enrollment'){
+        if(row.path==='anc-enrollment'){        
+            //props.setActiveContent({...props.activeContent, route:'anc-enrollment', id:row.id, actionType:action})
             history.push({
                 pathname: '/update-patient',
-                state: { id: row.id, patientObj:props.patientObj, actionType:action }
+                state: { id: row.recordId, patientObj:props.patientObj, actionType:action }
             });
-            //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-        }else if(row.path==='pharmacy'){
-            //props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id})
-            props.setActiveContent({...props.activeContent, route:'pharmacy-update', id:row.id, activeTab:"history", actionType:action, obj:row})
+        }else if(row.path==='anc-delivery'){
+            props.setActiveContent({...props.activeContent, route:'labour-delivery', id:row.recordId, actionType:action})
 
-        }else if(row.path==='Laboratory'){
-            props.setActiveContent({...props.activeContent, route:'mental-health-history', id:row.id, actionType:action})
-
-        }else if(row.path==='clinic-visit'){
-            props.setActiveContent({...props.activeContent, route:'consultation', id:row.id, activeTab:"history", actionType:action, })
+        }else if(row.path==='pmtct-enrollment'){
+            props.setActiveContent({...props.activeContent, route:'anc-pnc', id:row.recordId, activeTab:"history", actionType:action, })
+      
+        }else if(row.path==='anc-visit'){
+            props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"history", actionType:action, })
       
         }else{
 

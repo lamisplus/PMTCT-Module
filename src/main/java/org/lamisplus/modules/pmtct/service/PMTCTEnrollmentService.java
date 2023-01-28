@@ -6,10 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.patient.domain.dto.*;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
@@ -33,7 +38,7 @@ public class PMTCTEnrollmentService {
   private final PersonService personService;
   
   public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
-      System.out.println(pmtctEnrollmentRequestDto);
+      //System.out.println(pmtctEnrollmentRequestDto);
      return convertEntitytoRespondDto(convertEntitytoRespondDto(pmtctEnrollmentRequestDto));
   }
   
@@ -142,17 +147,37 @@ public class PMTCTEnrollmentService {
                 //.orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
     }
 
-    public PMTCTEnrollment viewPMTCTEnrollmentById(Long id) {
-        PMTCTEnrollment pmtctEnrollment = this.pmtctEnrollmentReporsitory.getPMTCTEnrollmentById(id);
-        return pmtctEnrollment;
-    }
+
     //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
-    public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
-        // PmtctVisit existVisit = getExistVisit(id);
-        PMTCTEnrollment pmtctEnrollment = convertEntitytoRespondDto(pmtctEnrollmentRequestDto);
-        pmtctEnrollment.setId(id);
-        //pmtctVisit.setArchived(0);
-        pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+//    public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+//        // PmtctVisit existVisit = getExistVisit(id);
+//        PMTCTEnrollment pmtctEnrollment = convertEntitytoRespondDto(pmtctEnrollmentRequestDto);
+//        pmtctEnrollment.setId(id);
+//        //pmtctVisit.setArchived(0);
+//        pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+//        return pmtctEnrollmentRequestDto;
+//    }
+
+    public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto)
+    {
+        Optional <PMTCTEnrollment> pmtctEnrollment = this.pmtctEnrollmentReporsitory.findById(id);
+        if(pmtctEnrollment.isPresent())
+        {
+            PMTCTEnrollment pmtctEnrollment1 = pmtctEnrollment.get();
+            pmtctEnrollment1.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
+            pmtctEnrollment1.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
+            pmtctEnrollment1.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
+            pmtctEnrollment1.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
+            pmtctEnrollment1.setGravida(pmtctEnrollmentRequestDto.getGravida());
+            pmtctEnrollment1.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
+            pmtctEnrollment1.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
+            this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
+        }
         return pmtctEnrollmentRequestDto;
     }
+
+    public  PMTCTEnrollmentRespondDto  viewPMTCTEnrollmentById(Long id) {
+       return convertEntitytoRespondDto(pmtctEnrollmentReporsitory.findById(id).orElseThrow(()-> new EntityNotFoundException(PMTCTEnrollment.class, "Id", id+ "") ));
+    }
+
 }

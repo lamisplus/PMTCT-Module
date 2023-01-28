@@ -154,7 +154,8 @@ const UserRegistration = (props) => {
             syphilisInfo:{},
             partnerNotification:{},
             sourceOfReferral:"",
-            staticHivStatus:""
+            staticHivStatus:"",
+
     });
      const [pregnancyStatus, setPregnancyStatus] = useState([]);
      //set ro show the facility name field if is transfer in 
@@ -166,12 +167,14 @@ const UserRegistration = (props) => {
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
     patientObj = locationState ? locationState.patientObj : {}; 
+    
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
     useEffect(() => { 
         loadGenders();
         getSex();
         PregnancyStatus();
         if(patientObj){
+            objValues.staticHivStatus = patientObj && patientObj.dynamicHivStatus==='Positive' ? "Positive": ""
             const identifiers = patientObj.identifier;
             const hospitalNumber = identifiers.identifier.find(obj => obj.type === 'HospitalNumber');
             basicInfo.dob=patientObj.dateOfBirth
@@ -187,12 +190,14 @@ const UserRegistration = (props) => {
             basicInfo.age=patientAge
             objValues.personId=patientObj.id
             basicInfo.ninNumber=patientObj.ninNumber
+            basicInfo.staticHivStatus=patientObj.dynamicHivStatus
 
         }
         if(basicInfo.dateOfRegistration < basicInfo.dob){
             alert('Date of registration can not be earlier than date of birth')
         }
         SOURCE_REFERRAL_PMTCT() 
+        
     }, [patientObj, patientId, basicInfo.dateOfRegistration]);
     //Get list of Source of Referral
     const SOURCE_REFERRAL_PMTCT =()=>{
@@ -338,9 +343,7 @@ const UserRegistration = (props) => {
             }       
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    
-
     //Handle CheckBox 
-
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
@@ -371,6 +374,7 @@ const UserRegistration = (props) => {
         }
 
     }
+
 
     return (
         <>
@@ -659,6 +663,7 @@ const UserRegistration = (props) => {
                                                     id="testResultSyphilis"
                                                     onChange={handleInputChange}
                                                     value={objValues.testResultSyphilis} 
+                                                    
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Positive" >Positive</option>
@@ -712,6 +717,7 @@ const UserRegistration = (props) => {
                                             ) : "" }                                         
                                             </FormGroup>
                                     </div>
+
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >HIV Status *</Label>
@@ -722,10 +728,11 @@ const UserRegistration = (props) => {
                                                     id="staticHivStatus"
                                                     onChange={handleInputChange}
                                                     value={objValues.staticHivStatus} 
+                                                    disabled={patientObj.dynamicHivStatus==='Positive'?true :false}
                                                 >
                                                     <option value="" >Select</option>
-                                                    <option value="Positive" >Positive</option>
-                                                    <option value="Negative" >Negative</option>
+                                                    <option value="Positive">Positive</option>
+                                                    <option value="Negative">Negative</option>
                                                     <option value="Unknown" >Unknown</option>
                                                 </Input>
                                             </InputGroup>

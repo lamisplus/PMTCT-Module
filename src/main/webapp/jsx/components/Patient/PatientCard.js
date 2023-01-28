@@ -116,78 +116,15 @@ function PatientCard(props) {
             .catch((error) => {    
             });        
     }
-    const get_age = dob => {
-      var today = new Date();
-      var dateParts = dob.split("-");
-      var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-      var birthDate = new Date(dateObject); // create a date object directlyfrom`dob1`argument
-      var age_now = today.getFullYear() - birthDate.getFullYear();
-      var m = today.getMonth() - birthDate.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                  age_now--;
-              }
-          if (age_now === 0) {
-                  return m + " month(s)";
-              }
-              return age_now ;
-    }
-    const calculate_age = dob => {
-      var today = new Date();
-      var dateParts = dob.split("-");
-      var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-      var birthDate = new Date(dateObject); // create a date object directlyfrom`dob1`argument
-      var age_now = today.getFullYear() - birthDate.getFullYear();
-      var m = today.getMonth() - birthDate.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                  age_now--;
-              }
-          if (age_now === 0) {
-                  return m + " month(s)";
-              }
-              return age_now + " year(s)";
-    };
 
-    const loadChildEvaluation =(row)=> {
-      props.setActiveContent('child-evaluation')
-    }
-    const capturePatientBiometric =(row)=> {
-      //props.setActiveContent('biometrics')
-      props.setActiveContent({...props.activeContent, route:'biometrics', obj:row})
-    }
-    const loadArtCommencement =(row)=> {
-      props.setActiveContent('art-commencement')
-    }
-    
-    const loadArt =(row)=> {
-        setpatientObj({...patientObj, ...row});
-            setArtModal(!artModal)
-    }
-    
-    const CurrentStatus = ()=>{
-
-          return (  <Label color="blue" size="mini">{hivStatus}</Label>);
-  }
-    const getHospitalNumber = (identifier) => {     
-      const identifiers = identifier;
-      const hospitalNumber = identifiers.identifier.find(obj => obj.type == 'HospitalNumber');       
-      return hospitalNumber ? hospitalNumber.value : '';
-    };
-    const getPhoneNumber = (identifier) => {     
-      const identifiers = identifier;
-      const phoneNumber = identifiers.contactPoint.find(obj => obj.type == 'phone');       
-      return phoneNumber ? phoneNumber.value : '';
-    };
     const getAddress = (identifier) => {     
       const identifiers = identifier;
       const address = identifiers.address.find(obj => obj.city);      
-      return address ? address.city : '';
+      const houseAddress= address.line[0]!==null ? address.line[0] :""      
+      const landMark= address.city!==null ? address.city :""    
+      return address ? houseAddress + " " + landMark : '';
     };
-    const handleBiometricCapture = (id) => { 
-      let patientObjID= id
-      setBiometricModal(!biometricModal);
-    }
 
-  
   return (
     <div className={classes.root}>
        <ExpansionPanel >
@@ -261,7 +198,7 @@ function PatientCard(props) {
                                   <Typography variant="caption">
                                       <Label color={props.patientObj.biometricStatus===true? "green" : "red"} size={"mini"}>
                                           Biometric Status
-                                          <Label.Detail>{props.patientObj.biometricStatus===true? "Captured" : "Not Capture"}</Label.Detail>
+                                          <Label.Detail>{props.patientObj.biometricStatus===true? "Captured" : "Not Captured"}</Label.Detail>
                                       </Label>
                                      
                                       

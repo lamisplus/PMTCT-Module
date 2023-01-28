@@ -84,7 +84,8 @@ const Labourpartner = (props) => {
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
-
+    const [syphills, setSyphills] = useState([]);
+    const [referred, setReferred] = useState([]);
     const [partner, setpartner]= useState({
                 age: "",
                 dateOfBirth: "",
@@ -95,9 +96,37 @@ const Labourpartner = (props) => {
                 referredTo: "",
                 syphillsStatus: "",
     })
-    useEffect(() => {           
+    useEffect(() => {  
+        PARTNER_SYPHILIS_STATUS();
+        PARTNER_REFERRED_PMTCT();         
     }, [props.patientObj.id, ]);
     //Get list 
+    const PARTNER_SYPHILIS_STATUS =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/PARTNER_SYPHILIS_STATUS`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            //console.log(response.data);
+            setSyphills(response.data);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });    
+    }
+    const PARTNER_REFERRED_PMTCT =()=>{
+        axios
+        .get(`${baseUrl}application-codesets/v2/PARTNER_REFERRED_PMTCT`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            //console.log(response.data);
+            setReferred(response.data);
+        })
+        .catch((error) => {
+        //console.log(error);
+        });    
+    }
     const handleInputChangepartnerDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
         setpartner ({...partner,  [e.target.name]: e.target.value});
@@ -110,7 +139,8 @@ const Labourpartner = (props) => {
         temp.hbStatus = partner.hbStatus ? "" : "This field is required"
         temp.hcStatus = partner.hcStatus ? "" : "This field is required"
         temp.postTestCounseled = partner.postTestCounseled ? "" : "This field is required"
-
+        temp.fullName = partner.fullName ? "" : "This field is required" 
+        temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
@@ -283,7 +313,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HBV status</Label>
+                            <Label >HBV status *</Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -305,7 +335,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HCV status</Label>
+                            <Label >HCV status *</Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -327,7 +357,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Syphillis Status</Label>
+                            <Label >Syphillis Status *</Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -337,8 +367,13 @@ const Labourpartner = (props) => {
                                     value={partner.syphillisStatus} 
                                 >
                                     <option value="" >Select</option>
-                                    <option value="Yes" >Yes</option>
-                                    <option value="No" >No</option>
+                                    <option value="">Select </option>
+                                    
+                                    {syphills.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
                                 </Input>
 
                             </InputGroup>
@@ -357,8 +392,13 @@ const Labourpartner = (props) => {
                                     id="referredTo"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.referredTo} 
-                                />
-
+                                >
+                                     {referred.map((value) => (
+                                        <option key={value.id} value={value.code}>
+                                            {value.display}
+                                        </option>
+                                    ))}
+                                </Input>
                             </InputGroup>
                             {errors.referredTo !=="" ? (
                                     <span className={classes.error}>{errors.referredTo}</span>
@@ -376,6 +416,7 @@ const Labourpartner = (props) => {
             variant="contained"
             color="primary"
             className={classes.button}
+            disabled={saving}
             startIcon={<SaveIcon />}
             style={{backgroundColor:"#014d88"}}
             onClick={handleSubmit}
