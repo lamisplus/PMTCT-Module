@@ -1177,6 +1177,7 @@ const UserRegistration = (props) => {
                                                     type="text"
                                                     name="address"
                                                     id="address"
+                                                    value={basicInfo.address}
                                                     onChange={handleInputChangeBasic}
                                                     style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                    
@@ -1195,6 +1196,7 @@ const UserRegistration = (props) => {
                                                     type="text"
                                                     name="landmark"
                                                     id="landmark"
+                                                    value={basicInfo.landmark}
                                                     onChange={handleInputChangeBasic}
                                                     style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                     
