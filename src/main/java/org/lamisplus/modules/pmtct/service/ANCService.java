@@ -984,7 +984,7 @@ public class ANCService {
         int age3 = Period.between(lmd, curDate).getYears();
         int age2 = Period.between(lmd, curDate).getMonths();
         int age1 = Period.between(lmd, curDate).getDays();
-        int ga =(int) Math.round(age1/7.0);
+        int ga =age1;
         ga += age2* 4;
         ga += age3 * 52;
         System.out.println("in method "+ ga);
