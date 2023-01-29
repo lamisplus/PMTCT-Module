@@ -751,6 +751,7 @@ public class ANCService {
             anc.setLastModifiedBy(user.getUserName());
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
+            anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
             anc.setHospitalNumber(person.getHospitalNumber());
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
@@ -814,13 +815,14 @@ public class ANCService {
             ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
             ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
+            ancRespondDto.setHivStatus(anc.getStaticHivStatus());
 
             String hivStatus = "Unknown";
             try{
-                hivStatus = this.getDynamicHivStatus(anc.getUuid());
+                hivStatus = this.getDynamicHivStatus(anc.getPersonUuid());
             }catch (Exception e){}
             ancRespondDto.setDynamicHivStatus(hivStatus);
-            ancRespondDto.setHivStatus(hivStatus);
+
         }
 
 
@@ -965,11 +967,24 @@ public class ANCService {
 
     public LocalDate calculateEDD(LocalDate lmd){
         LocalDate date = lmd;
-        date = date.plusDays(280);
-       // DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        System.out.println("in method "+ date);
+        date = date.plusMonths(9);
+        date =  date.plusDays(7);
         return date;
     }
+    public int calculateGA(LocalDate lmd){
+        LocalDate curDate = LocalDate.now();
+        int age3 = Period.between(lmd, curDate).getYears();
+        int age2 = Period.between(lmd, curDate).getMonths();
+        int age1 = Period.between(lmd, curDate).getDays();
+        int ga =(int) Math.round(age1/7.0);
+        ga += age2* 4;
+        ga += age3 * 52;
+        System.out.println("in method "+ ga);
+        return ga;
+    }
+
+
+
 
 }
 

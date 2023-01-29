@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RequestMapping("api/v1/pmtct/anc")
@@ -66,7 +67,7 @@ public class PMTCTController {
 
     @GetMapping("{id}")
     public ResponseEntity<ANC> getSingleANC(@PathVariable Long id) {
-        return ResponseEntity.ok(this.ancService.getSingleAnc(id));
+        return ResponseEntity.ok(ancService.getSingleAnc(id));
     }
 
     @GetMapping(value = "/pmtct-from-person")
@@ -305,5 +306,9 @@ public class PMTCTController {
         return ancAcivityTracker.getInfanctVisitActivities(hospitalNumber);
     }
 
+    @GetMapping(value ="/calculate-ga/{lmp}")
+    public int calculateGa(@PathVariable("lmp") LocalDate lmp) {
+        return ancService.calculateGA(lmp);
+    }
 
 }
