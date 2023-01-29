@@ -69,3 +69,4 @@ org\lamisplus\modules\pmtct\domain\entity\enums\TreatedForSyphilis.class
 org\lamisplus\modules\pmtct\domain\dto\InfantMotherArtDto.class
 org\lamisplus\modules\pmtct\domain\dto\ANCRespondDto.class
 org\lamisplus\modules\pmtct\domain\dto\PmtctHtsInfo.class
+org\lamisplus\modules\pmtct\domain\dto\SummaryChart.class

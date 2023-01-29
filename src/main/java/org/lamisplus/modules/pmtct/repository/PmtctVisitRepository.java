@@ -21,6 +21,9 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, Lo
         @Query(value = "SELECT * FROM public.pmtct_mother_visitation where anc_no = ?1 and date_of_visit > ?2 order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisits(String ancNo, LocalDate deliveryDate);
 
+        @Query(value = "SELECT count(*) FROM public.pmtct_mother_visitation where anc_no = ?1", nativeQuery = true)
+        Integer getMotherVisits(String ancNO);
+
 
 
 }

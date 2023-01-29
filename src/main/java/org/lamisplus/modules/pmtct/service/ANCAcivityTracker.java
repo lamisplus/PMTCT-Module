@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.service;
 
 import lombok.AllArgsConstructor;
 import org.lamisplus.modules.pmtct.domain.dto.ActivityTracker;
+import org.lamisplus.modules.pmtct.domain.dto.SummaryChart;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,38 @@ public class ANCAcivityTracker {
     public List<ActivityTracker> getANCActivities(String ancNo)
     {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
+        List<InfantArv> infantArvs = this.infantArvRepository.findByAncNumber(ancNo);
+        if(!(infantArvs.isEmpty()) ){
+            ActivityTracker activityTracker = new ActivityTracker();
+            infantArvs.forEach(infantArv -> {
+
+                activityTracker.setActivityName("ARV and CTX Administration");
+                activityTracker.setPath("apmtct_infant_arv");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(infantArv.getId());
+                activityTracker.setActivityDate(infantArv.getVisitDate());
+                activityTrackers.add(activityTracker);
+            });
+        }
+        ///LocalDate arvDate = this.getInfantArvDate(hospitalNumber);
+        List<InfantVisit> infantVisitList = this.infantVisitRepository.getPreArvVisits(ancNo);
+        if (!(infantVisitList.isEmpty()))
+        {
+            ActivityTracker activityTracker = new ActivityTracker();
+            infantVisitList.forEach(pmtctVisit ->{
+                activityTracker.setActivityName("Infant Post-ARV Visit");
+                activityTracker.setPath("pmtct_infant_visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctVisit.getId());
+                activityTracker.setActivityDate(pmtctVisit.getVisitDate());
+                activityTrackers.add(activityTracker);
+            } );
+
+        }
 
         LocalDate deliveryDate = this.getDeliveryDate(ancNo);
         List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisits(ancNo, deliveryDate);
@@ -174,6 +207,27 @@ public class ANCAcivityTracker {
 
         return activityTrackers;
 
+    }
+
+    public SummaryChart getSummaryChart (String ancNo)
+    {
+        SummaryChart summaryChart = new SummaryChart();
+        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisits(ancNo));
+        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByAncNo(ancNo);
+        if (delivery.isPresent()){
+            summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
+            summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
+            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisits(ancNo));
+
+        }
+        else
+        {
+            summaryChart.setChildAlive(0);
+            summaryChart.setChildDead(0);
+            summaryChart.setChildVisit(0);
+
+        }
+        return summaryChart;
     }
 
 }

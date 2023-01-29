@@ -12,11 +12,15 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
 {
     List<InfantVisit> findInfantVisitsByInfantHospitalNumber(String infanHospitalNumber);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_visit where infant_hospital_number = ?1 order by visit_date DESC", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_visit where anc_number = ?1 order by id DESC", nativeQuery = true)
     List<InfantVisit> getPreArvVisits(String hospitalNumber);
 
 //    @Query(value = "SELECT * FROM public.pmtct_infant_visit where infant_hospital_number = ?1 and visit_date > ?2 order by visit_date DESC", nativeQuery = true)
 //    List<InfantVisit> getPostArvVisits(String hospitalNumber, LocalDate visitDate);
+
+    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where anc_number = ?1", nativeQuery = true)
+    Integer getChildVisits(String ancNO);
+
 
 
 

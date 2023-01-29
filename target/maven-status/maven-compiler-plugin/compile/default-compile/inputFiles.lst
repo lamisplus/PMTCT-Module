@@ -40,6 +40,7 @@ C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\enti
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\InfantVisitService.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\DeliveryService.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\service\ANCAcivityTracker.java
+C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\SummaryChart.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\entity\Infant.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\HepatitisInfo.java
 C:\Life Codes\PMTCT-module\src\main\java\org\lamisplus\modules\pmtct\domain\dto\PMTCTEnrollmentRespondDto.java
