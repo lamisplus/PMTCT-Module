@@ -219,6 +219,10 @@ public class PMTCTController {
         return ancService.updateAncWithPartnerInfo(id, partnerInformation);
     }
 
+    @PutMapping(value = "delete-partnerinformation-in-anc/{id}")
+    public void deletePartnerInformation(@PathVariable("id") Long id) {
+        ancService.deletePartnerInfo(id);
+    }
     @GetMapping(value = "get-infant-by-ancno/{ancNo}")
     public ResponseEntity<List<Infant>> getInfantByAncNo(@PathVariable("ancNo") String ancNo){
         System.out.println("ANCNO "+ ancNo);

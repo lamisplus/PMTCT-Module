@@ -940,6 +940,14 @@ public class ANCService {
         return partnerInformation;
     }
 
+    public void deletePartnerInfo(Long id) {
+        // PmtctVisit existVisit = getExistVisit(id);
+        ANC anc = this.getExistingANC(id);
+        JsonNode partnerInformation2JsonNode = mapper.valueToTree(null);
+        anc.setPartnerInformation(partnerInformation2JsonNode);
+        ancRepository.save(anc);
+    }
+
     String getDynamicHivStatus (String personUuid){
         String hivStatus = "Unknown";
         Optional<String> uuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
