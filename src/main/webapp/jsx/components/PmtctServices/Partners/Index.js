@@ -123,8 +123,8 @@ const PatientnHistory = (props) => {
            
           }
     
-    const LoadPage =()=>{    
-            props.setActiveContent({...props.activeContent, route:'add-partner', id:"", actionType:""})
+    const LoadPage =(row,activePage)=>{    
+            props.setActiveContent({...props.activeContent, route:'add-partner', id:row, actionType:activePage, obj:row})
     }
     const LoadViewPage =(row)=>{
         
@@ -198,7 +198,7 @@ const PatientnHistory = (props) => {
                 { title: "HCV Status", field: "hcv" },
                 { title: "Syphillis Status", field: "syphillis" },
                 { title: "Referred To", field: "referred", filtering: false },        
-                //{ title: "Actions", field: "actions", filtering: false }, 
+                { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
               data={partners && [partners].map((row) => ({
@@ -220,9 +220,9 @@ const PatientnHistory = (props) => {
                             <Dropdown item text='Action'>
 
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
-                                {row.viewable && ( <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>)}
-                                {/* {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
-                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)}  */}
+                            <Dropdown.Item onClick={()=>LoadPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>
+                                <Dropdown.Item  onClick={()=>LoadPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>
+                                {/* <Dropdown.Item  onClick={()=>LoadPage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item> */}
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>

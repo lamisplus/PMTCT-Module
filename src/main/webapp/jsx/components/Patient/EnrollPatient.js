@@ -167,7 +167,7 @@ const UserRegistration = (props) => {
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
     patientObj = locationState ? locationState.patientObj : {}; 
-    
+    console.log(patientObj)
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
     useEffect(() => { 
         loadGenders();
@@ -522,6 +522,7 @@ const UserRegistration = (props) => {
                                             id="firstAncDate"
                                             onChange={handleInputChange}
                                             value={objValues.firstAncDate} 
+                                            min={patientObj.dateOfRegistration}
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
                                         />
                                     </InputGroup>

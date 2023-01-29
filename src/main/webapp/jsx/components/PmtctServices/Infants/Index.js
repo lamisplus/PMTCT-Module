@@ -52,7 +52,7 @@ ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 
 const InfantInformation = (props) => {
     const [infants, setInfants] = useState([])
-    //const [delivery, setDelivery] = useState([])
+    const [delivery, setDelivery] = useState([])
     const [loading, setLoading] = useState(true)
     const [aliveChild, setAliveChild] = useState(0)
     useEffect(() => {
@@ -85,7 +85,7 @@ const InfantInformation = (props) => {
             )
             .then((response) => {
             setLoading(false)
-            //setDelivery(response.data)
+            setDelivery(response.data)
             setAliveChild(response.data && response.data.numberOfInfantsAlive ? response.data.numberOfInfantsAlive : 0)
             })
 
@@ -105,8 +105,8 @@ const InfantInformation = (props) => {
         }
         
     }
-    const LoadPage =()=>{    
-        props.setActiveContent({...props.activeContent, route:'add-infant', id:"", actionType:""})
+    const LoadPage =(obj, actionType)=>{    
+        props.setActiveContent({...props.activeContent, route:'add-infant', id:obj.id, actionType:actionType, obj:obj})
 }
 
   return (
@@ -116,7 +116,7 @@ const InfantInformation = (props) => {
             variant="contained"
             color="primary"
             className=" float-end  mr-2 mt-2"
-            onClick={()=>LoadPage()}
+            onClick={()=>LoadPage(delivery, "create")}
             style={{backgroundColor:"#014d88"}}
             startIcon={<FaUserPlus size="10"/>}
         >
@@ -137,7 +137,7 @@ const InfantInformation = (props) => {
                 { title: "NIN Number", field: "nin" },             
                 { title: "Date of Delivery", field: "date" },
                 { title: "Sex", field: "sex", filtering: false },        
-                //{ title: "Actions", field: "actions", filtering: false }, 
+                { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
               data={infants.map((row) => ({
@@ -156,9 +156,9 @@ const InfantInformation = (props) => {
                             <Dropdown item text='Action'>
 
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
-                                <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />Follow Up Visit  </Dropdown.Item>
-                                {/* {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
-                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)}  */}
+                                <Dropdown.Item onClick={()=>LoadPage(row, 'view')}> <Icon name='eye' />View </Dropdown.Item>
+                                <Dropdown.Item  onClick={()=>LoadPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>
+                               
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>

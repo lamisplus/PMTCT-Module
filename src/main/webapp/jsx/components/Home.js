@@ -51,7 +51,7 @@ const Home = () => {
                   <Tab eventKey="home" title="Find Patients">                   
                     <NotEnrollPatients />
                   </Tab>
-                  <Tab eventKey="anc" title=" ANC Patients">                   
+                  <Tab eventKey="anc" title="General ANC Patients">
                     <ActiveANCPatients />
                   </Tab>
                   <Tab eventKey="visualization" title="Data Visualisation">                   

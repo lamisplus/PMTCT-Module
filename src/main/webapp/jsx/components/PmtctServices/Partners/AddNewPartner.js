@@ -83,6 +83,7 @@ const Labourpartner = (props) => {
     //let history = useHistory();
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
+    const [disabledField, setDisabledField] = useState(false);
     const [errors, setErrors] = useState({});
     const [syphills, setSyphills] = useState([]);
     const [referred, setReferred] = useState([]);
@@ -98,8 +99,12 @@ const Labourpartner = (props) => {
     })
     useEffect(() => {  
         PARTNER_SYPHILIS_STATUS();
-        PARTNER_REFERRED_PMTCT();         
-    }, [props.patientObj.id, ]);
+        PARTNER_REFERRED_PMTCT(); 
+        if(props.activeContent && props.activeContent.id) {
+            setpartner(props.activeContent.obj)
+            setDisabledField(props.activeContent.actionType==="view"? true : false)
+        }       
+    }, [props.patientObj.id, props.activeContent]);
     //Get list 
     const PARTNER_SYPHILIS_STATUS =()=>{
         axios
@@ -173,6 +178,7 @@ const Labourpartner = (props) => {
     const LoadPage =()=>{    
         props.setActiveContent({...props.activeContent, route:'partners', id:"", actionType:""})
     }
+    
 
   return (      
       <div >
@@ -221,6 +227,7 @@ const Labourpartner = (props) => {
                                     id="fullName"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.fullName} 
+                                    disabled={disabledField}
                                     
                                 />
                             </InputGroup>
@@ -239,7 +246,7 @@ const Labourpartner = (props) => {
                                     id="age"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.age} 
-                                    
+                                    disabled={disabledField}
                                 />
                             </InputGroup>
                             {errors.ancNo !=="" ? (
@@ -256,7 +263,8 @@ const Labourpartner = (props) => {
                                     name="preTestCounseled"
                                     id="preTestCounseled"
                                     onChange={handleInputChangepartnerDto}
-                                    value={partner.preTestCounseled} 
+                                    value={partner.preTestCounseled}
+                                    disabled={disabledField} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -277,7 +285,8 @@ const Labourpartner = (props) => {
                                     name="acceptHivTest"
                                     id="acceptHivTest"
                                     onChange={handleInputChangepartnerDto}
-                                    value={partner.acceptHivTest} 
+                                    value={partner.acceptHivTest}
+                                    disabled={disabledField} 
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -299,6 +308,7 @@ const Labourpartner = (props) => {
                                     id="postTestCounseled"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.postTestCounseled} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -321,6 +331,7 @@ const Labourpartner = (props) => {
                                     id="hbStatus"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.hbStatus} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -343,6 +354,7 @@ const Labourpartner = (props) => {
                                     id="hcStatus"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.hcStatus} 
+                                    disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
                                     <option value="Yes" >Yes</option>
@@ -364,11 +376,10 @@ const Labourpartner = (props) => {
                                     name="syphillisStatus"
                                     id="syphillisStatus"
                                     onChange={handleInputChangepartnerDto}
-                                    value={partner.syphillisStatus} 
+                                    value={partner.syphillisStatus}
+                                    disabled={disabledField} 
                                 >
-                                    <option value="" >Select</option>
-                                    <option value="">Select </option>
-                                    
+                                    <option value="" >Select</option>                                    
                                     {syphills.map((value) => (
                                         <option key={value.id} value={value.code}>
                                             {value.display}
@@ -392,6 +403,7 @@ const Labourpartner = (props) => {
                                     id="referredTo"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.referredTo} 
+                                    disabled={disabledField}
                                 >
                                      {referred.map((value) => (
                                         <option key={value.id} value={value.code}>
@@ -410,29 +422,54 @@ const Labourpartner = (props) => {
                 
                 {saving ? <Spinner /> : ""}
             <br />
+            {props.activeContent && props.activeContent.actionType ==="update" ? (<>
+                <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    
+                    className={classes.button}
+                    disabled={saving}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Update</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Updating</span>
+                        )}
+                    </MatButton>
+            </>)
+            :
+            (<>
             
-            <MatButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            disabled={saving}
-            startIcon={<SaveIcon />}
-            style={{backgroundColor:"#014d88"}}
-            onClick={handleSubmit}
-            >
-                {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-                ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-                )}
-            </MatButton>
+                <MatButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                hidden={disabledField}
+                className={classes.button}
+                disabled={saving}
+                startIcon={<SaveIcon />}
+                style={{backgroundColor:"#014d88"}}
+                onClick={handleSubmit}
+                >
+                    {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Save</span>
+                    ) : (
+                    <span style={{ textTransform: "capitalize" }}>Saving</span>
+                    )}
+                </MatButton>
+                </>)
+            }
             
             <MatButton
                 variant="contained"
                 className={classes.button}
                 startIcon={<CancelIcon />}
                 style={{backgroundColor:'#992E62'}}
+                onClick={()=>LoadPage()}
             >
                 <span style={{ textTransform: "capitalize" }}>Cancel</span>
             </MatButton>

@@ -85,6 +85,7 @@ const LabourinfantInfo = (props) => {
     const classes = useStyles()
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
+    const [disabledField, setDisabledField] = useState(false);
     const [genders, setGenders] = useState([]);
     const [infantInfo, setInfantInfo]= useState({
             ancNo: patientObj.ancNo,
@@ -95,12 +96,21 @@ const LabourinfantInfo = (props) => {
             nin: "",
             sex: "",
             surname: "",
-            uuid: patientObj.ancUuid
+            uuid: patientObj.ancUuid,
+            dateOfDelivery:""
           
     })
     useEffect(() => {           
         SEX();
-    }, [props.patientObj.id, ]);
+        if(props.activeContent && props.activeContent.actionType==='create'){
+            infantInfo.dateOfDelivery=props.activeContent.obj.dateOfDelivery
+        }
+        if(props.activeContent && props.activeContent.id){
+            setInfantInfo(props.activeContent.obj)
+            setDisabledField(props.activeContent.actionType==="view"? true : false)
+        }
+    }, [props.patientObj.id, props.activeContent]);
+    
     const SEX =()=>{
         axios
         .get(`${baseUrl}application-codesets/v2/SEX`,
@@ -125,7 +135,7 @@ const LabourinfantInfo = (props) => {
         temp.firstName = infantInfo.firstName ? "" : "This field is required"
         temp.surname = infantInfo.surname ? "" : "This field is required"
         temp.hospitalNumber = infantInfo.hospitalNumber ? "" : "This field is required"
-        temp.dateOfDelivery = infantInfo.dateOfDelivery ? "" : "This field is required"
+        temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
         temp.sex = infantInfo.sex ? "" : "This field is required"
         //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
         setErrors({
@@ -137,26 +147,46 @@ const LabourinfantInfo = (props) => {
     const handleSubmit = (e) => {        
         e.preventDefault();        
         if(validate()){
-        setSaving(true);
-        axios.post(`${baseUrl}pmtct/anc/add-infants`, infantInfo,
-        { headers: {"Authorization" : `Bearer ${token}`}},
-        
-        )
-            .then(response => {
-                setSaving(false);
-                //props.patientObj.commenced=true
-                toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
-                props.setActiveContent({...props.activeContent, route:'recent-history'})
-            })
-            .catch(error => {
-                setSaving(false);
-                toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+            setSaving(true);
+            if(props.activeContent && props.activeContent.actionType ==="update" ){
+                axios.put(`${baseUrl}pmtct/anc/update-infant/${props.activeContent.id}`, infantInfo,
+                { headers: {"Authorization" : `Bearer ${token}`}},
                 
-            });
-        }else{
-            toast.error("All field are required", {position: toast.POSITION.BOTTOM_CENTER});
-        } 
+                )
+                    .then(response => {
+                        setSaving(false);
+                        //props.patientObj.commenced=true
+                        toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                        props.setActiveContent({...props.activeContent, route:'recent-history'})
+                    })
+                    .catch(error => {
+                        setSaving(false);
+                        toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+                        
+                    });
+                
+                }else{
+                    axios.post(`${baseUrl}pmtct/anc/add-infants`, infantInfo,
+                    { headers: {"Authorization" : `Bearer ${token}`}},
+                    
+                    )
+                        .then(response => {
+                            setSaving(false);
+                            //props.patientObj.commenced=true
+                            toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                            props.setActiveContent({...props.activeContent, route:'infants'})
+                        })
+                        .catch(error => {
+                            setSaving(false);
+                            toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
+                            
+                        });
+                }
+            }else{
+                toast.error("All field are required", {position: toast.POSITION.BOTTOM_CENTER});
+            } 
     }
+
     const LoadPage =()=>{    
         props.setActiveContent({...props.activeContent, route:'infants', id:"", actionType:""})
     }
@@ -198,6 +228,24 @@ const LabourinfantInfo = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
+                            <Label >Date of Delivery *</Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="date"
+                                    name="dateOfDelivery"
+                                    id="dateOfDelivery"
+                                    onChange={handleInputChangeinfantInfoDto}
+                                    value={infantInfo.dateOfDelivery} 
+                                    disabled
+                                />
+                            </InputGroup>
+                            {errors.dateOfDelivery !=="" ? (
+                                    <span className={classes.error}>{errors.dateOfDelivery}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
@@ -209,7 +257,7 @@ const LabourinfantInfo = (props) => {
                                     id="firstName"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.firstName} 
-                                    //disabled
+                                    disabled={disabledField}
                                 />
                             </InputGroup>
                             {errors.firstName !=="" ? (
@@ -227,6 +275,7 @@ const LabourinfantInfo = (props) => {
                                     id="surname"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.surname} 
+                                    disabled={disabledField}
                                 >
                                
                                </Input>
@@ -246,6 +295,7 @@ const LabourinfantInfo = (props) => {
                                     id="sex"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.sex} 
+                                    disabled={disabledField}
                                 >
                                 <option value="">Select </option>
                                     
@@ -264,20 +314,22 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of infantInfo</Label>
+                            <Label >Date of infantInfo {infantInfo.dateOfDelivery}</Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
-                                    name="dateOfDelivery"
-                                    id="dateOfDelivery"
+                                    name="dateOfinfantInfo"
+                                    id="dateOfinfantInfo"
                                     onChange={handleInputChangeinfantInfoDto}
-                                    value={infantInfo.dateOfDelivery} 
+                                    value={infantInfo.dateOfinfantInfo} 
+                                    //min={infantInfo.dateOfDelivery!==""? moment(infantInfo.dateOfDelivery).format("YYYY-MM-DD") :""}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
-                            {errors.dateOfDelivery !=="" ? (
-                                    <span className={classes.error}>{errors.dateOfDelivery}</span>
+                            {errors.dateOfinfantInfo !=="" ? (
+                                    <span className={classes.error}>{errors.dateOfinfantInfo}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -291,6 +343,7 @@ const LabourinfantInfo = (props) => {
                                     id="hospitalNumber"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.hospitalNumber} 
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -309,6 +362,7 @@ const LabourinfantInfo = (props) => {
                                     id="nin"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.nin} 
+                                    disabled={disabledField}
                                 />
 
                             </InputGroup>
@@ -319,25 +373,49 @@ const LabourinfantInfo = (props) => {
                     </div>
             </div>
                 
-                {saving ? <Spinner /> : ""}
+            {saving ? <Spinner /> : ""}
             <br />
+            {props.activeContent && props.activeContent.actionType ==="update" ? (<>
+                <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    
+                    className={classes.button}
+                    disabled={saving}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Update</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Updating</span>
+                        )}
+                    </MatButton>
+            </>)
+            :
+            (<>
             
-            <MatButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            startIcon={<SaveIcon />}
-            style={{backgroundColor:"#014d88"}}
-            onClick={handleSubmit}
-            >
-                {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-                ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-                )}
-            </MatButton>
-            
+                <MatButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                hidden={disabledField}
+                className={classes.button}
+                disabled={saving}
+                startIcon={<SaveIcon />}
+                style={{backgroundColor:"#014d88"}}
+                onClick={handleSubmit}
+                >
+                    {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Save</span>
+                    ) : (
+                    <span style={{ textTransform: "capitalize" }}>Saving</span>
+                    )}
+                </MatButton>
+                </>)
+            }
             <MatButton
                 variant="contained"
                 className={classes.button}

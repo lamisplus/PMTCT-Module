@@ -191,7 +191,7 @@ const index=0;
             </div>
           </div>
       </div>
-      {props.patientObj.dynamicHivStatus==='Positive' ? (
+      {props.patientObj.dynamicHivStatus==='Positive'  || props.patientObj.hivStatus==='Positive' ? (
         <>
             <div className="col-xl-8 col-xxl-8 col-lg-8">
         <div className="card">
