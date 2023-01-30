@@ -74,7 +74,7 @@ public class DeliveryService
             delivery.setFacilityId(anc.getFacilityId()); }
         else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
-        return (Delivery) this.deliveryRepository.save(delivery);
+        return this.deliveryRepository.save(delivery);
     }
     public DeliveryResponseDto convertEntitytoRespondDto(Delivery delivery) {
         DeliveryResponseDto deliveryResponseDto = new DeliveryResponseDto();
@@ -166,12 +166,45 @@ public class DeliveryService
         return delivery;
     }
     //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
-    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {
-        // PmtctVisit existVisit = getExistVisit(id);
-        Delivery delivery = this.converRequestDtotoEntity(deliveryRequestDto);
-        delivery.setId(id);
-        //pmtctVisit.setArchived(0);
-        deliveryRepository.save(delivery);
+//    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {
+//        // PmtctVisit existVisit = getExistVisit(id);
+//        Delivery delivery = this.converRequestDtotoEntity(deliveryRequestDto);
+//        delivery.setId(id);
+//        //pmtctVisit.setArchived(0);
+//        deliveryRepository.save(delivery);
+//        return deliveryRequestDto;
+//    }
+    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto)
+    {
+        Optional <Delivery> deliverys = this.deliveryRepository.findById(id);
+        if(deliverys.isPresent())
+        {
+            Delivery delivery = deliverys.get();
+            delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
+            delivery.setBookingStatus(deliveryRequestDto.getBookingStatus());
+            delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
+            delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
+            delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
+            delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
+            delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
+            delivery.setMaternalOutcome(deliveryRequestDto.getMaternalOutcome());
+            delivery.setChildGivenArvWithin72(deliveryRequestDto.getChildGivenArvWithin72());
+            delivery.setChildStatus(deliveryRequestDto.getChildStatus());
+            delivery.setHivExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs());
+            delivery.setDeliveryTime(deliveryRequestDto.getDeliveryTime());
+            delivery.setOnArt(deliveryRequestDto.getOnArt());
+            delivery.setArtStartedLdWard(deliveryRequestDto.getArtStartedLdWard());
+            delivery.setHBStatus(deliveryRequestDto.getHBStatus());
+            delivery.setHCStatus(deliveryRequestDto.getHCStatus());
+            delivery.setReferalSource(deliveryRequestDto.getReferalSource());
+            delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
+            delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
+
+
+            this.deliveryRepository.save(delivery);
+        }
         return deliveryRequestDto;
     }
+
 }
