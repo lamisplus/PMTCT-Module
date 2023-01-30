@@ -41,6 +41,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.persistence.Column;
 import java.time.LocalDate;
@@ -347,15 +348,15 @@ public class ANCService {
 
         });
 
-        PageDTO pageDTO = personService.generatePagination(persons);
+        PageDTO pageDTO = this.generatePagination(personResponseDtos, pageNo, pageSize);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(persons.getTotalElements());
+        personMetaDataDto.setTotalRecords(pageDTO.getTotalRecords());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
         personMetaDataDto.setRecords(personResponseDtos);
-        //personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
-        return personMetaDataDto;
+       //personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
+         return personMetaDataDto;
         //return checkedInPeople;
     }
 
@@ -991,7 +992,13 @@ public class ANCService {
         return ga;
     }
 
-
+    public PageDTO generatePagination(ArrayList al, Integer pageNo, Integer pagesize) {
+        long totalRecords = al.size();
+        int pageNumber = pageNo;
+        int pageSize = pagesize;
+        int totalPages = (int) Math.ceil(totalRecords/pagesize);
+        return PageDTO.builder().totalRecords(totalRecords).pageNumber(pageNumber).pageSize(pageSize).totalPages(totalPages).build();
+    }
 
 
 }

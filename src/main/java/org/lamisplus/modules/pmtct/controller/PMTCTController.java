@@ -74,7 +74,7 @@ public class PMTCTController {
     public ResponseEntity<PersonMetaDataDto> getPMTCTFromPerson(
             @RequestParam(defaultValue = "*") String searchParam,
             @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "10") Integer pageSize)  {
+            @RequestParam(defaultValue = "25") Integer pageSize)  {
         PersonMetaDataDto personMetaDataDto = ancService.getAllPMTCTPerson3(searchParam, pageNo, pageSize);
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
@@ -305,9 +305,9 @@ public class PMTCTController {
         return infantVisitService.getFormFilter(hospitalNumber);
     }
 
-    @GetMapping(value = "get-infant-activities/{hospitalNumber}")
-    public List<ActivityTracker> getInfantVisitActivities(@PathVariable("hospitalNumber") String hospitalNumber) {
-        return ancAcivityTracker.getInfanctVisitActivities(hospitalNumber);
+    @GetMapping(value = "get-summary-chart/{ancNo}")
+    public SummaryChart getSummaryChart(@PathVariable("ancNo") String ancNo) {
+        return ancAcivityTracker.getSummaryChart(ancNo);
     }
 
     @GetMapping(value ="/calculate-ga/{lmp}")
