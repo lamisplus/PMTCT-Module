@@ -58,13 +58,13 @@ const useStyles = makeStyles(theme => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
-  //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
+  console.log(props)
   const [errors, setErrors] = useState({});
-  //const [loading, setLoading] = useState(true)
+  const [disabledField, setDisabledField] = useState(false);
   let temp = { ...errors }
   const classes = useStyles()
   const [saving, setSaving] = useState(false);
-  const [clinicalStage, setClinicalStage] = useState([]);
+  //const [clinicalStage, setClinicalStage] = useState([]);
   const [dsdModelType, setDsdModelType] = useState([]);
   const [currentVitalSigns, setcurrentVitalSigns] = useState({})
   const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
@@ -73,16 +73,7 @@ const ClinicVisit = (props) => {
   const [fp, setFp] = useState([]);
   const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support 
-  const [vitalClinicalSupport, setVitalClinicalSupport] = useState(
-          {
-            bodyWeight: "",
-            diastolic: "",
-            height: "",
-            systolic: "",
-            pulse:"",
-            temperature:"",
-            respiratoryRate:"" 
-          })
+
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
     dateOfViralLoad: "",
@@ -124,7 +115,25 @@ const ClinicVisit = (props) => {
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
     POINT_ENTRY_PMTCT();
-  }, []);
+    if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
+      GetVisit(props.activeContent.id)
+      setDisabledField(props.activeContent.actionType==="view"? true : false)
+  }
+  }, [props.activeContent]);
+  const GetVisit =(id)=>{
+    axios
+       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
+           { headers: {"Authorization" : `Bearer ${token}`} }
+       )
+       .then((response) => {
+            console.log(response.data);
+            setObjValues(response.data);
+            DsdModelType(response.data.dsdModel)
+       })
+       .catch((error) => {
+       //console.log(error);
+       });          
+}
 
     //Check for the last Vital Signs
     const VitalSigns = () => {
@@ -211,88 +220,7 @@ const ClinicVisit = (props) => {
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
   }
-  const handleInputChangeVitalSignDto = e => {
-    setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
-  } 
-  //Handle CheckBox 
-  // const handleCheckBox = e => {
-  //   if (e.target.checked) {
-  //     //currentVitalSigns.personId === null ? props.patientObj.id : currentVitalSigns.personId
-  //     setVitalSignDto({ ...currentVitalSigns })
-  //   } else {
-  //     setVitalSignDto({
-  //       bodyWeight: "",
-  //       diastolic: "",
-  //       encounterDate: "",
-  //       facilityId: "",
-  //       height: "",
-  //       personId: props.patientObj.id,
-  //       serviceTypeId: "",
-  //       systolic: "",
-  //       pulse:"",
-  //       temperature:"",
-  //       respiratoryRate:"" 
-  //     })
-  //   }
-  // }
-  //to check the input value for clinical decision 
-  // const handleInputValueCheckHeight =(e)=>{
-  //   if(e.target.name==="height" && (e.target.value < 48.26 || e.target.value>216.408)){
-  //     const message ="Height cannot be greater than 216.408 and less than 48.26"
-  //     setVitalClinicalSupport({...vitalClinicalSupport, height:message})
-  //   }else{
-  //     setVitalClinicalSupport({...vitalClinicalSupport, height:""})
-  //   }
-  // }
-  // const handleInputValueCheckBodyWeight =(e)=>{
-  //   if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
-  //     const message ="Body weight must not be greater than 150 and less than 3"
-  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
-  //   }else{
-  //     setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
-  //   }
-  // }
-//   const handleInputValueCheckSystolic =(e)=>{
-//     if(e.target.name==="systolic" && (e.target.value < 90 || e.target.value>240)){      
-//       const message ="Blood Pressure systolic must not be greater than 240 and less than 90"
-//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:message})
-//     }else{
-//       setVitalClinicalSupport({...vitalClinicalSupport, systolic:""})
-//     }
-//   }
-//   const handleInputValueCheckDiastolic =(e)=>{
-//     if(e.target.name==="diastolic" && (e.target.value < 60 || e.target.value>140)){      
-//       const message ="Blood Pressure diastolic must not be greater than 140 and less than 60"
-//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:message})
-//     }else{
-//       setVitalClinicalSupport({...vitalClinicalSupport, diastolic:""})
-//     }
-//   }
-//   const handleInputValueCheckPulse =(e)=>{
-//     if(e.target.name==="pulse" && (e.target.value < 40 || e.target.value>120)){      
-//     const message ="Pulse must not be greater than 120 and less than 40"
-//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, pulse:""})
-//     }
-// }
-// const handleInputValueCheckRespiratoryRate =(e)=>{
-//     if(e.target.name==="respiratoryRate" && (e.target.value < 10 || e.target.value>70)){      
-//     const message ="Respiratory Rate must not be greater than 70 and less than 10"
-//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, respiratoryRate:""})
-//     }
-// }
-// const handleInputValueCheckTemperature =(e)=>{
-//     if(e.target.name==="temperature" && (e.target.value < 35 || e.target.value>47)){      
-//     const message ="Temperature must not be greater than 47 and less than 35"
-//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:message})
-//     }else{
-//     setVitalClinicalSupport({...vitalClinicalSupport, temperature:""})
-//     }
-// }
-//Get list of DSD Model Type
+
 function DsdModelType (dsdmodel) {
   const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
   axios
@@ -330,27 +258,53 @@ function DsdModelType (dsdmodel) {
     e.preventDefault();
     if(validate()){
     setSaving(true)
-    axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
-      { headers: { "Authorization": `Bearer ${token}` } },
+    if(props.activeContent && props.activeContent.actionType==='update'){
+        axios.put(`${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`, objValues,
+        { headers: { "Authorization": `Bearer ${token}` } },
 
-    )
-      .then(response => {
-        setSaving(false);
-        toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-        props.setActiveContent({...props.activeContent, route:'recent-history'})
-      })
-      .catch(error => {
-        setSaving(false);
-        if(error.response && error.response.data){
-          let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-          toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+        )
+        .then(response => {
+          setSaving(false);
+          toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+          props.setActiveContent({...props.activeContent, route:'recent-history'})
+        })
+        .catch(error => {
+          setSaving(false);
+          if(error.response && error.response.data){
+            let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+            toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+          }
+          else{
+            toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+          }
+        
+        });
+      
+    }else{
+        axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
+        { headers: { "Authorization": `Bearer ${token}` } },
+
+          )
+            .then(response => {
+              setSaving(false);
+              toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+              props.setActiveContent({...props.activeContent, route:'recent-history'})
+            })
+            .catch(error => {
+              setSaving(false);
+              if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+              }
+              else{
+                toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+              }
+            
+            });
+          
         }
-        else{
-          toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-        }
-       
-      });
-    }
+     }
+    
   }
 
 
@@ -372,9 +326,9 @@ function DsdModelType (dsdmodel) {
             </Label>
             <br /><br />
             <div className="row">
-              <div className="form-group mb-3 col-md-6">
+              <div className="form-group mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >Date of Visit *</FormLabelName>
+                  <FormLabelName >Date of Visit <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="date"
                     name="dateOfVisit"
@@ -385,7 +339,7 @@ function DsdModelType (dsdmodel) {
                     //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                    required
+                    disabled={disabledField}
                   />
                  {errors.dateOfVisit !=="" ? (
                       <span className={classes.error}>{errors.dateOfVisit}</span>
@@ -394,12 +348,10 @@ function DsdModelType (dsdmodel) {
                 </FormGroup>
               </div>
              
-            </div>
-            <div className="row">
-              
+                          
               <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >Point of Entry*</FormLabelName>
+                  <FormLabelName >Point of Entry <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="select"
                     name="enteryPoint"
@@ -407,7 +359,7 @@ function DsdModelType (dsdmodel) {
                     value={objValues.enteryPoint}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
 
@@ -424,7 +376,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >FP Counselling *</FormLabelName>
+                  <FormLabelName >FP Counselling <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="select"
                     name="fpCounseling"
@@ -432,7 +384,7 @@ function DsdModelType (dsdmodel) {
                     value={objValues.fpCounseling}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="">Select </option>
                     <option value="YES">YES </option>
@@ -447,7 +399,7 @@ function DsdModelType (dsdmodel) {
               {objValues.fpCounseling==="YES" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >FP Method *</FormLabelName>
+                  <FormLabelName >FP Method <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="select"
                     name="fpMethod"
@@ -455,7 +407,7 @@ function DsdModelType (dsdmodel) {
                     value={objValues.fpMethod}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
                     {fp.map((value) => (
@@ -481,7 +433,7 @@ function DsdModelType (dsdmodel) {
             
               <div className=" mb-3 col-md-4">
               <FormGroup>
-                <FormLabelName >Viral Load Collection Date*</FormLabelName>
+                <FormLabelName >Viral Load Collection Date </FormLabelName>
               <Input
                 type="date"
                 name="dateOfViralLoad"
@@ -490,7 +442,8 @@ function DsdModelType (dsdmodel) {
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                 //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                max={moment(new Date()).format("YYYY-MM-DD")}  
+                max={moment(new Date()).format("YYYY-MM-DD")} 
+                disabled={disabledField} 
               />
               {errors.dateOfViralLoad !=="" ? (
                       <span className={classes.error}>{errors.dateOfViralLoad}</span>
@@ -499,7 +452,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
               <FormGroup>
-                <FormLabelName >GA at VL Collection*</FormLabelName>
+                <FormLabelName >GA at VL Collection <span style={{ color:"red"}}> *</span></FormLabelName>
                 <Input
                   type="number"
                   name="gaOfViralLoad"
@@ -507,7 +460,8 @@ function DsdModelType (dsdmodel) {
                   value={objValues.gaOfViralLoad}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={vital.encounterDate}   
+                  min={vital.encounterDate} 
+                  disabled={disabledField}  
                 />
               {errors.gaOfViralLoad !=="" ? (
                   <span className={classes.error}>{errors.gaOfViralLoad}</span>
@@ -516,14 +470,15 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >Result *</FormLabelName>
+                  <FormLabelName >Result <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="text"
                     name="resultOfViralLoad"
                     id="resultOfViralLoad"
-                    value={vital.nextAppointment}
+                    value={objValues.resultOfViralLoad}
                     onChange={handleInputChange}
-                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    disabled={disabledField} 
                   />
                 {errors.resultOfViralLoad !=="" ? (
                     <span className={classes.error}>{errors.resultOfViralLoad}</span>
@@ -542,7 +497,7 @@ function DsdModelType (dsdmodel) {
             <div className="row">
             <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >DSD *</FormLabelName>
+                  <FormLabelName >DSD <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="select"
                     name="dsd"
@@ -550,7 +505,7 @@ function DsdModelType (dsdmodel) {
                     value={objValues.dsd}
                     onChange={handleInputChange}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="">Select </option>
                     <option value="YES">YES </option>
@@ -572,7 +527,8 @@ function DsdModelType (dsdmodel) {
                           id="dsdModel"
                           value={objValues.dsdModel}
                           onChange={handleInputChange} 
-                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
+                          disabled={disabledField}                  
                           >
                           <option value="">Select </option>
                           <option value="Facility">Facility </option>
@@ -591,7 +547,8 @@ function DsdModelType (dsdmodel) {
                           id="dsdOption"
                           value={objValues.dsdOption}
                           onChange={handleInputChange} 
-                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
+                          disabled={disabledField}                  
                           >
                           <option value="">Select </option>
                           {dsdModelType.map((value) => (
@@ -607,14 +564,15 @@ function DsdModelType (dsdmodel) {
               </>)}
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
-                      <FormLabelName >Maternal Outcome *</FormLabelName>
+                      <FormLabelName >Maternal Outcome <span style={{ color:"red"}}> *</span></FormLabelName>
                       <Input
                           type="select"
                           name="maternalOutcome"
                           id="maternalOutcome"
                           value={objValues.maternalOutcome}
                           onChange={handleInputChange} 
-                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}  
+                          disabled={disabledField}                 
                           >
                           <option value="">Select </option>
                           {maternalCome.map((value) => (
@@ -629,16 +587,17 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-3">
               <FormGroup>
-                <FormLabelName >Date of Outcome *</FormLabelName>
+                <FormLabelName >Date of Outcome <span style={{ color:"red"}}> *</span></FormLabelName>
                 <Input
                   type="date"
                   name="dateOfmeternalOutcome"
                   id="dateOfmeternalOutcome"
-                  value={vital.dateOfmeternalOutcome}
+                  value={objValues.dateOfmeternalOutcome}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                   max={moment(new Date()).format("YYYY-MM-DD")} 
+                  disabled={disabledField}
                 />
                 {errors.dateOfmeternalOutcome !=="" ? (
                     <span className={classes.error}>{errors.dateOfmeternalOutcome}</span>
@@ -648,14 +607,15 @@ function DsdModelType (dsdmodel) {
               
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
-                      <FormLabelName >Client Visit Status *</FormLabelName>
+                      <FormLabelName >Client Visit Status <span style={{ color:"red"}}> *</span></FormLabelName>
                       <Input
                           type="select"
                           name="visitStatus"
                           id="visitStatus"
                           value={objValues.visitStatus}
                           onChange={handleInputChange} 
-                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}                   
+                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                          disabled={disabledField}                   
                           >
                           <option value="">Select </option>
                           {visitStatus.map((value) => (
@@ -681,7 +641,7 @@ function DsdModelType (dsdmodel) {
                       value={objValues.transferTo}
                       onChange={handleInputChange}
                       style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                      
+                      disabled={disabledField}
                     />
                   {errors.transferTo !=="" ? (
                           <span className={classes.error}>{errors.transferTo}</span>
@@ -692,22 +652,42 @@ function DsdModelType (dsdmodel) {
               )}
             </div>  
             <br />
-            <MatButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              disabled={saving}
-              startIcon={<SaveIcon />}
-              style={{backgroundColor:"#014d88"}}
-              onClick={handleSubmit}
-            >
-              {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-              ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-              )}
+            {props.activeContent && props.activeContent.actionType? (<>
+                <MatButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                hidden={disabledField}
+                className={classes.button}
+                startIcon={<SaveIcon />}
+                style={{backgroundColor:"#014d88"}}
+                onClick={handleSubmit}
+                disabled={saving}
+                >
+                    {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Update</span>
+                    ) : (
+                    <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                    )}
             </MatButton>
+            </>):(<>
+                <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Save</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                        )}
+            </MatButton>
+            </>)}
           </Segment>
         </Grid.Column>
       </Grid>

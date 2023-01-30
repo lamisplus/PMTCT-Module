@@ -275,7 +275,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
   //Validations of the forms
   const validate = () => {       
     temp.visitDate = infantVisitRequestDto.visitDate ? "" : "This field is required"
-
+    temp.bodyWeight = infantVisitRequestDto.bodyWeight ? "" : "This field is required"
     setErrors({
         ...temp
     })
@@ -390,7 +390,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             <div className="row">
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <FormLabelName >Date of Visit *</FormLabelName>
+                  <FormLabelName >Date of Visit <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="date"
                     name="visitDate"
@@ -411,7 +411,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <FormLabelName >Mother ANC number *</FormLabelName>
+                  <FormLabelName >Mother ANC number <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="text"
                     name="ancNumber"
@@ -429,7 +429,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
               </div>
               <div className=" mb-3 col-md-6">
                         <FormGroup>
-                        <FormLabelName >Body Weight</FormLabelName>
+                        <FormLabelName >Body Weight <span style={{ color:"red"}}> *</span></FormLabelName>
                         <InputGroup> 
                             <Input 
                                 type="number"
@@ -520,37 +520,39 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                         ) : "" }
 
                       </FormGroup>
-                    </div> 
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <FormLabelName >Infant outcome at 18 months</FormLabelName>
-                        <Input
-                          type="select"
-                          name="infantOutcomeAt18Months"
-                          id="infantOutcomeAt18Months"
-                          value={infantVisitRequestDto.infantOutcomeAt18Months}
-                          style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                          onChange={handleInputChangeInfantVisitRequestDto}
-                          
-                        >
-                        <option value="">Select </option>
-                        {infantOutcome.map((value, index) => (
-                                <option key={index} value={value.code}>
-                                    {value.display}
-                                </option>
-                            ))}
-                       
-                      </Input>
-                      {errors.infantOutcomeAt18Months !=="" ? (
-                            <span className={classes.error}>{errors.infantOutcomeAt18Months}</span>
-                        ) : "" }
+                    </div>
+                    {formFilter && formFilter.outCome===true && (
+                      <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <FormLabelName >Infant outcome at 18 months</FormLabelName>
+                          <Input
+                            type="select"
+                            name="infantOutcomeAt18Months"
+                            id="infantOutcomeAt18Months"
+                            value={infantVisitRequestDto.infantOutcomeAt18Months}
+                            style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                            onChange={handleInputChangeInfantVisitRequestDto}
+                            
+                          >
+                          <option value="">Select </option>
+                          {infantOutcome.map((value, index) => (
+                                  <option key={index} value={value.code}>
+                                      {value.display}
+                                  </option>
+                              ))}
+                        
+                        </Input>
+                        {errors.infantOutcomeAt18Months !=="" ? (
+                              <span className={classes.error}>{errors.infantOutcomeAt18Months}</span>
+                          ) : "" }
 
-                      </FormGroup>
-                    </div>             
+                        </FormGroup>
+                      </div>
+                    )}              
             </div>
             
             <br />
-            {formFilter.motherArt===false && (<>
+            {formFilter && formFilter.motherArt===false && (<>
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}>  Mother's ART </h4>
             </Label>
@@ -634,7 +636,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             </div>
             </>)}
             <br/>
-            {formFilter.infantArv===false && (<>
+            {formFilter && formFilter.infantArv===false && (<>
             <Label as='a' color='blue' style={{width:'106%', height:'35px'}} ribbon>
             <h4 style={{color:'#fff'}}> Infant ARV & CTX</h4>
             </Label>

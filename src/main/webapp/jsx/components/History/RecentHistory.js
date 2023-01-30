@@ -15,6 +15,7 @@ import "react-widgets/dist/css/react-widgets.css";
 
 
 const RecentHistory = (props) => {
+  let history = useHistory();
   const [recentActivities, setRecentActivities] = useState([])
   const [infants, setInfants] = useState([])
   const [
@@ -27,6 +28,7 @@ const RecentHistory = (props) => {
     RecentActivities();
   }, [props.patientObj.id]);
   ///GET LIST OF Infants
+
   const InfantInfo =()=>{
     axios
         .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
@@ -73,14 +75,23 @@ const RecentHistory = (props) => {
   }
 
   const LoadViewPage =(row,action)=>{
-        
-    if(row.path==='Mental-health'){        
-        props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id, actionType:action})
 
-    }else if(row.path==='clinic-visit'){
-      props.setActiveContent({...props.activeContent, route:'consultation', id:row.id, activeTab:"history",actionType:action, })
+    if(row.path==='anc-enrollment'){        
+        //props.setActiveContent({...props.activeContent, route:'anc-enrollment', id:row.id, actionType:action})
+        history.push({
+            pathname: '/update-patient',
+            state: { id: row.recordId, patientObj:props.patientObj, actionType:action }
+        });
+    }else if(row.path==='anc-delivery'){
+        props.setActiveContent({...props.activeContent, route:'labour-delivery', id:row.recordId, actionType:action})
 
-  }else{
+    }else if(row.path==='pmtct-enrollment'){
+        props.setActiveContent({...props.activeContent, route:'anc-pnc', id:row.recordId, activeTab:"history", actionType:action, })
+  
+    }else if(row.path==='anc-mother-visit'){
+        props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"home", actionType:action, })
+  
+    }else{
 
     }
     
@@ -124,7 +135,7 @@ const index=0;
                           }
                       >
                       <span className="accordion-header-icon"></span>
-                      <span className="accordion-header-text">Visit Date : <span className="">{data.activityDate}</span> </span>
+                      <span className="accordion-header-text">Visit Date : <span className="">{data.activityName}</span> </span>
                       <span className="accordion-header-indicator"></span>
                     </Accordion.Toggle>
                     <Accordion.Collapse
@@ -170,9 +181,15 @@ const index=0;
                                 <Dropdown.Menu className="dropdown-menu">
                                  <Dropdown.Item
                                   className="dropdown-item"
-                                  //onClick={()=>LoadViewPage(activity,'view')}
+                                  onClick={()=>LoadViewPage(data,'view')}
                                   >
                                     View
+                                  </Dropdown.Item>
+                                  <Dropdown.Item
+                                  className="dropdown-item"
+                                  onClick={()=>LoadViewPage(data,'view')}
+                                  >
+                                    Update
                                   </Dropdown.Item>
                                 </Dropdown.Menu>
                               </Dropdown>
@@ -214,7 +231,7 @@ const index=0;
                         <h4 className="m-1">
                           <span className="counter"><b>1</b></span> 
                         </h4>
-                        <p className="m-0"><b>ANC</b></p>
+                        <p className="m-0"><b>Mother Visit</b></p>
                       </div>
                     </div>
                     <div className="col-6">
@@ -222,7 +239,7 @@ const index=0;
                         <h4 className="m-1">
                           <span className="counter"><b>0</b></span>
                         </h4>
-                        <p className="m-0"><b>PNC</b></p>
+                        <p className="m-0"><b>Infant's Visit</b></p>
                       </div>
                     </div>
                   </div>
@@ -243,7 +260,7 @@ const index=0;
                         <h4 className="m-1">
                           <span className="counter">0</span> 
                         </h4>
-                        <p className="m-0"><b>HIV <sup style={{color:"red"}}>+</sup></b></p>
+                        <p className="m-0"><b>Alive <sup style={{color:"red"}}>+</sup></b></p>
                       </div>
                     </div>
                     <div className="col-6">
@@ -251,7 +268,7 @@ const index=0;
                         <h4 className="m-1">
                           <span className="counter">{infants.length}</span>
                         </h4>
-                        <p className="m-0"><b>HIV <sup style={{color:"green"}}>-</sup></b></p>
+                        <p className="m-0"><b>Dead <sup style={{color:"green"}}>-</sup></b></p>
                       </div>
                     </div>
                     </>

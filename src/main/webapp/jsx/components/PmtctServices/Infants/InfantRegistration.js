@@ -212,7 +212,7 @@ const LabourinfantInfo = (props) => {
                     <div className="row">
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ANC Number *</Label>
+                            <Label >ANC Number <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -230,7 +230,7 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of Delivery *</Label>
+                            <Label >Date of Delivery <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -249,7 +249,7 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Infant Given Name *</Label>
+                            <Label >Infant Given Name <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -287,7 +287,7 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Sex *</Label>
+                            <Label >Sex <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -314,7 +314,7 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of infantInfo {infantInfo.dateOfDelivery}</Label>
+                            <Label >Date of infantInfo <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -322,7 +322,7 @@ const LabourinfantInfo = (props) => {
                                     id="dateOfinfantInfo"
                                     onChange={handleInputChangeinfantInfoDto}
                                     value={infantInfo.dateOfinfantInfo} 
-                                    //min={infantInfo.dateOfDelivery!==""? moment(infantInfo.dateOfDelivery).format("YYYY-MM-DD") :""}
+                                    min={infantInfo.dateOfDelivery}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     disabled={disabledField}
                                 />
@@ -335,7 +335,7 @@ const LabourinfantInfo = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Hospital Number</Label>
+                            <Label >Hospital Number <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"

@@ -201,7 +201,7 @@ const Labourpartner = (props) => {
                     
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ANC Number *</Label>
+                            <Label >ANC Number <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -219,7 +219,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Partner  Full Name *</Label>
+                            <Label >Partner  Full Name <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -238,7 +238,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Partner  age *</Label>
+                            <Label >Partner  age <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
@@ -256,7 +256,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Pre-test Counseled *</Label>
+                            <Label >Pre-test Counseled <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -323,7 +323,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HBV status *</Label>
+                            <Label >HBV status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -346,7 +346,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HCV status *</Label>
+                            <Label >HCV status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -369,7 +369,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Syphillis Status *</Label>
+                            <Label >Syphillis Status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                             <Input 
                                     type="select"

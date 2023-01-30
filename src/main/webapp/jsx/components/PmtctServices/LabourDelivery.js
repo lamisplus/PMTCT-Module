@@ -104,7 +104,7 @@ const LabourDelivery = (props) => {
                 deliveryTime: "",
                 episiotomy: "",
                 feedingDecision: "",
-                gaweeks: "",
+                gaweeks: props.patientObj.gravida,
                 hbstatus: "",
                 hcstatus: "",
                 hivExposedInfantGivenHbWithin24hrs: "",
@@ -326,7 +326,7 @@ const LabourDelivery = (props) => {
                     <h2>labour and Delivery</h2>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ANC ID  *</Label>
+                            <Label >ANC ID  <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -344,7 +344,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Booking Status *</Label>
+                            <Label >Booking Status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -371,7 +371,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of Delivery *</Label>
+                            <Label >Date of Delivery <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -392,15 +392,16 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Gestational Age (weeks) *</Label>
+                            <Label >Gestational Age (weeks) <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="number"
                                     name="gaweeks"
                                     id="gaweeks"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.gaweeks} 
-                                    disabled={disabledField}
+                                    value={props.patientObj.gravida} 
+                                    disabled
+                                    
                                 />
 
                             </InputGroup>
@@ -411,7 +412,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ROM Delivery Interval * </Label>
+                            <Label >ROM Delivery Interval <span style={{ color:"red"}}> *</span> </Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -438,7 +439,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Mode of Delivery *</Label>
+                            <Label >Mode of Delivery <span style={{ color:"red"}}> *</span></Label>
                             
                             <Input
                                     type="select"
@@ -465,7 +466,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Episiotomy *</Label>
+                            <Label >Episiotomy <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -488,7 +489,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Vaginal Tear *</Label>
+                            <Label >Vaginal Tear <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -510,7 +511,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Feeding decision *</Label>
+                            <Label >Feeding decision <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -537,7 +538,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Child given ARV within 72 hrs *</Label>
+                            <Label >Child given ARV within 72 hrs <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -560,7 +561,7 @@ const LabourDelivery = (props) => {
                    
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >On ART? *</Label>
+                            <Label >On ART? <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -583,7 +584,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HIV exposed infant given Hep B within 24 hrs of birth *</Label>
+                            <Label >HIV exposed infant given Hep B within 24 hrs of birth <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -606,7 +607,7 @@ const LabourDelivery = (props) => {
                     
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Time of Diagnosis *</Label>
+                            <Label >Time of Diagnosis <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -632,7 +633,7 @@ const LabourDelivery = (props) => {
                    
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ART started in L&D ward *</Label>
+                            <Label >ART started in L&D ward <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -654,7 +655,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Source of Referral *</Label>
+                            <Label >Source of Referral <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -672,7 +673,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Hepatitis B Status *</Label>
+                            <Label >Hepatitis B Status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -694,7 +695,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Hepatitis C Status *</Label>
+                            <Label >Hepatitis C Status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -717,7 +718,7 @@ const LabourDelivery = (props) => {
             <h3>Maternal Outcome</h3>
             <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Maternal Outcome *</Label>
+                            <Label >Maternal Outcome <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -742,7 +743,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Child status *</Label>
+                            <Label >Child status <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"
@@ -768,7 +769,7 @@ const LabourDelivery = (props) => {
                     {delivery.childStatus==="CHILD_STATUS_DELIVERY_ALIVE" && (<>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Number of Child Alive *</Label>
+                            <Label >Number of Child Alive <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"
@@ -787,7 +788,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Number of Child Dead *</Label>
+                            <Label >Number of Child Dead <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="Number"

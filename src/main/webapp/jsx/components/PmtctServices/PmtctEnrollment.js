@@ -88,7 +88,7 @@ const AncPnc = (props) => {
     const [disabledField, setSisabledField] = useState(false);
     const [entryPoint, setentryPoint] = useState([]);
     const [tbStatus, setTbStatus] = useState([]);
-    const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
+    const [artStartTime, setartStartTime] = useState([]);
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -99,7 +99,7 @@ const AncPnc = (props) => {
             ga: props.patientObj.gaweeks,
             gravida: props.patientObj.gravida,
             artStartDate: "",
-            timingOfArtInitiation: "",
+            artStartTime: "",
             id: "",
             tbStatus:""            
     })
@@ -112,7 +112,7 @@ const AncPnc = (props) => {
             setSisabledField(props.activeContent.actionType==='view'?true : false)
         }
     }, []);
-console.log(props)
+
     const GetPatientPMTCT =(id)=>{
         axios
            .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${id}`,
@@ -144,7 +144,7 @@ console.log(props)
             { headers: {"Authorization" : `Bearer ${token}`} }
         )
         .then((response) => {
-            setTimingOfArtInitiation(response.data)
+            setartStartTime(response.data)
         })
         .catch((error) => {
         //console.log(error);
@@ -175,7 +175,7 @@ console.log(props)
         temp.gravida = enroll.gravida ? "" : "This field is required"
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.artStartDate = enroll.artStartDate ? "" : "This field is required"
-        temp.timingOfArtInitiation = enroll.timingOfArtInitiation ? "" : "This field is required"
+        temp.artStartTime = enroll.artStartTime ? "" : "This field is required"
         temp.tbStatus = enroll.tbStatus ? "" : "This field is required"
         setErrors({
             ...temp
@@ -235,7 +235,7 @@ console.log(props)
                 <h2>PMTCT Enrollment</h2>
                 <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >ANC ID *</Label>
+                            <Label >ANC ID <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -254,7 +254,7 @@ console.log(props)
                     </div>
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Date of Enrollment *</Label>
+                            <Label >Date of Enrollment <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -274,7 +274,7 @@ console.log(props)
                     </div>
                     <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                        <Label >Point of Entry *</Label>
+                        <Label >Point of Entry <span style={{ color:"red"}}> *</span></Label>
                         <InputGroup> 
                             <Input 
                                 type="select"
@@ -301,7 +301,7 @@ console.log(props)
 
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Gravida *</Label>
+                            <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -320,7 +320,7 @@ console.log(props)
                     </div>
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >Art Start Date *</Label>
+                            <Label >Art Start Date <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -340,18 +340,18 @@ console.log(props)
                     </div>
                     <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                        <Label >Timing of ART Initiation *</Label>
+                        <Label >Timing of ART Initiation <span style={{ color:"red"}}> *</span></Label>
                         <InputGroup> 
                             <Input 
                                 type="select"
-                                name="timingOfArtInitiation"
-                                id="timingOfArtInitiation"
+                                name="artStartTime"
+                                id="artStartTime"
                                 onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.timingOfArtInitiation}
+                                value={enroll.artStartTime}
                                 disabled={disabledField} 
                             >
                                 <option value="">Select</option>
-                                {timingOfArtInitiation.map((value, index) => (
+                                {artStartTime.map((value, index) => (
                                     <option key={index} value={value.code}>
                                         {value.display}
                                     </option>
@@ -359,14 +359,14 @@ console.log(props)
                             </Input>
 
                         </InputGroup>
-                        {errors.timingOfArtInitiation !=="" ? (
-                                <span className={classes.error}>{errors.timingOfArtInitiation}</span>
+                        {errors.artStartTime !=="" ? (
+                                <span className={classes.error}>{errors.artStartTime}</span>
                         ) : "" }
                         </FormGroup>
                     </div> 
                     <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                        <Label >TB Status *</Label>
+                        <Label >TB Status <span style={{ color:"red"}}> *</span></Label>
                         <InputGroup> 
                             <Input 
                                 type="select"

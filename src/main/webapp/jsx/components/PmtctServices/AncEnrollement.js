@@ -150,7 +150,7 @@ const AncEnrollement = (props) => {
                 <h2>ANC Enrollment</h2>
                 <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ANC No *</Label>
+                            <Label >ANC No <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -166,7 +166,7 @@ const AncEnrollement = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date of 1st ANC *</Label>
+                            <Label >Date of 1st ANC <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"
@@ -215,7 +215,7 @@ const AncEnrollement = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Date Of Last Menstrual Period* </Label>
+                            <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>
                             <InputGroup> 
                                 <Input 
                                     type="date"

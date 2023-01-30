@@ -211,6 +211,25 @@ function PatientCard(props) {
                               
                           </>
                       }
+                      {props.patientObj.dynamicHivStatus!==null && props.patientObj.staticHivStatus!==null ? (
+                          <>
+                              <div >
+                                  <Typography variant="caption">
+                                      <Label color={props.patientObj.dynamicHivStatus!=="Positive" && props.patientObj.staticHivStatus!=="Positive" ? "green" : "red"} size={"mini"}>
+                                          HIV Status
+                                        <Label.Detail>{props.patientObj.dynamicHivStatus!=="Unknown"  ? props.patientObj.dynamicHivStatus : props.patientObj.staticHivStatus}</Label.Detail>
+                                      </Label>
+                                     
+                                      
+                                  </Typography>
+                              </div>
+                          </>
+                          )
+                          :
+                          <>
+                              
+                          </>
+                      }
                     </Col>
                     </Row>
                     </Col>

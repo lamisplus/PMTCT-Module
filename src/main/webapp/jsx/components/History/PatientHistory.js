@@ -147,8 +147,8 @@ const PatientnHistory = (props) => {
         }else if(row.path==='pmtct-enrollment'){
             props.setActiveContent({...props.activeContent, route:'anc-pnc', id:row.recordId, activeTab:"history", actionType:action, })
       
-        }else if(row.path==='anc-visit'){
-            props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"history", actionType:action, })
+        }else if(row.path==='anc-mother-visit'){
+            props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"home", actionType:action, })
       
         }else{
 
@@ -373,7 +373,7 @@ const PatientnHistory = (props) => {
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
                                 {row.viewable && ( <Dropdown.Item onClick={()=>LoadViewPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>)}
                                 {row.viewable && ( <Dropdown.Item  onClick={()=>LoadViewPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>)}
-                                {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)} 
+                                {/* {row.viewable && ( <Dropdown.Item  onClick={()=>LoadDeletePage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>)}  */}
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>

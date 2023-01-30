@@ -50,11 +50,11 @@ const ClinicVisitPage = (props) => {
                 >
 
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">                   
-                    <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent}/>
+                    <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent} activeContent={props.activeContent}/>
                   </Tab>
                   {aliveChild > 0 && (  
-                    <Tab eventKey="history" title="CHILD FOLLOW UP VISIT">                   
-                    <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent}/>
+                    <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">                   
+                    <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent} activeContent={props.activeContent}/>
                     </Tab>
                   )}                   
                 </Tabs>
