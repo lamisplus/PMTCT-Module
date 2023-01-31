@@ -74,7 +74,7 @@ public class PMTCTController {
     public ResponseEntity<PersonMetaDataDto> getPMTCTFromPerson(
             @RequestParam(defaultValue = "*") String searchParam,
             @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "25") Integer pageSize)  {
+            @RequestParam(defaultValue = "10") Integer pageSize)  {
         PersonMetaDataDto personMetaDataDto = ancService.getAllPMTCTPerson3(searchParam, pageNo, pageSize);
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
