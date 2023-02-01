@@ -80,7 +80,7 @@ const InfantInformation = (props) => {
     const DeliveryInfo =()=>{
         setLoading(true)
         axios
-            .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.id}`,
+            .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.ancNo}`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
             )
             .then((response) => {
