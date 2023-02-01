@@ -487,13 +487,13 @@ const UserRegistration = (props) => {
             //ANC FORM VALIDATION
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-            temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
+            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
+            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
+            objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             
