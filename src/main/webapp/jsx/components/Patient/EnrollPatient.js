@@ -136,7 +136,8 @@ const UserRegistration = (props) => {
     const location = useLocation();
 
      //const [values, setValues] = useState([]);
-     const [objValues, setObjValues] = useState({   ancNo:"",
+     const [objValues, setObjValues] = useState({   
+            ancNo:"",
             gaweeks: "",
             gravida: "",
             expectedDeliveryDate:"",
@@ -287,11 +288,11 @@ const UserRegistration = (props) => {
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-            temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
+            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
+            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
             temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
             
@@ -369,9 +370,7 @@ const UserRegistration = (props) => {
 
          if(validate()){
             try {
-
                 objValues.person_uuid = patientObj.uuid;
-                console.log(objValues)
                 const response = await axios.post(`${baseUrl}pmtct/anc/anc-enrollement`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
@@ -391,7 +390,7 @@ const UserRegistration = (props) => {
         }
 
     }
-
+console.log(errors)
 
     return (
         <>
@@ -696,7 +695,7 @@ const UserRegistration = (props) => {
                                             ) : "" }                                        
                                             </FormGroup>
                                     </div>
-                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positve' && (<>
+                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span></Label>
@@ -706,7 +705,7 @@ const UserRegistration = (props) => {
                                                     name="treatedSyphilis"
                                                     id="treatedSyphilis"
                                                     onChange={handleInputChange}
-                                                    value={objValues.encounterDate} 
+                                                    value={objValues.treatedSyphilis} 
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Yes" >Yes</option>
