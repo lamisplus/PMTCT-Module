@@ -649,7 +649,8 @@ const UserRegistration = (props) => {
                                                 <span className={classes.error}>{errors.sourceOfReferral}</span>
                                         ) : "" }
                                         </FormGroup>
-                                </div>                                
+                                </div>
+                                                           
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Tested for syphilis <span style={{ color:"red"}}> *</span></Label>
@@ -671,7 +672,8 @@ const UserRegistration = (props) => {
                                         ) : "" }                                       
                                         </FormGroup>
                                 </div>
-                                
+
+                                {objValues.testedSyphilis==='Yes' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Syphilis test result <span style={{ color:"red"}}> *</span></Label>
@@ -694,6 +696,7 @@ const UserRegistration = (props) => {
                                             ) : "" }                                        
                                             </FormGroup>
                                     </div>
+                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positve' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span></Label>
@@ -736,8 +739,9 @@ const UserRegistration = (props) => {
                                             ) : "" }                                         
                                             </FormGroup>
                                     </div>
-
-                                    <div className="form-group mb-3 col-md-6">
+                                    </>)}
+                                </>)}
+                                <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >HIV Status <span style={{ color:"red"}}> *</span></Label>
                                             <InputGroup> 
@@ -759,7 +763,7 @@ const UserRegistration = (props) => {
                                                     <span className={classes.error}>{errors.staticHivStatus}</span>
                                             ) : "" }                                         
                                             </FormGroup>
-                                    </div>
+                                </div>   
                             </div>
                             </div>
                             </div>

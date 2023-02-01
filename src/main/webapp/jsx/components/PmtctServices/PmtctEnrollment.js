@@ -112,7 +112,7 @@ const AncPnc = (props) => {
             setSisabledField(props.activeContent.actionType==='view'?true : false)
         }
     }, []);
-
+    
     const GetPatientPMTCT =(id)=>{
         axios
            .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${id}`,
@@ -262,6 +262,7 @@ const AncPnc = (props) => {
                                     id="pmtctEnrollmentDate"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.pmtctEnrollmentDate} 
+                                    min={props.patientObj.firstAncDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     disabled={disabledField}
                                 />

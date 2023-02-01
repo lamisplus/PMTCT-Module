@@ -237,6 +237,8 @@ const LabourinfantInfo = (props) => {
                                     name="dateOfDelivery"
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeinfantInfoDto}
+                                    min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                                    max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={infantInfo.dateOfDelivery} 
                                     disabled
                                 />
@@ -352,7 +354,7 @@ const LabourinfantInfo = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
+                    {/* <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >National Identity  Number(NIN)</Label>
                             <InputGroup> 
@@ -370,7 +372,7 @@ const LabourinfantInfo = (props) => {
                                     <span className={classes.error}>{errors.nin}</span>
                             ) : "" }
                             </FormGroup>
-                    </div>
+                    </div> */}
             </div>
                 
             {saving ? <Spinner /> : ""}

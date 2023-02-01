@@ -18,6 +18,12 @@ const RecentHistory = (props) => {
   let history = useHistory();
   const [recentActivities, setRecentActivities] = useState([])
   const [infants, setInfants] = useState([])
+  const [summartChart, setSummaryChart]= useState({
+    motherVisit: 0,
+    childVisit: 1,
+    childAlive: 0,
+    childDead: 0
+  })
   const [
     activeAccordionHeaderShadow,
     setActiveAccordionHeaderShadow,
@@ -26,6 +32,7 @@ const RecentHistory = (props) => {
   useEffect(() => {
     InfantInfo();
     RecentActivities();
+    SummaryChart();
   }, [props.patientObj.id]);
   ///GET LIST OF Infants
 
@@ -43,7 +50,7 @@ const RecentHistory = (props) => {
         });
     
   }
-  //Get list of LaboratoryHistory
+
   const RecentActivities =()=>{
     axios
        .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`,
@@ -57,7 +64,19 @@ const RecentHistory = (props) => {
        });
    
   }
-
+  const SummaryChart =()=>{
+    axios
+       .get(`${baseUrl}pmtct/anc/get-summary-chart/${props.patientObj.ancNo}`,
+           { headers: {"Authorization" : `Bearer ${token}`} }
+       )
+       .then((response) => {
+        setSummaryChart(response.data)
+       })
+       .catch((error) => {
+       //console.log(error);
+       });
+   
+  }
   const ActivityName =(name)=> {
       if(name==='HIV Enrollment'){
         return "HE"
@@ -229,19 +248,21 @@ const index=0;
                     <div className="col-6 border-right">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter"><b>1</b></span> 
+                          <span className="counter"><b>{summartChart.motherVisit}</b></span> 
                         </h4>
                         <p className="m-0"><b>Mother Visit</b></p>
                       </div>
                     </div>
+                    {infants.length > 0 && (
                     <div className="col-6">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter"><b>0</b></span>
+                          <span className="counter"><b>{summartChart.childVisit}</b></span>
                         </h4>
                         <p className="m-0"><b>Infant's Visit</b></p>
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -258,17 +279,17 @@ const index=0;
                     <div className="col-6 border-right">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">0</span> 
+                          <span className="counter">{summartChart.childAlive}</span> 
                         </h4>
-                        <p className="m-0"><b>Alive <sup style={{color:"red"}}>+</sup></b></p>
+                        <p className="m-0"><b>Alive </b></p>
                       </div>
                     </div>
                     <div className="col-6">
                       <div className="pt-3 pb-3 ps-0 pe-0 text-center">
                         <h4 className="m-1">
-                          <span className="counter">{infants.length}</span>
+                          <span className="counter">{summartChart.childDead}</span>
                         </h4>
-                        <p className="m-0"><b>Dead <sup style={{color:"green"}}>-</sup></b></p>
+                        <p className="m-0"><b>Dead </b></p>
                       </div>
                     </div>
                     </>

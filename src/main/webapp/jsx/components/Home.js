@@ -54,9 +54,9 @@ const Home = () => {
                   <Tab eventKey="anc" title="General ANC Patients">
                     <ActiveANCPatients />
                   </Tab>
-                  <Tab eventKey="visualization" title="Data Visualisation">                   
+                  {/* <Tab eventKey="visualization" title="Data Visualisation">                   
                     <VisualisationHome />
-                  </Tab>                    
+                  </Tab>                     */}
                 </Tabs>
               </div>
             </Card.Body>

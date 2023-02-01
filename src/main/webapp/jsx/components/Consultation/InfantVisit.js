@@ -398,7 +398,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantVisitRequestDto.visitDate}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     onChange={handleInputChangeInfantVisitRequestDto}
-                    //={props.patientObj && props.patientObj.artCommence ? props.patientObj.artCommence.visitDate : null}
+                    min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
@@ -793,6 +793,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 value={infantPCRTestDto.dateSampleCollected}
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
                 max={moment(new Date()).format("YYYY-MM-DD")}  
                 />
                 {errors.dateSampleCollected !=="" ? (
@@ -810,6 +811,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 value={infantPCRTestDto.dateResultReceivedAtFacility}
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                min={infantPCRTestDto.dateSampleCollected}
                 max={moment(new Date()).format("YYYY-MM-DD")}   
                 />
                 {errors.dateResultReceivedAtFacility !=="" ? (
@@ -827,6 +829,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 value={infantPCRTestDto.dateResultReceivedByCaregiver}
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                min={infantPCRTestDto.dateSampleCollected}
                 max={moment(new Date()).format("YYYY-MM-DD")}   
                 />
                 {errors.dateResultReceivedByCaregiver !=="" ? (
@@ -844,6 +847,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                   value={infantPCRTestDto.dateSampleSent}
                   onChange={handleInputChangeInfantPCRTestDto}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  min={infantPCRTestDto.dateSampleCollected}
                   max={moment(new Date()).format("YYYY-MM-DD")}  
                   />
                 {errors.dateSampleSent !=="" ? (
