@@ -68,7 +68,7 @@ const InfantInformation = (props) => {
             )
             .then((response) => {
             setLoading(false)
-                    setInfants(response.data)
+            setInfants(response.data)
             })
 
             .catch((error) => {
@@ -111,6 +111,7 @@ const InfantInformation = (props) => {
 
   return (
     <div>
+        {infants.length }- {aliveChild}
     {(infants.length  < aliveChild) && (aliveChild > infants.length ) && (<>
         <Button
             variant="contained"
