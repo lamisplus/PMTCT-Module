@@ -163,12 +163,12 @@ public class DeliveryService
                 .orElseThrow(() -> new Exception("Delivery NOT FOUND"));
     }
 
-    public Delivery viewDeliveryById(Long id) {
+    public Delivery viewDeliveryById(String id) {
 
         return deliveryRepository
-                .findById(id)
+                .findDeliveryByAncNo(id)
                 .orElseThrow(() -> new EntityNotFoundException(Delivery.class, "errorMessage", "Delivery NOT FOUND "+ id));
-        //Optional<Delivery> delivery = this.deliveryRepository.findById(id);
+        //Optional<Delivery> delivery =id this.deliveryRepository.findById(id);
        // return delivery.get();
     }
     //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
