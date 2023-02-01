@@ -21,7 +21,7 @@ const ClinicVisitPage = (props) => {
     ///GET Delivery Object
     const DeliveryInfo =()=>{
       axios
-          .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.id}`,
+          .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.ancNo}`,
               { headers: {"Authorization" : `Bearer ${token}`} }
           )
           .then((response) => {
