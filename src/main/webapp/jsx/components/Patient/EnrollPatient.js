@@ -294,15 +294,16 @@ const UserRegistration = (props) => {
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
             objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
-            
+            objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+            temp.ancNo = objValues.ancNo ? "" : "This field is required"
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
     }
     //Handle Input Change for Basic Infor
     const handleInputChangeBasic = e => { 
         
-        setErrors({...errors, [e.target.name]: ""})        
+        setErrors({...errors, [e.target.name]: ""}) 
+               
         setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value});              
     } 
 

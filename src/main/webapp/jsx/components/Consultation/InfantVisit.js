@@ -521,7 +521,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
 
                       </FormGroup>
                     </div>
-                    {formFilter && formFilter.outCome===true && (
+                    {formFilter && formFilter.outCome===false && (
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <FormLabelName >Infant outcome at 18 months</FormLabelName>
