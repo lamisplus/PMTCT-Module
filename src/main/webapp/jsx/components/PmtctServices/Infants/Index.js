@@ -111,7 +111,7 @@ const InfantInformation = (props) => {
 
   return (
     <div>
-        {infants.length }- {aliveChild}
+   
     {(infants.length  < aliveChild) && (aliveChild > infants.length ) && (<>
         <Button
             variant="contained"
