@@ -703,6 +703,7 @@ const UserRegistration = (props) => {
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
+    console.log(errors)
 
     return (
         <>
