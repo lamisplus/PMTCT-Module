@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
 {
-    Delivery getDeliveryById(Long id);
+    //Delivery getDeliveryById(Long id);
 
     Delivery getDeliveryByAncNo(String ancNo);
 

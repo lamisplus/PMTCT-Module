@@ -121,7 +121,7 @@ public class InfantService {
         Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNo);
         if (infants.isPresent()){
             Infant infant = infants.get();
-            infant.setInfantOutcomeAt18Months(outCome);
+            infant.setInfantOutcomeAt18_months(outCome);
             infantRepository.save(infant);
         }
     }
