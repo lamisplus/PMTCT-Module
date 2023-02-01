@@ -190,7 +190,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-delivery/{id}")
-    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") Long id) {
+    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") String id) {
         return ResponseEntity.ok (deliveryService.viewDeliveryById(id));
     }
 
@@ -226,6 +226,7 @@ public class PMTCTController {
     @GetMapping(value = "get-infant-by-ancno/{ancNo}")
     public ResponseEntity<List<Infant>> getInfantByAncNo(@PathVariable("ancNo") String ancNo){
         System.out.println("ANCNO "+ ancNo);
+
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
     }
 

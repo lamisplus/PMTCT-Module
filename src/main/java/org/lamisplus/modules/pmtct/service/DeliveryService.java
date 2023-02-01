@@ -3,10 +3,12 @@ package org.lamisplus.modules.pmtct.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
@@ -161,9 +163,13 @@ public class DeliveryService
                 .orElseThrow(() -> new Exception("Delivery NOT FOUND"));
     }
 
-    public Delivery viewDeliveryById(Long id) {
-        Delivery delivery = this.deliveryRepository.getDeliveryById(id);
-        return delivery;
+    public Delivery viewDeliveryById(String id) {
+
+        return deliveryRepository
+                .findDeliveryByAncNo(id)
+                .orElseThrow(() -> new EntityNotFoundException(Delivery.class, "errorMessage", "Delivery NOT FOUND "+ id));
+        //Optional<Delivery> delivery =id this.deliveryRepository.findById(id);
+       // return delivery.get();
     }
     //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
 //    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {

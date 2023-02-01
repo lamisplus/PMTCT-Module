@@ -239,9 +239,11 @@ public class InfantVisitService
     public FormFilterResponseDto getFormFilter(String hospitalNumber){
         FormFilterResponseDto filterResponseDto = new FormFilterResponseDto();
         filterResponseDto.setInfantArv(this.infantArvAdministered(hospitalNumber));
-        Optional<Delivery> deliveryOptional = this.deliveryRepository.findDeliveryByHospitalNumber(hospitalNumber);
-        if (deliveryOptional.isPresent()){
-            filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(deliveryOptional.get().getAncNo()));
+        Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
+
+        //Optional<Delivery> deliveryOptional = this.deliveryRepository.findDeliveryByHospitalNumber(hospitalNumber);
+        if (infants.isPresent()){
+            filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(infants.get().getAncNo()));
         }
         else filterResponseDto.setMotherArt(Boolean.FALSE);
         int infantAge = this.calculateAge(hospitalNumber);
