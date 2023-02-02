@@ -316,4 +316,10 @@ public class PMTCTController {
         return ancService.calculateGA(lmp);
     }
 
+    @GetMapping(value ="/calculate-ga2")
+    public int calculateGa( @RequestParam("lmp") LocalDate lmp,  @RequestParam("visitDate") LocalDate visitDate) {
+        return ancService.calculateGA(lmp, visitDate);
+    }
+
+
 }

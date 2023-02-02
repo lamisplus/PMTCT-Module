@@ -48,6 +48,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -983,15 +984,8 @@ public class ANCService {
         return date;
     }
     public int calculateGA(LocalDate lmd){
-        LocalDate curDate = LocalDate.now();
-        int age3 = Period.between(lmd, curDate).getYears();
-        int age2 = Period.between(lmd, curDate).getMonths();
-        int age1 = Period.between(lmd, curDate).getDays();
-        int ga =age1;
-        ga += age2* 4;
-        ga += age3 * 52;
-        System.out.println("in method "+ ga);
-        return ga;
+        LocalDate currentDate = LocalDate.now();
+        return (int) ChronoUnit.WEEKS.between(lmd, currentDate);
     }
 
     public PageDTO generatePagination(ArrayList al, Integer pageNo, Integer pagesize) {
@@ -1002,6 +996,9 @@ public class ANCService {
         return PageDTO.builder().totalRecords(totalRecords).pageNumber(pageNumber).pageSize(pageSize).totalPages(totalPages).build();
     }
 
+    public int calculateGA(LocalDate lmd, LocalDate visitDate){
+        return (int) ChronoUnit.WEEKS.between(lmd, visitDate);
+    }
 
 }
 
