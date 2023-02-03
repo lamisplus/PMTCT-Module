@@ -104,7 +104,7 @@ const LabourDelivery = (props) => {
                 deliveryTime: "",
                 episiotomy: "",
                 feedingDecision: "",
-                gaweeks: props.patientObj.gravida,
+                gaweeks: "",
                 hbstatus: "",
                 hcstatus: "",
                 hivExposedInfantGivenHbWithin24hrs: "",
@@ -238,7 +238,24 @@ const LabourDelivery = (props) => {
         });    
     }
     const handleInputChangeDeliveryDto = e => {  
-        setErrors({...errors, [e.target.name]: ""})            
+        setErrors({...errors, [e.target.name]: ""}) 
+        if(e.target.name==='dateOfDelivery' && e.target.value!==''){
+
+            async function getGa() {
+                const ga=e.target.value
+                const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data>0){
+                    delivery.gaweeks=response.data
+                    setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                }else{
+                    toast.error("Please select a validate date")
+                    setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                }
+            }
+            getGa();
+        }            
         setDelivery ({...delivery,  [e.target.name]: e.target.value});
     }
 
@@ -399,7 +416,7 @@ const LabourDelivery = (props) => {
                                     name="gaweeks"
                                     id="gaweeks"
                                     onChange={handleInputChangeDeliveryDto}
-                                    value={props.patientObj.gravida} 
+                                    value={delivery.gaweeks} 
                                     disabled
                                     
                                 />

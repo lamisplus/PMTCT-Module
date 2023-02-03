@@ -261,7 +261,7 @@ function DsdModelType (dsdmodel) {
     temp.dsd = objValues.dsd ? "" : "This field is required"
     temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
     temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
-    temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
+    //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
     temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
     temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
     setErrors({
@@ -417,7 +417,7 @@ function DsdModelType (dsdmodel) {
               {objValues.fpCounseling==="YES" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >FP Method <span style={{ color:"red"}}> *</span></FormLabelName>
+                  <FormLabelName >FP Method </FormLabelName>
                   <Input
                     type="select"
                     name="fpMethod"

@@ -549,25 +549,7 @@ const UserRegistration = (props) => {
                                     ) : "" }  
                                             
                                     </FormGroup>
-                                </div>  
-                                <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
-                                        <InputGroup> 
-                                            <Input 
-                                                type="number"
-                                                name="gravida"
-                                                id="gravida"
-                                                onChange={handleInputChange}
-                                                value={objValues.gravida} 
-                                            />
-
-                                        </InputGroup>
-                                        {errors.gravida !=="" ? (
-                                                <span className={classes.error}>{errors.gravida}</span>
-                                        ) : "" }
-                                        </FormGroup>
-                                </div>
+                                </div> 
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Parity <span style={{ color:"red"}}> *</span></Label>
@@ -585,7 +567,29 @@ const UserRegistration = (props) => {
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
                                         </FormGroup>
+                                </div> 
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="gravida"
+                                                id="gravida"
+                                                onChange={handleInputChange}
+                                                value={objValues.gravida} 
+                                            />
+
+                                        </InputGroup>
+                                        {errors.gravida !=="" ? (
+                                                <span className={classes.error}>{errors.gravida}</span>
+                                        ) : "" }
+                                        {objValues.gravida < objValues.parity ? (
+                                                    <span className={classes.error}>Gravida should not be less Parity</span>
+                                            ) : "" }
+                                        </FormGroup>
                                 </div>
+                                
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>

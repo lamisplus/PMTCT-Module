@@ -465,7 +465,7 @@ const UserRegistration = (props) => {
                 }
             }
             getAncNumber();
-            }       
+        }       
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     } 
     /*****  Validation  */
@@ -704,7 +704,7 @@ const UserRegistration = (props) => {
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
-    console.log(errors)
+
 
     return (
         <>
