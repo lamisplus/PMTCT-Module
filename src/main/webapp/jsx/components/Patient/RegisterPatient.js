@@ -1590,7 +1590,7 @@ const UserRegistration = (props) => {
                                             {errors.gaweeks !=="" ? (
                                                     <span className={classes.error}>{errors.gaweeks}</span>
                                             ) : "" }
-                                            {errors.gaweeks ===0 ? (
+                                            {objValues.gaweeks ===0 ? (
                                                 <span className={classes.error}>Invalid value</span>
                                         ) : "" }
                                             </FormGroup>
