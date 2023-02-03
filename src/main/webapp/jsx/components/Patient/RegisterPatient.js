@@ -479,7 +479,7 @@ const UserRegistration = (props) => {
             temp.sexId = basicInfo.sexId ? "" : "Gender is required."
             temp.dateOfRegistration = basicInfo.dateOfRegistration ? "" : "Date of Registration is required."
             temp.educationId = basicInfo.educationId ? "" : "Education is required."
-            temp.address = basicInfo.address ? "" : "Address is required."
+            //temp.address = basicInfo.address ? "" : "Address is required."
             temp.phoneNumber = basicInfo.phoneNumber ? "" : "Phone Number  is required."
             temp.countryId = basicInfo.countryId ? "" : "Country is required."    
             temp.stateId = basicInfo.stateId ? "" : "State is required."  
@@ -668,12 +668,13 @@ const UserRegistration = (props) => {
                 const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
                         { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                     );
-                if(response.data){
-                    objValues.gaweeks=response.data
-                    setObjValues ({...objValues,  [e.target.name]: e.target.value});  
-                }else{
-                    toast.error("Something went wrong...")
-                }
+                    if(response.data>0){
+                        objValues.gaweeks=response.data
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                    }else{
+                        toast.error("Please select a validate date")
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                    }
             }
             getGa();
         }       
@@ -1185,7 +1186,7 @@ const UserRegistration = (props) => {
                                     <div className={"row"}>
                                         <div className="form-group  col-md-4">
                                             <FormGroup>
-                                                <Label>Street Address<span style={{ color:"red"}}> *</span></Label>
+                                                <Label>Street Address</Label>
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -1589,6 +1590,9 @@ const UserRegistration = (props) => {
                                             {errors.gaweeks !=="" ? (
                                                     <span className={classes.error}>{errors.gaweeks}</span>
                                             ) : "" }
+                                            {errors.gaweeks ===0 ? (
+                                                <span className={classes.error}>Invalid value</span>
+                                        ) : "" }
                                             </FormGroup>
                                     </div>
                                     

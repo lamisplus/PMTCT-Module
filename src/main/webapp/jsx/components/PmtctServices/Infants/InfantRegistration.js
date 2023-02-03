@@ -135,7 +135,7 @@ const LabourinfantInfo = (props) => {
         temp.firstName = infantInfo.firstName ? "" : "This field is required"
         temp.surname = infantInfo.surname ? "" : "This field is required"
         temp.hospitalNumber = infantInfo.hospitalNumber ? "" : "This field is required"
-        temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
+        //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
         temp.sex = infantInfo.sex ? "" : "This field is required"
         //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
         setErrors({
@@ -314,27 +314,7 @@ const LabourinfantInfo = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Date of infantInfo <span style={{ color:"red"}}> *</span></Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="date"
-                                    name="dateOfinfantInfo"
-                                    id="dateOfinfantInfo"
-                                    onChange={handleInputChangeinfantInfoDto}
-                                    value={infantInfo.dateOfinfantInfo} 
-                                    min={infantInfo.dateOfDelivery}
-                                    max= {moment(new Date()).format("YYYY-MM-DD") }
-                                    disabled={disabledField}
-                                />
-
-                            </InputGroup>
-                            {errors.dateOfinfantInfo !=="" ? (
-                                    <span className={classes.error}>{errors.dateOfinfantInfo}</span>
-                            ) : "" }
-                            </FormGroup>
-                    </div>
+                 
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >Hospital Number <span style={{ color:"red"}}> *</span></Label>

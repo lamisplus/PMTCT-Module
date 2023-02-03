@@ -350,11 +350,12 @@ const UserRegistration = (props) => {
                     const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
                             { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                         );
-                    if(response.data){
+                    if(response.data>0){
                         objValues.gaweeks=response.data
                         setObjValues ({...objValues,  [e.target.name]: e.target.value});  
                     }else{
-                        toast.error("Something went wrong...")
+                        toast.error("Please select a validate date")
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
                     }
                 }
                 getGa();
@@ -621,6 +622,9 @@ console.log(errors)
                                         </InputGroup>
                                         {errors.gaweeks !=="" ? (
                                                 <span className={classes.error}>{errors.gaweeks}</span>
+                                        ) : "" }
+                                        {errors.gaweeks ===0 ? (
+                                                <span className={classes.error}>Invalid value</span>
                                         ) : "" }
                                         </FormGroup>
                                 </div>
