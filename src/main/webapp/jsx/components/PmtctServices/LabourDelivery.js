@@ -263,7 +263,7 @@ const LabourDelivery = (props) => {
     const validate = () => {
         let temp = { ...errors }
         temp.artStartedLdWard = delivery.artStartedLdWard ? "" : "This field is required"
-        temp.referalSource = delivery.referalSource ? "" : "This field is required"
+        //temp.referalSource = delivery.referalSource ? "" : "This field is required"
         temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
         temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required"
         temp.onArt = delivery.onArt ? "" : "This field is required"
@@ -668,24 +668,6 @@ const LabourDelivery = (props) => {
                             {errors.artStartedLdWard !=="" ? (
                                     <span className={classes.error}>{errors.artStartedLdWard}</span>
                                 ) : "" }                                        
-                            </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Source of Referral <span style={{ color:"red"}}> *</span></Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="text"
-                                    name="referalSource"
-                                    id="referalSource"
-                                    onChange={handleInputChangeDeliveryDto}
-                                    value={delivery.referalSource} 
-                                    disabled={disabledField}
-                                />
-                            </InputGroup>
-                            {errors.referalSource !=="" ? (
-                                    <span className={classes.error}>{errors.referalSource}</span>
-                                ) : "" }                                         
                             </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-6">
