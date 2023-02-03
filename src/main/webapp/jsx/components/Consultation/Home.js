@@ -120,7 +120,6 @@ const ClinicVisit = (props) => {
       setDisabledField(props.activeContent.actionType==="view"? true : false)
   }
   }, [props.activeContent]);
-  console.log(props)
   const GetVisit =(id)=>{
     axios
        .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
@@ -217,6 +216,23 @@ const ClinicVisit = (props) => {
     if(e.target.name ==='dsdModel'){
       DsdModelType(e.target.value)
     }
+    if(e.target.name==='dateOfViralLoad' && e.target.value!==''){
+
+      async function getGa() {
+          const dateOfViralLoad=e.target.value
+          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2/${props.patientObj.ancNo}/${dateOfViralLoad}`,
+                  { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+              );
+              if(response.data>0){
+                  objValues.gaOfViralLoad=response.data
+                  setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+              }else{
+                  //toast.error("Please select a validate date")
+                  setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+              }
+      }
+      getGa();
+  }
     //console.log(e.target.name)
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
@@ -236,7 +252,8 @@ function DsdModelType (dsdmodel) {
      //console.log(error);
      });
  
-}
+  }
+
   //Validations of the forms
   const validate = () => {       
     temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
@@ -426,7 +443,7 @@ function DsdModelType (dsdmodel) {
             </div>
             <br />
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}><input type="radio" name="timeOfViralLoad" value="viralLoadAt32" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAt32' ? true : false}/> VIRAL LOAD AT 32-36 {"  "} {"  "} <input type="radio" name="timeOfViralLoad" value="viralLoadAtAnyTime" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAtAnyTime' ? true : false}/> VIRAL LOAD AT Other Time </h4>
+            <h4 style={{color:'#fff'}}> VIRAL LOAD  </h4>
             </Label>
             <br /><br />
             {/* TB Screening Form */}
@@ -462,7 +479,7 @@ function DsdModelType (dsdmodel) {
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""} 
-                  disabled={disabledField}  
+                  disabled={disabledField===false ? true : disabledField}  
                 />
               {errors.gaOfViralLoad !=="" ? (
                   <span className={classes.error}>{errors.gaOfViralLoad}</span>
