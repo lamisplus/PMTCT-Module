@@ -135,7 +135,7 @@ const InfantInformation = (props) => {
                   field: "hospital",
                 }, 
                 { title: "ANC NO.", field: "anc" }, 
-                { title: "NIN Number", field: "nin" },             
+                { title: "Age", field: "nin" },             
                 { title: "Date of Delivery", field: "date" },
                 { title: "Sex", field: "sex", filtering: false },        
                 { title: "Actions", field: "actions", filtering: false }, 
@@ -145,7 +145,7 @@ const InfantInformation = (props) => {
                    name: row.firstName + " " + row.surname,
                    hospital: row.hospitalNumber,
                    anc: row.ancNo,
-                   nin: row.nin,
+                   nin: row.age + row.age>1 ? "Months" : "Month",
                    sex: row.sex,
                    date: row.dateOfDelivery,
                    actions:
