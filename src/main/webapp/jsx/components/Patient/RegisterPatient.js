@@ -495,7 +495,7 @@ const UserRegistration = (props) => {
             temp.sexId = basicInfo.sexId ? "" : "Gender is required."
             temp.dateOfRegistration = basicInfo.dateOfRegistration ? "" : "Date of Registration is required."
             temp.educationId = basicInfo.educationId ? "" : "Education is required."
-            //temp.address = basicInfo.address ? "" : "Address is required."
+            temp.address = basicInfo.address ? "" : "Address is required."
             temp.phoneNumber = basicInfo.phoneNumber ? "" : "Phone Number  is required."
             temp.countryId = basicInfo.countryId ? "" : "Country is required."    
             temp.stateId = basicInfo.stateId ? "" : "State is required."  
@@ -720,7 +720,7 @@ const UserRegistration = (props) => {
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
-    const preventNegativeValues = (e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()
+
 
     return (
         <>
@@ -956,13 +956,14 @@ const UserRegistration = (props) => {
                                                         name="age"                                                       
                                                         className="form-control"                                                        
                                                         id="age"
-                                                        min="1"
+                                                        min="10"
                                                         value={basicInfo.age}
                                                         disabled={ageDisabled}
                                                         onChange={handleAgeChange}
                                                         style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                     />
                                                 </FormGroup>
+                                                <p><b style={{color:"red"}}>{basicInfo.age!=="" && basicInfo.age< 10 ? "The minimum age is 10" : " "} </b></p>
                                             </div>
                                         </div>
 
@@ -1202,7 +1203,7 @@ const UserRegistration = (props) => {
                                     <div className={"row"}>
                                         <div className="form-group  col-md-4">
                                             <FormGroup>
-                                                <Label>Street Address</Label>
+                                                <Label>Street Address <span style={{ color:"red"}}> *</span></Label>
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -1761,7 +1762,7 @@ const UserRegistration = (props) => {
                             </div>
                             </div>
                             </div>
-                            <p><b style={{color:"red"}}>{basicInfo.age!=="" && basicInfo.age< 10 ? "The minimum age is 10" : " "} </b></p>
+                            
                             {/* END OF HIV ENROLLEMENT FORM */}
                             {saving ? <Spinner /> : ""}
 

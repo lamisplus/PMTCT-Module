@@ -220,7 +220,8 @@ const ClinicVisit = (props) => {
 
       async function getGa() {
           const dateOfViralLoad=e.target.value
-          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2/${props.patientObj.ancNo}/${dateOfViralLoad}`,
+          //?ancNo=001&visitDate=2023-02-01
+          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2?ancNo=${props.patientObj.ancNo}&visitDate=${dateOfViralLoad}`,
                   { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
               );
               if(response.data>0){
@@ -459,7 +460,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoad}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
+                min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")} 
                 disabled={disabledField} 
               />
@@ -470,7 +471,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
               <FormGroup>
-                <FormLabelName >GA at VL Collection <span style={{ color:"red"}}> *</span></FormLabelName>
+                <FormLabelName >GA at VL Collection </FormLabelName>
                 <Input
                   type="number"
                   name="gaOfViralLoad"
@@ -488,7 +489,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >Result <span style={{ color:"red"}}> *</span></FormLabelName>
+                  <FormLabelName >Result </FormLabelName>
                   <Input
                     type="text"
                     name="resultOfViralLoad"

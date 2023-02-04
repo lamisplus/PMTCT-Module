@@ -243,7 +243,7 @@ const LabourDelivery = (props) => {
 
             async function getGa() {
                 const ga=e.target.value
-                const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
+                const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2?ancNo=${props.patientObj.ancNo}&visitDate=${ga}`,
                         { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                     );
                 if(response.data>0){

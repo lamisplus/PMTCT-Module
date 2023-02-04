@@ -308,6 +308,7 @@ const AncPnc = (props) => {
                                     type="text"
                                     name="gravida"
                                     id="gravida"
+                                    min="1"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.gravida} 
                                     disabled

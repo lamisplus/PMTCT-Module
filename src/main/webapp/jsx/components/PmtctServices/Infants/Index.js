@@ -145,7 +145,7 @@ const InfantInformation = (props) => {
                    name: row.firstName + " " + row.surname,
                    hospital: row.hospitalNumber,
                    anc: row.ancNo,
-                   nin: row.age + row.age>1 ? "Months" : "Month",
+                   nin: row.nin!=="0" && row.nin!=="1" ? row.nin+" Months" : row.nin+" Month",
                    sex: row.sex,
                    date: row.dateOfDelivery,
                    actions:
