@@ -22,13 +22,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
@@ -47,6 +50,9 @@ public class InfantService {
         Long facilityId = user.getCurrentOrganisationUnitId();
         Infant infant = new Infant();
         infant.setDateOfDelivery(infantDto.getDateOfDelivery());
+        try{
+            infant.setNin(calculateAgeInMonths(infantDto.getDateOfDelivery())+"");
+        }catch (Exception e){}
         infant.setFirstName(personService.treatNull(infantDto.getFirstName()));
         infant.setMiddleName(personService.treatNull(infantDto.getMiddleName()));
         infant.setSurname(personService.treatNull(infantDto.getSurname()));
@@ -61,6 +67,14 @@ public class InfantService {
         return infant;
     }
 
+    public int calculateAgeInMonths(LocalDate dob){
+        LocalDate toDay = LocalDate.now();
+        int ga =  0;
+        if (dob == null){}else ga  = (int) ChronoUnit.MONTHS.between(dob, toDay);
+        if(ga<0) ga = 0;
+        return ga;
+    }
+
     @SneakyThrows
     public Infant getSingleInfant(Long id) {
         return this.infantRepository.findById(id)
@@ -73,6 +87,9 @@ public class InfantService {
          Long facilityId = user.getCurrentOrganisationUnitId();
          Infant infant = new Infant();
          infant.setDateOfDelivery(infantDto.getDateOfDelivery());
+         try{
+             infant.setNin(calculateAgeInMonths(infantDto.getDateOfDelivery())+"");
+         }catch (Exception e){}
          infant.setFirstName(personService.treatNull(infantDto.getFirstName()));
          infant.setMiddleName(personService.treatNull(infantDto.getMiddleName()));
          infant.setSurname(personService.treatNull(infantDto.getSurname()));
@@ -114,6 +131,7 @@ public class InfantService {
         personMetaDataDto.setPageSize(paging.getPageSize());
         personMetaDataDto.setTotalPages(infants.getTotalPages());
         personMetaDataDto.setCurrentPage(infants.getNumber());
+
         personMetaDataDto.setRecords(infants.getContent());
         return personMetaDataDto;
     }
@@ -123,6 +141,18 @@ public class InfantService {
             Infant infant = infants.get();
             infant.setInfantOutcomeAt18_months(outCome);
             infantRepository.save(infant);
+        }
+    }
+
+    public CompletableFuture<Boolean> hospitalNumberExist(String hospitalNumber) {
+        Optional<Infant> infants = this.infantRepository.getInfantByHospitalNumber(hospitalNumber);
+        if (infants.isPresent()) {
+            System.out.println("True");
+            return CompletableFuture.completedFuture(true);
+        }
+        else{
+            System.out.println("False");
+            return CompletableFuture.completedFuture(false);
         }
     }
 }

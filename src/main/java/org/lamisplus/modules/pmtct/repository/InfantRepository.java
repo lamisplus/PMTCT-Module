@@ -16,6 +16,8 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
 
     Optional<Infant> findInfantByHospitalNumber(String hospitalNumber);
 
+    Optional<Infant> getInfantByHospitalNumber(String hospitalNumber);
+
     @Query(
             value = "SELECT * FROM pmtct_infant_information pi WHERE pi.facility_id=?1 AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pi.date_of_delivery) < 10 ) ORDER BY pi.id desc",
             nativeQuery = true

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RequestMapping("api/v1/pmtct/anc")
 @RestController
@@ -317,8 +319,19 @@ public class PMTCTController {
     }
 
     @GetMapping(value ="/calculate-ga2")
-    public int calculateGa( @RequestParam("lmp") LocalDate lmp,  @RequestParam("visitDate") LocalDate visitDate) {
-        return ancService.calculateGA(lmp, visitDate);
+    public int calculateGa( @RequestParam("ancNo") String ancNo,  @RequestParam("visitDate") LocalDate visitDate) {
+        return ancService.calculateGA(ancNo, visitDate);
+    }
+
+    @GetMapping(value ="/calculate-ga3")
+    public int calculateGa2( @RequestParam("hospitalNumber") String hospitalNumber,  @RequestParam("visitDate") LocalDate visitDate) {
+        return ancService.calculateGA2(hospitalNumber, visitDate);
+    }
+
+    @PostMapping("/exist/infant-hospital-number")
+    public ResponseEntity<Boolean> hospitalNumberExists(@RequestBody String hospitalNumber) throws InterruptedException, ExecutionException {
+        CompletableFuture<Boolean> hospitalNumberExist = infantService.hospitalNumberExist(hospitalNumber);
+        return ResponseEntity.ok(hospitalNumberExist.get());
     }
 
 

@@ -21,6 +21,7 @@ import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.InfantPCRTestRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.stereotype.Service;
@@ -43,9 +44,16 @@ public class PmtctVisitService {
     private final ANCService ancService;
     private final UserService userService;
     ObjectMapper mapper = new ObjectMapper();
+    private final InfantPCRTestRepository infantPCRTestRepository;
 
     public PmtctVisitResponseDto save(PmtctVisitRequestDto pmtctVisitRequestDto) {
         return convertEntitytoRespondDto(converRequestDtotoEntity(pmtctVisitRequestDto));
+    }
+
+    public LocalDate nextAppointmentDate(LocalDate lmd){
+        LocalDate date = lmd;
+        date = date.plusMonths(1);
+        return date;
     }
 
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
@@ -59,18 +67,18 @@ public class PmtctVisitService {
         pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
         pmtctVisit.setGaOfViralLoad(pmtctVisitRequestDto.getGaOfViralLoad());
         pmtctVisit.setResultOfViralLoad(pmtctVisitRequestDto.getResultOfViralLoad());
-
-        pmtctVisit.setTimeOfViralLoad(pmtctVisitRequestDto.getTimeOfViralLoad());
-
+        int ga = pmtctVisitRequestDto.getGaOfViralLoad();
+        String tVL = "Other Time";
+        if((ga >= 32) || (ga<=36)) tVL = "Between 32 and 36";
+        pmtctVisit.setTimeOfViralLoad(tVL);
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
-
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
         pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
         pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
-        pmtctVisit.setNextAppointmentDate(pmtctVisitRequestDto.getNextAppointmentDate());
+        pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();

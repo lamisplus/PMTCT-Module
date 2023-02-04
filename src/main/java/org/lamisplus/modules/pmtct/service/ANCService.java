@@ -29,9 +29,11 @@ import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.patient.service.VisitService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.CreatedDate;
@@ -57,6 +59,8 @@ import java.util.stream.Collectors;
 public class ANCService {
     private final ANCRepository ancRepository;
     private final PersonRepository personRepository;
+
+    private final InfantRepository infantRepository;
     private final UserService userService;
     private final PersonService personService;
     private ObjectMapper mapper = new ObjectMapper();
@@ -126,7 +130,7 @@ public class ANCService {
                 anc.setLMP(ancRequestDto.getLMP());
                 try{
                     LocalDate eed =  this.calculateEDD(ancRequestDto.getLMP());
-                    System.out.println("@ invocation "+ eed);
+                   // System.out.println("@ invocation "+ eed);
                     anc.setExpectedDeliveryDate(eed);
                 }catch (Exception e){e.printStackTrace();}
                 anc.setGAWeeks(ancRequestDto.getGAWeeks());
@@ -373,14 +377,14 @@ public class ANCService {
 
         }
         Page<Person> persons = null;
-        if (!((searchValue == null) || (searchValue.equals("*")))) {
+        if ((searchValue == null) || (searchValue.equals("*"))) {
+            persons = personRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
+        } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
+            System.out.println("I got here Doc");
             persons = personRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
-
-        } else {
-            persons = personRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
         }
         List<Person> personList = persons.getContent();
         ArrayList<ANCRespondDto> ancResponseDtos = new ArrayList<>();
@@ -996,8 +1000,36 @@ public class ANCService {
         return PageDTO.builder().totalRecords(totalRecords).pageNumber(pageNumber).pageSize(pageSize).totalPages(totalPages).build();
     }
 
-    public int calculateGA(LocalDate lmd, LocalDate visitDate){
-        return (int) ChronoUnit.WEEKS.between(lmd, visitDate);
+    public int calculateGA(String ancNo, LocalDate visitDate){
+        LocalDate lmp = getLMP(ancNo);
+        int ga =   (int) ChronoUnit.WEEKS.between(lmp, visitDate);
+        if(ga<0) ga = 0;
+        return ga;
+    }
+
+    public LocalDate getLMP(String ancNo)
+    {
+        LocalDate LMP = LocalDate.now();
+        Optional<ANC> anc = this.ancRepository.getByAncNo(ancNo);
+        if (anc.isPresent())
+            LMP = anc.get().getLMP();
+        return LMP;
+    }
+
+    public int calculateGA2(String hospitalNumber, LocalDate visitDate){
+        LocalDate dob = getDOB(hospitalNumber);
+        int ga =   (int) ChronoUnit.MONTHS.between(dob, visitDate);
+        if(ga<0) ga = 0;
+        return ga;
+    }
+
+    public LocalDate getDOB(String hospitalNumber)
+    {
+        LocalDate DOB = LocalDate.now();
+        Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
+        if (infants.isPresent())
+            DOB = infants.get().getDateOfDelivery();
+        return DOB;
     }
 
 }

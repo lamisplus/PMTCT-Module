@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -134,13 +135,14 @@ public class InfantVisitService
             LocalDate dob = infant.getDateOfDelivery();
             LocalDate curDate = LocalDate.now();
             if (dob != null && curDate != null) {
-                Period period = Period.between(dob, curDate);
-                age = (period.getYears()*12)+ period.getMonths();
+                //Period period = Period.between(dob, curDate);
+                age = (int) ChronoUnit.MONTHS.between(dob, curDate);
+                //age = (period.getYears()*12)+ period.getMonths();
             } else {
                 age = 0;
             }
         }
-        System.out.println("Age " + age);
+        //System.out.println("Age " + age);
         return age;
     }
 
