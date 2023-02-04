@@ -120,7 +120,6 @@ const ClinicVisit = (props) => {
       setDisabledField(props.activeContent.actionType==="view"? true : false)
   }
   }, [props.activeContent]);
-  console.log(props)
   const GetVisit =(id)=>{
     axios
        .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
@@ -217,6 +216,24 @@ const ClinicVisit = (props) => {
     if(e.target.name ==='dsdModel'){
       DsdModelType(e.target.value)
     }
+    if(e.target.name==='dateOfViralLoad' && e.target.value!==''){
+
+      async function getGa() {
+          const dateOfViralLoad=e.target.value
+          //?ancNo=001&visitDate=2023-02-01
+          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2?ancNo=${props.patientObj.ancNo}&visitDate=${dateOfViralLoad}`,
+                  { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+              );
+              if(response.data>0){
+                  objValues.gaOfViralLoad=response.data
+                  setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+              }else{
+                  //toast.error("Please select a validate date")
+                  setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+              }
+      }
+      getGa();
+  }
     //console.log(e.target.name)
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
     
@@ -236,7 +253,8 @@ function DsdModelType (dsdmodel) {
      //console.log(error);
      });
  
-}
+  }
+
   //Validations of the forms
   const validate = () => {       
     temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
@@ -244,7 +262,7 @@ function DsdModelType (dsdmodel) {
     temp.dsd = objValues.dsd ? "" : "This field is required"
     temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
     temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
-    temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
+    //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
     temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
     temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
     setErrors({
@@ -400,7 +418,7 @@ function DsdModelType (dsdmodel) {
               {objValues.fpCounseling==="YES" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
-                  <FormLabelName >FP Method <span style={{ color:"red"}}> *</span></FormLabelName>
+                  <FormLabelName >FP Method </FormLabelName>
                   <Input
                     type="select"
                     name="fpMethod"
@@ -426,7 +444,7 @@ function DsdModelType (dsdmodel) {
             </div>
             <br />
             <Label as='a' color='teal' style={{width:'106%', height:'35px'}} ribbon>
-            <h4 style={{color:'#fff'}}><input type="radio" name="timeOfViralLoad" value="viralLoadAt32" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAt32' ? true : false}/> VIRAL LOAD AT 32-36 {"  "} {"  "} <input type="radio" name="timeOfViralLoad" value="viralLoadAtAnyTime" onChange={handleInputChange} checked={objValues.timeOfViralLoad==='viralLoadAtAnyTime' ? true : false}/> VIRAL LOAD AT Other Time </h4>
+            <h4 style={{color:'#fff'}}> VIRAL LOAD  </h4>
             </Label>
             <br /><br />
             {/* TB Screening Form */}
@@ -442,7 +460,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoad}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
+                min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                 max={moment(new Date()).format("YYYY-MM-DD")} 
                 disabled={disabledField} 
               />
@@ -453,7 +471,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
               <FormGroup>
-                <FormLabelName >GA at VL Collection <span style={{ color:"red"}}> *</span></FormLabelName>
+                <FormLabelName >GA at VL Collection </FormLabelName>
                 <Input
                   type="number"
                   name="gaOfViralLoad"
@@ -462,7 +480,7 @@ function DsdModelType (dsdmodel) {
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""} 
-                  disabled={disabledField}  
+                  disabled={disabledField===false ? true : disabledField}  
                 />
               {errors.gaOfViralLoad !=="" ? (
                   <span className={classes.error}>{errors.gaOfViralLoad}</span>
@@ -471,7 +489,7 @@ function DsdModelType (dsdmodel) {
               </div>
               <div className=" mb-3 col-md-4">
                 <FormGroup>
-                  <FormLabelName >Result <span style={{ color:"red"}}> *</span></FormLabelName>
+                  <FormLabelName >Result </FormLabelName>
                   <Input
                     type="text"
                     name="resultOfViralLoad"

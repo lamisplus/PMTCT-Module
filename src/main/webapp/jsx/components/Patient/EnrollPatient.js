@@ -288,13 +288,13 @@ const UserRegistration = (props) => {
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
+            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
+            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+            //objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -322,26 +322,25 @@ const UserRegistration = (props) => {
         });    
     }
     const handleInputChange = e => { 
-        setErrors({...errors, [e.target.name]: ""}) 
-        if(e.target.name==='ancNo' && e.target.value!==''){
-
-            async function getAncNumber() {
-                const ancNumber=e.target.value
-                const ancNo= {
-                    ancNo:ancNumber
+            setErrors({...errors, [e.target.name]: ""}) 
+            if(e.target.name==='ancNo' && e.target.value!==''){
+                async function getAncNumber() {
+                    const ancNumber=e.target.value
+                    const ancNo= {
+                        ancNo:ancNumber
+                    }
+                    const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
+                            { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                        );
+                    if(response.data===true){
+                        
+                        toast.error("ANC number already exist")
+                        setAncNumberCheck(response.data)
+                    }else{
+                        setAncNumberCheck(false)
+                    }
                 }
-                const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
-                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
-                    );
-                if(response.data===true){
-                    
-                    toast.error("ANC number already exist")
-                    setAncNumberCheck(response.data)
-                }else{
-                    setAncNumberCheck(false)
-                }
-            }
-            getAncNumber();
+                getAncNumber();
             } 
             if(e.target.name==='lmp' && e.target.value!==''){
 
@@ -350,11 +349,12 @@ const UserRegistration = (props) => {
                     const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
                             { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                         );
-                    if(response.data){
+                    if(response.data>0){
                         objValues.gaweeks=response.data
                         setObjValues ({...objValues,  [e.target.name]: e.target.value});  
                     }else{
-                        toast.error("Something went wrong...")
+                        toast.error("Please select a validate date")
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
                     }
                 }
                 getGa();
@@ -391,7 +391,7 @@ const UserRegistration = (props) => {
         }
 
     }
-console.log(errors)
+
 
     return (
         <>
@@ -548,25 +548,7 @@ console.log(errors)
                                     ) : "" }  
                                             
                                     </FormGroup>
-                                </div>  
-                                <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
-                                        <InputGroup> 
-                                            <Input 
-                                                type="number"
-                                                name="gravida"
-                                                id="gravida"
-                                                onChange={handleInputChange}
-                                                value={objValues.gravida} 
-                                            />
-
-                                        </InputGroup>
-                                        {errors.gravida !=="" ? (
-                                                <span className={classes.error}>{errors.gravida}</span>
-                                        ) : "" }
-                                        </FormGroup>
-                                </div>
+                                </div> 
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Parity <span style={{ color:"red"}}> *</span></Label>
@@ -577,6 +559,7 @@ console.log(errors)
                                                 id="parity"
                                                 onChange={handleInputChange}
                                                 value={objValues.parity} 
+                                                min="0"
                                             />
 
                                         </InputGroup>
@@ -584,7 +567,30 @@ console.log(errors)
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
                                         </FormGroup>
+                                </div> 
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="gravida"
+                                                id="gravida"
+                                                onChange={handleInputChange}
+                                                value={objValues.gravida} 
+                                                min="0"
+                                            />
+
+                                        </InputGroup>
+                                        {errors.gravida !=="" ? (
+                                                <span className={classes.error}>{errors.gravida}</span>
+                                        ) : "" }
+                                        {objValues.gravida < objValues.parity ? (
+                                                    <span className={classes.error}>Gravida should not be less Parity</span>
+                                            ) : "" }
+                                        </FormGroup>
                                 </div>
+                                
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>
@@ -621,6 +627,9 @@ console.log(errors)
                                         </InputGroup>
                                         {errors.gaweeks !=="" ? (
                                                 <span className={classes.error}>{errors.gaweeks}</span>
+                                        ) : "" }
+                                        {errors.gaweeks ===0 ? (
+                                                <span className={classes.error}>Invalid value</span>
                                         ) : "" }
                                         </FormGroup>
                                 </div>

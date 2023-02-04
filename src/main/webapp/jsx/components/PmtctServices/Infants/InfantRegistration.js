@@ -12,6 +12,7 @@ import { useHistory } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
 import moment from "moment";
+import { NoStroller } from '@mui/icons-material';
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -87,19 +88,21 @@ const LabourinfantInfo = (props) => {
     const [errors, setErrors] = useState({});
     const [disabledField, setDisabledField] = useState(false);
     const [genders, setGenders] = useState([]);
+    const [hospitalNumStatus, setHospitalNumStatus]= useState(false);
     const [infantInfo, setInfantInfo]= useState({
             ancNo: patientObj.ancNo,
             dateOfinfantInfo: "",
             firstName: "",
-            hospitalNumber: "",
+            hospitalNumber2: "",
             middleName: "",
             nin: "",
             sex: "",
             surname: "",
             uuid: patientObj.ancUuid,
-            dateOfDelivery:""
-          
+            dateOfDelivery:"",
+            hospitalNumber:""
     })
+    console.log(infantInfo)
     useEffect(() => {           
         SEX();
         if(props.activeContent && props.activeContent.actionType==='create'){
@@ -108,7 +111,9 @@ const LabourinfantInfo = (props) => {
         if(props.activeContent && props.activeContent.id){
             setInfantInfo(props.activeContent.obj)
             setDisabledField(props.activeContent.actionType==="view"? true : false)
+            props.activeContent.obj.hospitalNumber2=props.activeContent.obj.hospitalNumber
         }
+        
     }, [props.patientObj.id, props.activeContent]);
     
     const SEX =()=>{
@@ -125,7 +130,24 @@ const LabourinfantInfo = (props) => {
         });    
     }
     const handleInputChangeinfantInfoDto = e => {  
-        setErrors({...errors, [e.target.name]: ""})            
+        setErrors({...errors, [e.target.name]: ""}) 
+        if(e.target.name==='hospitalNumber2' && e.target.value!==''){
+            async function getHosiptalNumber() {
+                const hosiptalNumber=e.target.value
+                const response = await axios.post(`${baseUrl}pmtct/anc/exist/infant-hospital-number`, hosiptalNumber,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data!==true){
+                    setHospitalNumStatus(false)
+                    errors.hospitalNumber=""
+                }else{
+                    errors.hospitalNumber=""
+                    toast.error("Error! Hosiptal Number already exist");
+                    setHospitalNumStatus(true)
+                }
+            }
+            getHosiptalNumber();
+        }            
         setInfantInfo ({...infantInfo,  [e.target.name]: e.target.value});
     }
 
@@ -134,8 +156,8 @@ const LabourinfantInfo = (props) => {
         let temp = { ...errors }
         temp.firstName = infantInfo.firstName ? "" : "This field is required"
         temp.surname = infantInfo.surname ? "" : "This field is required"
-        temp.hospitalNumber = infantInfo.hospitalNumber ? "" : "This field is required"
-        temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
+        temp.hospitalNumber2 = infantInfo.hospitalNumber2 ? "" : "This field is required"
+        //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
         temp.sex = infantInfo.sex ? "" : "This field is required"
         //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
         setErrors({
@@ -145,7 +167,8 @@ const LabourinfantInfo = (props) => {
     }
     /**** Submit Button Processing  */
     const handleSubmit = (e) => {        
-        e.preventDefault();        
+        e.preventDefault(); 
+        infantInfo.hospitalNumber=infantInfo.hospitalNumber2       
         if(validate()){
             setSaving(true);
             if(props.activeContent && props.activeContent.actionType ==="update" ){
@@ -314,43 +337,26 @@ const LabourinfantInfo = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-6">
-                            <FormGroup>
-                            <Label >Date of infantInfo <span style={{ color:"red"}}> *</span></Label>
-                            <InputGroup> 
-                                <Input 
-                                    type="date"
-                                    name="dateOfinfantInfo"
-                                    id="dateOfinfantInfo"
-                                    onChange={handleInputChangeinfantInfoDto}
-                                    value={infantInfo.dateOfinfantInfo} 
-                                    min={infantInfo.dateOfDelivery}
-                                    max= {moment(new Date()).format("YYYY-MM-DD") }
-                                    disabled={disabledField}
-                                />
-
-                            </InputGroup>
-                            {errors.dateOfinfantInfo !=="" ? (
-                                    <span className={classes.error}>{errors.dateOfinfantInfo}</span>
-                            ) : "" }
-                            </FormGroup>
-                    </div>
+                 
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >Hospital Number <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="hospitalNumber"
-                                    id="hospitalNumber"
+                                    name="hospitalNumber2"
+                                    id="hospitalNumber2"
                                     onChange={handleInputChangeinfantInfoDto}
-                                    value={infantInfo.hospitalNumber} 
+                                    value={infantInfo.hospitalNumber2} 
                                     disabled={disabledField}
                                 />
 
                             </InputGroup>
-                            {errors.hospitalNumber !=="" ? (
-                                    <span className={classes.error}>{errors.hospitalNumber}</span>
+                            {errors.hospitalNumber2 !=="" ? (
+                                    <span className={classes.error}>{errors.hospitalNumber2}</span>
+                            ) : "" }
+                            {hospitalNumStatus===true ? (
+                                <span className={classes.error}>{"Hospital number already exist"}</span>
                             ) : "" }
                             </FormGroup>
                     </div>
@@ -403,7 +409,7 @@ const LabourinfantInfo = (props) => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                hidden={disabledField}
+                hidden={disabledField || hospitalNumStatus}
                 className={classes.button}
                 disabled={saving}
                 startIcon={<SaveIcon />}
@@ -423,6 +429,7 @@ const LabourinfantInfo = (props) => {
                 className={classes.button}
                 startIcon={<CancelIcon />}
                 style={{backgroundColor:'#992E62'}}
+                onClick={()=>LoadPage()}
             >
                 <span style={{ textTransform: "capitalize" }}>Cancel</span>
             </MatButton>

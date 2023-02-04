@@ -89,7 +89,7 @@ const ClinicVisit = (props) => {
       bodyWeight: "",
       breastFeeding: "",
       ctxStatus: "",
-      infantHospitalNumber: infantHospitalNumber,
+      infantHospitalNumber: "",
       uuid: "",
       visitDate: "",
       visitStatus: "",
@@ -345,7 +345,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     { headers: {"Authorization" : `Bearer ${token}`} }
                 )
                 .then((response) => {
-                //setLoading(false)
+                  infantVisitRequestDto.infantHospitalNumber=obj.hospitalNumber
                   setFormFilter(response.data)
                 })
       
@@ -353,8 +353,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 //console.log(error);
                 });
             
-        }
-        InfantVisit()
+          }
+          InfantVisit()
   }
 
   return (
@@ -388,7 +388,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             </Label>
             <br /><br />
             <div className="row">
-              <div className="form-group mb-3 col-md-6">
+              <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName >Date of Visit <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
@@ -411,6 +411,24 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
+                  <FormLabelName >Infant Hospital Number <span style={{ color:"red"}}> *</span></FormLabelName>
+                  <Input
+                    type="text"
+                    name="infantHospitalNumber"
+                    id="infantHospitalNumber"
+                    value={infantVisitRequestDto.infantHospitalNumber}
+                    style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                    onChange={handleInputChangeInfantVisitRequestDto}
+                    disabled
+                  />
+                 {errors.infantHospitalNumber !=="" ? (
+                      <span className={classes.error}>{errors.infantHospitalNumber}</span>
+                  ) : "" }
+
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
                   <FormLabelName >Mother ANC number <span style={{ color:"red"}}> *</span></FormLabelName>
                   <Input
                     type="text"
@@ -427,6 +445,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
 
                 </FormGroup>
               </div>
+
               <div className=" mb-3 col-md-6">
                         <FormGroup>
                         <FormLabelName >Body Weight <span style={{ color:"red"}}> *</span></FormLabelName>
@@ -521,7 +540,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
 
                       </FormGroup>
                     </div>
-                    {formFilter && formFilter.outCome===false && (
+                    {formFilter && formFilter.outCome===true && (
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <FormLabelName >Infant outcome at 18 months</FormLabelName>

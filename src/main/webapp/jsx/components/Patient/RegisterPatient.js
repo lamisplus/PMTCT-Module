@@ -197,7 +197,7 @@ const UserRegistration = (props) => {
     let patientId = null;
     patientId = locationState ? locationState.patientId : null;
     let temp = { ...errors }
-
+    
     useEffect(() => { 
         loadGenders();
         loadMaritalStatus();
@@ -392,7 +392,23 @@ const UserRegistration = (props) => {
         }
         getAncNumber();
         } 
-                
+        if(e.target.name==='hospitalNumber' && e.target.value!==''){
+            async function getHosiptalNumber() {
+                const hosiptalNumber=e.target.value
+                const response = await axios.post(`${baseUrl}patient/exist/hospital-number`, hosiptalNumber,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data!==true){
+                    setHospitalNumStatus(false)
+                    errors.hospitalNumber=""
+                }else{
+                    errors.hospitalNumber=""
+                    toast.error("Error! Hosiptal Number already exist");
+                    setHospitalNumStatus(true)
+                }
+            }
+            getHosiptalNumber();
+        }        
     } 
     //Function to show relatives 
     const handleAddRelative = () => {
@@ -465,7 +481,7 @@ const UserRegistration = (props) => {
                 }
             }
             getAncNumber();
-            }       
+        }       
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     } 
     /*****  Validation  */
@@ -668,12 +684,13 @@ const UserRegistration = (props) => {
                 const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
                         { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
                     );
-                if(response.data){
-                    objValues.gaweeks=response.data
-                    setObjValues ({...objValues,  [e.target.name]: e.target.value});  
-                }else{
-                    toast.error("Something went wrong...")
-                }
+                    if(response.data>0){
+                        objValues.gaweeks=response.data
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                    }else{
+                        toast.error("Please select a validate date")
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                    }
             }
             getGa();
         }       
@@ -703,7 +720,7 @@ const UserRegistration = (props) => {
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
-    console.log(errors)
+
 
     return (
         <>
@@ -939,13 +956,14 @@ const UserRegistration = (props) => {
                                                         name="age"                                                       
                                                         className="form-control"                                                        
                                                         id="age"
-                                                        min="1"
+                                                        min="10"
                                                         value={basicInfo.age}
                                                         disabled={ageDisabled}
                                                         onChange={handleAgeChange}
                                                         style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                     />
                                                 </FormGroup>
+                                                <p><b style={{color:"red"}}>{basicInfo.age!=="" && basicInfo.age< 10 ? "The minimum age is 10" : " "} </b></p>
                                             </div>
                                         </div>
 
@@ -1185,7 +1203,7 @@ const UserRegistration = (props) => {
                                     <div className={"row"}>
                                         <div className="form-group  col-md-4">
                                             <FormGroup>
-                                                <Label>Street Address<span style={{ color:"red"}}> *</span></Label>
+                                                <Label>Street Address <span style={{ color:"red"}}> *</span></Label>
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -1516,25 +1534,7 @@ const UserRegistration = (props) => {
                                             
                                     </FormGroup>
                                 </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                            <FormGroup>
-                                            <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
-                                            <InputGroup> 
-                                                <Input 
-                                                    type="number"
-                                                    name="gravida"
-                                                    id="gravida"
-                                                    onChange={handleInputChange}
-                                                    value={objValues.gravida} 
-                                                />
-
-                                            </InputGroup>
-                                            {errors.gravida !=="" ? (
-                                                    <span className={classes.error}>{errors.gravida}</span>
-                                            ) : "" }
-                                            </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
+                                <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Parity <span style={{ color:"red"}}> *</span></Label>
                                             <InputGroup> 
@@ -1543,7 +1543,8 @@ const UserRegistration = (props) => {
                                                     name="parity"
                                                     id="parity"
                                                     onChange={handleInputChange}
-                                                    value={objValues.parity} 
+                                                    value={objValues.parity}
+                                                    min="1"
                                                 />
 
                                             </InputGroup>
@@ -1552,6 +1553,30 @@ const UserRegistration = (props) => {
                                             ) : "" }
                                             </FormGroup>
                                     </div>
+                                    <div className="form-group mb-3 col-md-6">
+                                            <FormGroup>
+                                            <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
+                                            <InputGroup> 
+                                                <Input 
+                                                    type="tel"
+                                                    name="gravida"
+                                                    id="gravida"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.gravida} 
+                                                    min={objValues.parity}
+                                                   
+                                                />
+
+                                            </InputGroup>
+                                            {errors.gravida !=="" ? (
+                                                    <span className={classes.error}>{errors.gravida}</span>
+                                            ) : "" }
+                                            {objValues.gravida < objValues.parity ? (
+                                                    <span className={classes.error}>Gravida should not be less Parity</span>
+                                            ) : "" }
+                                            </FormGroup>
+                                    </div>
+                                    
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>
@@ -1589,6 +1614,9 @@ const UserRegistration = (props) => {
                                             {errors.gaweeks !=="" ? (
                                                     <span className={classes.error}>{errors.gaweeks}</span>
                                             ) : "" }
+                                            {objValues.gaweeks ===0 ? (
+                                                <span className={classes.error}>Invalid value</span>
+                                        ) : "" }
                                             </FormGroup>
                                     </div>
                                     
@@ -1734,7 +1762,7 @@ const UserRegistration = (props) => {
                             </div>
                             </div>
                             </div>
-                            <p><b style={{color:"red"}}>{basicInfo.age!=="" && basicInfo.age< 10 ? "The minimum age is 10" : " "} </b></p>
+                            
                             {/* END OF HIV ENROLLEMENT FORM */}
                             {saving ? <Spinner /> : ""}
 
@@ -1745,7 +1773,7 @@ const UserRegistration = (props) => {
                                 type="submit"
                                 variant="contained"
                                 color="primary"
-                                hidden={disabledAgeBaseOnAge}
+                                hidden={disabledAgeBaseOnAge || hospitalNumStatus}
                                 className={classes.button}
                                 startIcon={<SaveIcon />}
                                 onClick={handleSubmit}

@@ -12,13 +12,13 @@
       <option name="url" value="https://nexus.jx.infobelt.com/repository/maven-releases/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="foreach-nexus" />
-      <option name="name" value="Foreach nexus" />
+      <option name="id" value="across" />
+      <option name="name" value="Across Repository" />
       <option name="url" value="https://repository.foreach.be/nexus/repository/public/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="across" />
-      <option name="name" value="Across Repository" />
+      <option name="id" value="foreach-nexus" />
+      <option name="name" value="Foreach nexus" />
       <option name="url" value="https://repository.foreach.be/nexus/repository/public/" />
     </remote-repository>
     <remote-repository>
