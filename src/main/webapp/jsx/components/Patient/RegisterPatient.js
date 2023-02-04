@@ -197,7 +197,7 @@ const UserRegistration = (props) => {
     let patientId = null;
     patientId = locationState ? locationState.patientId : null;
     let temp = { ...errors }
-
+    
     useEffect(() => { 
         loadGenders();
         loadMaritalStatus();
@@ -392,7 +392,23 @@ const UserRegistration = (props) => {
         }
         getAncNumber();
         } 
-                
+        if(e.target.name==='hospitalNumber' && e.target.value!==''){
+            async function getHosiptalNumber() {
+                const hosiptalNumber=e.target.value
+                const response = await axios.post(`${baseUrl}patient/exist/hospital-number`, hosiptalNumber,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data!==true){
+                    setHospitalNumStatus(false)
+                    errors.hospitalNumber=""
+                }else{
+                    errors.hospitalNumber=""
+                    toast.error("Error! Hosiptal Number already exist");
+                    setHospitalNumStatus(true)
+                }
+            }
+            getHosiptalNumber();
+        }        
     } 
     //Function to show relatives 
     const handleAddRelative = () => {
@@ -704,7 +720,7 @@ const UserRegistration = (props) => {
     const handleCancel =()=>{
         history.push({ pathname: '/' });
     }
-
+    const preventNegativeValues = (e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()
 
     return (
         <>
@@ -1526,7 +1542,8 @@ const UserRegistration = (props) => {
                                                     name="parity"
                                                     id="parity"
                                                     onChange={handleInputChange}
-                                                    value={objValues.parity} 
+                                                    value={objValues.parity}
+                                                    min="1"
                                                 />
 
                                             </InputGroup>
@@ -1540,12 +1557,13 @@ const UserRegistration = (props) => {
                                             <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
                                             <InputGroup> 
                                                 <Input 
-                                                    type="number"
+                                                    type="tel"
                                                     name="gravida"
                                                     id="gravida"
                                                     onChange={handleInputChange}
                                                     value={objValues.gravida} 
                                                     min={objValues.parity}
+                                                   
                                                 />
 
                                             </InputGroup>
@@ -1557,6 +1575,7 @@ const UserRegistration = (props) => {
                                             ) : "" }
                                             </FormGroup>
                                     </div>
+                                    
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span> </Label>
@@ -1753,7 +1772,7 @@ const UserRegistration = (props) => {
                                 type="submit"
                                 variant="contained"
                                 color="primary"
-                                hidden={disabledAgeBaseOnAge}
+                                hidden={disabledAgeBaseOnAge || hospitalNumStatus}
                                 className={classes.button}
                                 startIcon={<SaveIcon />}
                                 onClick={handleSubmit}

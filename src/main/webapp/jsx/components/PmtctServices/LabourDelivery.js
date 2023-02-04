@@ -248,10 +248,10 @@ const LabourDelivery = (props) => {
                     );
                 if(response.data>0){
                     delivery.gaweeks=response.data
-                    setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                    setDelivery ({...delivery,  [e.target.name]: e.target.value});  
                 }else{
                     toast.error("Please select a validate date")
-                    setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                    setDelivery ({...delivery,  [e.target.name]: e.target.value}); 
                 }
             }
             getGa();
@@ -418,6 +418,7 @@ const LabourDelivery = (props) => {
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.gaweeks} 
                                     disabled
+                                    min="0"
                                     
                                 />
 
@@ -777,7 +778,7 @@ const LabourDelivery = (props) => {
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.numberOfInfantsAlive} 
                                     disabled={disabledField}
-                                    
+                                    min="0"
                                 />
                             </InputGroup>
                             {errors.numberOfInfantsAlive !=="" ? (
@@ -796,6 +797,7 @@ const LabourDelivery = (props) => {
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.numberOfInfantsDead} 
                                     disabled={disabledField}
+                                    min="0"
                                 />
                             </InputGroup>
                             {errors.numberOfInfantsDead !=="" ? (

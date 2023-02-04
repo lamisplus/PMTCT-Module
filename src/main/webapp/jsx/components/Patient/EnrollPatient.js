@@ -322,26 +322,25 @@ const UserRegistration = (props) => {
         });    
     }
     const handleInputChange = e => { 
-        setErrors({...errors, [e.target.name]: ""}) 
-        if(e.target.name==='ancNo' && e.target.value!==''){
-
-            async function getAncNumber() {
-                const ancNumber=e.target.value
-                const ancNo= {
-                    ancNo:ancNumber
+            setErrors({...errors, [e.target.name]: ""}) 
+            if(e.target.name==='ancNo' && e.target.value!==''){
+                async function getAncNumber() {
+                    const ancNumber=e.target.value
+                    const ancNo= {
+                        ancNo:ancNumber
+                    }
+                    const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
+                            { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                        );
+                    if(response.data===true){
+                        
+                        toast.error("ANC number already exist")
+                        setAncNumberCheck(response.data)
+                    }else{
+                        setAncNumberCheck(false)
+                    }
                 }
-                const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
-                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
-                    );
-                if(response.data===true){
-                    
-                    toast.error("ANC number already exist")
-                    setAncNumberCheck(response.data)
-                }else{
-                    setAncNumberCheck(false)
-                }
-            }
-            getAncNumber();
+                getAncNumber();
             } 
             if(e.target.name==='lmp' && e.target.value!==''){
 
@@ -560,6 +559,7 @@ const UserRegistration = (props) => {
                                                 id="parity"
                                                 onChange={handleInputChange}
                                                 value={objValues.parity} 
+                                                min="0"
                                             />
 
                                         </InputGroup>
@@ -578,6 +578,7 @@ const UserRegistration = (props) => {
                                                 id="gravida"
                                                 onChange={handleInputChange}
                                                 value={objValues.gravida} 
+                                                min="0"
                                             />
 
                                         </InputGroup>

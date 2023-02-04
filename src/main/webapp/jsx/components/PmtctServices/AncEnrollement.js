@@ -191,6 +191,7 @@ const AncEnrollement = (props) => {
                                     id="encounterDate"
                                     onChange={handleInputChangeVitalSignDto}
                                     value={vital.encounterDate} 
+                                    min="0"
                                 />
 
                             </InputGroup>

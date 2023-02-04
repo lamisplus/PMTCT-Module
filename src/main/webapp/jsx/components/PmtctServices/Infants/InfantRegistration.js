@@ -87,6 +87,7 @@ const LabourinfantInfo = (props) => {
     const [errors, setErrors] = useState({});
     const [disabledField, setDisabledField] = useState(false);
     const [genders, setGenders] = useState([]);
+    const [hospitalNumStatus, setHospitalNumStatus]= useState(false);
     const [infantInfo, setInfantInfo]= useState({
             ancNo: patientObj.ancNo,
             dateOfinfantInfo: "",
@@ -125,7 +126,24 @@ const LabourinfantInfo = (props) => {
         });    
     }
     const handleInputChangeinfantInfoDto = e => {  
-        setErrors({...errors, [e.target.name]: ""})            
+        setErrors({...errors, [e.target.name]: ""}) 
+        if(e.target.name==='hospitalNumber' && e.target.value!==''){
+            async function getHosiptalNumber() {
+                const hosiptalNumber=e.target.value
+                const response = await axios.post(`${baseUrl}pmtct/anc/exist/infant-hospital-number`, hosiptalNumber,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data!==true){
+                    setHospitalNumStatus(false)
+                    errors.hospitalNumber=""
+                }else{
+                    errors.hospitalNumber=""
+                    toast.error("Error! Hosiptal Number already exist");
+                    setHospitalNumStatus(true)
+                }
+            }
+            getHosiptalNumber();
+        }            
         setInfantInfo ({...infantInfo,  [e.target.name]: e.target.value});
     }
 
@@ -332,6 +350,9 @@ const LabourinfantInfo = (props) => {
                             {errors.hospitalNumber !=="" ? (
                                     <span className={classes.error}>{errors.hospitalNumber}</span>
                             ) : "" }
+                            {hospitalNumStatus===true ? (
+                                <span className={classes.error}>{"Hospital number already exist"}</span>
+                            ) : "" }
                             </FormGroup>
                     </div>
                     {/* <div className="form-group mb-3 col-md-6">
@@ -383,7 +404,7 @@ const LabourinfantInfo = (props) => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                hidden={disabledField}
+                hidden={disabledField || hospitalNumStatus}
                 className={classes.button}
                 disabled={saving}
                 startIcon={<SaveIcon />}
