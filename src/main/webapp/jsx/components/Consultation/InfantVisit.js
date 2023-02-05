@@ -254,6 +254,20 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
   const handleInputChangeInfantVisitRequestDto = e => {
     setErrors({...temp, [e.target.name]:""})   
     //console.log(e.target.name)
+    if(e.target.name==='visitDate' && e.target.value!==''){
+
+      async function getGa() {
+          const ga=e.target.value
+          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga3?hospitalNumber=${props.patientObj.ancNo}&visitDate=${ga}`,
+                  { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+              );
+          if(response.data>=0){
+            infantPCRTestDto.ageAtTest=response.data
+              setInfantVisitRequestDto ({...infantVisitRequestDto,  [e.target.name]: e.target.value});  
+          }
+      }
+      getGa();
+  }
     setInfantVisitRequestDto({ ...infantVisitRequestDto, [e.target.name]: e.target.value });    
   }
   const handleInputChangeInfantArvDto = e => {
@@ -353,8 +367,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 //console.log(error);
                 });
             
-          }
-          InfantVisit()
+        }
+        InfantVisit()
   }
 
   return (
@@ -398,7 +412,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantVisitRequestDto.visitDate}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     onChange={handleInputChangeInfantVisitRequestDto}
-                    min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
+                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
@@ -771,7 +785,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 value={infantPCRTestDto.ageAtTest}
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                 
+                 disabled
                 />
                 {errors.ageAtTest !=="" ? (
                 <span className={classes.error}>{errors.ageAtTest}</span>

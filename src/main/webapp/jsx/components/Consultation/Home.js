@@ -355,7 +355,7 @@ function DsdModelType (dsdmodel) {
                     value={objValues.dateOfVisit}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     onChange={handleInputChange}
-                    min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
+                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     disabled={disabledField}

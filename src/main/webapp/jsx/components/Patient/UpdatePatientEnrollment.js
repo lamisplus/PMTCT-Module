@@ -95,33 +95,10 @@ const useStyles = makeStyles((theme) => ({
 const UserRegistration = (props) => {
     const [basicInfo, setBasicInfo]= useState(
             {
-                active: true,
-                address: [],
-                contact: [],
-                contactPoint: [],
-                dateOfBirth: "",
-                deceased: false,
-                deceasedDateTime: null,
-                firstName: "",
-                genderId: "",
-                identifier: "",
-                otherName: "",
-                maritalStatusId: "",
-                educationId: "",
-                employmentStatusId:"",
-                dateOfRegistration: "",
-                isDateOfBirthEstimated: null,
+                fullname: "",
+                sex: "",
                 age:"",
-                phoneNumber:"",
-                altPhonenumber:"",
-                dob:"",
-                countryId:"",
-                stateId:"",
-                district:"",
-                landmark:"",
-                sexId:"",
-                ninNumber:""
-
+                hospitalNumber:"",
             }
     )
     const [saving, setSaving] = useState(false);
@@ -163,37 +140,30 @@ const UserRegistration = (props) => {
      const toggle = () => setOpen(!open);
     const locationState = location.state;
     let patientId = null;
+    let actionType = null;
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
+    actionType = locationState ? locationState.actionType : null;
     patientObj = locationState ? locationState.patientObj : {}; 
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
+    const [disabledField, setDisabledField] = useState(false);
     useEffect(() => { 
         loadGenders();
         getSex();
         PregnancyStatus();
-        if(patientObj){
-            const identifiers = patientObj.identifier;
-            const hospitalNumber = identifiers.identifier.find(obj => obj.type === 'HospitalNumber');
-            basicInfo.dob=patientObj.dateOfBirth
-            basicInfo.firstName=patientObj.firstName
-            basicInfo.dateOfRegistration=patientObj.dateOfRegistration
-            basicInfo.middleName=patientObj.otherName
-            basicInfo.lastName=patientObj.surname
-            basicInfo.dateOfRegistration=patientObj.dateOfRegistration
-            basicInfo.hospitalNumber=hospitalNumber && hospitalNumber ? hospitalNumber.value : ''
-            setObjValues ({...objValues,  uniqueId: hospitalNumber ? hospitalNumber.value : ''});
-            basicInfo.genderId=patientObj && patientObj.gender ? patientObj.gender.id : null
-            const patientAge=calculate_age(moment(patientObj.dateOfBirth).format("DD-MM-YYYY"))
-            basicInfo.age=patientAge
-            objValues.personId=patientObj.id
-            basicInfo.ninNumber=patientObj.ninNumber
 
+        if(patientObj){
+            setDisabledField(actionType==='view'? true : false)
+            setObjValues ({...patientObj});
+            basicInfo.fullname=patientObj.fullname
+            basicInfo.age=patientObj.age
+            basicInfo.hospitalNumber=patientObj.hospitalNumber
+            basicInfo.sex=patientObj.sex
+            //syphilisInfo
         }
-        if(basicInfo.dateOfRegistration < basicInfo.dob){
-            alert('Date of registration can not be earlier than date of birth')
-        }
+
         SOURCE_REFERRAL_PMTCT() 
-    }, [patientObj, patientId, basicInfo.dateOfRegistration]);
+    }, [patientObj, patientId,]);
     //Get list of Source of Referral
     const SOURCE_REFERRAL_PMTCT =()=>{
         axios
@@ -235,22 +205,6 @@ const UserRegistration = (props) => {
             
         }
     }, []);
-    //Calculate Date of birth 
-    const calculate_age = dob => {
-        var today = new Date();
-        var dateParts = dob.split("-");
-        var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-        var birthDate = new Date(dateObject); // create a date object directlyfrom`dob1`argument
-        var age_now = today.getFullYear() - birthDate.getFullYear();
-        var m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age_now--;
-                }
-            if (age_now === 0) {
-                    return m + " month(s)";
-                }
-                return age_now ;
-    };
 
     const handleAgeChange = (e) => {
         const ageNumber = e.target.value.replace(/\D/g, '')
@@ -289,7 +243,7 @@ const UserRegistration = (props) => {
             temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
             temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
-            
+            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
     }
@@ -417,10 +371,10 @@ const UserRegistration = (props) => {
                                                         type="text"
                                                         name="firstName"
                                                         id="firstName"
-                                                        value={basicInfo.firstName + " "+ basicInfo.lastName}
+                                                        value={basicInfo.fullname}
                                                         onChange={handleInputChangeBasic}
                                                         style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
-                                                        //disabled
+                                                        
                                                     />
                                                     {errors.firstName !=="" ? (
                                                     <span className={classes.error}>{errors.firstName}</span>
@@ -452,7 +406,7 @@ const UserRegistration = (props) => {
                                                             name="sexId"
                                                             id="sexId"
                                                             onChange={handleInputChangeBasic}
-                                                            value={basicInfo.sexId}
+                                                            value={basicInfo.sex}
                                                             style={{border: 'none', backgroundColor: 'transparent', outline:'none'}}
                                                             
                                                         />
@@ -497,6 +451,7 @@ const UserRegistration = (props) => {
                                                     id="ancNo"
                                                     onChange={handleInputChange}
                                                     value={objValues.ancNo} 
+                                                    disabled={disabledField}
                                                 />
 
                                             </InputGroup>
@@ -519,6 +474,7 @@ const UserRegistration = (props) => {
                                             onChange={handleInputChange}
                                             value={objValues.firstAncDate} 
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
+                                            disabled={disabledField}
                                         />
                                     </InputGroup>
                                     {errors.firstAncDate !=="" ? (
@@ -537,6 +493,7 @@ const UserRegistration = (props) => {
                                                 id="gravida"
                                                 onChange={handleInputChange}
                                                 value={objValues.gravida} 
+                                                disabled={disabledField}
                                             />
 
                                         </InputGroup>
@@ -554,7 +511,8 @@ const UserRegistration = (props) => {
                                                 name="parity"
                                                 id="parity"
                                                 onChange={handleInputChange}
-                                                value={objValues.parity} 
+                                                value={objValues.parity}
+                                                disabled={disabledField} 
                                             />
 
                                         </InputGroup>
@@ -574,6 +532,7 @@ const UserRegistration = (props) => {
                                                 onChange={handleInputChange}
                                                 value={objValues.lmp} 
                                                 max= {moment(new Date()).format("YYYY-MM-DD") }
+                                                disabled={disabledField}
                                             />
 
                                         </InputGroup>
@@ -593,6 +552,7 @@ const UserRegistration = (props) => {
                                                 id="gaweeks"
                                                 onChange={handleInputChange}
                                                 value={objValues.gaweeks} 
+                                                disabled={disabledField}
                                             />
 
                                         </InputGroup>
@@ -611,7 +571,8 @@ const UserRegistration = (props) => {
                                                 name="sourceOfReferral"
                                                 id="sourceOfReferral"
                                                 onChange={handleInputChange}
-                                                value={objValues.sourceOfReferral} 
+                                                value={objValues.sourceOfReferral}
+                                                disabled={disabledField} 
                                             >
                                                     <option value="">Select</option>
                                                 {sourceOfReferral.map((value, index) => (
@@ -638,6 +599,7 @@ const UserRegistration = (props) => {
                                                 id="testedSyphilis"
                                                 onChange={handleInputChange}
                                                 value={objValues.testedSyphilis} 
+                                                disabled={disabledField}
                                             >
                                                     <option value="" >Select</option>
                                                 <option value="Yes" >Yes</option>
@@ -661,7 +623,7 @@ const UserRegistration = (props) => {
                                                     id="testResultSyphilis"
                                                     onChange={handleInputChange}
                                                     value={objValues.testResultSyphilis} 
-                                                    
+                                                    disabled={disabledField}
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Positive" >Positive</option>
@@ -684,6 +646,7 @@ const UserRegistration = (props) => {
                                                     id="treatedSyphilis"
                                                     onChange={handleInputChange}
                                                     value={objValues.encounterDate} 
+                                                    disabled={disabledField}
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Yes" >Yes</option>
@@ -705,6 +668,7 @@ const UserRegistration = (props) => {
                                                     id="referredSyphilisTreatment"
                                                     onChange={handleInputChange}
                                                     value={objValues.referredSyphilisTreatment} 
+                                                    disabled={disabledField}
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Yes" >Yes</option>
@@ -728,6 +692,7 @@ const UserRegistration = (props) => {
                                                     id="staticHivStatus"
                                                     onChange={handleInputChange}
                                                     value={objValues.staticHivStatus} 
+                                                    disabled={disabledField}
                                                 >
                                                     <option value="" >Select</option>
                                                     <option value="Positive" >Positive</option>
@@ -748,11 +713,12 @@ const UserRegistration = (props) => {
 
                             <br />
 
-
+                            {objValues.gaweeks >0  && ancNumberCheck!==true && objValues.gravida >= objValues.parity &&  (
                             <MatButton
                                 type="submit"
                                 variant="contained"
                                 color="primary"
+                                hidden={disabledField}
                                 className={classes.button}
                                 startIcon={<SaveIcon />}
                                 disabled={disabledAgeBaseOnAge}
@@ -764,7 +730,7 @@ const UserRegistration = (props) => {
                                     <span style={{ textTransform: "capitalize" }}>Saving...</span>
                                 )}
                             </MatButton>
-    
+                            )}
                             <MatButton
                                 variant="contained"
                                 className={classes.button}

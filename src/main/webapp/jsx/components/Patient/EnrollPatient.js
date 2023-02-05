@@ -168,7 +168,6 @@ const UserRegistration = (props) => {
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
     patientObj = locationState ? locationState.patientObj : {}; 
-    console.log(patientObj)
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
     useEffect(() => { 
         loadGenders();
@@ -288,6 +287,7 @@ const UserRegistration = (props) => {
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
+            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
             //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
@@ -353,6 +353,7 @@ const UserRegistration = (props) => {
                         objValues.gaweeks=response.data
                         setObjValues ({...objValues,  [e.target.name]: e.target.value});  
                     }else{
+                        objValues.gaweeks=response.data
                         toast.error("Please select a validate date")
                         setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
                     }
@@ -608,6 +609,9 @@ const UserRegistration = (props) => {
                                         {errors.lmp !=="" ? (
                                                 <span className={classes.error}>{errors.lmp}</span>
                                         ) : "" }
+                                        {objValues.gaweeks===0 ? (
+                                                <span className={classes.error}>Invalid date </span>
+                                        ) : "" }
                                         </FormGroup>
                                 </div>
                                 
@@ -628,9 +632,7 @@ const UserRegistration = (props) => {
                                         {errors.gaweeks !=="" ? (
                                                 <span className={classes.error}>{errors.gaweeks}</span>
                                         ) : "" }
-                                        {errors.gaweeks ===0 ? (
-                                                <span className={classes.error}>Invalid value</span>
-                                        ) : "" }
+                                        
                                         </FormGroup>
                                 </div>
                                 
@@ -685,7 +687,7 @@ const UserRegistration = (props) => {
                                 {objValues.testedSyphilis==='Yes' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Syphilis test result <span style={{ color:"red"}}> *</span></Label>
+                                            <Label >Syphilis test result </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -708,7 +710,7 @@ const UserRegistration = (props) => {
                                     {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span></Label>
+                                            <Label >Treated for syphilis (penicillin) </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -729,7 +731,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Referred Syphilis +ve client <span style={{ color:"red"}}> *</span></Label>
+                                            <Label >Referred Syphilis +ve client </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -781,13 +783,14 @@ const UserRegistration = (props) => {
 
                             <br />
 
-
+                            {objValues.gaweeks >0  && ancNumberCheck!==true && objValues.gravida >= objValues.parity &&  (
                             <MatButton
                                 type="submit"
                                 variant="contained"
                                 color="primary"
                                 className={classes.button}
                                 startIcon={<SaveIcon />}
+                                hidden={ancNumberCheck}
                                 disabled={disabledAgeBaseOnAge}
                                 onClick={handleSubmit}
                             >
@@ -797,7 +800,7 @@ const UserRegistration = (props) => {
                                     <span style={{ textTransform: "capitalize" }}>Saving...</span>
                                 )}
                             </MatButton>
-    
+                            )}
                             <MatButton
                                 variant="contained"
                                 className={classes.button}
@@ -811,22 +814,7 @@ const UserRegistration = (props) => {
                     </div>
                 </CardContent>
             </Card>
-            <Modal show={open} toggle={toggle} className="fade" size="sm"
-                aria-labelledby="contained-modal-title-vcenter"
-                centered backdrop="static">
-             <Modal.Header >
-            <Modal.Title id="contained-modal-title-vcenter">
-                Notification!
-            </Modal.Title>
-            </Modal.Header>
-                <Modal.Body>
-                    <h4>Are you Sure of the Age entered?</h4>
-                    
-                </Modal.Body>
-            <Modal.Footer>
-                <Button onClick={toggle} style={{backgroundColor:"#014d88", color:"#fff"}}>Yes</Button>
-            </Modal.Footer>
-            </Modal>
+         
         </>
     );
 };

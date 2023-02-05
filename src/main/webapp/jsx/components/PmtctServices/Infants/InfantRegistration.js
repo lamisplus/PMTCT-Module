@@ -93,7 +93,6 @@ const LabourinfantInfo = (props) => {
             ancNo: patientObj.ancNo,
             dateOfinfantInfo: "",
             firstName: "",
-            hospitalNumber2: "",
             middleName: "",
             nin: "",
             sex: "",
@@ -102,19 +101,20 @@ const LabourinfantInfo = (props) => {
             dateOfDelivery:"",
             hospitalNumber:""
     })
-    console.log(infantInfo)
+
     useEffect(() => {           
         SEX();
+        //console.log(props.activeContent.obj)
         if(props.activeContent && props.activeContent.actionType==='create'){
-            infantInfo.dateOfDelivery=props.activeContent.obj.dateOfDelivery
+            infantInfo.dateOfDelivery=props.activeContent.obj
         }
         if(props.activeContent && props.activeContent.id){
             setInfantInfo(props.activeContent.obj)
             setDisabledField(props.activeContent.actionType==="view"? true : false)
-            props.activeContent.obj.hospitalNumber2=props.activeContent.obj.hospitalNumber
+            //props.activeContent.obj.hospitalNumber2=props.activeContent.obj.hospitalNumber
         }
         
-    }, [props.patientObj.id, props.activeContent]);
+    }, [props.patientObj.id, props.activeContent.id]);
     
     const SEX =()=>{
         axios
@@ -131,7 +131,7 @@ const LabourinfantInfo = (props) => {
     }
     const handleInputChangeinfantInfoDto = e => {  
         setErrors({...errors, [e.target.name]: ""}) 
-        if(e.target.name==='hospitalNumber2' && e.target.value!==''){
+        if(e.target.name==='hospitalNumber' && e.target.value!==''){
             async function getHosiptalNumber() {
                 const hosiptalNumber=e.target.value
                 const response = await axios.post(`${baseUrl}pmtct/anc/exist/infant-hospital-number`, hosiptalNumber,
@@ -156,7 +156,7 @@ const LabourinfantInfo = (props) => {
         let temp = { ...errors }
         temp.firstName = infantInfo.firstName ? "" : "This field is required"
         temp.surname = infantInfo.surname ? "" : "This field is required"
-        temp.hospitalNumber2 = infantInfo.hospitalNumber2 ? "" : "This field is required"
+        temp.hospitalNumber = infantInfo.hospitalNumber ? "" : "This field is required"
         //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
         temp.sex = infantInfo.sex ? "" : "This field is required"
         //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
@@ -167,8 +167,7 @@ const LabourinfantInfo = (props) => {
     }
     /**** Submit Button Processing  */
     const handleSubmit = (e) => {        
-        e.preventDefault(); 
-        infantInfo.hospitalNumber=infantInfo.hospitalNumber2       
+        e.preventDefault();      
         if(validate()){
             setSaving(true);
             if(props.activeContent && props.activeContent.actionType ==="update" ){
@@ -213,6 +212,7 @@ const LabourinfantInfo = (props) => {
     const LoadPage =()=>{    
         props.setActiveContent({...props.activeContent, route:'infants', id:"", actionType:""})
     }
+console.log(infantInfo)
 
   return (      
       <div >
@@ -260,7 +260,7 @@ const LabourinfantInfo = (props) => {
                                     name="dateOfDelivery"
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeinfantInfoDto}
-                                    min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     value={infantInfo.dateOfDelivery} 
                                     disabled
@@ -344,10 +344,10 @@ const LabourinfantInfo = (props) => {
                             <InputGroup> 
                                 <Input 
                                     type="text"
-                                    name="hospitalNumber2"
-                                    id="hospitalNumber2"
+                                    name="hospitalNumber"
+                                    id="hospitalNumber"
                                     onChange={handleInputChangeinfantInfoDto}
-                                    value={infantInfo.hospitalNumber2} 
+                                    value={infantInfo.hospitalNumber} 
                                     disabled={disabledField}
                                 />
 

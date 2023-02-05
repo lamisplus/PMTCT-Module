@@ -474,7 +474,7 @@ const UserRegistration = (props) => {
                     );
                 if(response.data===true){
                     
-                    toast.error("ANC number already exist")
+                    toast.error("ANC number already exist", {position: toast.POSITION.BOTTOM_CENTER})
                     setAncNumberCheck(response.data)
                 }else{
                     setAncNumberCheck(false)
@@ -503,11 +503,12 @@ const UserRegistration = (props) => {
             //ANC FORM VALIDATION
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
+           // objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
+            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
+            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
             objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
@@ -1134,6 +1135,7 @@ const UserRegistration = (props) => {
                                                     id="countryId"
                                                     style={{border: "1px solid #014D88", borderRadius:"0.2rem"}}
                                                     value={basicInfo.countryId}
+                                                    disabled
                                                     //onChange={getStates}
                                                     >
                                                     <option value={""}>Select</option>
@@ -1594,6 +1596,9 @@ const UserRegistration = (props) => {
                                             {errors.lmp !=="" ? (
                                                     <span className={classes.error}>{errors.lmp}</span>
                                             ) : "" }
+                                            {objValues.gaweeks ===0 ? (
+                                                <span className={classes.error}>Invalid date</span>
+                                            ) : "" }
                                             </FormGroup>
                                     </div>
                                    
@@ -1614,9 +1619,7 @@ const UserRegistration = (props) => {
                                             {errors.gaweeks !=="" ? (
                                                     <span className={classes.error}>{errors.gaweeks}</span>
                                             ) : "" }
-                                            {objValues.gaweeks ===0 ? (
-                                                <span className={classes.error}>Invalid value</span>
-                                        ) : "" }
+                                            
                                             </FormGroup>
                                     </div>
                                     
@@ -1691,10 +1694,10 @@ const UserRegistration = (props) => {
                                             ) : "" }                                        
                                             </FormGroup>
                                     </div>
-                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positve' && (<>
+                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span></Label>
+                                            <Label >Treated for syphilis (penicillin) </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -1715,7 +1718,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Referred Syphilis +ve client <span style={{ color:"red"}}> *</span></Label>
+                                            <Label >Referred Syphilis +ve client </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -1767,8 +1770,7 @@ const UserRegistration = (props) => {
                             {saving ? <Spinner /> : ""}
 
                             <br />
-
-                            {basicInfo.age>= 10 && (
+                            {basicInfo.age>= 10 && objValues.gaweeks >0  && ancNumberCheck!==true && objValues.gravida >= objValues.parity &&  (
                             <MatButton
                                 type="submit"
                                 variant="contained"

@@ -340,7 +340,7 @@ const LabourDelivery = (props) => {
             <CardBody>
             <form >
                 <div className="row">
-                    <h2>labour and Delivery</h2>
+                    <h2>Labour and Delivery</h2>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >ANC ID  <span style={{ color:"red"}}> *</span></Label>
@@ -396,7 +396,7 @@ const LabourDelivery = (props) => {
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.dateOfDelivery} 
-                                    min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     disabled={disabledField}
                                 />

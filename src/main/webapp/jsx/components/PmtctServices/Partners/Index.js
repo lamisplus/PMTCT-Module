@@ -114,7 +114,7 @@ const PatientnHistory = (props) => {
                .then((response) => {
                 setLoading(false)
                 //console.log(response.data.partnerInformation)
-                setPartners(response.data.partnerInformation)
+                setPartners(response.data.partnerInformation!==null ? [response.data.partnerInformation] : [])
                 })
 
                .catch((error) => {
@@ -187,7 +187,7 @@ const PatientnHistory = (props) => {
 
             <MaterialTable
             icons={tableIcons}
-              title="List Of Partners "
+              title="List of Partners "
               columns={[
                 { title: "Partner Name", field: "name" },
                 { title: "Partner Name", field: "age" },
@@ -201,7 +201,7 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={partners && [partners].map((row) => ({
+              data={partners.map((row) => ({
                    name: row.fullName,
                    age: row.age,
                    pre: row.preTestCounseled,

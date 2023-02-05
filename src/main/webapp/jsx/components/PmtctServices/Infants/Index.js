@@ -85,7 +85,7 @@ const InfantInformation = (props) => {
             )
             .then((response) => {
             setLoading(false)
-            setDelivery(response.data)
+            setDelivery(response.data.dateOfDelivery)
             setAliveChild(response.data && response.data.numberOfInfantsAlive ? response.data.numberOfInfantsAlive : 0)
             })
 
@@ -107,7 +107,7 @@ const InfantInformation = (props) => {
     }
     const LoadPage =(obj, actionType)=>{    
         props.setActiveContent({...props.activeContent, route:'add-infant', id:obj.id, actionType:actionType, obj:obj})
-}
+    }
 
   return (
     <div>

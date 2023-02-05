@@ -96,6 +96,7 @@ const Labourpartner = (props) => {
                 postTestCounseled: "",
                 referredTo: "",
                 syphillsStatus: "",
+                referredToOthers:""
     })
     useEffect(() => {  
         PARTNER_SYPHILIS_STATUS();
@@ -103,6 +104,7 @@ const Labourpartner = (props) => {
         if(props.activeContent && props.activeContent.id) {
             setpartner(props.activeContent.obj)
             setDisabledField(props.activeContent.actionType==="view"? true : false)
+            
         }       
     }, [props.patientObj.id, props.activeContent]);
     //Get list 
@@ -153,7 +155,7 @@ const Labourpartner = (props) => {
     }
     /**** Submit Button Processing  */
     const handleSubmit = (e) => {        
-        e.preventDefault();        
+        e.preventDefault();  
         if(validate()){
         setSaving(true);
         axios.put(`${baseUrl}pmtct/anc/update-partnerinformation-in-anc/${props.patientObj.id}`, partner,
@@ -219,6 +221,24 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
+                            <Label >Partner HIV Status </Label>
+                            <InputGroup> 
+                                <Input 
+                                    type="text"
+                                    name="partnerHivSTatus"
+                                    id="partnerHivSTatus"
+                                    //onChange={handleInputChangepartnerDto}
+                                    value={props.patientObj.dynamicHivStatus!=="Unknown"  ? props.patientObj.dynamicHivStatus : props.patientObj.staticHivStatus}
+                                    disabled
+                                />
+                            </InputGroup>
+                            {errors.ancNo !=="" ? (
+                                    <span className={classes.error}>{errors.ancNo}</span>
+                            ) : "" }
+                            </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                            <FormGroup>
                             <Label >Partner  Full Name <span style={{ color:"red"}}> *</span></Label>
                             <InputGroup> 
                                 <Input 
@@ -244,6 +264,7 @@ const Labourpartner = (props) => {
                                     type="Number"
                                     name="age"
                                     id="age"
+                                    min={10}
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.age} 
                                     disabled={disabledField}
@@ -334,8 +355,8 @@ const Labourpartner = (props) => {
                                     disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
-                                    <option value="Yes" >Yes</option>
-                                    <option value="No" >No</option>
+                                    <option value="Positive" >Positive</option>
+                                    <option value="Negative" >Negative</option>
                                 </Input>
 
                             </InputGroup>
@@ -357,8 +378,8 @@ const Labourpartner = (props) => {
                                     disabled={disabledField}
                                 >
                                     <option value="" >Select</option>
-                                    <option value="Yes" >Yes</option>
-                                    <option value="No" >No</option>
+                                    <option value="Positive" >Positive</option>
+                                    <option value="Negative" >Negative</option>
                                 </Input>
 
                             </InputGroup>
@@ -381,7 +402,7 @@ const Labourpartner = (props) => {
                                 >
                                     <option value="" >Select</option>                                    
                                     {syphills.map((value) => (
-                                        <option key={value.id} value={value.code}>
+                                        <option key={value.id} value={value.display}>
                                             {value.display}
                                         </option>
                                     ))}
@@ -398,15 +419,16 @@ const Labourpartner = (props) => {
                             <Label >Referred To</Label>
                             <InputGroup> 
                                 <Input 
-                                    type="text"
+                                    type="select"
                                     name="referredTo"
                                     id="referredTo"
                                     onChange={handleInputChangepartnerDto}
                                     value={partner.referredTo} 
                                     disabled={disabledField}
                                 >
+                                    <option value="" >Select</option> 
                                      {referred.map((value) => (
-                                        <option key={value.id} value={value.code}>
+                                        <option key={value.id} value={value.display}>
                                             {value.display}
                                         </option>
                                     ))}
@@ -417,6 +439,26 @@ const Labourpartner = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
+                    {partner.referredTo==='OTHERS' && (
+                        <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                        <Label >Referred To</Label>
+                        <InputGroup> 
+                            <Input 
+                                type="text"
+                                name="referredToOthers"
+                                id="referredToOthers"
+                                onChange={handleInputChangepartnerDto}
+                                value={partner.referredToOthers} 
+                                disabled={disabledField}
+                            >
+                                
+                            </Input>
+                        </InputGroup>
+                       
+                        </FormGroup>
+                </div>
+                    )}
   
             </div>
                 
