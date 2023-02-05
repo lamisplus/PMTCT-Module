@@ -412,7 +412,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantVisitRequestDto.visitDate}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                     onChange={handleInputChangeInfantVisitRequestDto}
-                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
+                    min={props.patientObj.firstAncDate}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
