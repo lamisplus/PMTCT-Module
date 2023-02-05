@@ -352,8 +352,8 @@ console.log(infantInfo)
                                 />
 
                             </InputGroup>
-                            {errors.hospitalNumber2 !=="" ? (
-                                    <span className={classes.error}>{errors.hospitalNumber2}</span>
+                            {errors.hospitalNumber !=="" ? (
+                                    <span className={classes.error}>{errors.hospitalNumber}</span>
                             ) : "" }
                             {hospitalNumStatus===true ? (
                                 <span className={classes.error}>{"Hospital number already exist"}</span>

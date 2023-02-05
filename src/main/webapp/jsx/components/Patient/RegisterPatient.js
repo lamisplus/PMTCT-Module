@@ -510,7 +510,7 @@ const UserRegistration = (props) => {
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
             //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+            //objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             
