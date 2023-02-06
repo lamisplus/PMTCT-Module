@@ -22,7 +22,10 @@ public class ANCEnrollementRequestDto{
     private Integer gAWeeks;
     private String hivDiognosicTime;
     private String staticHivStatus;
-    private SyphilisInfo syphilisInfo;
+    private String testedSyphilis;
+    private String testResultSyphilis;
+    private String treatedSyphilis;
+    private String referredSyphilisTreatment;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
     private final String person_uuid;

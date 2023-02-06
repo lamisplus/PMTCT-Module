@@ -122,7 +122,7 @@ const ClinicVisit = (props) => {
   }, [props.activeContent]);
   const GetVisit =(id)=>{
     axios
-       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
+       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.patientObj.ancNo}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {

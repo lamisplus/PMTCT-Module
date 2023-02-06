@@ -21,9 +21,10 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private LocalDate expectedDeliveryDate;
     private Integer gAWeeks;
     private String hivDiognosicTime;
-    @Type(type = "jsonb-node")
-    @Column(columnDefinition = "jsonb")
-    private JsonNode syphilisInfo;
+    private String testedSyphilis;
+    private String testResultSyphilis;
+    private String treatedSyphilis;
+    private String referredSyphilisTreatment;
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")
     private JsonNode pmtctHtsInfo;

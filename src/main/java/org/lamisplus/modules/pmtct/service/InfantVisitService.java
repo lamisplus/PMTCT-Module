@@ -146,10 +146,24 @@ public class InfantVisitService
         return age;
     }
 
-    @SneakyThrows
-    public InfantVisit getSingleInfantVisit(Long id) {
-        return this.infantVisitRepository.findById(id)
-                .orElseThrow(() -> new Exception("InfantVisit NOT FOUND"));
+
+    public InfantVisitRequestDto convertEntitytoRequestDto(InfantVisit infantVisit) {
+        InfantVisitRequestDto infantVisitResponseDto = new InfantVisitRequestDto();
+        //infantVisitResponseDto.setFullname(this.getFullName(infantVisit.getInfantHospitalNumber()));
+        //infantVisitResponseDto.setAge(calculateAge(infantVisit.getInfantHospitalNumber()));
+        //infantVisitResponseDto.setAgeAtCtx(infantVisit.getAgeAtCtx());
+        infantVisitResponseDto.setAncNumber(infantVisit.getAncNumber());
+        infantVisitResponseDto.setBodyWeight(infantVisit.getBodyWeight());
+        infantVisitResponseDto.setBreastFeeding(infantVisit.getBreastFeeding());
+        infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
+        infantVisitResponseDto.setId(infantVisit.getId());
+        infantVisitResponseDto.setInfantHospitalNumber(infantVisit.getInfantHospitalNumber());
+        infantVisitResponseDto.setUuid(infantVisit.getUuid());
+        infantVisitResponseDto.setVisitDate(infantVisit.getVisitDate());
+        infantVisitResponseDto.setVisitStatus(infantVisit.getVisitStatus());
+
+
+        return infantVisitResponseDto;
     }
 
     public List<InfantVisit> getInfantVisitByHospitalNumber(String hospitalNumber) {
@@ -253,4 +267,27 @@ public class InfantVisitService
         else filterResponseDto.setOutCome(Boolean.FALSE);
         return filterResponseDto;
     }
+
+    @SneakyThrows
+    public InfantVisit  getSingleInfantVisit(Long id) {
+        return this.infantVisitRepository.findById(id)
+                .orElseThrow(() -> new Exception("InfantVisit NOT FOUND"));
+    }
+
+//    @SneakyThrows
+//    public InfantVisitationConsolidatedDto  getSingleInfantVisit(Long id) {
+//        Optional<InfantVisit> infantVisitOptional = infantVisitRepository.findById(id);
+//        InfantVisitationConsolidatedDto infantVisitationConsolidatedDto = new InfantVisitationConsolidatedDto();
+//        if (infantVisitOptional.isPresent()){
+//            InfantVisit infantVisit = infantVisitOptional.get();
+//            infantVisitationConsolidatedDto.setInfantVisitRequestDto(convertEntitytoRequestDto(infantVisit));
+//            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findByAncNumberAndVisitDate(infantVisit.getAncNumber(), infantVisit.getVisitDate());
+//            if(infantMotherArtOptional.isPresent()) {
+//                infantVisitationConsolidatedDto.setInfantMotherArtDto();
+//            }
+//        }
+//        return infantVisitationConsolidatedDto;
+//    }
+
+
 }

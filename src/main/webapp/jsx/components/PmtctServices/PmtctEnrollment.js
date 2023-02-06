@@ -115,7 +115,7 @@ const AncPnc = (props) => {
     
     const GetPatientPMTCT =(id)=>{
         axios
-           .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${id}`,
+           .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${props.patientObj.ancNo}`,
                { headers: {"Authorization" : `Bearer ${token}`} }
            )
            .then((response) => {

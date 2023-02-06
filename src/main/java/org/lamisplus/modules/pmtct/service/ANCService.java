@@ -89,18 +89,17 @@ public class ANCService {
             anc.setExpectedDeliveryDate(ancRequestDto.getExpectedDeliveryDate());
             anc.setGAWeeks(ancRequestDto.getGAWeeks());
             anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
+            anc.setTestedSyphilis(ancRequestDto.getTestedSyphilis());
+            anc.setTestResultSyphilis(ancRequestDto.getTestResultSyphilis());
+            anc.setTreatedSyphilis(ancRequestDto.getTreatedSyphilis());
+            anc.setReferredSyphilisTreatment(ancRequestDto.getReferredSyphilisTreatment());
 
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
             anc.setHospitalNumber(hostpitalNumber);
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
-            SyphilisInfo syphilisInfo = ancRequestDto.getSyphilisInfo();
-            if (syphilisInfo != null) {
-                JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
-                anc.setSyphilisInfo(syphilisInfoJsonNode);
 
-            }
 
             PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
@@ -128,23 +127,19 @@ public class ANCService {
                 anc.setGravida(ancRequestDto.getGravida());
                 anc.setParity(ancRequestDto.getParity());
                 anc.setLMP(ancRequestDto.getLMP());
-                try{
-                    LocalDate eed =  this.calculateEDD(ancRequestDto.getLMP());
-                   // System.out.println("@ invocation "+ eed);
+                try {
+                    LocalDate eed = this.calculateEDD(ancRequestDto.getLMP());
+                    // System.out.println("@ invocation "+ eed);
                     anc.setExpectedDeliveryDate(eed);
-                }catch (Exception e){e.printStackTrace();}
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 anc.setGAWeeks(ancRequestDto.getGAWeeks());
                 anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
                 anc.setUuid(UUID.randomUUID().toString());
                 anc.setHospitalNumber(hostpitalNumber);
                 anc.setArchived(0L);
 
-                SyphilisInfo syphilisInfo = ancRequestDto.getSyphilisInfo();
-                if (syphilisInfo != null) {
-                    JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
-                    anc.setSyphilisInfo(syphilisInfoJsonNode);
-
-                }
                 PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
                 if (pmtctHtsInfo != null) {
                     JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
@@ -234,6 +229,7 @@ public class ANCService {
         return ancRespondDtoList;
 
     }
+
     private ANC getExistAnc(Long id) {
         return ancRepository
                 .findById(id)
@@ -244,6 +240,7 @@ public class ANCService {
         ANC anc = this.ancRepository.getANCById(id);
         return entityToDto(anc);
     }
+
     public ANCRequestDto updateAnc(Long id, ANCRequestDto ancRequestDto) {
         // PmtctVisit existVisit = getExistVisit(id);
         ANC anc = convertDtoToEntity(ancRequestDto);
@@ -253,7 +250,7 @@ public class ANCService {
         return ancRequestDto;
     }
 
-        public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
+    public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
         ancRespondDto.setAncNo(anc.getAncNo());
         ancRespondDto.setId(anc.getId());
@@ -264,7 +261,10 @@ public class ANCService {
         ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         ancRespondDto.setGAWeeks(anc.getGAWeeks());
         ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-        ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+        ancRespondDto.setTestedSyphilis(anc.getTestedSyphilis());
+        ancRespondDto.setTestResultSyphilis(anc.getTestResultSyphilis());
+        ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
+        ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         ancRespondDto.setPartnerInformation(anc.getPartnerInformation());
@@ -322,7 +322,7 @@ public class ANCService {
     }
 
     public PersonMetaDataDto getAllPMTCTPerson3(String searchValue, int pageNo, int pageSize) {
-       //Integer rec = ancRepository.getTotalAnc();
+        //Integer rec = ancRepository.getTotalAnc();
         //pageSize+= rec;
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
         Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -339,9 +339,9 @@ public class ANCService {
             String queryParam = "%" + searchValue + "%";
             persons = personRepository.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         } else {
-           // Integer rec = ancRepository.getTotalAnc();
+            // Integer rec = ancRepository.getTotalAnc();
             //if (rec >= 1) {
-                persons = personRepository.findFemalePerson(0, currentOrganisationUnitId, paging);
+            persons = personRepository.findFemalePerson(0, currentOrganisationUnitId, paging);
             //} else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
         }
 
@@ -363,7 +363,7 @@ public class ANCService {
         personMetaDataDto.setCurrentPage(persons.getNumber());
         //personMetaDataDto.setRecords(personResponseDtos);
         personMetaDataDto.setRecords(persons.getContent().stream().map(this::getDtoFromPerson).collect(Collectors.toList()));
-         return personMetaDataDto;
+        return personMetaDataDto;
         //return checkedInPeople;
     }
 
@@ -462,9 +462,10 @@ public class ANCService {
         personResponseDto.setOrganization(person.getOrganization());
         personResponseDto.setUuid(person.getUuid());
         String hivStatus = "Unknown";
-        try{
+        try {
             hivStatus = this.getDynamicHivStatus(person.getUuid());
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
         personResponseDto.setDynamicHivStatus(hivStatus);
         return personResponseDto;
     }
@@ -687,18 +688,17 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
-            try{
-                LocalDate eed =  this.calculateEDD(ancEnrollementRequestDto.getLMP());
+            anc.setTestedSyphilis(ancEnrollementRequestDto.getTestedSyphilis());
+            anc.setTestResultSyphilis(ancEnrollementRequestDto.getTestResultSyphilis());
+            anc.setTreatedSyphilis(ancEnrollementRequestDto.getTreatedSyphilis());
+            anc.setReferredSyphilisTreatment(ancEnrollementRequestDto.getReferredSyphilisTreatment());
+            try {
+                LocalDate eed = this.calculateEDD(ancEnrollementRequestDto.getLMP());
                 anc.setExpectedDeliveryDate(eed);
-            }catch (Exception e){e.printStackTrace();}
-            anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
-            SyphilisInfo syphilisInfo = ancEnrollementRequestDto.getSyphilisInfo();
-            if (syphilisInfo != null) {
-                JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
-                anc.setSyphilisInfo(syphilisInfoJsonNode);
-
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
+            anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
             PmtctHtsInfo pmtctHtsInfo = ancEnrollementRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
                 JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
@@ -730,7 +730,11 @@ public class ANCService {
         ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         ancRespondDto.setGAWeeks(anc.getGAWeeks());
         ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-        ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+        ancRespondDto.setTestedSyphilis(anc.getTestedSyphilis());
+        ancRespondDto.setTestResultSyphilis(anc.getTestResultSyphilis());
+        ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
+        ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
+
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         ancRespondDto.setPerson_uuid(persons.getUuid());
@@ -764,18 +768,18 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
-            try{
-                LocalDate eed =  this.calculateEDD(ancWithPersonRequestDto.getLMP());
+            try {
+                LocalDate eed = this.calculateEDD(ancWithPersonRequestDto.getLMP());
                 //System.out.println("@ invocation "+ eed);
                 anc.setExpectedDeliveryDate(eed);
-            }catch (Exception e){e.printStackTrace();}
-            anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
-            SyphilisInfo syphilisInfo = ancWithPersonRequestDto.getSyphilisInfo();
-            if (syphilisInfo != null) {
-                JsonNode syphilisInfoJsonNode = mapper.valueToTree(syphilisInfo);
-                anc.setSyphilisInfo(syphilisInfoJsonNode);
-
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
+            anc.setTestedSyphilis(ancWithPersonRequestDto.getTestedSyphilis());
+            anc.setTestResultSyphilis(ancWithPersonRequestDto.getTestResultSyphilis());
+            anc.setTreatedSyphilis(ancWithPersonRequestDto.getTreatedSyphilis());
+            anc.setReferredSyphilisTreatment(ancWithPersonRequestDto.getReferredSyphilisTreatment());
 
             PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
@@ -819,16 +823,20 @@ public class ANCService {
             ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
             ancRespondDto.setGAWeeks(anc.getGAWeeks());
             ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-            ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+            ancRespondDto.setTestedSyphilis(anc.getTestedSyphilis());
+            ancRespondDto.setTestResultSyphilis(anc.getTestResultSyphilis());
+            ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
+            ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
             ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
             ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
             ancRespondDto.setHivStatus(anc.getStaticHivStatus());
 
             String hivStatus = "Unknown";
-            try{
+            try {
                 hivStatus = this.getDynamicHivStatus(anc.getPersonUuid());
-            }catch (Exception e){}
+            } catch (Exception e) {
+            }
             ancRespondDto.setDynamicHivStatus(hivStatus);
 
         }
@@ -865,6 +873,7 @@ public class ANCService {
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ANC.class, "id", "" + id));
     }
+
     public void graduateFromANC(ANC anc, String visitStatus) {
         ANC existingAnc = this.getExistingANC(anc.getId());
         existingAnc.setFirstAncDate(anc.getFirstAncDate());
@@ -874,7 +883,10 @@ public class ANCService {
         existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         existingAnc.setGAWeeks(anc.getGAWeeks());
         existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
-        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setTestedSyphilis(anc.getTestedSyphilis());
+        existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
+        existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
+        existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());
         existingAnc.setPersonUuid(anc.getPersonUuid());
@@ -905,7 +917,10 @@ public class ANCService {
         existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         existingAnc.setGAWeeks(anc.getGAWeeks());
         existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
-        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setTestedSyphilis(anc.getTestedSyphilis());
+        existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
+        existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
+        existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());
         existingAnc.setPersonUuid(anc.getPersonUuid());
@@ -956,38 +971,37 @@ public class ANCService {
         ancRepository.save(anc);
     }
 
-    String getDynamicHivStatus (String personUuid){
+    String getDynamicHivStatus(String personUuid) {
         String hivStatus = "Unknown";
         Optional<String> uuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
-        if(uuid.isPresent())
-        {
+        if (uuid.isPresent()) {
             hivStatus = "Positive";
-        }else{
+        } else {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
             List<HtsClient> htsClientList = ancRepository.getHtsRecordsByPersonsUuidAAndFacilityId(personUuid, user.getCurrentOrganisationUnitId());
             Iterator iterator = htsClientList.iterator();
-            while (iterator.hasNext())
-            {
-                HtsClient htsClient = (HtsClient)  iterator.next();
+            while (iterator.hasNext()) {
+                HtsClient htsClient = (HtsClient) iterator.next();
                 String firstResult = htsClient.getHivTestResult();
                 String secondResult = htsClient.getHivTestResult2();
-                if (secondResult == null) hivStatus= firstResult;
-                else hivStatus= secondResult;
+                if (secondResult == null) hivStatus = firstResult;
+                else hivStatus = secondResult;
                 break;
             }
 
         }
-        return  hivStatus;
+        return hivStatus;
     }
 
-    public LocalDate calculateEDD(LocalDate lmd){
+    public LocalDate calculateEDD(LocalDate lmd) {
         LocalDate date = lmd;
         date = date.plusMonths(9);
-        date =  date.plusDays(7);
+        date = date.plusDays(7);
         return date;
     }
-    public int calculateGA(LocalDate lmd){
+
+    public int calculateGA(LocalDate lmd) {
         LocalDate currentDate = LocalDate.now();
         return (int) ChronoUnit.WEEKS.between(lmd, currentDate);
     }
@@ -996,19 +1010,18 @@ public class ANCService {
         long totalRecords = al.size();
         int pageNumber = pageNo;
         int pageSize = pagesize;
-        int totalPages = (int) Math.ceil(totalRecords/pagesize);
+        int totalPages = (int) Math.ceil(totalRecords / pagesize);
         return PageDTO.builder().totalRecords(totalRecords).pageNumber(pageNumber).pageSize(pageSize).totalPages(totalPages).build();
     }
 
-    public int calculateGA(String ancNo, LocalDate visitDate){
+    public int calculateGA(String ancNo, LocalDate visitDate) {
         LocalDate lmp = getLMP(ancNo);
-        int ga =   (int) ChronoUnit.WEEKS.between(lmp, visitDate);
-        if(ga<0) ga = 0;
+        int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
+        if (ga < 0) ga = 0;
         return ga;
     }
 
-    public LocalDate getLMP(String ancNo)
-    {
+    public LocalDate getLMP(String ancNo) {
         LocalDate LMP = LocalDate.now();
         Optional<ANC> anc = this.ancRepository.getByAncNo(ancNo);
         if (anc.isPresent())
@@ -1016,21 +1029,39 @@ public class ANCService {
         return LMP;
     }
 
-    public int calculateGA2(String hospitalNumber, LocalDate visitDate){
+    public int calculateGA2(String hospitalNumber, LocalDate visitDate) {
         LocalDate dob = getDOB(hospitalNumber);
-        int ga =   (int) ChronoUnit.MONTHS.between(dob, visitDate);
-        if(ga<0) ga = 0;
+        int ga = (int) ChronoUnit.MONTHS.between(dob, visitDate);
+        if (ga < 0) ga = 0;
         return ga;
     }
 
-    public LocalDate getDOB(String hospitalNumber)
-    {
+    public LocalDate getDOB(String hospitalNumber) {
         LocalDate DOB = LocalDate.now();
         Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
         if (infants.isPresent())
             DOB = infants.get().getDateOfDelivery();
         return DOB;
     }
+//
+//    public ANCRespondDto getANCDetailsByANCNo(String ancNo){
+//        Optional<ANC> anc = ancRepository.getByAncNo(ancNo);
+//        ANCRespondDto ancRespondDto = new ANCRespondDto()
+//        if(anc.isPresent()){
+//            String puuid = anc.get().getPersonUuid();
+//            Optional<User> currentUser = this.userService.getUserWithRoles();
+//            User user = (User) currentUser.get();
+//            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(puuid, user.getCurrentOrganisationUnitId(), 0);
+//            if(persons.isPresent()){
+//                Person person = persons.get();
+//                ancRespondDto = getANCRespondDtoFromPerson(person);
+//            }
+//
+//
+//        }
+//        return ancRespondDto;
+//    }
+
 
 }
 

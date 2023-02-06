@@ -39,6 +39,10 @@ public class ANCRespondDto implements Serializable {
     private Long personId;
     private String staticHivStatus;
     private String dynamicHivStatus;
+    private String testedSyphilis;
+    private String testResultSyphilis;
+    private String treatedSyphilis;
+    private String referredSyphilisTreatment;
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
 
 }

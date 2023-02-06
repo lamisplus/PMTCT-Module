@@ -128,13 +128,13 @@ const LabourDelivery = (props) => {
         TIME_HIV_DIAGNOSIS();
         if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
             GetPatientLabourDTO(props.activeContent.id)
-            setSisabledField(props.activeContent.actionType==='view'?true : false)
+            setSisabledField(props.activeContent.actionType==='view'? true : false)
         }
     }, [props.patientObj.id,props.activeContent ]);
-
+    
     const GetPatientLabourDTO =(id)=>{
         axios
-           .get(`${baseUrl}pmtct/anc/view-delivery/${props.activeContent.id}`,
+           .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.ancNo}`,
                { headers: {"Authorization" : `Bearer ${token}`} }
            )
            .then((response) => {
@@ -145,6 +145,7 @@ const LabourDelivery = (props) => {
            //console.log(error);
            });          
     }
+
     //Get list 
     const BOOKING_STATUS =()=>{
         axios

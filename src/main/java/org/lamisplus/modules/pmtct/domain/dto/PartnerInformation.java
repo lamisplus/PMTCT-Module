@@ -16,5 +16,6 @@ public class PartnerInformation
     private String hcStatus;
     private String syphillisStatus;
     private String referredTo;
+    private String referredToOthers;
     private int age;
 }
