@@ -396,7 +396,7 @@ const LabourDelivery = (props) => {
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.dateOfDelivery} 
-                                    min={props.patientObj.pmtctEnrollmentRespondDto && props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
+                                    min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     disabled={disabledField}
                                 />

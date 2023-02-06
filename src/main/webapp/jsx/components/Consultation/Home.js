@@ -460,7 +460,7 @@ function DsdModelType (dsdmodel) {
                 value={objValues.dateOfViralLoad}
                 onChange={handleInputChange}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                min={props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                min={props.patientObj.firstAncDate}
                 max={moment(new Date()).format("YYYY-MM-DD")} 
                 disabled={disabledField} 
               />
@@ -479,7 +479,7 @@ function DsdModelType (dsdmodel) {
                   value={objValues.gaOfViralLoad}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""} 
+                  min={props.patientObj.firstAncDate}
                   disabled={disabledField===false ? true : disabledField}  
                 />
               {errors.gaOfViralLoad !=="" ? (
@@ -614,7 +614,7 @@ function DsdModelType (dsdmodel) {
                   value={objValues.dateOfmeternalOutcome}
                   onChange={handleInputChange}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                  min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
+                  min={props.patientObj.firstAncDate}
                   max={moment(new Date()).format("YYYY-MM-DD")} 
                   disabled={disabledField}
                 />

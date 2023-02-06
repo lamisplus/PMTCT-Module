@@ -689,6 +689,7 @@ const UserRegistration = (props) => {
                         objValues.gaweeks=response.data
                         setObjValues ({...objValues,  [e.target.name]: e.target.value});  
                     }else{
+                        objValues.gaweeks=response.data
                         toast.error("Please select a validate date")
                         setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
                     }
@@ -1596,8 +1597,8 @@ const UserRegistration = (props) => {
                                             {errors.lmp !=="" ? (
                                                     <span className={classes.error}>{errors.lmp}</span>
                                             ) : "" }
-                                            {objValues.gaweeks ===0 ? (
-                                                <span className={classes.error}>Invalid date</span>
+                                            {objValues.gaweeks===0 ? (
+                                                <span className={classes.error}>Invalid date </span>
                                             ) : "" }
                                             </FormGroup>
                                     </div>
@@ -1741,7 +1742,7 @@ const UserRegistration = (props) => {
                                 </>)}
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >HIV Status </Label>
+                                            <Label >HIV Status <span style={{ color:"red"}}> *</span></Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"

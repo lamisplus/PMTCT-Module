@@ -289,6 +289,24 @@ const UserRegistration = (props) => {
                 }
             }
             getAncNumber();
+            }
+            if(e.target.name==='lmp' && e.target.value!==''){
+
+                async function getGa() {
+                    const ga=e.target.value
+                    const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
+                            { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                        );
+                        if(response.data>0){
+                            objValues.gaweeks=response.data
+                            setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                        }else{
+                            objValues.gaweeks=response.data
+                            toast.error("Please select a validate date")
+                            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                        }
+                }
+                getGa();
             }       
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    
@@ -482,26 +500,7 @@ const UserRegistration = (props) => {
                                     ) : "" }  
                                             
                                     </FormGroup>
-                                </div>  
-                                <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
-                                        <InputGroup> 
-                                            <Input 
-                                                type="number"
-                                                name="gravida"
-                                                id="gravida"
-                                                onChange={handleInputChange}
-                                                value={objValues.gravida} 
-                                                disabled={disabledField}
-                                            />
-
-                                        </InputGroup>
-                                        {errors.gravida !=="" ? (
-                                                <span className={classes.error}>{errors.gravida}</span>
-                                        ) : "" }
-                                        </FormGroup>
-                                </div>
+                                </div> 
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Parity <span style={{ color:"red"}}> *</span></Label>
@@ -519,8 +518,32 @@ const UserRegistration = (props) => {
                                         {errors.parity !=="" ? (
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
+                                        
+                                        </FormGroup>
+                                </div> 
+                                <div className="form-group mb-3 col-md-6">
+                                        <FormGroup>
+                                        <Label >Gravida <span style={{ color:"red"}}> *</span></Label>
+                                        <InputGroup> 
+                                            <Input 
+                                                type="number"
+                                                name="gravida"
+                                                id="gravida"
+                                                onChange={handleInputChange}
+                                                value={objValues.gravida} 
+                                                disabled={disabledField}
+                                            />
+
+                                        </InputGroup>
+                                        {errors.gravida !=="" ? (
+                                                <span className={classes.error}>{errors.gravida}</span>
+                                        ) : "" }
+                                         {objValues.gravida < objValues.parity ? (
+                                                    <span className={classes.error}>Gravida should not be less Parity</span>
+                                            ) : "" }
                                         </FormGroup>
                                 </div>
+                                
                                 <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
                                         <Label >Date Of Last Menstrual Period <span style={{ color:"red"}}> *</span></Label>
@@ -538,6 +561,9 @@ const UserRegistration = (props) => {
                                         </InputGroup>
                                         {errors.lmp !=="" ? (
                                                 <span className={classes.error}>{errors.lmp}</span>
+                                        ) : "" }
+                                        {objValues.gaweeks===0 ? (
+                                                <span className={classes.error}>Invalid date </span>
                                         ) : "" }
                                         </FormGroup>
                                 </div>
