@@ -22,6 +22,7 @@ import org.lamisplus.modules.pmtct.domain.dto.ANCRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRespondDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
@@ -178,6 +179,11 @@ public class PMTCTEnrollmentService {
 
     public  PMTCTEnrollmentRespondDto  viewPMTCTEnrollmentById(Long id) {
        return convertEntitytoRespondDto(pmtctEnrollmentReporsitory.findById(id).orElseThrow(()-> new EntityNotFoundException(PMTCTEnrollment.class, "Id", id+ "") ));
+    }
+
+    public void deletePMTCT(Long id) {
+        PMTCTEnrollment existingPMTCTEnrollment = this.getSinglePmtctEnrollment(id);
+        this.pmtctEnrollmentReporsitory.delete(existingPMTCTEnrollment);
     }
 
 }

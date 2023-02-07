@@ -134,7 +134,7 @@ const LabourDelivery = (props) => {
     
     const GetPatientLabourDTO =(id)=>{
         axios
-           .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.ancNo}`,
+           .get(`${baseUrl}pmtct/anc/view-delivery/${props.activeContent.id}`,
                { headers: {"Authorization" : `Bearer ${token}`} }
            )
            .then((response) => {

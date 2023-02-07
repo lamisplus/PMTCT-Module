@@ -66,8 +66,8 @@ const ClinicVisit = (props) => {
   const [saving, setSaving] = useState(false);
   //const [clinicalStage, setClinicalStage] = useState([]);
   const [dsdModelType, setDsdModelType] = useState([]);
-  const [currentVitalSigns, setcurrentVitalSigns] = useState({})
-  const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
+  // const [currentVitalSigns, setcurrentVitalSigns] = useState({})
+  // const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
   const [visitStatus, setVisitStatus] = useState([]);
   const [maternalCome, setMaternalCome] = useState([]);
   const [fp, setFp] = useState([]);
@@ -96,21 +96,21 @@ const ClinicVisit = (props) => {
     timeOfViralLoad: "",
   }
   );
-  const [vital, setVitalSignDto] = useState({
-    bodyWeight: "",
-    diastolic: "",
-    encounterDate: "",
-    facilityId: 1,
-    height: "",
-    personId: props.patientObj.id,
-    serviceTypeId: 1,
-    systolic: "",
-    pulse:"",
-    temperature:"",
-    respiratoryRate:"" 
-  })
+  // const [vital, setVitalSignDto] = useState({
+  //   bodyWeight: "",
+  //   diastolic: "",
+  //   encounterDate: "",
+  //   facilityId: 1,
+  //   height: "",
+  //   personId: props.patientObj.id,
+  //   serviceTypeId: 1,
+  //   systolic: "",
+  //   pulse:"",
+  //   temperature:"",
+  //   respiratoryRate:"" 
+  // })
   useEffect(() => {
-    VitalSigns();
+    ///VitalSigns();
     VISIT_STATUS_PMTCT()
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
@@ -122,7 +122,7 @@ const ClinicVisit = (props) => {
   }, [props.activeContent]);
   const GetVisit =(id)=>{
     axios
-       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.patientObj.ancNo}`,
+       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {
@@ -135,24 +135,7 @@ const ClinicVisit = (props) => {
        });          
 }
 
-    //Check for the last Vital Signs
-    const VitalSigns = () => {
-    axios
-      .get(`${baseUrl}patient/vital-sign/person/${props.patientObj.id}`,
-        { headers: { "Authorization": `Bearer ${token}` } }
-      )
-      .then((response) => {
 
-        const lastVitalSigns = response.data[response.data.length - 1]
-        if (lastVitalSigns.encounterDate === moment(new Date()).format("YYYY-MM-DD") === true) {
-          setcurrentVitalSigns(lastVitalSigns)
-          setShowCurrentVitalSigns(true)
-        }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-    }
     const VISIT_STATUS_PMTCT = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`,

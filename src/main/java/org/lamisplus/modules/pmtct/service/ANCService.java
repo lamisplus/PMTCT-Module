@@ -28,10 +28,7 @@ import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.patient.service.VisitService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.Infant;
-import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
+import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
@@ -985,6 +982,8 @@ public class ANCService {
                 HtsClient htsClient = (HtsClient) iterator.next();
                 String firstResult = htsClient.getHivTestResult();
                 String secondResult = htsClient.getHivTestResult2();
+                System.out.println("firstResult = "+ firstResult);
+                System.out.println("secondResult = "+ secondResult);
                 if (secondResult == null) hivStatus = firstResult;
                 else hivStatus = secondResult;
                 break;
@@ -1062,6 +1061,10 @@ public class ANCService {
 //        return ancRespondDto;
 //    }
 
-
+    public void deleteANC(Long id) {
+        ANC existingANC = this.getSingleAnc(id);
+        existingANC.setArchived(1L);
+        ancRepository.save(existingANC);
+    }
 }
 

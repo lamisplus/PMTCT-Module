@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import MaterialTable from 'material-table';
+import MaterialTable, { MTableToolbar }  from 'material-table';
 import axios from "axios";
 
 import { token as token, url as baseUrl } from "./../../../api";
@@ -26,7 +26,7 @@ import 'react-widgets/dist/css/react-widgets.css';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
-import { MdDashboard } from "react-icons/md";
+//import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
 import { Label } from 'semantic-ui-react'
 import Moment from "moment";
@@ -108,6 +108,7 @@ const useStyles = makeStyles(theme => ({
 const Patients = (props) => {    
     const [patientList, setPatientList] = useState([])
     const [loading, setLoading] = useState(true)
+    const [showPPI, setShowPPI] = useState(true)
     useEffect(() => {
         patients()
       }, []);
@@ -148,6 +149,14 @@ const Patients = (props) => {
         const hospitalNumber = identifiers.identifier.find(obj => obj.type == 'HospitalNumber');       
         return hospitalNumber ? hospitalNumber.value : '';
     };
+    const handleCheckBox =e =>{
+        if(e.target.checked){
+            setShowPPI(false)
+        }else{
+            setShowPPI(true)
+        }
+    }
+
     
   return (
     <div>
@@ -160,6 +169,7 @@ const Patients = (props) => {
                 {
                   title: "Patient Name",
                   field: "name",
+                  hidden:showPPI
                 },
                 { title: "Hospital Number", field: "hospital_number", filtering: false },
                 { title: "Sex", field: "gender", filtering: false },
@@ -255,6 +265,31 @@ const Patients = (props) => {
                           pageSize:10,
                           debounceInterval: 400
                       }}
+                      components={{
+                        Toolbar: props => (
+                        <div >
+                            <div className="form-check custom-checkbox  float-left mt-4 ml-3 ">
+                                <input
+                                type="checkbox"
+                                className="form-check-input"                       
+                                name="showPP!"
+                                id="showPP"
+                                value="showPP"
+                                checked={showPPI===true? false : true}
+                                onChange={handleCheckBox}
+                                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                                />
+                                <label
+                                className="form-check-label"
+                                htmlFor="basic_checkbox_1"
+                                >
+                                <b style={{color:'#014d88',fontWeight:'bold'}}>SHOW PII</b>
+                                </label>
+                            </div>
+                            <MTableToolbar {...props} />
+                        </div>
+                        ),
+                    }}
             />
        
     </div>

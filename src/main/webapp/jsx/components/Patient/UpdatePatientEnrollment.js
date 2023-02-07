@@ -324,7 +324,7 @@ const UserRegistration = (props) => {
 
                 objValues.person_uuid = patientObj.uuid;
                 console.log(objValues)
-                const response = await axios.post(`${baseUrl}pmtct/anc/anc-enrollement`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
+                const response = await axios.put(`${baseUrl}pmtct/anc/anc-enrollement`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
                 toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
                 history.push('/');
             } catch (error) {                

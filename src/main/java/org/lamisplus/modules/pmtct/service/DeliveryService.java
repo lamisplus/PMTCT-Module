@@ -213,4 +213,9 @@ public class DeliveryService
         return deliveryRequestDto;
     }
 
+    public void deleteDelivery(Long id) {
+        Delivery existingDelivery = getSingleDelivery(id);
+        this.deliveryRepository.delete(existingDelivery);
+    }
+
 }

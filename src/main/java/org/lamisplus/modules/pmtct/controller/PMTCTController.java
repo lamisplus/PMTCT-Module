@@ -192,8 +192,8 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-delivery/{id}")
-    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") String id) {
-        return ResponseEntity.ok (deliveryService.viewDeliveryById(id));
+    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (deliveryService.getSingleDelivery(id));
     }
 
     @GetMapping(value = "activities/{ancNo}")
@@ -251,7 +251,7 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.getInfantVisitByHospitalNumber(hospitalNumber));
     }
     @GetMapping(value = "view-infantvisit/{id}")
-    public ResponseEntity<InfantVisit> viewInfantVisit(@PathVariable("id") Long id) {
+    public ResponseEntity<InfantVisitationConsolidatedDto> viewInfantVisit(@PathVariable("id") Long id) {
         return ResponseEntity.ok (infantVisitService.getSingleInfantVisit(id));
     }
 
@@ -333,6 +333,38 @@ public class PMTCTController {
         CompletableFuture<Boolean> hospitalNumberExist = infantService.hospitalNumberExist(hospitalNumber);
         return ResponseEntity.ok(hospitalNumberExist.get());
     }
+
+
+    @DeleteMapping(value = "/delete/delivery/{id}")
+    public ResponseEntity<String> deleteDelivery(@PathVariable("id") Long id) {
+        this.deliveryService.deleteDelivery(id);
+        return ResponseEntity.accepted ().build ();
+    }
+
+    @DeleteMapping(value = "/delete/anc/{id}")
+    public ResponseEntity<String> deleteANC(@PathVariable("id") Long id) {
+        this.ancService.deleteANC(id);
+        return ResponseEntity.accepted ().build ();
+    }
+
+    @DeleteMapping(value = "/delete/pmtct/{id}")
+    public ResponseEntity<String> deletePMTCT(@PathVariable("id") Long id) {
+        this.pmtctEnrollmentService.deletePMTCT(id);
+        return ResponseEntity.accepted ().build ();
+    }
+
+    @PutMapping(value = "update-infant-visit}")
+    public ResponseEntity<InfantVisitationConsolidatedDto> updateInfantVisit(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
+        return ResponseEntity.ok (infantVisitService.updateInfantVisit(infantVisitationConsolidatedDto));
+    }
+
+    @DeleteMapping(value = "/delete/infantvisit/{id}")
+    public ResponseEntity<String> deleteInfantVisit(@PathVariable("id") Long id) {
+        this.infantVisitService.DeleteInfantVisit(id);
+        return ResponseEntity.accepted ().build ();
+    }
+
+
 
 
 }

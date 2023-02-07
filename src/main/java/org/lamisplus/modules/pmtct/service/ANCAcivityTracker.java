@@ -25,6 +25,10 @@ public class ANCAcivityTracker {
 
     private  final InfantVisitRepository infantVisitRepository;
 
+    private  final InfantRepository infantRepository;
+
+
+
     private LocalDate getDeliveryDate (String ancNo)
     {
         LocalDate deliveryDate = LocalDate.now();
@@ -40,38 +44,38 @@ public class ANCAcivityTracker {
     public List<ActivityTracker> getANCActivities(String ancNo)
     {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
-        List<InfantArv> infantArvs = this.infantArvRepository.findByAncNumber(ancNo);
-        if(!(infantArvs.isEmpty()) ){
+        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByAncNumber(ancNo);
+        if(!(infantVisits.isEmpty()) ){
             ActivityTracker activityTracker = new ActivityTracker();
-            infantArvs.forEach(infantArv -> {
+            infantVisits.forEach(infantVisit -> {
 
-                activityTracker.setActivityName("ARV and CTX Administration");
-                activityTracker.setPath("apmtct_infant_arv");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
-                activityTracker.setViewable(true);
-                activityTracker.setRecordId(infantArv.getId());
-                activityTracker.setActivityDate(infantArv.getVisitDate());
-                activityTrackers.add(activityTracker);
-            });
-        }
-        ///LocalDate arvDate = this.getInfantArvDate(hospitalNumber);
-        List<InfantVisit> infantVisitList = this.infantVisitRepository.getPreArvVisits(ancNo);
-        if (!(infantVisitList.isEmpty()))
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            infantVisitList.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("Infant Post-ARV Visit");
+                activityTracker.setActivityName("Infant Visit");
                 activityTracker.setPath("pmtct_infant_visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
                 activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctVisit.getId());
-                activityTracker.setActivityDate(pmtctVisit.getVisitDate());
+                activityTracker.setRecordId(infantVisit.getId());
+                activityTracker.setActivityDate(infantVisit.getVisitDate());
                 activityTrackers.add(activityTracker);
-            } );
-
+            });
         }
+//        ///LocalDate arvDate = this.getInfantArvDate(hospitalNumber);
+//        List<InfantVisit> infantVisitList = this.infantVisitRepository.getPreArvVisits(ancNo);
+//        if (!(infantVisitList.isEmpty()))
+//        {
+//            ActivityTracker activityTracker = new ActivityTracker();
+//            infantVisitList.forEach(pmtctVisit ->{
+//                activityTracker.setActivityName("Infant Post-ARV Visit");
+//                activityTracker.setPath("pmtct_infant_visit");
+//                activityTracker.setEditable(true);
+//                activityTracker.setDeletable(true);
+//                activityTracker.setViewable(true);
+//                activityTracker.setRecordId(pmtctVisit.getId());
+//                activityTracker.setActivityDate(pmtctVisit.getVisitDate());
+//                activityTrackers.add(activityTracker);
+//            } );
+//
+//        }
 
         LocalDate deliveryDate = this.getDeliveryDate(ancNo);
         List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisits(ancNo, deliveryDate);
@@ -89,6 +93,22 @@ public class ANCAcivityTracker {
                 activityTrackers.add(activityTracker);
             } );
 
+        }
+
+        List<Infant> infantList = infantRepository.findInfantByAncNo(ancNo);
+
+        if(!(infantList.isEmpty())){
+            infantList.forEach(infant-> {
+                ActivityTracker activityTracker = new ActivityTracker();
+                activityTracker.setActivityName("Add Infant");
+                activityTracker.setPath("pmtct_infant_information");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(infant.getId());
+                activityTracker.setActivityDate(infant.getDateOfDelivery());
+                activityTrackers.add(activityTracker);
+            });
         }
 
         Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByAncNo(ancNo);

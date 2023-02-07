@@ -123,7 +123,11 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
       results: "",
       testType: "",
   });
-
+  //Vital signs clinical decision support 
+  const [vitalClinicalSupport, setVitalClinicalSupport] = 
+            useState({
+              bodyWeight: "",
+            })
 
   useEffect(() => {
     InfantInfo();
@@ -236,6 +240,14 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
     .catch((error) => {
     //console.log(error);
     });        
+  }
+  const handleInputValueCheckweight =(e)=>{
+    if(e.target.name==="bodyWeight" && (e.target.value < 3 || e.target.value>150)){      
+      const message ="Body weight must not be greater than 150 and less than 3"
+      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:message})
+    }else{
+      setVitalClinicalSupport({...vitalClinicalSupport, bodyWeight:""})
+    }
   }
   //GET AdultRegimenLine 
   const AdultRegimenLine =()=>{
@@ -469,8 +481,9 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                                 name="bodyWeight"
                                 id="bodyWeight"
                                 onChange={handleInputChangeInfantVisitRequestDto}
-                                min="3"
+                                min="1"
                                 max="150"
+                                onKeyUp={handleInputValueCheckweight} 
                                 value={infantVisitRequestDto.bodyWeight}
                                 style={{border: "1px solid #014D88", borderRadius:"0rem"}}
                             />
@@ -481,6 +494,12 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                         {errors.bodyWeight !=="" ? (
                             <span className={classes.error}>{errors.bodyWeight}</span>
                         ) : "" }
+                        {vitalClinicalSupport.weight !=="" ? (
+                                <span className={classes.error}>{vitalClinicalSupport.weight}</span>
+                        ) : ""}
+                        {infantVisitRequestDto.bodyWeight <=0? (
+                                <span className={classes.error}>Invalid Body Weight </span>
+                        ) : ""}
                         </FormGroup>
                     </div> 
                      <div className="form-group mb-3 col-md-6">
