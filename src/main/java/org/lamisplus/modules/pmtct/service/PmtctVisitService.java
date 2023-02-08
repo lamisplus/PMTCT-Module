@@ -242,4 +242,9 @@ public class PmtctVisitService {
         return convertEntitytoRespondDto(pmtctVisit);
     }
 
+    public void deleteMotherVisit(Long id) {
+        PmtctVisit exist = this.getSinglePmtctVisit(id);
+        this.pmtctVisitRepository.delete(exist);
+    }
+
 }

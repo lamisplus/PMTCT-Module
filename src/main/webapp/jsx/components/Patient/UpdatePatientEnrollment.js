@@ -141,8 +141,10 @@ const UserRegistration = (props) => {
     const locationState = location.state;
     let patientId = null;
     let actionType = null;
+    let recordId = null;
     let patientObj = {};
     patientId = locationState ? locationState.patientId : null;
+    recordId = locationState ? locationState.id : null;
     actionType = locationState ? locationState.actionType : null;
     patientObj = locationState ? locationState.patientObj : {}; 
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
@@ -151,7 +153,7 @@ const UserRegistration = (props) => {
         loadGenders();
         getSex();
         PregnancyStatus();
-
+        //console.log(patientObj)
         if(patientObj){
             setDisabledField(actionType==='view'? true : false)
             setObjValues ({...patientObj});
@@ -163,7 +165,7 @@ const UserRegistration = (props) => {
         }
 
         SOURCE_REFERRAL_PMTCT() 
-    }, [patientObj, patientId,]);
+    }, [patientObj, patientId,actionType]);
     //Get list of Source of Referral
     const SOURCE_REFERRAL_PMTCT =()=>{
         axios
@@ -323,10 +325,12 @@ const UserRegistration = (props) => {
             try {
 
                 objValues.person_uuid = patientObj.uuid;
-                console.log(objValues)
-                const response = await axios.put(`${baseUrl}pmtct/anc/anc-enrollement`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
-                toast.success("Patient Register successful", {position: toast.POSITION.BOTTOM_CENTER});
-                history.push('/');
+                const response = await axios.put(`${baseUrl}pmtct/anc/update-anc/${recordId}`, objValues, { headers: {"Authorization" : `Bearer ${token}`} });
+                toast.success("Record updated  successful", {position: toast.POSITION.BOTTOM_CENTER});
+                history.push({
+                    pathname: '/patient-history',
+                    state: { patientObj: patientObj }
+                });
             } catch (error) {                
                 if(error.response && error.response.data){
                     let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
@@ -356,8 +360,8 @@ const UserRegistration = (props) => {
                 <CardContent>
                     <Link
                         to={{
-                            pathname: "/",
-                            state: 'users'
+                            pathname: "/patient-history",
+                            state: { patientObj: patientObj  }
                         }}>
                         <Button
                             variant="contained"
@@ -469,7 +473,7 @@ const UserRegistration = (props) => {
                                                     id="ancNo"
                                                     onChange={handleInputChange}
                                                     value={objValues.ancNo} 
-                                                    disabled={disabledField}
+                                                    disabled
                                                 />
 
                                             </InputGroup>
@@ -555,7 +559,7 @@ const UserRegistration = (props) => {
                                                 onChange={handleInputChange}
                                                 value={objValues.lmp} 
                                                 max= {moment(new Date()).format("YYYY-MM-DD") }
-                                                disabled={disabledField}
+                                                disabled
                                             />
 
                                         </InputGroup>
@@ -661,7 +665,7 @@ const UserRegistration = (props) => {
                                             ) : "" }                                        
                                             </FormGroup>
                                     </div>
-                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positve' && (<>
+                                    {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
                                             <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span></Label>
@@ -751,9 +755,9 @@ const UserRegistration = (props) => {
                                 onClick={handleSubmit}
                             >
                                 {!saving ? (
-                                    <span style={{ textTransform: "capitalize" }}>Save</span>
+                                    <span style={{ textTransform: "capitalize" }}>Update</span>
                                 ) : (
-                                    <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                                    <span style={{ textTransform: "capitalize" }}>Updating...</span>
                                 )}
                             </MatButton>
                             )}

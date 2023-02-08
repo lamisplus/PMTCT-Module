@@ -454,7 +454,7 @@ const UserRegistration = (props) => {
         contacts.splice(index, 1); 
     };   
     const getRelationship = (relationshipId) => {
-        const relationship = relationshipOptions.find(obj => obj.id == relationshipId);
+        const relationship = relationshipOptions.find(obj => obj.id === relationshipId);
         return relationship ? relationship.display : '';
     };
     const handleInputChangeRelatives = e => {        

@@ -196,6 +196,11 @@ public class PMTCTController {
         return ResponseEntity.ok (deliveryService.getSingleDelivery(id));
     }
 
+    @GetMapping(value = "view-delivery2/{ancNo}")
+    public ResponseEntity<Delivery> viewDelivery2(@PathVariable("ancNo") String ancNo) {
+        return ResponseEntity.ok (deliveryService.getSingleDelivery2(ancNo));
+    }
+
     @GetMapping(value = "activities/{ancNo}")
     public List<ActivityTracker> getActivitiesByANC(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getANCActivities(ancNo);
@@ -364,7 +369,23 @@ public class PMTCTController {
         return ResponseEntity.accepted ().build ();
     }
 
+    @DeleteMapping(value = "/delete/mothervisit/{id}")
+    public ResponseEntity<String> deleteMotherVisit(@PathVariable("id") Long id) {
+        this.pmtctVisitService.deleteMotherVisit(id);
+        return ResponseEntity.accepted ().build ();
+    }
 
+    @DeleteMapping(value = "/delete/infantinfo/{id}")
+    public ResponseEntity<String> deleteInfantInfo(@PathVariable("id") Long id) {
+        this.infantService.deleteInfant(id);
+        return ResponseEntity.accepted ().build ();
+    }
+
+    @DeleteMapping(value = "delete/partnerinfo/{id}")
+    public ResponseEntity<String>  deletePartnerInfo(@PathVariable("id") Long id) {
+        ancService.deletePartnerInfo(id);
+        return ResponseEntity.accepted ().build ();
+    }
 
 
 }

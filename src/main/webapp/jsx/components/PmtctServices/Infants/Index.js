@@ -22,12 +22,11 @@ import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-widgets/dist/css/react-widgets.css';
-import { makeStyles } from '@material-ui/core/styles'
-//import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
+import {  Modal } from "react-bootstrap";
 import "@reach/menu-button/styles.css";
 import {FaUserPlus} from 'react-icons/fa'
 import { Dropdown,Button, Menu, Icon } from 'semantic-ui-react'
-
+import { toast} from "react-toastify";
 
 const tableIcons = {
 Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -55,6 +54,10 @@ const InfantInformation = (props) => {
     const [delivery, setDelivery] = useState([])
     const [loading, setLoading] = useState(true)
     const [aliveChild, setAliveChild] = useState(0)
+    const [open, setOpen] = React.useState(false)
+    const [saving, setSaving] = useState(false)
+    const [record, setRecord] = useState(null)
+     const toggle = () => setOpen(!open);
     useEffect(() => {
         InfantInfo();
         DeliveryInfo();
@@ -80,7 +83,7 @@ const InfantInformation = (props) => {
     const DeliveryInfo =()=>{
         setLoading(true)
         axios
-            .get(`${baseUrl}pmtct/anc/view-delivery/${props.patientObj.ancNo}`,
+            .get(`${baseUrl}pmtct/anc/view-delivery2/${props.patientObj.ancNo}`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
             )
             .then((response) => {
@@ -94,20 +97,40 @@ const InfantInformation = (props) => {
             });
         
     }
-    const LoadViewPage =(row,action)=>{
-        
-        if(row.path==='Mental-health'){        
-            props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id, actionType:action})
 
-        }else if(row.path==='Art-commence'){
-            props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id, actionType:action})
-
-        }
-        
-    }
     const LoadPage =(obj, actionType)=>{    
         props.setActiveContent({...props.activeContent, route:'add-infant', id:obj.id, actionType:actionType, obj:obj})
     }
+    const LoadDeletePage =(row)=>{
+
+        setSaving(true)       
+        //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/infantinfo/${row.id}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            InfantInfo()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });  
+    
+        }
+        const LoadModal =(row)=>{
+            toggle()
+            setRecord(row)
+        }
 
   return (
     <div>
@@ -159,7 +182,7 @@ const InfantInformation = (props) => {
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
                                 <Dropdown.Item onClick={()=>LoadPage(row, 'view')}> <Icon name='eye' />View </Dropdown.Item>
                                 <Dropdown.Item  onClick={()=>LoadPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>
-                               
+                                <Dropdown.Item  onClick={()=>LoadModal(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>
@@ -186,7 +209,24 @@ const InfantInformation = (props) => {
                           debounceInterval: 400
             }}
             />
-         
+       <Modal show={open} toggle={toggle} className="fade" size="md"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered backdrop="static">
+            <Modal.Header >
+        <Modal.Title id="contained-modal-title-vcenter">
+            Notification!
+        </Modal.Title>
+        </Modal.Header>
+            <Modal.Body>
+                <h4>Are you Sure you want to delete - <b>{record && record.firstName + " " + record.surname}</b></h4>
+                
+            </Modal.Body>
+        <Modal.Footer>
+            <Button onClick={()=>LoadDeletePage(record)}  style={{backgroundColor:"red", color:"#fff"}} disabled={saving}>{saving===false ? "Yes": "Deleting..."}</Button>
+            <Button onClick={toggle} style={{backgroundColor:"#014d88", color:"#fff"}} disabled={saving}>No</Button>
+            
+        </Modal.Footer>
+        </Modal>     
     </div>
   );
 }

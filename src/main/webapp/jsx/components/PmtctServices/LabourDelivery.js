@@ -301,7 +301,7 @@ const LabourDelivery = (props) => {
             )
                 .then(response => {
                     setSaving(false);
-                    //props.patientObj.commenced=true
+                    props.patientObj.deliveryStatus=true
                     toast.success("Record updated successful", {position: toast.POSITION.BOTTOM_CENTER});
                     props.setActiveContent({...props.activeContent, route:'recent-history'})
                 })
@@ -397,7 +397,7 @@ const LabourDelivery = (props) => {
                                     id="dateOfDelivery"
                                     onChange={handleInputChangeDeliveryDto}
                                     value={delivery.dateOfDelivery} 
-                                    min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : props.patientObj.firstAncDate}
+                                    min={props.patientObj.firstAncDate}
                                     max= {moment(new Date()).format("YYYY-MM-DD") }
                                     disabled={disabledField}
                                 />

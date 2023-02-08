@@ -58,7 +58,6 @@ const useStyles = makeStyles(theme => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
-  console.log(props)
   const [errors, setErrors] = useState({});
   const [disabledField, setDisabledField] = useState(false);
   let temp = { ...errors }
@@ -118,23 +117,22 @@ const ClinicVisit = (props) => {
     if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
       GetVisit(props.activeContent.id)
       setDisabledField(props.activeContent.actionType==="view"? true : false)
-  }
+    }
   }, [props.activeContent]);
+
   const GetVisit =(id)=>{
     axios
        .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
            { headers: {"Authorization" : `Bearer ${token}`} }
        )
        .then((response) => {
-            console.log(response.data);
             setObjValues(response.data);
             DsdModelType(response.data.dsdModel)
        })
        .catch((error) => {
        //console.log(error);
        });          
-}
-
+    }
 
     const VISIT_STATUS_PMTCT = () => {
       axios
@@ -194,49 +192,49 @@ const ClinicVisit = (props) => {
   
     }
 
-  const handleInputChange = e => {
-    setErrors({...temp, [e.target.name]:""}) 
-    if(e.target.name ==='dsdModel'){
-      DsdModelType(e.target.value)
-    }
-    if(e.target.name==='dateOfViralLoad' && e.target.value!==''){
-
-      async function getGa() {
-          const dateOfViralLoad=e.target.value
-          //?ancNo=001&visitDate=2023-02-01
-          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2?ancNo=${props.patientObj.ancNo}&visitDate=${dateOfViralLoad}`,
-                  { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
-              );
-              if(response.data>0){
-                  objValues.gaOfViralLoad=response.data
-                  setObjValues ({...objValues,  [e.target.name]: e.target.value});  
-              }else{
-                  //toast.error("Please select a validate date")
-                  setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
-              }
+    const handleInputChange = e => {
+      setErrors({...temp, [e.target.name]:""}) 
+      if(e.target.name ==='dsdModel'){
+        DsdModelType(e.target.value)
       }
-      getGa();
-  }
-    //console.log(e.target.name)
-    setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    
-  }
+      if(e.target.name==='dateOfViralLoad' && e.target.value!==''){
 
-function DsdModelType (dsdmodel) {
-  const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
-  axios
-     .get(`${baseUrl}application-codesets/v2/${dsd}`,
-         { headers: {"Authorization" : `Bearer ${token}`} }
-     )
-     .then((response) => {
-         //console.log(response.data);
-         setDsdModelType(response.data);
-     })
-     .catch((error) => {
-     //console.log(error);
-     });
- 
-  }
+        async function getGa() {
+            const dateOfViralLoad=e.target.value
+            //?ancNo=001&visitDate=2023-02-01
+            const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga2?ancNo=${props.patientObj.ancNo}&visitDate=${dateOfViralLoad}`,
+                    { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                );
+                if(response.data>0){
+                    objValues.gaOfViralLoad=response.data
+                    setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                }else{
+                    //toast.error("Please select a validate date")
+                    setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                }
+        }
+        getGa();
+    }
+      //console.log(e.target.name)
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+      
+    }
+
+    function DsdModelType (dsdmodel) {
+    const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
+    axios
+      .get(`${baseUrl}application-codesets/v2/${dsd}`,
+          { headers: {"Authorization" : `Bearer ${token}`} }
+      )
+      .then((response) => {
+          //console.log(response.data);
+          setDsdModelType(response.data);
+      })
+      .catch((error) => {
+      //console.log(error);
+      });
+  
+    }
 
   //Validations of the forms
   const validate = () => {       

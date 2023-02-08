@@ -23,12 +23,9 @@ import SaveAlt from '@material-ui/icons/SaveAlt';
 import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import 'react-toastify/dist/ReactToastify.css';
-import 'react-widgets/dist/css/react-widgets.css';
-import { makeStyles } from '@material-ui/core/styles'
-import { useHistory } from "react-router-dom";
 //import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
 import "@reach/menu-button/styles.css";
-
+import {  Modal } from "react-bootstrap";
 import { Dropdown,Button, Menu, Icon } from 'semantic-ui-react'
 
 
@@ -52,55 +49,13 @@ ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
 ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
-
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
-        }
-    },
-    input: {
-        display: 'none'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    }, 
-}))
-
-
-
 const PatientnHistory = (props) => {
     const [partners, setPartners] = useState([])
     const [loading, setLoading] = useState(true)
-
+    const [open, setOpen] = React.useState(false)
+    const [saving, setSaving] = useState(false)
+    const [record, setRecord] = useState(null)
+     const toggle = () => setOpen(!open);
     useEffect(() => {
         PatientHistory()
       }, [props.patientObj.id]);
@@ -126,19 +81,22 @@ const PatientnHistory = (props) => {
     const LoadPage =(row,activePage)=>{    
             props.setActiveContent({...props.activeContent, route:'add-partner', id:row, actionType:activePage, obj:row})
     }
-    const LoadViewPage =(row)=>{
-        
-        if(row.path==='Mental-health'){        
+    const LoadDeletePage =(row)=>{
+
+            setSaving(true)       
             //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
             axios
-            .delete(`${baseUrl}observation/${row.id}`,
+            .delete(`${baseUrl}pmtct/anc/delete/partnerinfo/${props.patientObj.id}`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
             )
             .then((response) => {
                 toast.success("Record Deleted Successfully");
                 PatientHistory()
+                toggle()
+                setSaving(false) 
             })
             .catch((error) => {
+                setSaving(false) 
                 if(error.response && error.response.data){
                     let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
                     toast.error(errorMessage);
@@ -147,32 +105,17 @@ const PatientnHistory = (props) => {
                     toast.error("Something went wrong. Please try again...");
                   }
             });  
-        }else if(row.path==='Art-commence'){
-            //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
-            axios
-            .delete(`${baseUrl}hiv/art/commencement/${row.id}`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                toast.success("Record Deleted Successfully");
-                PatientHistory()
-            })
-            .catch((error) => {
-                if(error.response && error.response.data){
-                    let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                    toast.error(errorMessage);
-                  }
-                  else{
-                    toast.error("Something went wrong. Please try again...");
-                  }
-            });
-
-        }
         
     }
+    const LoadModal =(row)=>{
+        toggle()
+        setRecord(row)
+    }
+
 
   return (
     <div>
+        {partners && partners.length<= 0 && (
         <Button
             variant="contained"
             color="primary"
@@ -183,6 +126,7 @@ const PatientnHistory = (props) => {
         >
             <span style={{ textTransform: "capitalize" }}>New Partner</span>
         </Button>
+        )}
         <br/><br/><br/><br/>
 
             <MaterialTable
@@ -222,7 +166,7 @@ const PatientnHistory = (props) => {
                             <Dropdown.Menu style={{ marginTop:"10px", }}>
                             <Dropdown.Item onClick={()=>LoadPage(row, 'view')}> <Icon name='eye' />View  </Dropdown.Item>
                                 <Dropdown.Item  onClick={()=>LoadPage(row, 'update')}><Icon name='edit' />Edit</Dropdown.Item>
-                                {/* <Dropdown.Item  onClick={()=>LoadPage(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item> */}
+                                <Dropdown.Item  onClick={()=>LoadModal(row, 'delete')}> <Icon name='trash' /> Delete</Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
                             </Button>
@@ -249,7 +193,24 @@ const PatientnHistory = (props) => {
                           debounceInterval: 400
                       }}
             />
-         
+         <Modal show={open} toggle={toggle} className="fade" size="md"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered backdrop="static">
+            <Modal.Header >
+        <Modal.Title id="contained-modal-title-vcenter">
+            Notification!
+        </Modal.Title>
+        </Modal.Header>
+            <Modal.Body>
+                <h4>Are you Sure you want to delete - <b>{record && record.fullName}</b></h4>
+                
+            </Modal.Body>
+        <Modal.Footer>
+            <Button onClick={()=>LoadDeletePage(record)}  style={{backgroundColor:"red", color:"#fff"}} disabled={saving}>{saving===false ? "Yes": "Deleting..."}</Button>
+            <Button onClick={toggle} style={{backgroundColor:"#014d88", color:"#fff"}} disabled={saving}>No</Button>
+            
+        </Modal.Footer>
+        </Modal>    
     </div>
   );
 }

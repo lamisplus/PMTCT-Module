@@ -2,22 +2,28 @@ import React, { Fragment, useState, useEffect } from "react";
 // BS
 import { Dropdown,} from "react-bootstrap";
 /// Scroll
-import { makeStyles } from '@material-ui/core/styles';
+//import { makeStyles } from '@material-ui/core/styles';
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { Link } from "react-router-dom";
+//import { Link } from "react-router-dom";
 import axios from "axios";
 import { url as baseUrl, token } from "../../../api";
-import { Alert } from "react-bootstrap";
+//import { Alert } from "react-bootstrap";
 import {  Card,Accordion } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import "react-widgets/dist/css/react-widgets.css";
-//import { toast} from "react-toastify";
-
+import { toast} from "react-toastify";
+import {  Modal } from "react-bootstrap";
+import {Button } from 'semantic-ui-react'
 
 const RecentHistory = (props) => {
   let history = useHistory();
   const [recentActivities, setRecentActivities] = useState([])
   const [infants, setInfants] = useState([])
+  const [open, setOpen] = React.useState(false)
+  const [saving, setSaving] = useState(false)
+  const [record, setRecord] = useState(null)
+   const toggle = () => setOpen(!open);
+   let notToBeUpdated = ['pmtct_infant_information'];
   const [summartChart, setSummaryChart]= useState({
     motherVisit: 0,
     childVisit: 1,
@@ -110,12 +116,172 @@ const RecentHistory = (props) => {
     }else if(row.path==='anc-mother-visit'){
         props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"home", actionType:action, })
   
+    }else if(row.path==='pmtct_infant_visit'){
+      props.setActiveContent({...props.activeContent, route:'consultation', id:row.recordId, activeTab:"child", actionType:action, })
+
+    }else if(row.path==='pmtct_infant_information'){
+      props.setActiveContent({...props.activeContent, route:'add-infant', id:row.recordId, activeTab:"home", actionType:action, })
+
     }else{
 
     }
     
-}
-//console.log(infants)
+  }
+  const LoadDeletePage =(row)=>{
+          
+    if(row.path==='anc-enrollment'){ 
+        setSaving(true)       
+        //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/anc/${row.recordId}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            RecentActivities()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });  
+    }else if(row.path==='pmtct-enrollment'){
+        setSaving(true) 
+        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/pmtct/${row.recordId}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            RecentActivities()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });
+
+    }else if(row.path==='anc-delivery'){
+        setSaving(false) 
+        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/delivery/${row.recordId}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            RecentActivities()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });
+
+    }else if(row.path==='anc-mother-visit'){
+        setSaving(true) 
+        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/delivery/${row.recordId}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            RecentActivities()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });
+
+    }else if(row.path==='pmtct_infant_visit'){
+        setSaving(true) 
+        //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+        axios
+        .delete(`${baseUrl}pmtct/anc/delete/infantvisit/${row.recordId}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+            toast.success("Record Deleted Successfully");
+            RecentActivities()
+            toggle()
+            setSaving(false) 
+        })
+        .catch((error) => {
+            setSaving(false) 
+            if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage);
+              }
+              else{
+                toast.error("Something went wrong. Please try again...");
+              }
+        });
+
+    }else if(row.path==='pmtct_infant_information'){
+      setSaving(true) 
+      //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+      axios
+      .delete(`${baseUrl}pmtct/anc/delete/infantinfo/${row.recordId}`,
+          { headers: {"Authorization" : `Bearer ${token}`} }
+      )
+      .then((response) => {
+          toast.success("Record Deleted Successfully");
+          RecentActivities()
+          toggle()
+          setSaving(false) 
+      })
+      .catch((error) => {
+          setSaving(false) 
+          if(error.response && error.response.data){
+              let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+              toast.error(errorMessage);
+            }
+            else{
+              toast.error("Something went wrong. Please try again...");
+            }
+      });
+
+    }
+    else{
+
+    }
+    
+  }
+  const LoadModal =(row)=>{
+    toggle()
+    setRecord(row)
+  }
 const index=0;
 
   return (
@@ -173,6 +339,7 @@ const index=0;
                                 {data.activityDate}
                                 </small>
                               </div>
+                              {!notToBeUpdated.includes(data.path) ? (
                               <Dropdown className="dropdown">
                                 <Dropdown.Toggle
                                 variant=" light"
@@ -210,8 +377,15 @@ const index=0;
                                   >
                                     Update
                                   </Dropdown.Item>
+                                  <Dropdown.Item
+                                  className="dropdown-item"
+                                  onClick={()=>LoadModal(data, 'delete')}
+                                  >
+                                    Delete
+                                  </Dropdown.Item>
                                 </Dropdown.Menu>
                               </Dropdown>
+                               ):""}
                               </div>
                             </li>
                                                  
@@ -369,7 +543,24 @@ const index=0;
           )
       }
       
-     
+      <Modal show={open} toggle={toggle} className="fade" size="md"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered backdrop="static">
+            <Modal.Header >
+        <Modal.Title id="contained-modal-title-vcenter">
+            Notification!
+        </Modal.Title>
+        </Modal.Header>
+            <Modal.Body>
+                <h4>Are you Sure you want to delete <b>{record && record.activityName}</b></h4>
+                
+            </Modal.Body>
+        <Modal.Footer>
+            <Button onClick={()=>LoadDeletePage(record)}  style={{backgroundColor:"red", color:"#fff"}} disabled={saving}>{saving===false ? "Yes": "Deleting..."}</Button>
+            <Button onClick={toggle} style={{backgroundColor:"#014d88", color:"#fff"}} disabled={saving}>No</Button>
+            
+        </Modal.Footer>
+        </Modal>     
  </div>
       
     </Fragment>

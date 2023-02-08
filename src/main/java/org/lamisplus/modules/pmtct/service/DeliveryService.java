@@ -1,6 +1,7 @@
 package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jdk.nashorn.internal.runtime.options.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
@@ -161,6 +162,16 @@ public class DeliveryService
     public Delivery getSingleDelivery(Long id) {
         return this.deliveryRepository.findById(id)
                 .orElseThrow(() -> new Exception("Delivery NOT FOUND"));
+    }
+
+
+    public Delivery getSingleDelivery2(String ancNo) {
+        Delivery deliveryOptional= deliveryRepository.getDeliveryByAncNo(ancNo);
+        Delivery delivery = new Delivery();
+        if (deliveryOptional != null) {
+            delivery =  deliveryOptional;
+        }
+        return delivery;
     }
 
     public Delivery viewDeliveryById(String id) {

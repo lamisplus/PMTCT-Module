@@ -61,7 +61,6 @@ const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {}
   //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
-  const [infantObj, setInfantObj] = useState()
   const [infantHospitalNumber, setInfantHospitalNumber] = useState()
   let temp = { ...errors }
   const classes = useStyles()
@@ -77,6 +76,7 @@ const ClinicVisit = (props) => {
   const [agectx, setAgeCTX] = useState([]);
   const [pcrResult, setPcrResult] = useState([])
   const [infantOutcome, setInfantOutcome] = useState([])
+  const [disabledField, setDisabledField] = useState(false);
   const [objValues, setObjValues] = useState({
       infantVisitRequestDto: "",
       infantArvDto: "",
@@ -139,9 +139,52 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
     INFANT_ARV_PROPHYLAXIS_TYPE();
     INFANT_PCR_RESULT();
     INFANT_OUTCOME_AT_18_MONTHS()
-  }, [props.patientObj.ancNo]);
-    ///GET LIST OF Infants
-    const InfantInfo =()=>{
+    if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
+      GetVisit(props.activeContent.id)
+      setDisabledField(props.activeContent.actionType==="view"? true : false)
+    }
+  }, [props.patientObj.ancNo, props.activeContent]);
+  //GEt visit information   
+  const GetVisit =(id)=>{
+    axios
+    .get(`${baseUrl}pmtct/anc/view-infantvisit/${props.activeContent.id}`,
+        { headers: {"Authorization" : `Bearer ${token}`} }
+    )
+    .then((response) => {
+         setObjValues(response.data);
+         setInfantVisitRequestDto(response.data.infantVisitRequestDto)
+         setInfantArvDto(response.data.infantArvDto)
+         setInfantMotherArtDto(response.data.infantMotherArtDto)
+         setInfantPCRTestDto(response.data.infantPCRTestDto)
+         GetInfantDetail2(response.data.infantVisitRequestDto)
+    })
+    .catch((error) => {
+    //console.log(error);
+    });          
+  }
+  //This is to get infant hospital numbet when viewing or updating infant 
+  const  GetInfantDetail2=(obj)=>{
+    setInfantHospitalNumber(obj.infantHospitalNumber)
+    const InfantVisit =()=>{
+     //setLoading(true)
+     axios
+         .get(`${baseUrl}pmtct/anc/get-form-filter/${obj.infantHospitalNumber}`,
+             { headers: {"Authorization" : `Bearer ${token}`} }
+         )
+         .then((response) => {
+           infantVisitRequestDto.infantHospitalNumber=obj.infantHospitalNumber
+           setFormFilter(response.data)
+         })
+
+         .catch((error) => {
+         //console.log(error);
+         });
+     
+    }
+    InfantVisit()
+  }
+  ///GET LIST OF Infants
+  const InfantInfo =()=>{
       //setLoading(true)
       axios
           .get(`${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
@@ -317,26 +360,49 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
       objValues.infantArvDto=infantArvDto
       objValues.infantMotherArtDto=infantMotherArtDto
       objValues.infantPCRTestDto=infantPCRTestDto
-      axios.post(`${baseUrl}pmtct/anc/infant-visit-consolidated`, objValues,
-        { headers: { "Authorization": `Bearer ${token}` } },
+      if(props.activeContent && props.activeContent.actionType){//Perform operation for updation action
+          axios.post(`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`, objValues,
+            { headers: { "Authorization": `Bearer ${token}` } },
 
-      )
-      .then(response => {
-        setSaving(false);
-        toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-        props.setActiveContent({...props.activeContent, route:'recent-history'})
-      })
-      .catch(error => {
-        setSaving(false);
-        if(error.response && error.response.data){
-          let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-          toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+          )
+          .then(response => {
+            setSaving(false);
+            toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+            props.setActiveContent({...props.activeContent, route:'recent-history'})
+          })
+          .catch(error => {
+            setSaving(false);
+            if(error.response && error.response.data){
+              let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+              toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+            }
+            else{
+              toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+            }
+          
+          });
+        }else{
+          axios.post(`${baseUrl}pmtct/anc/infant-visit-consolidated`, objValues,
+          { headers: { "Authorization": `Bearer ${token}` } },
+
+            )
+            .then(response => {
+              setSaving(false);
+              toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+              props.setActiveContent({...props.activeContent, route:'recent-history'})
+            })
+            .catch(error => {
+              setSaving(false);
+              if(error.response && error.response.data){
+                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+              }
+              else{
+                toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+              }
+            
+            });
         }
-        else{
-          toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-        }
-       
-      });
     }
   }
   const handleSelecteRegimen = e => { 
@@ -363,7 +429,6 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
   }
   function GetInfantDetail(obj){
            setInfantHospitalNumber(obj.hospitalNumber)
-          setInfantObj(obj)
           const InfantVisit =()=>{
             //setLoading(true)
             axios
@@ -410,7 +475,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
         <Grid.Column width={12}>
         <Segment>
             <Label as='a' color='blue'  style={{width:'106%', height:'35px'}} ribbon>
-              <h4 style={{color:'#fff'}}>Infant Clinic Visit  - {infantObj && infantObj.hospitalNumber ? infantObj.hospitalNumber : " "}</h4>
+              <h4 style={{color:'#fff'}}>Infant Clinic Visit  - {infantVisitRequestDto && infantVisitRequestDto.infantHospitalNumber ? infantVisitRequestDto.infantHospitalNumber : " "}</h4>
             </Label>
             <br /><br />
             <div className="row">
@@ -486,6 +551,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                                 onKeyUp={handleInputValueCheckweight} 
                                 value={infantVisitRequestDto.bodyWeight}
                                 style={{border: "1px solid #014D88", borderRadius:"0rem"}}
+                                disabled={disabledField}
                             />
                             <InputGroupText addonType="append" style={{ backgroundColor:"#014D88", color:"#fff", border: "1px solid #014D88", borderRadius:"0rem"}}>
                                 kg
@@ -497,7 +563,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                         {vitalClinicalSupport.weight !=="" ? (
                                 <span className={classes.error}>{vitalClinicalSupport.weight}</span>
                         ) : ""}
-                        {infantVisitRequestDto.bodyWeight <=0? (
+                        {infantVisitRequestDto.bodyWeight!=="" && infantVisitRequestDto.bodyWeight <=0? (
                                 <span className={classes.error}>Invalid Body Weight </span>
                         ) : ""}
                         </FormGroup>
@@ -512,7 +578,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                           value={infantVisitRequestDto.breastFeeding}
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                           onChange={handleInputChangeInfantVisitRequestDto}
-                          
+                          disabled={disabledField}
                         >
                         <option value="">Select </option>
                         <option value="YES">YES </option>
@@ -535,7 +601,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                           value={infantVisitRequestDto.ctxStatus}
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                           onChange={handleInputChangeInfantVisitRequestDto}
-                          
+                          disabled={disabledField}
                         >
                         <option value="">Select </option>
                         <option value="YES">YES </option>
@@ -558,7 +624,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                           value={infantVisitRequestDto.visitStatus}
                           style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                           onChange={handleInputChangeInfantVisitRequestDto}
-                          
+                          disabled={disabledField}
                         >
                         <option value="">Select </option>
                         {childStatus.map((value, index) => (
@@ -584,7 +650,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                             value={infantVisitRequestDto.infantOutcomeAt18Months}
                             style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                             onChange={handleInputChangeInfantVisitRequestDto}
-                            
+                            disabled={disabledField}
                           >
                           <option value="">Select </option>
                           {infantOutcome.map((value, index) => (
@@ -620,7 +686,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantMotherArtDto.motherArtInitiationTime}
                     onChange={handleInputChangeInfantMotherArtDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
                     {timeMotherArt.map((value, index) => (
@@ -646,6 +712,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                             onChange={handleSelecteRegimen}
                             required
                             style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                            disabled={disabledField}
                             >
                                 <option value=""> Select</option>
         
@@ -671,7 +738,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                             value={infantMotherArtDto.regimenId}
                             onChange={handleInputChangeInfantMotherArtDto}
                             style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                            required
+                            disabled={disabledField}
                             > 
                                 <option value=""> Select</option>    
                                 {regimenType.map((value) => (
@@ -704,7 +771,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 id="ageAtCtx"
                 value={infantArvDto.ageAtCtx}
                 onChange={handleInputChangeInfantArvDto}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}  
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                disabled={disabledField}  
                 >
                    <option value="select">Select </option>
                    {agectx.map((value, index) => (
@@ -728,7 +796,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantArvDto.infantArvType}
                     onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
                     {infantArv.map((value) => (
@@ -752,7 +820,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantArvDto.arvDeliveryPoint}
                     onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
                     <option value="Within 72 hour">Within 72 hour </option>
@@ -773,7 +841,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     value={infantArvDto.infantArvTime}
                     onChange={handleInputChangeInfantArvDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
                     <option value="select">Select </option>
                     <option value="Facility Delivery">Facility Delivery</option>
@@ -818,12 +886,12 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                     type="select"
                     name="testType"
                     id="testType"
-                    value={infantArvDto.testType}
-                    onChange={handleInputChangeInfantArvDto}
+                    value={infantPCRTestDto.testType}
+                    onChange={handleInputChangeInfantPCRTestDto}
                     style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                    required
+                    disabled={disabledField}
                   >
-                    <option value="select">Select </option>
+                    <option value="">Select </option>
                     <option value="First PCR">First PCR</option>
                     <option value="Second PCR">Second PCR</option>
                     <option value="Confirmatory PCR">Confirmatory PCR</option>
@@ -846,7 +914,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                 min={props.patientObj && props.patientObj.pmtctEnrollmentRespondDto ? props.patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate : ""}
-                max={moment(new Date()).format("YYYY-MM-DD")}  
+                max={moment(new Date()).format("YYYY-MM-DD")} 
+                disabled={disabledField} 
                 />
                 {errors.dateSampleCollected !=="" ? (
                 <span className={classes.error}>{errors.dateSampleCollected}</span>
@@ -864,7 +933,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                 min={infantPCRTestDto.dateSampleCollected}
-                max={moment(new Date()).format("YYYY-MM-DD")}   
+                max={moment(new Date()).format("YYYY-MM-DD")} 
+                disabled={disabledField}  
                 />
                 {errors.dateResultReceivedAtFacility !=="" ? (
                 <span className={classes.error}>{errors.dateResultReceivedAtFacility}</span>
@@ -882,7 +952,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 onChange={handleInputChangeInfantPCRTestDto}
                 style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                 min={infantPCRTestDto.dateSampleCollected}
-                max={moment(new Date()).format("YYYY-MM-DD")}   
+                max={moment(new Date()).format("YYYY-MM-DD")}  
+                disabled={disabledField} 
                 />
                 {errors.dateResultReceivedByCaregiver !=="" ? (
                 <span className={classes.error}>{errors.dateResultReceivedByCaregiver}</span>
@@ -900,7 +971,8 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                   onChange={handleInputChangeInfantPCRTestDto}
                   style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
                   min={infantPCRTestDto.dateSampleCollected}
-                  max={moment(new Date()).format("YYYY-MM-DD")}  
+                  max={moment(new Date()).format("YYYY-MM-DD")} 
+                  disabled={disabledField} 
                   />
                 {errors.dateSampleSent !=="" ? (
                 <span className={classes.error}>{errors.dateSampleSent}</span>
@@ -916,8 +988,10 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                 id="results"
                 value={infantPCRTestDto.results}
                 onChange={handleInputChangeInfantPCRTestDto}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}} 
+                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                disabled={disabledField} 
                 >
+                   <option value="select">Select </option>
                    {pcrResult.map((value) => (
                       <option key={value.id} value={value.id}>
                         {value.display}
@@ -932,23 +1006,45 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
             </div>
             <br />
             <br />
-            {infantObj && infantObj.hospitalNumber ? (
+            {infantVisitRequestDto && infantVisitRequestDto.infantHospitalNumber ? (
+              <>
+              {props.activeContent && props.activeContent.actionType? (<>
                 <MatButton
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  className={classes.button}
-                  disabled={saving}
-                  startIcon={<SaveIcon />}
-                  style={{backgroundColor:"#014d88"}}
-                  onClick={handleSubmit}
+                type="submit"
+                variant="contained"
+                color="primary"
+                hidden={disabledField}
+                className={classes.button}
+                startIcon={<SaveIcon />}
+                style={{backgroundColor:"#014d88"}}
+                onClick={handleSubmit}
+                disabled={saving}
                 >
-                  {!saving ? (
-                    <span style={{ textTransform: "capitalize" }}>Save</span>
-                  ) : (
-                    <span style={{ textTransform: "capitalize" }}>Saving...</span>
-                  )}
-                </MatButton>
+                    {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Update</span>
+                    ) : (
+                    <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                    )}
+            </MatButton>
+            </>):(<>
+                <MatButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    startIcon={<SaveIcon />}
+                    style={{backgroundColor:"#014d88"}}
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    >
+                        {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>Save</span>
+                        ) : (
+                        <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                        )}
+            </MatButton>
+            </>)}
+              </> 
               ) : ""
             }
           </Segment>

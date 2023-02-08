@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import MaterialTable from 'material-table';
+import React, { useState } from 'react'
+import MaterialTable, { MTableToolbar }  from 'material-table';
 import axios from "axios";
-
 import { token as token, url as baseUrl } from "./../../../api";
 import { forwardRef } from 'react';
 import 'semantic-ui-css/semantic.min.css';
@@ -23,19 +22,12 @@ import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-widgets/dist/css/react-widgets.css';
-import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
-import { Label } from 'semantic-ui-react'
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
-import moment from "moment";
-//import { FaUserPlus } from "react-icons/fa";
-import {TiArrowForward} from 'react-icons/ti'
-
-
 
 //Dtate Picker package
 Moment.locale("en");
@@ -61,94 +53,17 @@ ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
 ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
-
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
-        }
-    },
-    input: {
-        display: 'none'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    }, 
-}))
-
 
 const Patients = (props) => {    
-    const [patientList, setPatientList] = useState([])
-    const [loading, setLoading] = useState(true)
-    useEffect(() => {
-        patients()
-      }, []);
-        ///GET LIST OF Patients
-        async function patients() {
-            setLoading(true)
-            axios
-                .get(`${baseUrl}pmtct/pmtct-from-person`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-                )
-                .then((response) => {
-                    setLoading(false)
-                    setPatientList(response.data);
-                   
-                })
-                .catch((error) => {  
-                    setLoading(false)  
-                });        
+
+    const [showPPI, setShowPPI] = useState(true)
+        const handleCheckBox =e =>{
+            if(e.target.checked){
+                setShowPPI(false)
+            }else{
+                setShowPPI(true)
+            }
         }
-    const calculate_age = dob => {
-        var today = new Date();
-        var dateParts = dob.split("-");
-        var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-        var birthDate = new Date(dateObject); // create a date object directlyfrom`dob1`argument
-        var age_now = today.getFullYear() - birthDate.getFullYear();
-        var m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age_now--;
-                }
-            if (age_now === 0) {
-                    return m + " month(s)";
-                }
-                return age_now + " year(s)";
-        };
-    
-    const getHospitalNumber = (identifier) => { 
-        console.log(identifier)    
-        const identifiers = identifier;
-        const hospitalNumber = identifiers.identifier.find(obj => obj.type == 'HospitalNumber');       
-        return hospitalNumber ? hospitalNumber.value : '';
-    };
     
   return (
     <div>
@@ -161,6 +76,7 @@ const Patients = (props) => {
                 {
                   title: "Patient Name",
                   field: "name",
+                  hidden:showPPI
                 },
                 { title: "Hospital Number", field: "hospital_number", filtering: false },
                 { title: "Sex", field: "gender", filtering: false },
@@ -247,6 +163,31 @@ const Patients = (props) => {
                     pageSizeOptions:[10,20,100],
                     pageSize:10,
                     debounceInterval: 400
+                }}
+                components={{
+                    Toolbar: props => (
+                    <div >
+                        <div className="form-check custom-checkbox  float-left mt-4 ml-3 ">
+                            <input
+                            type="checkbox"
+                            className="form-check-input"                       
+                            name="showPP!"
+                            id="showPP"
+                            value="showPP"
+                            checked={showPPI===true? false : true}
+                            onChange={handleCheckBox}
+                            style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                            />
+                            <label
+                            className="form-check-label"
+                            htmlFor="basic_checkbox_1"
+                            >
+                            <b style={{color:'#014d88',fontWeight:'bold'}}>SHOW PII</b>
+                            </label>
+                        </div>
+                        <MTableToolbar {...props} />
+                    </div>
+                    ),
                 }}
             />
        

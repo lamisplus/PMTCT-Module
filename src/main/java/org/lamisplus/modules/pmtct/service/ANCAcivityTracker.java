@@ -154,7 +154,7 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        Optional<ANC> ancs = this.ancRepository.getByAncNo(ancNo);
+        Optional<ANC> ancs = this.ancRepository.getByAncNoAndArchived(ancNo,0L);
         if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();

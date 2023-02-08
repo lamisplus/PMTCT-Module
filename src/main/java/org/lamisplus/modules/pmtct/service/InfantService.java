@@ -16,6 +16,7 @@ import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.springframework.data.domain.Page;
@@ -154,5 +155,10 @@ public class InfantService {
             System.out.println("False");
             return CompletableFuture.completedFuture(false);
         }
+    }
+
+    public void deleteInfant(Long id) {
+        Infant exist = this.getSingleInfant(id);
+        this.infantRepository.delete(exist);
     }
 }

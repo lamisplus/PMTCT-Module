@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import MaterialTable, { MTableToolbar }  from 'material-table';
 import axios from "axios";
 
@@ -23,12 +23,10 @@ import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-widgets/dist/css/react-widgets.css';
-import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 //import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
-import { Label } from 'semantic-ui-react'
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
 import moment from "moment";
@@ -61,73 +59,10 @@ ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
 ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
-
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
-        }
-    },
-    input: {
-        display: 'none'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    }, 
-}))
-
 
 const Patients = (props) => {    
-    const [patientList, setPatientList] = useState([])
-    const [loading, setLoading] = useState(true)
+
     const [showPPI, setShowPPI] = useState(true)
-    useEffect(() => {
-        patients()
-      }, []);
-        ///GET LIST OF Patients
-        async function patients() {
-            setLoading(true)
-            axios
-                .get(`${baseUrl}pmtct/pmtct-from-person`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-                )
-                .then((response) => {
-                    setLoading(false)
-                    setPatientList(response.data);
-                   
-                })
-                .catch((error) => {  
-                    setLoading(false)  
-                });        
-        }
     const calculate_age = dob => {
         var today = new Date();
         var dateParts = dob.split("-");
@@ -265,7 +200,7 @@ const Patients = (props) => {
                           pageSize:10,
                           debounceInterval: 400
                       }}
-                      components={{
+                    components={{
                         Toolbar: props => (
                         <div >
                             <div className="form-check custom-checkbox  float-left mt-4 ml-3 ">

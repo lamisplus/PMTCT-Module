@@ -30,6 +30,7 @@ import org.lamisplus.modules.patient.service.VisitService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
@@ -67,6 +68,8 @@ public class ANCService {
     private final PMTCTEnrollmentService pmtctEnrollmentService;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     private final HtsClientRepository htsClientRepository;
+
+    private final DeliveryRepository deliveryRepository;
 
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
@@ -832,9 +835,14 @@ public class ANCService {
             String hivStatus = "Unknown";
             try {
                 hivStatus = this.getDynamicHivStatus(anc.getPersonUuid());
-            } catch (Exception e) {
-            }
+            } catch (Exception e) { }
             ancRespondDto.setDynamicHivStatus(hivStatus);
+
+            boolean deliveryStatus = Boolean.FALSE;
+            try {
+                deliveryStatus = this.getDeliveryStatus(anc.getAncNo());
+            } catch (Exception e) { }
+            ancRespondDto.setDeliveryStatus(deliveryStatus);
 
         }
 
@@ -960,13 +968,6 @@ public class ANCService {
         return partnerInformation;
     }
 
-    public void deletePartnerInfo(Long id) {
-        // PmtctVisit existVisit = getExistVisit(id);
-        ANC anc = this.getExistingANC(id);
-        JsonNode partnerInformation2JsonNode = mapper.valueToTree(null);
-        anc.setPartnerInformation(partnerInformation2JsonNode);
-        ancRepository.save(anc);
-    }
 
     String getDynamicHivStatus(String personUuid) {
         String hivStatus = "Unknown";
@@ -991,6 +992,20 @@ public class ANCService {
 
         }
         return hivStatus;
+    }
+
+    boolean getDeliveryStatus(String ancNo) {
+        boolean deliveryStatus = Boolean.FALSE;
+        Delivery delivery = new Delivery();
+        try{
+            delivery = this.deliveryRepository.getDeliveryByAncNo(ancNo);
+
+        }catch (Exception e){}
+
+        if(delivery == null) deliveryStatus = Boolean.FALSE;
+        else deliveryStatus = Boolean.TRUE;
+
+        return deliveryStatus;
     }
 
     public LocalDate calculateEDD(LocalDate lmd) {
@@ -1066,5 +1081,15 @@ public class ANCService {
         existingANC.setArchived(1L);
         ancRepository.save(existingANC);
     }
+
+    public void deletePartnerInfo(Long id)
+    {
+        // PmtctVisit existVisit = getExistVisit(id);
+        ANC anc = this.getExistingANC(id);
+        JsonNode partnerInformation2JsonNode = mapper.valueToTree(null);
+        anc.setPartnerInformation(partnerInformation2JsonNode);
+        ancRepository.save(anc);
+    }
+
 }
 

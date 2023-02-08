@@ -166,7 +166,7 @@ const Labourpartner = (props) => {
                 setSaving(false);
                 //props.patientObj.commenced=true
                 toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
-                props.setActiveContent({...props.activeContent, route:'recent-history'})
+                props.setActiveContent({...props.activeContent, route:'partners'})
             })
             .catch(error => {
                 setSaving(false);
