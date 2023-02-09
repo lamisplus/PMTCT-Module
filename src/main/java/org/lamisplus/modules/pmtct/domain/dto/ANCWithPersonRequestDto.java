@@ -29,6 +29,7 @@ public class ANCWithPersonRequestDto implements Serializable
     private String testResultSyphilis;
     private String treatedSyphilis;
     private String referredSyphilisTreatment;
+    private String sourceOfReferral;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
     private PersonDto personDto;

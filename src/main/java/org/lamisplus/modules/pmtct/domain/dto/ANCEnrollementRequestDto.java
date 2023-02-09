@@ -28,5 +28,6 @@ public class ANCEnrollementRequestDto{
     private String referredSyphilisTreatment;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
+    private String sourceOfReferral;
     private final String person_uuid;
 }

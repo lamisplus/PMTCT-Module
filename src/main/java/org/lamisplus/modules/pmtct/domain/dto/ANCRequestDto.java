@@ -25,6 +25,7 @@ public class ANCRequestDto implements Serializable
     private PersonDto personDto;
     private String person_uuid;
     private String staticHivStatus;
+    private String sourceOfReferral;
 
 
 

@@ -35,6 +35,7 @@ public class ANCRespondDto implements Serializable {
     private String hivStatus;
     private boolean pmtctRegStatus;
     private boolean deliveryStatus;
+    private String sourceOfReferral;
     private LocalDate dateOfBirth;
     private String sex;
     private Long personId;

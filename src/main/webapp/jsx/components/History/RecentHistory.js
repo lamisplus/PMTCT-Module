@@ -84,16 +84,18 @@ const RecentHistory = (props) => {
    
   }
   const ActivityName =(name)=> {
-      if(name==='HIV Enrollment'){
-        return "HE"
-      }else if(name==='Pharmacy refill'){
-        return "PR"
-      }else if(name==='Clinical evaluation'){
-        return "CE"
-      }else if(name==='Clinic visit follow up'){
-        return "CV"
-      }else if(name==='ART Commencement'){
-        return "AC"
+      if(name==='pmtct-enrollment'){
+        return "PE"
+      }else if(name==='anc-enrollment'){
+        return "AE"
+      }else if(name==='anc-delivery'){
+        return "AD"
+      }else if(name==='anc-mother-visit'){
+        return "MV"
+      }else if(name==='pmtct_infant_visit'){
+        return "IV"
+      }else if(name==='pmtct_infant_information'){
+        return "II"
       }else {
         return "RA"
       }
@@ -305,7 +307,7 @@ const index=0;
                     defaultActiveKey="0"
                   >
                     <>
-                    {recentActivities.map((data, i)=>
+                    {recentActivities && recentActivities.map((data, i)=>
                     <div className="accordion-item" key={i}>
                       <Accordion.Toggle
                           as={Card.Text}
@@ -332,7 +334,7 @@ const index=0;
 
                             <li>
                               <div className="timeline-panel">
-                              <div className={i % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{"RA"}</div>
+                              <div className={i % 2 == 0 ? "media me-2 media-info" : "media me-2 media-success"}>{ActivityName(data.path)}</div>
                               <div className="media-body">
                                 <h5 className="mb-1">{data.activityName}</h5>
                                 <small className="d-block">

@@ -294,7 +294,7 @@ const PatientnHistory = (props) => {
                 { title: "Actions", field: "actions", filtering: false }, 
               ]}
               isLoading={loading}
-              data={recentActivities.map((row) => ({
+              data={recentActivities && recentActivities.map((row) => ({
                    name: row.activityName,
                    date: row.activityDate,
                    actions:!notToBeUpdated.includes(row.path) ? (

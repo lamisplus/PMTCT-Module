@@ -464,7 +464,17 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
                   </List>
               {infants.map((row) =>
                   <List celled>
-                  <List.Item onClick={()=>GetInfantDetail(row)} style={{cursor: "pointer"}}>{row.firstName} <span className="float-end"><b>{row.hospitalNumber}</b></span></List.Item>
+                  <List.Item onClick={()=>GetInfantDetail(row)} style={{cursor: "pointer"}}> 
+                  
+                    
+                    <Label as='a' color='blue' >
+                    {row.firstName} 
+                    </Label>
+                    <Label as='a' color='teal' className="float-end" tag>
+                    {row.hospitalNumber}
+                    </Label>
+                    </List.Item>
+                  
                   </List>
                
               )}
