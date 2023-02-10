@@ -25,7 +25,7 @@ const ClinicVisitPage = (props) => {
               { headers: {"Authorization" : `Bearer ${token}`} }
           )
           .then((response) => {
-          //setDelivery(response.data)
+          console.log(response.data)
           setAliveChild(response.data && response.data.numberOfInfantsAlive ? response.data.numberOfInfantsAlive : 0)
           })
           .catch((error) => {
@@ -52,7 +52,7 @@ const ClinicVisitPage = (props) => {
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">                   
                     <ConsultationPage patientObj={patientObj} setActiveContent={props.setActiveContent} activeContent={props.activeContent}/>
                   </Tab>
-                  {aliveChild > 0 && (  
+                  {aliveChild && aliveChild > 0 && (  
                     <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">                   
                     <InfantVisit patientObj={patientObj} setActiveContent={props.setActiveContent} activeContent={props.activeContent}/>
                     </Tab>

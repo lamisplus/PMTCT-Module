@@ -152,11 +152,11 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
     )
     .then((response) => {
          setObjValues(response.data);
-         setInfantVisitRequestDto(response.data.infantVisitRequestDto)
-         setInfantArvDto(response.data.infantArvDto)
-         setInfantMotherArtDto(response.data.infantMotherArtDto)
-         setInfantPCRTestDto(response.data.infantPCRTestDto)
-         GetInfantDetail2(response.data.infantVisitRequestDto)
+         setInfantVisitRequestDto({...response.data.infantVisitRequestDto})
+         setInfantArvDto({...response.data.infantArvDto})
+         setInfantMotherArtDto({...response.data.infantMotherArtDto})
+         setInfantPCRTestDto({...response.data.infantPCRTestDto})
+         GetInfantDetail2({...response.data.infantVisitRequestDto})
     })
     .catch((error) => {
     //console.log(error);
@@ -313,7 +313,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
 
       async function getGa() {
           const ga=e.target.value
-          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga3?hospitalNumber=${props.patientObj.ancNo}&visitDate=${ga}`,
+          const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga3?hospitalNumber=${infantHospitalNumber}&visitDate=${ga}`,
                   { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
               );
           if(response.data>=0){
@@ -361,7 +361,7 @@ const [infantPCRTestDto, setInfantPCRTestDto] = useState({
       objValues.infantMotherArtDto=infantMotherArtDto
       objValues.infantPCRTestDto=infantPCRTestDto
       if(props.activeContent && props.activeContent.actionType){//Perform operation for updation action
-          axios.post(`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`, objValues,
+          axios.put(`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`, objValues,
             { headers: { "Authorization": `Bearer ${token}` } },
 
           )
