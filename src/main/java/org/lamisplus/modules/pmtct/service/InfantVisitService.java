@@ -85,6 +85,20 @@ public class InfantVisitService
         infantVisit.setVisitStatus(infantVisitRequestDto.getVisitStatus());
         infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
+        try{
+            Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
+            if(infants.isPresent()){
+                Infant infant = infants.get();
+                LocalDate nad = this.calculateNAD(infantVisitRequestDto.getVisitDate());
+
+                infant.setDefaultDays(this.defaultDate(infant.getLastVisitDate(), infantVisitRequestDto.getVisitDate()));
+                infant.setLastVisitDate(infantVisitRequestDto.getVisitDate());
+                infant.setNextAppointmentDate(nad);
+                infantRepository.save(infant);
+
+            }
+        }catch(Exception e) {}
+
         //infantVisit.setAgeAtCtx(infantVisitRequestDto.getAgeAtCtx());
         infantVisit.setUuid(UUID.randomUUID().toString());
 
@@ -389,6 +403,20 @@ public class InfantVisitService
         exist.setVisitStatus(infantVisitRequestDto.getVisitStatus());
         exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
+        try{
+            Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
+            if(infants.isPresent()){
+                Infant infant = infants.get();
+                LocalDate nad = this.calculateNAD(infantVisitRequestDto.getVisitDate());
+
+                infant.setDefaultDays(this.defaultDate(infant.getLastVisitDate(), infantVisitRequestDto.getVisitDate()));
+                infant.setLastVisitDate(infantVisitRequestDto.getVisitDate());
+                infant.setNextAppointmentDate(nad);
+                infantRepository.save(infant);
+
+
+            }
+        }catch(Exception e) {}
        this.infantVisitRepository.save(exist);
 
     }
@@ -437,6 +465,23 @@ public class InfantVisitService
         }
 
         //return infantVisitationConsolidatedDto;
+    }
+
+
+    public int defaultDate (LocalDate day1, LocalDate day2){
+        int age = 0;
+        if(day1 == null){age = 0;}
+        else {
+            age = (int) ChronoUnit.MONTHS.between(day1, day2);
+            if (age <= 0) age = 0;
+        }
+        return age;
+    }
+
+    public LocalDate calculateNAD(LocalDate lmd) {
+        LocalDate date = lmd;
+        date = date.plusMonths(1);
+        return date;
     }
 
 

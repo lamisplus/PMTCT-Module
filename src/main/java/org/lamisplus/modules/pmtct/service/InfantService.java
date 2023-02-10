@@ -64,6 +64,9 @@ public class InfantService {
         infant.setFacilityId(facilityId);
         infant.setCreatedBy(user.getUserName());
         infant.setLastModifiedBy(user.getUserName());
+        infant.setLastVisitDate(infantDto.getDateOfDelivery());
+        infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
+        infant.setDefaultDays(0);
         infantRepository.save(infant);
         return infant;
     }
@@ -102,6 +105,9 @@ public class InfantService {
          infant.setCreatedBy(user.getUserName());
          infant.setLastModifiedBy(user.getUserName());
          infant.setId(id);
+         infant.setLastVisitDate(infantDto.getDateOfDelivery());
+         infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
+         infant.setDefaultDays(0);
         return infantRepository.save(infant);
     }
 
@@ -161,4 +167,18 @@ public class InfantService {
         Infant exist = this.getSingleInfant(id);
         this.infantRepository.delete(exist);
     }
+
+
+    public int defaultDate (LocalDate day1, LocalDate day2){
+        int  age = (int) ChronoUnit.MONTHS.between(day1, day2);
+        if (age <= 0) age = 0;
+        return age;
+    }
+
+    public LocalDate calculateNAD(LocalDate lmd) {
+        LocalDate date = lmd;
+        date = date.plusMonths(1);
+        return date;
+    }
+
 }

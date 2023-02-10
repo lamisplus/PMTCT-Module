@@ -930,7 +930,7 @@ public class ANCService {
         ancRepository.save(existingAnc);
     }
 
-    public void updateANC(ANC anc, String visitStatus) {
+    public void updateANC(ANC anc, String visitStatus, LocalDate visitDate) {
         ANC existingAnc = this.getExistingANC(anc.getId());
         existingAnc.setFirstAncDate(anc.getFirstAncDate());
         existingAnc.setGravida(anc.getGravida());
