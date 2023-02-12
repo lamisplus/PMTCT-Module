@@ -100,6 +100,13 @@ public class ANCService {
             anc.setHospitalNumber(hostpitalNumber);
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
+            try{
+                LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
+
+                anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
+                anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
+                anc.setNextAppointmentDate(nad);
+            }catch(Exception e){}
 
 
             PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
@@ -140,6 +147,13 @@ public class ANCService {
                 anc.setUuid(UUID.randomUUID().toString());
                 anc.setHospitalNumber(hostpitalNumber);
                 anc.setArchived(0L);
+                try{
+                    LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
+
+                    anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
+                    anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
+                    anc.setNextAppointmentDate(nad);
+                }catch(Exception e){}
 
                 PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
                 if (pmtctHtsInfo != null) {
@@ -256,6 +270,13 @@ public class ANCService {
         anc.setCreatedDate(exist.getCreatedDate());
         anc.setUuid(exist.getUuid());
         anc.setPersonUuid(exist.getPersonUuid());
+        try{
+            LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
+
+            anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
+            anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
+            anc.setNextAppointmentDate(nad);
+        }catch(Exception e){}
         //pmtctVisit.setArchived(0);
         ancRepository.save(anc);
         return ancRequestDto;
@@ -700,6 +721,13 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            try{
+                LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
+
+                anc.setDefaultDays(this.defaultDate(ancEnrollementRequestDto.getFirstAncDate(), ancEnrollementRequestDto.getFirstAncDate()));
+                anc.setLastVisitDate(ancEnrollementRequestDto.getFirstAncDate());
+                anc.setNextAppointmentDate(nad);
+            }catch(Exception e){}
             anc.setTestedSyphilis(ancEnrollementRequestDto.getTestedSyphilis());
             anc.setTestResultSyphilis(ancEnrollementRequestDto.getTestResultSyphilis());
             anc.setTreatedSyphilis(ancEnrollementRequestDto.getTreatedSyphilis());
@@ -782,6 +810,13 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            try{
+                LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
+
+                anc.setDefaultDays(this.defaultDate(ancWithPersonRequestDto.getFirstAncDate(), ancWithPersonRequestDto.getFirstAncDate()));
+                anc.setLastVisitDate(ancWithPersonRequestDto.getFirstAncDate());
+                anc.setNextAppointmentDate(nad);
+            }catch(Exception e){}
             try {
                 LocalDate eed = this.calculateEDD(ancWithPersonRequestDto.getLMP());
                 //System.out.println("@ invocation "+ eed);
@@ -949,6 +984,13 @@ public class ANCService {
         existingAnc.setPersonUuid(anc.getPersonUuid());
         existingAnc.setArchived(0L);
         existingAnc.setStatus(visitStatus);
+        try{
+            LocalDate nad = this.calculateNAD(visitDate);
+
+            existingAnc.setDefaultDays(this.defaultDate(existingAnc.getLastVisitDate(), visitDate));
+            existingAnc.setLastVisitDate(visitDate);
+            existingAnc.setNextAppointmentDate(nad);
+        }catch(Exception e){}
 
         existingAnc.setHospitalNumber(anc.getHospitalNumber());
         existingAnc.setUuid(anc.getUuid());
@@ -1107,6 +1149,21 @@ public class ANCService {
         JsonNode partnerInformation2JsonNode = mapper.valueToTree(null);
         anc.setPartnerInformation(partnerInformation2JsonNode);
         ancRepository.save(anc);
+    }
+
+    public int defaultDate (LocalDate day1, LocalDate day2){
+        int age = 0;
+        if((day1 == null) || (day2 == null)){age = 0;}
+        else {
+            age = (int) ChronoUnit.MONTHS.between(day1, day2);
+            if (age <= 0) age = 0;
+        }
+        return age;
+    }
+    public LocalDate calculateNAD(LocalDate lmd) {
+        LocalDate date = lmd;
+        date = date.plusMonths(1);
+        return date;
     }
 
 }

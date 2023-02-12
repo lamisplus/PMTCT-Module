@@ -470,7 +470,7 @@ public class InfantVisitService
 
     public int defaultDate (LocalDate day1, LocalDate day2){
         int age = 0;
-        if(day1 == null){age = 0;}
+        if((day1 == null) || (day2 == null)){age = 0;}
         else {
             age = (int) ChronoUnit.MONTHS.between(day1, day2);
             if (age <= 0) age = 0;
