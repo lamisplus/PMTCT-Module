@@ -1035,7 +1035,7 @@ const UserRegistration = (props) => {
                                                     ) : "" }
                                                 </FormGroup>
                                             </div>
-                                            {/* <div className="form-group mb-3 col-md-4">
+                                            <div className="form-group mb-3 col-md-4">
                                                 <FormGroup>
                                                     <Label for="ninNumber">National Identity Number (NIN)  </Label>
                                                     <input
@@ -1050,7 +1050,7 @@ const UserRegistration = (props) => {
                                                    
                                                 </FormGroup>
                                             
-                                            </div> */}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
