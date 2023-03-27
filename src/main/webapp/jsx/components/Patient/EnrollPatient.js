@@ -301,7 +301,6 @@ const UserRegistration = (props) => {
     }
     //Handle Input Change for Basic Infor
     const handleInputChangeBasic = e => { 
-        
         setErrors({...errors, [e.target.name]: ""}) 
                
         setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value});              
@@ -342,6 +341,7 @@ const UserRegistration = (props) => {
                 }
                 getAncNumber();
             } 
+            //Check for lmp and make an API call
             if(e.target.name==='lmp' && e.target.value!==''){
 
                 async function getGa() {
@@ -359,7 +359,8 @@ const UserRegistration = (props) => {
                     }
                 }
                 getGa();
-            }       
+            } 
+      
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }   
 
@@ -560,13 +561,16 @@ const UserRegistration = (props) => {
                                                 id="parity"
                                                 onChange={handleInputChange}
                                                 value={objValues.parity} 
-                                                min="0"
+                                                min="1"
                                             />
 
                                         </InputGroup>
                                         {errors.parity !=="" ? (
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
+                                        { objValues.parity!=="" && objValues.parity<=0 ? (
+                                                    <span className={classes.error}>Parity should not be less than 1</span>
+                                            ) : "" }
                                         </FormGroup>
                                 </div> 
                                 <div className="form-group mb-3 col-md-6">
@@ -576,10 +580,10 @@ const UserRegistration = (props) => {
                                             <Input 
                                                 type="number"
                                                 name="gravida"
-                                                id="gravida"
+                                                id="gragravidavida"
                                                 onChange={handleInputChange}
                                                 value={objValues.gravida} 
-                                                min="0"
+                                                min="1"
                                             />
 
                                         </InputGroup>

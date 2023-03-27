@@ -522,7 +522,9 @@ const UserRegistration = (props) => {
                                         {errors.parity !=="" ? (
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
-                                        
+                                        { objValues.parity!=="" && objValues.parity<=0 ? (
+                                                    <span className={classes.error}>Parity should not be less than 1</span>
+                                            ) : "" }
                                         </FormGroup>
                                 </div> 
                                 <div className="form-group mb-3 col-md-6">

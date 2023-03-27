@@ -99,7 +99,7 @@ public class PmtctVisitService {
                         ANC anc = ancs.get();
                         if (visitStatus.contains("_IN")) {
 
-                            ancService.updateANC(anc, visitStatus);
+                            ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
                         } else {
                             ancService.graduateFromANC(anc, visitStatus);
                         }

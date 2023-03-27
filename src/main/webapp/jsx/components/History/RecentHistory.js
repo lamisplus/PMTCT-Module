@@ -375,7 +375,7 @@ const index=0;
                                   </Dropdown.Item>
                                   <Dropdown.Item
                                   className="dropdown-item"
-                                  onClick={()=>LoadViewPage(data,'view')}
+                                  onClick={()=>LoadViewPage(data,'update')}
                                   >
                                     Update
                                   </Dropdown.Item>
