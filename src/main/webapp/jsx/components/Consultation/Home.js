@@ -247,6 +247,7 @@ const ClinicVisit = (props) => {
       })
       return Object.values(temp).every(x => x == "")
     }
+
     /**** Submit Button Processing  */
     const handleSubmit = (e) => {
       e.preventDefault();

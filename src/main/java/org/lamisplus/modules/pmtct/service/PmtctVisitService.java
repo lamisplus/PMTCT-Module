@@ -67,10 +67,12 @@ public class PmtctVisitService {
         pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
         pmtctVisit.setGaOfViralLoad(pmtctVisitRequestDto.getGaOfViralLoad());
         pmtctVisit.setResultOfViralLoad(pmtctVisitRequestDto.getResultOfViralLoad());
-        int ga = pmtctVisitRequestDto.getGaOfViralLoad();
-        String tVL = "Other Time";
-        if((ga >= 32) || (ga<=36)) tVL = "Between 32 and 36";
-        pmtctVisit.setTimeOfViralLoad(tVL);
+        if(pmtctVisitRequestDto.getGaOfViralLoad()!=null) {
+            int ga = pmtctVisitRequestDto.getGaOfViralLoad();
+            String tVL = "Other Time";
+            if ((ga >= 32) || (ga <= 36)) tVL = "Between 32 and 36";
+            pmtctVisit.setTimeOfViralLoad(tVL);
+        }
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());

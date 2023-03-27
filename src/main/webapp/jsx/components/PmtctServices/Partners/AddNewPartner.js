@@ -143,11 +143,11 @@ const Labourpartner = (props) => {
     const validate = () => {
         let temp = { ...errors }
         temp.age = partner.age ? "" : "This field is required"
-        temp.hbStatus = partner.hbStatus ? "" : "This field is required"
-        temp.hcStatus = partner.hcStatus ? "" : "This field is required"
+        //temp.hbStatus = partner.hbStatus ? "" : "This field is required"
+        //temp.hcStatus = partner.hcStatus ? "" : "This field is required"
         temp.postTestCounseled = partner.postTestCounseled ? "" : "This field is required"
         temp.fullName = partner.fullName ? "" : "This field is required" 
-        temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
+        //temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
