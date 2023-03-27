@@ -695,7 +695,8 @@ const UserRegistration = (props) => {
                     }
             }
             getGa();
-        }       
+        } 
+      
         setObjValues ({...objValues,  [e.target.name]: e.target.value});          
     }      
     const checkPhoneNumber=(e, inputName)=>{
@@ -1547,12 +1548,15 @@ const UserRegistration = (props) => {
                                                     id="parity"
                                                     onChange={handleInputChange}
                                                     value={objValues.parity}
-                                                    min="1"
+                                                    min="2"
                                                 />
 
                                             </InputGroup>
                                             {errors.parity !=="" ? (
                                                     <span className={classes.error}>{errors.parity}</span>
+                                            ) : "" }
+                                            {objValues.parity!=="" && objValues.parity<=0 ? (
+                                                    <span className={classes.error}>Parity should not be less than 1</span>
                                             ) : "" }
                                             </FormGroup>
                                     </div>

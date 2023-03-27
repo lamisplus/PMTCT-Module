@@ -120,20 +120,19 @@ const ClinicVisit = (props) => {
     }
   }, [props.activeContent]);
 
-  const GetVisit =(id)=>{
-    axios
-       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
-           { headers: {"Authorization" : `Bearer ${token}`} }
-       )
-       .then((response) => {
-            setObjValues(response.data);
-            DsdModelType(response.data.dsdModel)
-       })
-       .catch((error) => {
-       //console.log(error);
-       });          
+    const GetVisit =(id)=>{
+      axios
+        .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+              setObjValues(response.data);
+              DsdModelType(response.data.dsdModel)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });          
     }
-
     const VISIT_STATUS_PMTCT = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`,
@@ -146,7 +145,7 @@ const ClinicVisit = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-  
+
     }
     const POINT_ENTRY_PMTCT = () => {
       axios
@@ -160,9 +159,8 @@ const ClinicVisit = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-  
-    }
-    
+
+    }    
     const FAMILY_PLANNING_METHOD = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
@@ -191,7 +189,6 @@ const ClinicVisit = (props) => {
         });
   
     }
-
     const handleInputChange = e => {
       setErrors({...temp, [e.target.name]:""}) 
       if(e.target.name ==='dsdModel'){
@@ -219,7 +216,6 @@ const ClinicVisit = (props) => {
       setObjValues({ ...objValues, [e.target.name]: e.target.value });
       
     }
-
     function DsdModelType (dsdmodel) {
     const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
     axios
@@ -236,76 +232,74 @@ const ClinicVisit = (props) => {
   
     }
 
-  //Validations of the forms
-  const validate = () => {       
-    temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
-    temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
-    temp.dsd = objValues.dsd ? "" : "This field is required"
-    temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
-    temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
-    //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
-    temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
-    temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
-    setErrors({
-        ...temp
-    })
-    return Object.values(temp).every(x => x == "")
-  }
-
-
-  /**** Submit Button Processing  */
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if(validate()){
-    setSaving(true)
-    if(props.activeContent && props.activeContent.actionType==='update'){
-        axios.put(`${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`, objValues,
-        { headers: { "Authorization": `Bearer ${token}` } },
-
-        )
-        .then(response => {
-          setSaving(false);
-          toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-          props.setActiveContent({...props.activeContent, route:'recent-history'})
-        })
-        .catch(error => {
-          setSaving(false);
-          if(error.response && error.response.data){
-            let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-            toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
-          }
-          else{
-            toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-          }
-        
-        });
-      
-    }else{
-        axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
-        { headers: { "Authorization": `Bearer ${token}` } },
+    //Validations of the forms
+    const validate = () => {       
+      temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
+      temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
+      temp.dsd = objValues.dsd ? "" : "This field is required"
+      temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
+      temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
+      //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
+      temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
+      temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
+      setErrors({
+          ...temp
+      })
+      return Object.values(temp).every(x => x == "")
+    }
+    /**** Submit Button Processing  */
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if(validate()){
+      setSaving(true)
+      if(props.activeContent && props.activeContent.actionType==='update'){
+          axios.put(`${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`, objValues,
+          { headers: { "Authorization": `Bearer ${token}` } },
 
           )
-            .then(response => {
-              setSaving(false);
-              toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-              props.setActiveContent({...props.activeContent, route:'recent-history'})
-            })
-            .catch(error => {
-              setSaving(false);
-              if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
-              }
-              else{
-                toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-              }
-            
-            });
+          .then(response => {
+            setSaving(false);
+            toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+            props.setActiveContent({...props.activeContent, route:'recent-history'})
+          })
+          .catch(error => {
+            setSaving(false);
+            if(error.response && error.response.data){
+              let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+              toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+            }
+            else{
+              toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+            }
           
-        }
-     }
-    
-  }
+          });
+        
+      }else{
+          axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
+          { headers: { "Authorization": `Bearer ${token}` } },
+
+            )
+              .then(response => {
+                setSaving(false);
+                toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
+              })
+              .catch(error => {
+                setSaving(false);
+                if(error.response && error.response.data){
+                  let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                  toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+                }
+                else{
+                  toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+                }
+              
+              });
+            
+          }
+      }
+      
+    }
 
 
   return (
