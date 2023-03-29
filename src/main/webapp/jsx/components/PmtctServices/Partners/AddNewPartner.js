@@ -344,7 +344,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HBV status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >HBV status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -367,7 +367,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HCV status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >HCV status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -390,7 +390,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Syphillis Status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >Syphillis Status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"

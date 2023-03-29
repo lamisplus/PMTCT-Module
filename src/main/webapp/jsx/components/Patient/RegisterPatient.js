@@ -503,16 +503,15 @@ const UserRegistration = (props) => {
             //ANC FORM VALIDATION
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-           // objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
+            objValues.testResultSyphilis==="Positive" && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
-            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
+            objValues.testResultSyphilis==="Positive" && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            //objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+            objValues.testedSyphilis==="Yes" && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
             temp.ancNo = objValues.ancNo ? "" : "This field is required"
-            //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -678,6 +677,25 @@ const UserRegistration = (props) => {
     }
     const handleInputChange = e => {  
         setErrors({...temp, [e.target.name]:""}) 
+        if(e.target.name==='ancNo' && e.target.value!==''){
+            async function getAncNumber() {
+                const ancNumber=e.target.value
+                const ancNo= {
+                    ancNo:ancNumber
+                }
+                const response = await axios.post(`${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,ancNo,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                if(response.data===true){
+                    
+                    toast.error("ANC number already exist")
+                    setAncNumberCheck(response.data)
+                }else{
+                    setAncNumberCheck(false)
+                }
+            }
+            getAncNumber();
+        } 
         if(e.target.name==='lmp' && e.target.value!==''){
 
             async function getGa() {
@@ -696,7 +714,17 @@ const UserRegistration = (props) => {
             }
             getGa();
         } 
-      
+        if(e.target.name==='parity' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+            return;   
+        } //gravida
+        if(e.target.name==='gravida' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+            return;   
+        }
+        if(e.target.name==='testedSyphilis' && e.target.value!=='' && e.target.value==='Yes'){//Clear other fields if value is YES
+            objValues.testResultSyphilis=""  
+            objValues.referredSyphilisTreatment=""  
+            objValues.treatedSyphilis="" 
+        } 
         setObjValues ({...objValues,  [e.target.name]: e.target.value});          
     }      
     const checkPhoneNumber=(e, inputName)=>{
