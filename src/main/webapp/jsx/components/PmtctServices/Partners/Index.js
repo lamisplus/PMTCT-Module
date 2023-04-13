@@ -134,7 +134,7 @@ const PatientnHistory = (props) => {
               title="List of Partners "
               columns={[
                 { title: "Partner Name", field: "name" },
-                { title: "Partner Name", field: "age" },
+                { title: "Partner Age", field: "age" },
                 { title: "Pre-test Counseled", field: "pre" },
                 { title: "Partner Accept HIV Test", field: "hiv" },             
                 { title: "Post-Test Counseled", field: "post" },
