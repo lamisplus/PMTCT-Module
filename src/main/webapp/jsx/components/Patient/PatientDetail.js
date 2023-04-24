@@ -74,22 +74,25 @@ function PatientCard(props) {
 		  </div>
       <Card >
         <CardContent>
-            <PatientCardDetail patientObj={patientObj} setArt={setArt} setActiveContent={setActiveContent}/>            
+            {/* Patient Card Detail */}
+            <PatientCardDetail patientObj={patientObj} setArt={setArt} setActiveContent={setActiveContent}/>  
+            {/* Patient Dashboard menu */}
             <SubMenu patientObj={patientObj} art={art} setActiveContent={setActiveContent}/>
             <br/>
-          {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {/* Patient dashboard menu route */}
+            {activeContent.route==='recent-history' &&(<RecentHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
 
-          {activeContent.route==='consultation' &&( <ClinicVisit patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='anc-pnc' &&( <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='anc-enrollment' &&( <AncEnrollement patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='labour-delivery' &&( <LabourDelivery patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='pmtct-hts' &&( <PmtctHts patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='partners' &&( <Partners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='infants' &&( <Infants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='add-partner' &&( <AddPartners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='add-infant' &&( <AddInfants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
-          {activeContent.route==='patient-history' &&( <PatientHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}         
-          {/* History Pages */}
+            {activeContent.route==='consultation' &&( <ClinicVisit patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='anc-pnc' &&( <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='anc-enrollment' &&( <AncEnrollement patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='labour-delivery' &&( <LabourDelivery patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='pmtct-hts' &&( <PmtctHts patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='partners' &&( <Partners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='infants' &&( <Infants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='add-partner' &&( <AddPartners patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='add-infant' &&( <AddInfants patientObj={patientObj} patientAge={patientObj.age} setActiveContent={setActiveContent} activeContent={activeContent}/>)}
+            {activeContent.route==='patient-history' &&( <PatientHistory patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>)}         
+            {/* History Pages */}
          
          </CardContent>
       </Card>

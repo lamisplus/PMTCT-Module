@@ -238,13 +238,13 @@ const UserRegistration = (props) => {
             //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
             temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
             temp.gravida = objValues.gravida ? "" : "This field is required"
-            temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required"
+            objValues.testResultSyphilis==="Yes" && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
             temp.lmp = objValues.lmp ? "" : "This field is required"
             temp.parity = objValues.parity ? "" : "This field is required"
             temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required"
+            objValues.testResultSyphilis==="Yes" && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
             temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required"
+            objValues.testedSyphilis==="Yes" && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
             temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
                 setErrors({ ...temp })
         return Object.values(temp).every(x => x == "")
@@ -292,24 +292,46 @@ const UserRegistration = (props) => {
             }
             getAncNumber();
             }
-            if(e.target.name==='lmp' && e.target.value!==''){
+        if(e.target.name==='lmp' && e.target.value!==''){
 
-                async function getGa() {
-                    const ga=e.target.value
-                    const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
-                            { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
-                        );
-                        if(response.data>0){
-                            objValues.gaweeks=response.data
-                            setObjValues ({...objValues,  [e.target.name]: e.target.value});  
-                        }else{
-                            objValues.gaweeks=response.data
-                            toast.error("Please select a validate date")
-                            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
-                        }
-                }
-                getGa();
-            }       
+            async function getGa() {
+                const ga=e.target.value
+                const response = await axios.get(`${baseUrl}pmtct/anc/calculate-ga/${ga}`,
+                        { headers: {"Authorization" : `Bearer ${token}`, 'Content-Type': 'text/plain'} }
+                    );
+                    if(response.data>0){
+                        objValues.gaweeks=response.data
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value});  
+                    }else{
+                        objValues.gaweeks=response.data
+                        toast.error("Please select a validate date")
+                        setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+                    }
+            }
+            getGa();
+        } 
+        if(e.target.name==='parity' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+            return;   
+        } //gravida
+        if(e.target.name==='gravida' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+            return;   
+        }
+        if(e.target.name==='testedSyphilis' && e.target.value!=='' && e.target.value==='Yes'){//The field will  not accept zero as a value
+            objValues.testResultSyphilis=""  
+            objValues.referredSyphilisTreatment=""  
+            objValues.treatedSyphilis="" 
+            setObjValues ({...objValues,  ['testResultSyphilis']: ""}); 
+            setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+            setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+        }
+        if(e.target.name==='testResultSyphilis' && e.target.value!=='' && e.target.value==='Positive'){//The field will  not accept zero as a value
+            objValues.treatedSyphilis=""  
+            objValues.referredSyphilisTreatment=""   
+            setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+            setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+        }      
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    
 
@@ -347,7 +369,7 @@ const UserRegistration = (props) => {
         }
 
     }
-
+console.log(errors)
     return (
         <>
         <div className="row page-titles mx-0" style={{marginTop:"0px", marginBottom:"-10px"}}>

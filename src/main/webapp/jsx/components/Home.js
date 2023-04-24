@@ -1,8 +1,8 @@
-import React, {useState, Fragment } from "react";
+import React, {useState, Fragment, useEffect } from "react";
 import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
 import NotEnrollPatients from './Patient/PatientList'
 import ActiveANCPatients from './Patient/ActiveANCPatientList'
-import VisualisationHome from './Visualisation/Index'
+//import VisualisationHome from './Visualisation/Index'
 import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 import { FaUserPlus } from "react-icons/fa";
@@ -12,9 +12,11 @@ const divStyle = {
   fontSize: 14,
 };
 
-const Home = () => {
+const Home = (props) => {
     const [key, setKey] = useState('home');
-
+    useEffect(() => { 
+      setKey('home')
+    },[])
 
   return (
     <Fragment>  
@@ -51,7 +53,7 @@ const Home = () => {
                   <Tab eventKey="home" title="Find Patients">                   
                     <NotEnrollPatients />
                   </Tab>
-                  <Tab eventKey="anc" title="General ANC Patients">
+                  <Tab eventKey="anc" title="General PMTCT Patients">
                     <ActiveANCPatients />
                   </Tab>
                   {/* <Tab eventKey="visualization" title="Data Visualisation">                   

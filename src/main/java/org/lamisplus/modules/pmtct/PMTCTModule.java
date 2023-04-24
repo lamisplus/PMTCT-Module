@@ -4,6 +4,7 @@ import com.foreach.across.config.AcrossApplication;
 import com.foreach.across.core.AcrossModule;
 import com.foreach.across.core.context.configurer.ComponentScanConfigurer;
 import com.foreach.across.modules.hibernate.jpa.AcrossHibernateJpaModule;
+import org.lamisplus.modules.hts.HtsModule;
 import org.lamisplus.modules.patient.PatientModule;
 import org.lamisplus.modules.patient.PatientModule;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -13,8 +14,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 @AcrossApplication(
         modules = {
                 AcrossHibernateJpaModule.NAME,
-                PatientModule.NAME
-
+                PatientModule.NAME,
+                HtsModule.NAME
         }
 
         )

@@ -137,17 +137,23 @@ const Labourpartner = (props) => {
     const handleInputChangepartnerDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
         setpartner ({...partner,  [e.target.name]: e.target.value});
+        if(e.target.name==='referredTo' && partner.referredTo!=='OTHERS'){
+            partner.referredToOthers=""
+            setpartner ({...partner,  ['referredToOthers']: ""});
+            setpartner ({...partner,  [e.target.name]: e.target.value});
+        }
+        setpartner ({...partner,  [e.target.name]: e.target.value});
     }
 
     //FORM VALIDATION
     const validate = () => {
         let temp = { ...errors }
         temp.age = partner.age ? "" : "This field is required"
-        temp.hbStatus = partner.hbStatus ? "" : "This field is required"
-        temp.hcStatus = partner.hcStatus ? "" : "This field is required"
+        //temp.hbStatus = partner.hbStatus ? "" : "This field is required"
+        //temp.hcStatus = partner.hcStatus ? "" : "This field is required"
         temp.postTestCounseled = partner.postTestCounseled ? "" : "This field is required"
         temp.fullName = partner.fullName ? "" : "This field is required" 
-        temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
+        //temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
         setErrors({
             ...temp
             })    
@@ -344,7 +350,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HBV status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >HBV status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -367,7 +373,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >HCV status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >HCV status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -390,7 +396,7 @@ const Labourpartner = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >Syphillis Status <span style={{ color:"red"}}> *</span></Label>
+                            <Label >Syphillis Status </Label>
                             <InputGroup> 
                             <Input 
                                     type="select"
@@ -442,7 +448,7 @@ const Labourpartner = (props) => {
                     {partner.referredTo==='OTHERS' && (
                         <div className="form-group mb-3 col-md-6">
                         <FormGroup>
-                        <Label >Referred To</Label>
+                        <Label >Referred To Others (Please specify)</Label>
                         <InputGroup> 
                             <Input 
                                 type="text"

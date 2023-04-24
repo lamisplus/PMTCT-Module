@@ -106,10 +106,10 @@ const Patients = (props) => {
                                         > {row.fullname}
                                         </Link>,
                                         
-                                hospital_number: row.hospitalNumber,
-                                gender:row && row.sex ? row.sex : "Female",
-                                age: row.age,
-                                actions:<div>
+                                        hospital_number: row.hospitalNumber,
+                                        gender:row && row.sex ? row.sex : "Female",
+                                        age: row.age,
+                                        actions:<div>
                                             <Link
                                                 to={{
                                                     pathname: "/patient-history",
