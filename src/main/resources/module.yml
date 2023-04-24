@@ -1,6 +1,6 @@
 basePackage: org.lamisplus.modules.pmtct
 name: PMTCTModule
-dependencies: {PatientModule: 1.0.0, HtsModule: 1.0.0, HivModule: 1.0.0}
+dependencies: {PatientModule: 2.0.2, HtsModule: 2.0.3, HivModule: 2.1.0}
 store: true
 menus:
   - icon: fa fa-heartbeat

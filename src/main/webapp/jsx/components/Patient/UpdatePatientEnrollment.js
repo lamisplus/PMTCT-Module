@@ -316,10 +316,21 @@ const UserRegistration = (props) => {
         if(e.target.name==='gravida' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
             return;   
         }
-        if(e.target.name==='testedSyphilis' && e.target.value!=='' && e.target.value==='Yes'){//Clear other fields if value is YES
+        if(e.target.name==='testedSyphilis' && e.target.value!=='' && e.target.value==='Yes'){//The field will  not accept zero as a value
             objValues.testResultSyphilis=""  
             objValues.referredSyphilisTreatment=""  
             objValues.treatedSyphilis="" 
+            setObjValues ({...objValues,  ['testResultSyphilis']: ""}); 
+            setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+            setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+        }
+        if(e.target.name==='testResultSyphilis' && e.target.value!=='' && e.target.value==='Positive'){//The field will  not accept zero as a value
+            objValues.treatedSyphilis=""  
+            objValues.referredSyphilisTreatment=""   
+            setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+            setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+            setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
         }      
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
     }    

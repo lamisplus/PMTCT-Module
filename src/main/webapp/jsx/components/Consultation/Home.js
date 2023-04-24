@@ -212,7 +212,23 @@ const ClinicVisit = (props) => {
         }
         getGa();
     }
-      //console.log(e.target.name)
+    if(e.target.name==='fpCounseling' && e.target.value==='No'){
+      objValues.fpMethod=""
+      setObjValues({ ...objValues, ['fpMethod']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }
+    if(e.target.name==='dsd' && e.target.value!=='Yes'){
+      objValues.dsdModel=""
+      objValues.dsdOption=""
+      setObjValues({ ...objValues, ['dsdModel']: ""});
+      setObjValues({ ...objValues, ['dsdOption']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }//objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT'   
+    if(e.target.name==='visitStatus' && e.target.value!=='VISIT_STATUS_PMTCT_TRANSFER_OUT'){
+      objValues.transferTo=""
+      setObjValues({ ...objValues, ['transferTo']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }
       setObjValues({ ...objValues, [e.target.name]: e.target.value });
       
     }
@@ -382,8 +398,8 @@ const ClinicVisit = (props) => {
                     disabled={disabledField}
                   >
                     <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
+                    <option value="Yes">YES </option>
+                    <option value="No">NO </option>
                    
                   </Input>
                   {errors.fpCounseling !=="" ? (
@@ -391,7 +407,7 @@ const ClinicVisit = (props) => {
                   ) : "" }
                 </FormGroup>
               </div>
-              {objValues.fpCounseling==="YES" && (
+              {objValues.fpCounseling==="Yes" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName >FP Method </FormLabelName>
@@ -503,8 +519,8 @@ const ClinicVisit = (props) => {
                     disabled={disabledField}
                   >
                     <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
+                    <option value="Yes">YES </option>
+                    <option value="No">NO </option>
                    
                   </Input>
                   {errors.dsd !=="" ? (
@@ -512,7 +528,7 @@ const ClinicVisit = (props) => {
                   ) : "" }
                 </FormGroup>
               </div>
-              {objValues.dsd==='YES' && (<>
+              {objValues.dsd==='Yes' && (<>
               <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                       <FormLabelName >DSD Model</FormLabelName>
@@ -624,7 +640,7 @@ const ClinicVisit = (props) => {
                           <span className={classes.error}>{errors.visitStatus}</span>
                       ) : "" }
                   </FormGroup>
-              </div>
+              </div> 
               {objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT' && (
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>

@@ -53,7 +53,7 @@ const Home = (props) => {
                   <Tab eventKey="home" title="Find Patients">                   
                     <NotEnrollPatients />
                   </Tab>
-                  <Tab eventKey="anc" title="General ANC Patients">
+                  <Tab eventKey="anc" title="General PMTCT Patients">
                     <ActiveANCPatients />
                   </Tab>
                   {/* <Tab eventKey="visualization" title="Data Visualisation">                   

@@ -137,6 +137,12 @@ const Labourpartner = (props) => {
     const handleInputChangepartnerDto = e => {  
         setErrors({...errors, [e.target.name]: ""})            
         setpartner ({...partner,  [e.target.name]: e.target.value});
+        if(e.target.name==='referredTo' && partner.referredTo!=='OTHERS'){
+            partner.referredToOthers=""
+            setpartner ({...partner,  ['referredToOthers']: ""});
+            setpartner ({...partner,  [e.target.name]: e.target.value});
+        }
+        setpartner ({...partner,  [e.target.name]: e.target.value});
     }
 
     //FORM VALIDATION
@@ -442,7 +448,7 @@ const Labourpartner = (props) => {
                     {partner.referredTo==='OTHERS' && (
                         <div className="form-group mb-3 col-md-6">
                         <FormGroup>
-                        <Label >Referred To</Label>
+                        <Label >Referred To Others (Please specify)</Label>
                         <InputGroup> 
                             <Input 
                                 type="text"

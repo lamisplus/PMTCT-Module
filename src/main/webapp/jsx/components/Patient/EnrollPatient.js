@@ -368,9 +368,20 @@ const UserRegistration = (props) => {
                 objValues.testResultSyphilis=""  
                 objValues.referredSyphilisTreatment=""  
                 objValues.treatedSyphilis="" 
+                setObjValues ({...objValues,  ['testResultSyphilis']: ""}); 
+                setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+                setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+                setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+            }
+            if(e.target.name==='testResultSyphilis' && e.target.value!=='' && e.target.value==='Positive'){//The field will  not accept zero as a value
+                objValues.treatedSyphilis=""  
+                objValues.referredSyphilisTreatment=""   
+                setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+                setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+                setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
             }
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
-    }   
+    }  
 
     //Handle CheckBox 
     const handleCancel =()=>{
@@ -720,6 +731,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
+                                    
                                             <FormGroup>
                                             <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span> </Label>
                                             <InputGroup> 
