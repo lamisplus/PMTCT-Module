@@ -24,6 +24,7 @@ export default function App() {
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>
+          {/* Route to patient Dashboard */}
           <Route path="/patient-history">
             <PatientDetail />
           </Route> 
@@ -36,7 +37,7 @@ export default function App() {
           <Route path="/update-patient">
             <UpdatePatientEnrollment />
           </Route>
-
+          {/* Default Route */}
           <Route path="/">
             <Home />
           </Route>       

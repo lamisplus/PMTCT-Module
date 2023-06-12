@@ -301,7 +301,7 @@ const LabourDelivery = (props) => {
             )
                 .then(response => {
                     setSaving(false);
-                    props.patientObj.deliveryStatus=true
+                    
                     toast.success("Record updated successful", {position: toast.POSITION.BOTTOM_CENTER});
                     props.setActiveContent({...props.activeContent, route:'recent-history'})
                 })
@@ -317,7 +317,7 @@ const LabourDelivery = (props) => {
             )
                 .then(response => {
                     setSaving(false);
-                    //props.patientObj.commenced=true
+                    props.patientObj.deliveryStatus=true
                     toast.success("Record save successful", {position: toast.POSITION.BOTTOM_CENTER});
                     props.setActiveContent({...props.activeContent, route:'recent-history'})
                 })
