@@ -283,25 +283,22 @@ const UserRegistration = (props) => {
      /*****  Validation  */
      const validate = () => {
         let temp = { ...errors }
-        
-            //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
-            temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
-            temp.gravida = objValues.gravida ? "" : "This field is required"
-            temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
-            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
-            temp.lmp = objValues.lmp ? "" : "This field is required"
-            temp.parity = objValues.parity ? "" : "This field is required"
-            temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
-            //objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
-            temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
-            //objValues.testedSyphilis==='Yes' && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
-            temp.ancNo = objValues.ancNo ? "" : "This field is required"
-                setErrors({ ...temp })
-        return Object.values(temp).every(x => x == "")
+        temp.gaweeks = objValues.gaweeks ? "" : "This field is required"
+        temp.gravida = objValues.gravida ? "" : "This field is required"
+        objValues.testResultSyphilis==="Positive" && (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment ? "" : "This field is required")
+        temp.lmp = objValues.lmp ? "" : "This field is required"
+        temp.parity = objValues.parity ? "" : "This field is required"
+        temp.testedSyphilis = objValues.testedSyphilis ? "" : "This field is required"
+        objValues.testResultSyphilis==="Positive" && (temp.treatedSyphilis = objValues.treatedSyphilis ? "" : "This field is required")
+        temp.sourceOfReferral = objValues.sourceOfReferral ? "" : "This field is required"
+        objValues.testedSyphilis==="Yes" && (temp.testResultSyphilis = objValues.testResultSyphilis ? "" : "This field is required")
+        temp.staticHivStatus = objValues.staticHivStatus ? "" : "This field is required"
+        temp.ancNo = objValues.ancNo ? "" : "This field is required"
+        setErrors({ ...temp })
+        return Object.values(temp).every(x => x === "")
     }
     //Handle Input Change for Basic Infor
     const handleInputChangeBasic = e => { 
-        
         setErrors({...errors, [e.target.name]: ""}) 
                
         setBasicInfo ({...basicInfo,  [e.target.name]: e.target.value});              
@@ -342,6 +339,7 @@ const UserRegistration = (props) => {
                 }
                 getAncNumber();
             } 
+            //Check for lmp and make an API call
             if(e.target.name==='lmp' && e.target.value!==''){
 
                 async function getGa() {
@@ -359,9 +357,31 @@ const UserRegistration = (props) => {
                     }
                 }
                 getGa();
-            }       
+            } 
+            if(e.target.name==='parity' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+                return;   
+            } //gravida
+            if(e.target.name==='gravida' && e.target.value!=='' && e.target.value<=0){//The field will  not accept zero as a value
+                return;   
+            }
+            if(e.target.name==='testedSyphilis' && e.target.value!=='' && e.target.value==='Yes'){//The field will  not accept zero as a value
+                objValues.testResultSyphilis=""  
+                objValues.referredSyphilisTreatment=""  
+                objValues.treatedSyphilis="" 
+                setObjValues ({...objValues,  ['testResultSyphilis']: ""}); 
+                setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+                setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+                setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+            }
+            if(e.target.name==='testResultSyphilis' && e.target.value!=='' && e.target.value==='Positive'){//The field will  not accept zero as a value
+                objValues.treatedSyphilis=""  
+                objValues.referredSyphilisTreatment=""   
+                setObjValues ({...objValues,  ['treatedSyphilis']: ""}); 
+                setObjValues ({...objValues,  ['referredSyphilisTreatment']: ""}); 
+                setObjValues ({...objValues,  [e.target.name]: e.target.value}); 
+            }
         setObjValues ({...objValues,  [e.target.name]: e.target.value});                
-    }   
+    }  
 
     //Handle CheckBox 
     const handleCancel =()=>{
@@ -369,7 +389,6 @@ const UserRegistration = (props) => {
     }
     const handleSubmit = async (e) => {
         e.preventDefault(); 
-
          if(validate()){
             try {
                 objValues.person_uuid = patientObj.uuid;
@@ -560,13 +579,16 @@ const UserRegistration = (props) => {
                                                 id="parity"
                                                 onChange={handleInputChange}
                                                 value={objValues.parity} 
-                                                min="0"
+                                                min={1}
                                             />
 
                                         </InputGroup>
                                         {errors.parity !=="" ? (
                                                 <span className={classes.error}>{errors.parity}</span>
                                         ) : "" }
+                                        { objValues.parity!=="" && objValues.parity<=0 ? (
+                                                    <span className={classes.error}>Parity should not be less than 1</span>
+                                            ) : "" }
                                         </FormGroup>
                                 </div> 
                                 <div className="form-group mb-3 col-md-6">
@@ -576,10 +598,10 @@ const UserRegistration = (props) => {
                                             <Input 
                                                 type="number"
                                                 name="gravida"
-                                                id="gravida"
+                                                id="gragravidavida"
                                                 onChange={handleInputChange}
                                                 value={objValues.gravida} 
-                                                min="0"
+                                                min="1"
                                             />
 
                                         </InputGroup>
@@ -687,7 +709,7 @@ const UserRegistration = (props) => {
                                 {objValues.testedSyphilis==='Yes' && (<>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Syphilis test result </Label>
+                                            <Label >Syphilis test result <span style={{ color:"red"}}> *</span> </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -709,8 +731,9 @@ const UserRegistration = (props) => {
                                     </div>
                                     {objValues.testedSyphilis==='Yes' && objValues.testResultSyphilis==='Positive' && (<>
                                     <div className="form-group mb-3 col-md-6">
+                                    
                                             <FormGroup>
-                                            <Label >Treated for syphilis (penicillin) </Label>
+                                            <Label >Treated for syphilis (penicillin) <span style={{ color:"red"}}> *</span> </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"
@@ -731,7 +754,7 @@ const UserRegistration = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                             <FormGroup>
-                                            <Label >Referred Syphilis +ve client </Label>
+                                            <Label >Referred Syphilis +ve client <span style={{ color:"red"}}> *</span> </Label>
                                             <InputGroup> 
                                                 <Input 
                                                     type="select"

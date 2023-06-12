@@ -83,7 +83,7 @@ public class ANCAcivityTracker {
         {
             ActivityTracker activityTracker = new ActivityTracker();
             pmtctVisits1.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("PNC Visit");
+                activityTracker.setActivityName("PMTCT Visit");
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
@@ -130,7 +130,7 @@ public class ANCAcivityTracker {
         {
             ActivityTracker activityTracker = new ActivityTracker();
             pmtctVisits.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("ANC Visit");
+                activityTracker.setActivityName("PMTCT Visit");
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);

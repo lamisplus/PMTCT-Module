@@ -416,7 +416,7 @@ public class ANCService {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-          //  System.out.println("I got here Doc");
+            System.out.println("I got here Doc");
             persons = personRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         }
         List<Person> personList = persons.getContent();
@@ -1043,8 +1043,8 @@ public class ANCService {
                 HtsClient htsClient = (HtsClient) iterator.next();
                 String firstResult = htsClient.getHivTestResult();
                 String secondResult = htsClient.getHivTestResult2();
-                //System.out.println("firstResult = "+ firstResult);
-                //System.out.println("secondResult = "+ secondResult);
+                System.out.println("firstResult = "+ firstResult);
+                System.out.println("secondResult = "+ secondResult);
                 if (secondResult == null) hivStatus = firstResult;
                 else hivStatus = secondResult;
                 break;

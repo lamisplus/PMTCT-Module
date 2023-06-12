@@ -120,20 +120,19 @@ const ClinicVisit = (props) => {
     }
   }, [props.activeContent]);
 
-  const GetVisit =(id)=>{
-    axios
-       .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
-           { headers: {"Authorization" : `Bearer ${token}`} }
-       )
-       .then((response) => {
-            setObjValues(response.data);
-            DsdModelType(response.data.dsdModel)
-       })
-       .catch((error) => {
-       //console.log(error);
-       });          
+    const GetVisit =(id)=>{
+      axios
+        .get(`${baseUrl}pmtct/anc/view-mother-visit/${props.activeContent.id}`,
+            { headers: {"Authorization" : `Bearer ${token}`} }
+        )
+        .then((response) => {
+              setObjValues(response.data);
+              DsdModelType(response.data.dsdModel)
+        })
+        .catch((error) => {
+        //console.log(error);
+        });          
     }
-
     const VISIT_STATUS_PMTCT = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`,
@@ -146,7 +145,7 @@ const ClinicVisit = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-  
+
     }
     const POINT_ENTRY_PMTCT = () => {
       axios
@@ -160,9 +159,8 @@ const ClinicVisit = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-  
-    }
-    
+
+    }    
     const FAMILY_PLANNING_METHOD = () => {
       axios
         .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`,
@@ -191,7 +189,6 @@ const ClinicVisit = (props) => {
         });
   
     }
-
     const handleInputChange = e => {
       setErrors({...temp, [e.target.name]:""}) 
       if(e.target.name ==='dsdModel'){
@@ -215,11 +212,26 @@ const ClinicVisit = (props) => {
         }
         getGa();
     }
-      //console.log(e.target.name)
+    if(e.target.name==='fpCounseling' && e.target.value==='No'){
+      objValues.fpMethod=""
+      setObjValues({ ...objValues, ['fpMethod']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }
+    if(e.target.name==='dsd' && e.target.value!=='Yes'){
+      objValues.dsdModel=""
+      objValues.dsdOption=""
+      setObjValues({ ...objValues, ['dsdModel']: ""});
+      setObjValues({ ...objValues, ['dsdOption']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }//objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT'   
+    if(e.target.name==='visitStatus' && e.target.value!=='VISIT_STATUS_PMTCT_TRANSFER_OUT'){
+      objValues.transferTo=""
+      setObjValues({ ...objValues, ['transferTo']: ""});
+      setObjValues({ ...objValues, [e.target.name]: e.target.value });
+    }
       setObjValues({ ...objValues, [e.target.name]: e.target.value });
       
     }
-
     function DsdModelType (dsdmodel) {
     const dsd = dsdmodel ==='Facility' ? 'DSD_MODEL_FACILITY' : 'DSD_MODEL_COMMUNITY'
     axios
@@ -236,76 +248,75 @@ const ClinicVisit = (props) => {
   
     }
 
-  //Validations of the forms
-  const validate = () => {       
-    temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
-    temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
-    temp.dsd = objValues.dsd ? "" : "This field is required"
-    temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
-    temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
-    //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
-    temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
-    temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
-    setErrors({
-        ...temp
-    })
-    return Object.values(temp).every(x => x == "")
-  }
+    //Validations of the forms
+    const validate = () => {       
+      temp.visitStatus = objValues.visitStatus ? "" : "This field is required"
+      temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required"
+      temp.dsd = objValues.dsd ? "" : "This field is required"
+      temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required"
+      temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required"
+      //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
+      temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome ? "" : "This field is required"
+      temp.maternalOutcome = objValues.maternalOutcome ? "" : "This field is required"
+      setErrors({
+          ...temp
+      })
+      return Object.values(temp).every(x => x == "")
+    }
 
-
-  /**** Submit Button Processing  */
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if(validate()){
-    setSaving(true)
-    if(props.activeContent && props.activeContent.actionType==='update'){
-        axios.put(`${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`, objValues,
-        { headers: { "Authorization": `Bearer ${token}` } },
-
-        )
-        .then(response => {
-          setSaving(false);
-          toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-          props.setActiveContent({...props.activeContent, route:'recent-history'})
-        })
-        .catch(error => {
-          setSaving(false);
-          if(error.response && error.response.data){
-            let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-            toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
-          }
-          else{
-            toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-          }
-        
-        });
-      
-    }else{
-        axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
-        { headers: { "Authorization": `Bearer ${token}` } },
+    /**** Submit Button Processing  */
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if(validate()){
+      setSaving(true)
+      if(props.activeContent && props.activeContent.actionType==='update'){
+          axios.put(`${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`, objValues,
+          { headers: { "Authorization": `Bearer ${token}` } },
 
           )
-            .then(response => {
-              setSaving(false);
-              toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
-              props.setActiveContent({...props.activeContent, route:'recent-history'})
-            })
-            .catch(error => {
-              setSaving(false);
-              if(error.response && error.response.data){
-                let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
-                toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
-              }
-              else{
-                toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
-              }
-            
-            });
+          .then(response => {
+            setSaving(false);
+            toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+            props.setActiveContent({...props.activeContent, route:'recent-history'})
+          })
+          .catch(error => {
+            setSaving(false);
+            if(error.response && error.response.data){
+              let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+              toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+            }
+            else{
+              toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+            }
           
-        }
-     }
-    
-  }
+          });
+        
+      }else{
+          axios.post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues,
+          { headers: { "Authorization": `Bearer ${token}` } },
+
+            )
+              .then(response => {
+                setSaving(false);
+                toast.success("Clinic Visit save successful", {position: toast.POSITION.BOTTOM_CENTER});
+                props.setActiveContent({...props.activeContent, route:'recent-history'})
+              })
+              .catch(error => {
+                setSaving(false);
+                if(error.response && error.response.data){
+                  let errorMessage = error.response.data.apierror && error.response.data.apierror.message!=="" ? error.response.data.apierror.message :  "Something went wrong, please try again";
+                  toast.error(errorMessage, {position: toast.POSITION.BOTTOM_CENTER});
+                }
+                else{
+                  toast.error("Something went wrong. Please try again...", {position: toast.POSITION.BOTTOM_CENTER});
+                }
+              
+              });
+            
+          }
+      }
+      
+    }
 
 
   return (
@@ -387,8 +398,8 @@ const ClinicVisit = (props) => {
                     disabled={disabledField}
                   >
                     <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
+                    <option value="Yes">YES </option>
+                    <option value="No">NO </option>
                    
                   </Input>
                   {errors.fpCounseling !=="" ? (
@@ -396,7 +407,7 @@ const ClinicVisit = (props) => {
                   ) : "" }
                 </FormGroup>
               </div>
-              {objValues.fpCounseling==="YES" && (
+              {objValues.fpCounseling==="Yes" && (
               <div className=" mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName >FP Method </FormLabelName>
@@ -508,8 +519,8 @@ const ClinicVisit = (props) => {
                     disabled={disabledField}
                   >
                     <option value="">Select </option>
-                    <option value="YES">YES </option>
-                    <option value="NO">NO </option>
+                    <option value="Yes">YES </option>
+                    <option value="No">NO </option>
                    
                   </Input>
                   {errors.dsd !=="" ? (
@@ -517,7 +528,7 @@ const ClinicVisit = (props) => {
                   ) : "" }
                 </FormGroup>
               </div>
-              {objValues.dsd==='YES' && (<>
+              {objValues.dsd==='Yes' && (<>
               <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                       <FormLabelName >DSD Model</FormLabelName>
@@ -629,7 +640,7 @@ const ClinicVisit = (props) => {
                           <span className={classes.error}>{errors.visitStatus}</span>
                       ) : "" }
                   </FormGroup>
-              </div>
+              </div> 
               {objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT' && (
               <div className="form-group mb-3 col-md-3">
                   <FormGroup>
