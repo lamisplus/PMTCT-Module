@@ -1,27 +1,19 @@
 package org.lamisplus.modules.pmtct.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.hibernate.annotations.Type;
 import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
-import org.lamisplus.modules.base.domain.entities.ApplicationUserOrganisationUnit;
 import org.lamisplus.modules.base.domain.entities.OrganisationUnit;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.domain.repositories.OrganisationUnitRepository;
 import org.lamisplus.modules.base.service.UserService;
-import org.lamisplus.modules.hts.domain.entity.HtsClient;
-import org.lamisplus.modules.hts.repository.HtsClientRepository;
 import org.lamisplus.modules.patient.domain.dto.*;
-import org.lamisplus.modules.patient.domain.entity.Encounter;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.EncounterRepository;
 import org.lamisplus.modules.patient.repository.PersonRepository;
@@ -34,20 +26,14 @@ import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import javax.persistence.Column;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,7 +53,6 @@ public class ANCService {
     private final EncounterRepository encounterRepository;
     private final PMTCTEnrollmentService pmtctEnrollmentService;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
-    private final HtsClientRepository htsClientRepository;
 
     private final DeliveryRepository deliveryRepository;
 
@@ -1036,20 +1021,12 @@ public class ANCService {
             hivStatus = "Positive";
         } else {
             Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
-            List<HtsClient> htsClientList = ancRepository.getHtsRecordsByPersonsUuidAAndFacilityId(personUuid, user.getCurrentOrganisationUnitId());
-            Iterator iterator = htsClientList.iterator();
-            while (iterator.hasNext()) {
-                HtsClient htsClient = (HtsClient) iterator.next();
-                String firstResult = htsClient.getHivTestResult();
-                String secondResult = htsClient.getHivTestResult2();
-                System.out.println("firstResult = "+ firstResult);
-                System.out.println("secondResult = "+ secondResult);
-                if (secondResult == null) hivStatus = firstResult;
-                else hivStatus = secondResult;
-                break;
-            }
+            Optional<HtsClientProjection> htsOptional = ancRepository.
+                    getHtsRecordByPersonsUuidAAndFacilityId(personUuid, currentUser.get()
+                            .getCurrentOrganisationUnitId());
+            HtsClientProjection htsClient = htsOptional.get();
 
+            hivStatus = htsClient != null ? htsClient.getHivTestResult() : "Negative";
         }
         return hivStatus;
     }
