@@ -17,10 +17,7 @@ const divStyle = {
 
 const Home = (props) => {
     const [key, setKey] = useState('home');
-<<<<<<< HEAD
-=======
     const [modalShow, setModalShow] = useState(false);
->>>>>>> master
     useEffect(() => { 
       setKey('home')
     },[])

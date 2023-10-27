@@ -62,12 +62,9 @@ ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 const Patients = (props) => {    
 
     const [showPPI, setShowPPI] = useState(true)
-<<<<<<< HEAD
-=======
     const [modalShow, setModalShow] = useState(false);
     const [info, setInfo] = useState({});
 
->>>>>>> master
     const calculate_age = dob => {
         var today = new Date();
         var dateParts = dob.split("-");
