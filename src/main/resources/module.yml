@@ -1,0 +1,18 @@
+basePackage: org.lamisplus.modules.pmtct
+name: PMTCTModule
+dependencies: {HivModule: 2.1.2}
+store: true
+menus:
+  - icon: fa fa-heartbeat
+    disabled: false
+    name: PMTCT
+    state: pmtct
+    url: /across/resources/static/pmtct/index.html
+umdLocation: /across/resources/static/pmtct/index.html
+webModules:
+  - breadcrumb: PMTCT
+    name: PMTCTModule
+    path: pmtct
+    position: 99
+
+

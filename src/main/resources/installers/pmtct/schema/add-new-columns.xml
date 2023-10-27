@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet failOnError="true"  id="20230209-001" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="last_visit_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD last_visit_date date
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230209-002" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="next_appointment_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD next_appointment_date date
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230209-003" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="default_days" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD default_days integer
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230210-003" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="infant_outcome_at18_months" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD infant_outcome_at18_months character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+
+    <changeSet failOnError="true"  id="20230209-004" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="last_visit_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD last_visit_date date
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230209-005" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="next_appointment_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD next_appointment_date date
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20230209-006" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="default_days" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD default_days integer
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-007" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="tested_syphilis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD tested_syphilis character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-008" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="test_result_syphilis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD test_result_syphilis character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-009" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="treated_syphilis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD treated_syphilis character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-010" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="referred_syphilis_treatment" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD referred_syphilis_treatment character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-011" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="static_hiv_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD  static_hiv_status character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true"  id="20230209-012" author="drkarim-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="source_of_referral" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD source_of_referral character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
