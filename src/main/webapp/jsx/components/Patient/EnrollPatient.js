@@ -18,6 +18,10 @@ import {TiArrowBack} from 'react-icons/ti'
 import {token, url as baseUrl } from "../../../api";
 import 'react-phone-input-2/lib/style.css'
 import  './patient.css'
+<<<<<<< HEAD
+=======
+import PmtctEnrollment   from "../PmtctServices/PmtctEnrollment";  
+>>>>>>> master
 // import Form from 'react-bootstrap/Form';
 import {  Modal } from "react-bootstrap";
 
@@ -130,6 +134,11 @@ const UserRegistration = (props) => {
     const [genders, setGenders]= useState([]);
     const [ancNumberCheck, setAncNumberCheck] = useState(false);
     const [errors, setErrors] = useState({})
+<<<<<<< HEAD
+=======
+    const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"create", obj:{}});
+
+>>>>>>> master
     const userDetail = props.location && props.location.state ? props.location.state.user : null;
     const classes = useStyles();
     const history = useHistory();
@@ -170,6 +179,10 @@ const UserRegistration = (props) => {
     patientObj = locationState ? locationState.patientObj : {}; 
     const [sourceOfReferral, setSourceOfReferral] = useState([]);
     useEffect(() => { 
+<<<<<<< HEAD
+=======
+        console.log(locationState)
+>>>>>>> master
         loadGenders();
         getSex();
         PregnancyStatus();
@@ -519,9 +532,10 @@ const UserRegistration = (props) => {
                                 </div>
                            
                             </div>
+                                                        {/* Adding  ENROLLEMENT FORM HERE */}
 
-                            {/* Adding  ENROLLEMENT FORM HERE */}
-                            <div className="card">
+{locationState.showANC ?        
+                 <div className="card">
                             <div className="card-header" style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder', borderRadius:"0.2rem"}}>
                                 <h5 className="card-title"  style={{color:'#fff'}}>ANC  Enrollment</h5>
                             </div>
@@ -800,7 +814,8 @@ const UserRegistration = (props) => {
                                 </div>   
                             </div>
                             </div>
-                            </div>
+                            </div>: <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>
+}
                             {/* END OF HIV ENROLLEMENT FORM */}
                             {saving ? <Spinner /> : ""}
 

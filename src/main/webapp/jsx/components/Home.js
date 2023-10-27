@@ -6,6 +6,9 @@ import ActiveANCPatients from './Patient/ActiveANCPatientList'
 import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 import { FaUserPlus } from "react-icons/fa";
+import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
+
+
 //import PageTitle from "./../layouts/PageTitle";
 const divStyle = {
   borderRadius: "2px",
@@ -14,6 +17,10 @@ const divStyle = {
 
 const Home = (props) => {
     const [key, setKey] = useState('home');
+<<<<<<< HEAD
+=======
+    const [modalShow, setModalShow] = useState(false);
+>>>>>>> master
     useEffect(() => { 
       setKey('home')
     },[])
@@ -25,47 +32,66 @@ const Home = (props) => {
 				<li className="breadcrumb-item active"><h4>PMTCT</h4></li>
 			</ol>
 		  </div>
-      <Link to={"register-patient"}>
+      {/* <Link to={"register-patient"}> */}
             <Button
                 variant="contained"
                 color="primary"
                 className=" float-end mb-10"
                 startIcon={<FaUserPlus size="10"/>}
                 style={{backgroundColor:'#014d88'}}
+                onClick={(e)=>{
+                  e.preventDefault()
+                  setModalShow(true)
+                }}
             >
                 <span style={{ textTransform: "capitalize" }}>New Patient</span>
             </Button>
-        </Link>
+        {/* </Link> */}
         <br/><br/>
-      <Row>       
+        <Row>       
         <Col xl={12}>
-          <Card style={divStyle}>            
-            <Card.Body>
+        <Card style={divStyle}>      
+        <Card.Body>
               {/* <!-- Nav tabs --> */}
+
               <div className="custom-tab-1">
-                <Tabs
+              <Tabs
                     id="controlled-tab-example"
                     activeKey={key}
                     onSelect={(k) => setKey(k)}
                     className="mb-3"
                 >
                   
+
                   <Tab eventKey="home" title="Find Patients">                   
-                    <NotEnrollPatients />
+                 <NotEnrollPatients />
                   </Tab>
                   <Tab eventKey="anc" title="General PMTCT Patients">
-                    <ActiveANCPatients />
+                  <ActiveANCPatients />
+                  </Tab>
+                  <Tab eventKey="" title="ANC Patients">
+                  {/* <ActiveANCPatients /> */}
                   </Tab>
                   {/* <Tab eventKey="visualization" title="Data Visualisation">                   
                     <VisualisationHome />
                   </Tab>                     */}
+
                 </Tabs>
+
               </div>
+
             </Card.Body>
+      
           </Card>
+
         </Col>
         
       </Row>
+      <PmtctEntryPoint
+      route="/register-patient"
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+      />
     </Fragment>
   );
 };

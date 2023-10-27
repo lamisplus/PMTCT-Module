@@ -32,8 +32,7 @@ import momentLocalizer from "react-widgets-moment";
 import moment from "moment";
 //import { FaUserPlus } from "react-icons/fa";
 import {TiArrowForward} from 'react-icons/ti'
-
-
+import PmtctEntryPoint from '../PmtctServices/PmtctEntryPoint';  
 
 //Dtate Picker package
 Moment.locale("en");
@@ -63,6 +62,12 @@ ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 const Patients = (props) => {    
 
     const [showPPI, setShowPPI] = useState(true)
+<<<<<<< HEAD
+=======
+    const [modalShow, setModalShow] = useState(false);
+    const [info, setInfo] = useState({});
+
+>>>>>>> master
     const calculate_age = dob => {
         var today = new Date();
         var dateParts = dob.split("-");
@@ -145,13 +150,17 @@ const Patients = (props) => {
                                     
                                     //status: (<Label color="blue" size="mini">{row.currentStatus}</Label>),
                                  //enroll-patient
-                                    actions:<div>
-                                            <Link
+                                    actions:<div onClick={(e)=>{
+
+                                        setModalShow(true)
+                                        setInfo({ patientId : row.id, patientObj: row })
+                                    }}>
+                                            {/* <Link
                                                 to={{
                                                     pathname: "/enroll-patient",
-                                                    state: { patientId : row.id, patientObj: row }
+                                                    state: { patientId : row.id, patientObj: row, entryType: 'ANC'  }
                                                 }}
-                                            >
+                                            > */}
                                                 <ButtonGroup variant="contained" 
                                                     aria-label="split button"
                                                     style={{backgroundColor:'rgb(153, 46, 98)', height:'30px',width:'215px'}}
@@ -173,7 +182,7 @@ const Patients = (props) => {
                                                 </Button>
                                                 
                                                 </ButtonGroup>
-                                            </Link>
+                                            {/* </Link> */}
 
                                             </div>
                                         })),
@@ -226,7 +235,13 @@ const Patients = (props) => {
                         ),
                     }}
             />
-       
+            <PmtctEntryPoint
+            route="/enroll-patient"
+            show={modalShow}
+            info={info}
+            onHide={() => setModalShow(false)
+            }
+      />
     </div>
   );
 }

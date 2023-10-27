@@ -28,6 +28,8 @@ export default function App() {
           <Route path="/patient-history">
             <PatientDetail />
           </Route> 
+ 
+
           <Route path="/register-patient">
             <RegisterPatientPage />
           </Route>
