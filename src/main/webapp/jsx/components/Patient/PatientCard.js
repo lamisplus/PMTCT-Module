@@ -60,7 +60,7 @@ function PatientCard(props) {
   const patientObjs = props.patientObj ? props.patientObj : {}
   const permissions= props.permissions ? props.permissions : [];
   const [patientObj, setpatientObj] = useState(patientObjs)
-  const [patientBiometricStatus, setPatientBiometricStatus]= useState(props.patientObj.biometricStatus);
+  const [patientBiometricStatus, setPatientBiometricStatus]= useState(props?.patientObj?.biometricStatus);
   const [biometricStatus, setBiometricStatus] = useState(false);
   const [devices, setDevices] = useState([]);
   const [modal, setModal] = useState(false);

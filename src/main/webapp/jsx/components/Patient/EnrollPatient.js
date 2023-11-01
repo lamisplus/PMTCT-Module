@@ -131,7 +131,7 @@ const UserRegistration = (props) => {
     const [genders, setGenders]= useState([]);
     const [ancNumberCheck, setAncNumberCheck] = useState(false);
     const [errors, setErrors] = useState({})
-    const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"create", obj:{}});
+    const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"", obj:{}});
 
     const userDetail = props.location && props.location.state ? props.location.state.user : null;
     const classes = useStyles();
@@ -805,13 +805,15 @@ const UserRegistration = (props) => {
                                 </div>   
                             </div>
                             </div>
-                            </div>: <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent}/>
+                            </div>: <PmtctEnrollment patientObj={patientObj} setActiveContent={setActiveContent} activeContent={activeContent} hideUpdateButton={true}/>
 }
                             {/* END OF HIV ENROLLEMENT FORM */}
                             {saving ? <Spinner /> : ""}
 
                             <br />
 
+
+               {  locationState.showANC    &&     <>
                             {objValues.gaweeks >0  && ancNumberCheck!==true && objValues.gravida >= objValues.parity &&  (
                             <MatButton
                                 type="submit"
@@ -839,6 +841,8 @@ const UserRegistration = (props) => {
                             >
                                 <span style={{ textTransform: "capitalize", color:"#fff"  }}>Cancel</span>
                             </MatButton>
+
+                            </>}
                         </Form>
                     </div>
                 </CardContent>

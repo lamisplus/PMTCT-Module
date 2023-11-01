@@ -54,7 +54,7 @@ ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
 
-const ANCPatients = (props) => {    
+const Patients = (props) => {    
 
     const [showPPI, setShowPPI] = useState(true)
         const handleCheckBox =e =>{
@@ -195,6 +195,6 @@ const ANCPatients = (props) => {
   );
 }
 
-export default ANCPatients;
+export default Patients;
 
 
