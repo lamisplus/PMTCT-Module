@@ -89,7 +89,7 @@ const ANCPatients = (props) => {
               //isLoading={loading}
                 data={query =>
                 new Promise((resolve, reject) =>
-                    axios.get(`${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`, { headers: {"Authorization" : `Bearer ${token}`} })
+                    axios.get(`${baseUrl}pmtct/anc/pmtct-from-person?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`, { headers: {"Authorization" : `Bearer ${token}`} })
                         .then(response => response)
                         .then(result => {
                             
@@ -103,7 +103,7 @@ const ANCPatients = (props) => {
                                         }}
             
                                         title={"Click to view patient dashboard"}
-                                        > {row.fullname}
+                                        > {row.surname}
                                         </Link>,
                                         
                                         hospital_number: row.hospitalNumber,

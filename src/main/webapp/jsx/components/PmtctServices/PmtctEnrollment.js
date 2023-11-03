@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import { Redirect } from 'react-router-dom';
 import {Card,CardBody, FormGroup, Label, Input, InputGroup,InputGroupText} from 'reactstrap';
 import {Label as FormLabelName, } from "reactstrap";
 import MatButton from '@material-ui/core/Button'
@@ -85,8 +86,8 @@ const AncPnc = (props) => {
     let history = useHistory();
 
     const location = useLocation();
-    const locationState = location.state;
-    console.log(locationState)
+    const locationState = location && location.state ? location.state : null;
+    //console.log(locationState)
 
     const classes = useStyles()
     const [disabledField, setSisabledField] = useState(false);
@@ -99,14 +100,17 @@ const AncPnc = (props) => {
     const [enroll, setEnrollDto]= useState({
             ancNo: patientObj.ancNo?patientObj.ancNo: '' ,
             pmtctEnrollmentDate:"",
-            entryPoint: "",
+            entryPoint: locationState && locationState.pmtctType ? locationState.pmtctType : null,
             ga: props.patientObj.gaweeks,
             gravida: props.patientObj.gravida,
             artStartDate: "",
             artStartTime: "",
             id: "",
             tbStatus:""   ,
-            staticHivStatus: ''         
+            staticHivStatus: '',
+            personUuid:  locationState && locationState.patientObj ?  locationState.patientObj.uuid : null,
+            patientObj:locationState && locationState.patientObj ? locationState.patientObj : null,
+            pmtctType:locationState && locationState.pmtctType ? locationState.pmtctType : null
     })
     useEffect(() => { 
         POINT_ENTRY_PMTCT();
@@ -175,7 +179,7 @@ const AncPnc = (props) => {
     const validate = () => {
         let temp = { ...errors }        
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
-        temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
+        //temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
         //temp.ga = enroll.ga ? "" : "This field is required"
         // temp.gravida = enroll.gravida ? "" : "This field is required"
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
@@ -187,13 +191,14 @@ const AncPnc = (props) => {
             })    
         return Object.values(temp).every(x => x == "")
     }
-    
+
     /**** Submit Button Processing  */
-    const handleSubmit = (e) => {        
+    const handleSubmit = (e) => {
+
         e.preventDefault();
         if (validate()){             
         setSaving(true);
-        if(props.activeContent && props.activeContent.actionType){//Perform operation for updation action
+        if(props.activeContent && props.activeContent.actionType){ //Perform operation for update action
             axios.put(`${baseUrl}pmtct/anc/update-pmtct-enrollment/${props.activeContent.id}`, enroll,
             { headers: {"Authorization" : `Bearer ${token}`}},
             
@@ -210,7 +215,6 @@ const AncPnc = (props) => {
                 
             });
         }else{//perform operation for save action
-
             axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
             { headers: {"Authorization" : `Bearer ${token}`}},
             
@@ -219,7 +223,16 @@ const AncPnc = (props) => {
                 setSaving(false);
                 props.patientObj.pmtctRegStatus=true
                 toast.success("Enrollment save successful", {position: toast.POSITION.BOTTOM_CENTER});
-                props.setActiveContent({...props.activeContent, route:'recent-history'})
+                //props.setActiveContent({...props.activeContent, route:'recent-history'})
+                //return <Redirect to='/patient-history' />
+                //history.push("/patient-history");
+                history.push({
+                    pathname: '/patient-history',
+                    state: {  // location state
+                        patientObj: locationState.patientObj,
+                    },
+                });
+
 
             })
             .catch(error => {
@@ -244,7 +257,7 @@ const AncPnc = (props) => {
 
                 <h3 className='mb-3'><span>Point of Entry: </span> {  locationState.postValue === 'L&D'? 'Labour and Delivery': locationState.postValue === 'ANC'? 'ANC': `Post Partum:  ${locationState.postValue}`}</h3>
  
-         {true &&     <div className="form-group mb-3 col-md-4">
+         {!true &&     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
                             <Label >ANC ID
                                  {/* <span style={{ color:"red"}}> *</span> */}
@@ -324,7 +337,7 @@ const AncPnc = (props) => {
                                     min="1"
                                     onChange={handleInputChangeEnrollmentDto}
                                     value={enroll.gravida} 
-                                    disabled
+
                                 />
 
                             </InputGroup>
