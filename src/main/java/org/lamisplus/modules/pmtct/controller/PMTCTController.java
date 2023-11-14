@@ -81,6 +81,16 @@ public class PMTCTController {
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/all-active-pmtct")
+    public ResponseEntity<PersonMetaDataDto> getANCFromPerson(
+            @RequestParam(defaultValue = "*") String searchParam,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize
+    ) {
+        PersonMetaDataDto personMetaDataDto = ancService.getActiveOnPMTCT(searchParam, pageNo, pageSize);
+        return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
 //    @GetMapping(value = "/pmtct-from-person-by-hospitalNumber/{hospitalNumber}")
 //    public ResponseEntity<PMTCTPersonDto> getpmtctFromPersonByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber) {
 //        return ResponseEntity.ok(this.ancService.getPMTCTPersonByHospitalNumber(hospitalNumber));
@@ -326,6 +336,11 @@ public class PMTCTController {
     @GetMapping(value ="/calculate-ga2")
     public int calculateGa( @RequestParam("ancNo") String ancNo,  @RequestParam("visitDate") LocalDate visitDate) {
         return ancService.calculateGA(ancNo, visitDate);
+    }
+
+    @GetMapping(value = "/calculate-ga-from-person")
+    public int calculateGaFromPmtct(@RequestParam("personUuid") String personUuid, @RequestParam("visitDate") LocalDate visitDate) {
+        return ancService.calculateGaFromPmtct(personUuid, visitDate);
     }
 
     @GetMapping(value ="/calculate-ga3")

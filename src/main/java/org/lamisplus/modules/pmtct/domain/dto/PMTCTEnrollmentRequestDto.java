@@ -3,6 +3,8 @@
  import lombok.AllArgsConstructor;
  import lombok.Builder;
  import lombok.Data;
+ import org.lamisplus.modules.patient.domain.dto.PersonDto;
+ import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 
  import java.io.Serializable;
  import java.time.LocalDate;
@@ -22,5 +24,10 @@
      private LocalDate artStartDate;
      private String artStartTime;
      private String tbStatus;
+     private PersonDto personDto;
+     private PmtctType pmtctType;
+     private String personUuid;
+     private String hivStatus;
+     private LocalDate lmp;
  }
 

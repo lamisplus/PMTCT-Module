@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.audit4j.core.util.Log;
 import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
@@ -26,16 +27,20 @@ import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +58,7 @@ public class ANCService {
     private final EncounterRepository encounterRepository;
     private final PMTCTEnrollmentService pmtctEnrollmentService;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+//    private Logger logger;
 
     private final DeliveryRepository deliveryRepository;
 
@@ -339,6 +345,10 @@ public class ANCService {
         return pmtctPersonDtosList;
     }
 
+//    public PersonMetaDataDto getAllANCPatient(String searchValue, int pageNo, int pageSize) {
+//
+//    }
+
     public PersonMetaDataDto getAllPMTCTPerson3(String searchValue, int pageNo, int pageSize) {
         //Integer rec = ancRepository.getTotalAnc();
         //pageSize+= rec;
@@ -350,16 +360,16 @@ public class ANCService {
             currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
 
         }
-        Page<Person> persons = null;
+        Page<PatientInfo> persons = null;
         if (!((searchValue == null) || (searchValue.equals("*")))) {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            persons = personRepository.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         } else {
             // Integer rec = ancRepository.getTotalAnc();
             //if (rec >= 1) {
-            persons = personRepository.findFemalePerson(0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.findFemalePerson(0, currentOrganisationUnitId, paging);
             //} else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
         }
 
@@ -423,6 +433,43 @@ public class ANCService {
         //return checkedInPeople;
     }
 
+    public PersonMetaDataDto getActiveOnPMTCT(String searchValue, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            User user = (User) currentUser.get();
+            currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
+
+        }
+        Page<PatientPerson> persons = null;
+        if ((searchValue == null) || (searchValue.equals("*"))) {
+            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCT(0, currentOrganisationUnitId, paging);
+
+        } else {
+            searchValue = searchValue.replaceAll("\\s", "");
+            searchValue = searchValue.replaceAll(",", "");
+            String queryParam = "%" + searchValue + "%";
+            System.out.println("I got here Doc");
+            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCTBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+        }
+        List<PatientPerson> personList = persons.getContent();
+        ArrayList<PMTCTEnrollmentWithPersonRespondDto> pmtctResponseDtos = new ArrayList<>();
+        personList.forEach(person -> {
+            PMTCTEnrollmentWithPersonRespondDto pmtctResponseDto = getPMTCTRespondDtoFromPerson(person);
+            pmtctResponseDtos.add(pmtctResponseDto);
+        });
+
+        PageDTO pageDTO = personService.generatePagination(persons);
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords(pmtctResponseDtos.size());
+        personMetaDataDto.setPageSize(pageDTO.getPageSize());
+        personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
+        personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
+        personMetaDataDto.setRecords(pmtctResponseDtos);
+        return personMetaDataDto;
+    }
+
     public PMTCTPersonDto getPMTCTPersonByHospitalNumber(String hospitalNumber) {
         List<Person> persons = this.personRepository.getPersonByHospitalNumber(hospitalNumber);
         PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
@@ -453,7 +500,8 @@ public class ANCService {
         return pmtctPersonDto;
     }
 
-    public PersonResponseDto getDtoFromPerson(Person person) {
+    public PersonResponseDto getDtoFromPerson(PatientInfo person) {
+        //Log.info("person {}", person);
         PersonResponseDto personResponseDto = new PersonResponseDto();
         personResponseDto.setId(person.getId());
         personResponseDto.setNinNumber(person.getNinNumber());
@@ -464,20 +512,20 @@ public class ANCService {
         personResponseDto.setFirstName("");
         personResponseDto.setSurname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
         personResponseDto.setOtherName("");
-        personResponseDto.setContactPoint(person.getContactPoint());
-        personResponseDto.setAddress(person.getAddress());
-        personResponseDto.setContact(person.getContact());
-        personResponseDto.setIdentifier(person.getIdentifier());
-        personResponseDto.setEducation(person.getEducation());
-        personResponseDto.setEmploymentStatus(person.getEmploymentStatus());
-        personResponseDto.setMaritalStatus(person.getMaritalStatus());
+        personResponseDto.setContactPoint(parseJsonString(person.getContactPoint()));
+        personResponseDto.setAddress(parseJsonString(person.getAddress()));
+        personResponseDto.setContact(parseJsonString(person.getContact()));
+        personResponseDto.setIdentifier(parseJsonString(person.getIdentifier()));
+        personResponseDto.setEducation(parseJsonString(person.getEducation()));
+        personResponseDto.setEmploymentStatus(parseJsonString(person.getEmploymentStatus()));
+        personResponseDto.setMaritalStatus(parseJsonString(person.getMaritalStatus()));
         personResponseDto.setSex(person.getSex());
-        personResponseDto.setGender(person.getGender());
+        personResponseDto.setGender(parseJsonString(person.getGender()));
         personResponseDto.setDeceased(person.getDeceased());
         personResponseDto.setDateOfRegistration(person.getDateOfRegistration());
         personResponseDto.setActive(person.getActive());
         personResponseDto.setDeceasedDateTime(person.getDeceasedDateTime());
-        personResponseDto.setOrganization(person.getOrganization());
+        personResponseDto.setOrganization(parseJsonString(person.getOrganization()));
         personResponseDto.setUuid(person.getUuid());
         String hivStatus = "Unknown";
         try {
@@ -749,6 +797,10 @@ public class ANCService {
         ancRespondDto.setFullname(this.getFullName(persons.getFirstName(), persons.getOtherName(), persons.getSurname()));
         ancRespondDto.setAncUuid(anc.getUuid());
         ancRespondDto.setAge(this.calculateAge(persons.getDateOfBirth()));
+        ancRespondDto.setAddress(persons.getAddress());
+        ancRespondDto.setPersonId(persons.getId());
+        ancRespondDto.setSex(persons.getSex());
+        ancRespondDto.setContactPoint(persons.getContactPoint());
         ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
         ancRespondDto.setGravida(anc.getGravida());
         ancRespondDto.setParity(anc.getParity());
@@ -830,6 +882,56 @@ public class ANCService {
             }
         }
         return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
+    }
+
+    public PMTCTEnrollmentWithPersonRespondDto getPMTCTRespondDtoFromPerson(@NotNull PatientPerson person) {
+        PMTCTEnrollmentWithPersonRespondDto pmtctWithPersonRespondDto = new PMTCTEnrollmentWithPersonRespondDto();
+        pmtctWithPersonRespondDto.setDateOfBirth(person.getDateOfBirth());
+        pmtctWithPersonRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
+        pmtctWithPersonRespondDto.setSex(person.getSex());
+        pmtctWithPersonRespondDto.setFullName(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
+        pmtctWithPersonRespondDto.setPersonId(person.getPersonId());
+        pmtctWithPersonRespondDto.setPerson_uuid(person.getPersonUuid());
+        pmtctWithPersonRespondDto.setId(person.getId());
+        pmtctWithPersonRespondDto.setUuid(person.getUuid());
+        pmtctWithPersonRespondDto.setAddress(parseJsonString(person.getAddress()));
+        pmtctWithPersonRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
+        pmtctWithPersonRespondDto.setHospitalNumber(person.getHospitalNumber());
+        pmtctWithPersonRespondDto.setHivStatus(person.getHivStatus());
+        pmtctWithPersonRespondDto.setArtStartDate(person.getArtStartDate());
+        pmtctWithPersonRespondDto.setEntryPoint(person.getEntryPoint());
+        pmtctWithPersonRespondDto.setTbStatus(person.getTbStatus());
+        pmtctWithPersonRespondDto.setPmtctRegStatus(true);
+
+        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
+        if(ancs.isPresent()) {
+            ANC anc = ancs.get();
+            pmtctWithPersonRespondDto.setAncNo(anc.getAncNo());
+            pmtctWithPersonRespondDto.setGravida(anc.getGravida());
+            pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
+
+        }
+        PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByPersonUuid(person.getPersonUuid());
+        if(pmtctEnrollmentRespondDto != null) {
+            pmtctWithPersonRespondDto.setPmtctEnrollmentDate(pmtctEnrollmentRespondDto.getPmtctEnrollmentDate());
+//            pmtctWithPersonRespondDto.setEntryPoint(pmtctEnrollmentRespondDto.getEntryPoint());
+            pmtctWithPersonRespondDto.setArtStartTime(pmtctEnrollmentRespondDto.getArtStartTime());
+//            pmtctWithPersonRespondDto.setTbStatus(pmtctEnrollmentRespondDto.getTbStatus());
+//            pmtctWithPersonRespondDto.setHospitalNumber(pmtctEnrollmentRespondDto.getHospitalNumber());
+        }
+        return pmtctWithPersonRespondDto;
+    }
+
+    private JsonNode parseJsonString(String jsonString) {
+        try {
+            if (jsonString != null) {
+                return mapper.readTree(jsonString);
+            }
+            return null;
+        } catch (IOException e) {
+            System.err.println("Error parsing JSON string: " + e);
+            return null;
+        }
     }
 
     public ANCRespondDto getANCRespondDtoFromPerson(Person person) {
@@ -1080,6 +1182,15 @@ public class ANCService {
         return LMP;
     }
 
+    public LocalDate getLMPFromPMTCT(String personUuid) {
+        LocalDate LMP = LocalDate.now();
+        Optional<PMTCTEnrollment> pmtct = this.pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);
+        if(pmtct.isPresent() && pmtct.get().getLmp() != null) {
+            LMP = pmtct.get().getLmp();
+        }
+        return LMP;
+    }
+
     public int calculateGA2(String hospitalNumber, LocalDate visitDate) {
         LocalDate dob = getDOB(hospitalNumber);
         int ga = (int) ChronoUnit.MONTHS.between(dob, visitDate);
@@ -1143,5 +1254,11 @@ public class ANCService {
         return date;
     }
 
+    public int calculateGaFromPmtct(String personUuid, LocalDate visitDate) {
+        LocalDate lmp = getLMPFromPMTCT(personUuid);
+        int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
+        if (ga < 0) ga = 0;
+        return ga;
+    }
 }
 

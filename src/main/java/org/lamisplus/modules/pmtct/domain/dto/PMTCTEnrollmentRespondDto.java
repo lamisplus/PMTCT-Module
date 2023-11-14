@@ -20,5 +20,8 @@
      private String fullName;
      private int age;
      private String uuid;
+     private String hivStatus;
+     private LocalDate lmp;
+     private boolean pmtctRegStatus;
 
  }
