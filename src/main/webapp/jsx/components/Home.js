@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import Button from '@material-ui/core/Button';
 import { FaUserPlus } from "react-icons/fa";
 import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
-
+import ANCPatients from "./Patient/ActiveANCPatientList";
 
 //import PageTitle from "./../layouts/PageTitle";
 const divStyle = {
@@ -63,11 +63,12 @@ const Home = (props) => {
                   <Tab eventKey="home" title="Find Patients">                   
                  <NotEnrollPatients />
                   </Tab>
-                  <Tab eventKey="anc" title="General PMTCT Patients">
-                  <ActiveANCPatients />
+                  <Tab eventKey="anc" title="ANC Patients">
+                  <ANCPatients />
                   </Tab>
-                  <Tab eventKey="" title="ANC Patients">
-                  {/* <ActiveANCPatients /> */}
+
+                  <Tab eventKey="pmtct" title="General PMTCT Patients">
+                  <ActiveANCPatients />
                   </Tab>
                   {/* <Tab eventKey="visualization" title="Data Visualisation">                   
                     <VisualisationHome />

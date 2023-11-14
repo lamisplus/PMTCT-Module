@@ -8,7 +8,7 @@ import CancelIcon from '@material-ui/icons/Cancel'
 import axios from "axios";
 import { toast} from "react-toastify";
 import { url as baseUrl, token } from "../../../api";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import 'react-summernote/dist/react-summernote.css'; // import styles
 import { Spinner } from "reactstrap";
 import {Message } from 'semantic-ui-react'
@@ -19,7 +19,7 @@ const useStyles = makeStyles(theme => ({
         margin: theme.spacing(20),
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     form: {
         width: '100%', // Fix IE 11 issue.
@@ -82,8 +82,12 @@ const useStyles = makeStyles(theme => ({
 
 const AncPnc = (props) => {
     const patientObj = props.patientObj;
-    //console.log(patientObj)
     let history = useHistory();
+
+    const location = useLocation();
+    const locationState = location.state;
+    console.log(locationState)
+
     const classes = useStyles()
     const [disabledField, setSisabledField] = useState(false);
     const [entryPoint, setentryPoint] = useState([]);
@@ -93,7 +97,7 @@ const AncPnc = (props) => {
     const [errors, setErrors] = useState({});
 
     const [enroll, setEnrollDto]= useState({
-            ancNo: patientObj.ancNo,
+            ancNo: patientObj.ancNo?patientObj.ancNo: '' ,
             pmtctEnrollmentDate:"",
             entryPoint: "",
             ga: props.patientObj.gaweeks,
@@ -101,7 +105,8 @@ const AncPnc = (props) => {
             artStartDate: "",
             artStartTime: "",
             id: "",
-            tbStatus:""            
+            tbStatus:""   ,
+            staticHivStatus: ''         
     })
     useEffect(() => { 
         POINT_ENTRY_PMTCT();
@@ -172,7 +177,7 @@ const AncPnc = (props) => {
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
         //temp.ga = enroll.ga ? "" : "This field is required"
-        temp.gravida = enroll.gravida ? "" : "This field is required"
+        // temp.gravida = enroll.gravida ? "" : "This field is required"
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.artStartDate = enroll.artStartDate ? "" : "This field is required"
         temp.artStartTime = enroll.artStartTime ? "" : "This field is required"
@@ -204,7 +209,8 @@ const AncPnc = (props) => {
                 toast.error("Something went wrong", {position: toast.POSITION.BOTTOM_CENTER});
                 
             });
-        }else{//perform opertaio for save action
+        }else{//perform operation for save action
+
             axios.post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll,
             { headers: {"Authorization" : `Bearer ${token}`}},
             
@@ -231,11 +237,18 @@ const AncPnc = (props) => {
         <Card className={classes.root}>
             <CardBody>
             <form >
-                <div className="row">
-                <h2>PMTCT Enrollment</h2>
-                <div className="form-group mb-3 col-md-4">
+                <div className="row ">
+                <div className="card-header mb-3 " style={{backgroundColor:"#014d88",color:'#fff',fontWeight:'bolder',  borderRadius:"0.2rem", marginTop: '-20px'}}>
+                                    <h5 className="card-title" style={{color:'#fff'}}>PMTCT Enrollment</h5>
+                </div>
+
+                <h3 className='mb-3'><span>Point of Entry: </span> {  locationState.postValue === 'L&D'? 'Labour and Delivery': locationState.postValue === 'ANC'? 'ANC': `Post Partum:  ${locationState.postValue}`}</h3>
+ 
+         {true &&     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                            <Label >ANC ID <span style={{ color:"red"}}> *</span></Label>
+                            <Label >ANC ID
+                                 {/* <span style={{ color:"red"}}> *</span> */}
+                                 </Label>
                             <InputGroup> 
                                 <Input 
                                     type="text"
@@ -251,7 +264,7 @@ const AncPnc = (props) => {
                                 <span className={classes.error}>{errors.ancNo}</span>
                         ) : "" }
                             </FormGroup>
-                    </div>
+                    </div>}
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
                             <Label >Date of Enrollment <span style={{ color:"red"}}> *</span></Label>
@@ -273,7 +286,7 @@ const AncPnc = (props) => {
                             ) : "" }
                             </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-4">
+                    {/* <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                         <Label >Point of Entry <span style={{ color:"red"}}> *</span></Label>
                         <InputGroup> 
@@ -298,7 +311,7 @@ const AncPnc = (props) => {
                                 <span className={classes.error}>{errors.entryPoint}</span>
                         ) : "" }
                         </FormGroup>
-                    </div> 
+                    </div>  */}
 
                     <div className="form-group mb-3 col-md-4">
                             <FormGroup>
@@ -392,10 +405,42 @@ const AncPnc = (props) => {
                         ) : "" }
                         </FormGroup>
                     </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>
+                            HIV Status <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="staticHivStatus"
+                              id="staticHivStatus"
+                              onChange={handleInputChangeEnrollmentDto}
+                              value={enroll.staticHivStatus}
+                            >
+                              <option value="">Select</option>
+                              <option value="Positive">Positive</option>
+                              <option value="Negative">Negative</option>
+                              <option value="Unknown">Unknown</option>
+                            </Input>
+                          </InputGroup>
+                          {errors.staticHivStatus !== "" ? (
+                            <span className={classes.error}>
+                              {errors.staticHivStatus}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+
                 </div>
                 
                 {saving ? <Spinner /> : ""}
                 <br />
+
+               { props.hideUpdateButton && <>
                 {props.activeContent && props.activeContent.actionType? (<>
                     <MatButton
                     type="submit"
@@ -432,6 +477,7 @@ const AncPnc = (props) => {
                             )}
                 </MatButton>
                 </>)}
+                </>}
                 </form>
             </CardBody>
         </Card> 
