@@ -106,7 +106,6 @@ const useStyles = makeStyles((theme) => ({
 const UserRegistration = (props) => {
   const { state } = useLocation();
 
-  console.log("props", state);
   const [basicInfo, setBasicInfo] = useState({
     active: true,
     address: [],
@@ -160,7 +159,13 @@ const UserRegistration = (props) => {
   const [topLevelUnitCountryOptions, settopLevelUnitCountryOptions] = useState(
     []
   );
-  const [activeContent, setActiveContent] = useState({route:"recent-history", id:"", activeTab:"home", actionType:"", obj:{}});
+  const [activeContent, setActiveContent] = useState({
+    route: "recent-history",
+    id: "",
+    activeTab: "home",
+    actionType: "",
+    obj: {},
+  });
 
   const userDetail =
     props.location && props.location.state ? props.location.state.user : null;
@@ -189,19 +194,18 @@ const UserRegistration = (props) => {
     partnerNotification: {},
     staticHivStatus: "",
   });
-  const [enroll, setEnrollDto]= useState({
+  const [enroll, setEnrollDto] = useState({
     // ancNo: patientObj.ancNo,
-    pmtctEnrollmentDate:"",
+    pmtctEnrollmentDate: "",
     entryPoint: "",
     // ga: props.patientObj.gaweeks,
     // gravida: props.patientObj.gravida,
     artStartDate: "",
     artStartTime: "",
     id: "",
-    tbStatus:"",
+    tbStatus: "",
     personDto: {},
-            
-})
+  });
   const [carePoints, setCarePoints] = useState([]);
   const [sourceReferral, setSourceReferral] = useState([]);
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
@@ -210,6 +214,8 @@ const UserRegistration = (props) => {
   //status for hospital Number
   const [hospitalNumStatus, setHospitalNumStatus] = useState(false);
   const [open, setOpen] = React.useState(false);
+  const [PMTCTObj, setPMTCTObj] = useState({});
+
   const toggle = () => setOpen(!open);
   const locationState = location.state;
   let patientId = null;
@@ -469,6 +475,14 @@ const UserRegistration = (props) => {
     setErrors({ ...temp });
     return Object.values(temp).every((x) => x == "");
   };
+
+  // GET PMTCT INPUT FROM THE PMTCT COMPONENT
+  const getPMTCTInfo = (info) => {
+    console.log(info);
+    setPMTCTObj(info);
+    return info;
+  };
+
   //Function to add relatives
   const handleSaveRelationship = (e) => {
     if (validateRelatives()) {
@@ -488,6 +502,7 @@ const UserRegistration = (props) => {
     contacts.splice(index, 1);
     setContacts([...contacts]);
   };
+
   const handleEditRelative = (relative, index) => {
     setRelatives(relative);
     setShowRelative(true);
@@ -555,42 +570,36 @@ const UserRegistration = (props) => {
     temp.stateId = basicInfo.stateId ? "" : "State is required.";
     temp.district = basicInfo.district ? "" : "Province/LGA is required.";
     //ANC FORM VALIDATION
-if(state.showANC){
-
-
-    temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
-    temp.gravida = objValues.gravida ? "" : "This field is required";
-    objValues.testResultSyphilis === "Positive" &&
-      (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
+    if (state.showANC) {
+      temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
+      temp.gravida = objValues.gravida ? "" : "This field is required";
+      objValues.testResultSyphilis === "Positive" &&
+        (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
+          ? ""
+          : "This field is required");
+      temp.lmp = objValues.lmp ? "" : "This field is required";
+      temp.parity = objValues.parity ? "" : "This field is required";
+      temp.testedSyphilis = objValues.testedSyphilis
         ? ""
-        : "This field is required");
-    temp.lmp = objValues.lmp ? "" : "This field is required";
-    temp.parity = objValues.parity ? "" : "This field is required";
-    temp.testedSyphilis = objValues.testedSyphilis
-      ? ""
-      : "This field is required";
-    objValues.testResultSyphilis === "Positive" &&
-      (temp.treatedSyphilis = objValues.treatedSyphilis
+        : "This field is required";
+      objValues.testResultSyphilis === "Positive" &&
+        (temp.treatedSyphilis = objValues.treatedSyphilis
+          ? ""
+          : "This field is required");
+      temp.sourceOfReferral = objValues.sourceOfReferral
         ? ""
-        : "This field is required");
-    temp.sourceOfReferral = objValues.sourceOfReferral
-      ? ""
-      : "This field is required";
-    objValues.testedSyphilis === "Yes" &&
-      (temp.testResultSyphilis = objValues.testResultSyphilis
+        : "This field is required";
+      objValues.testedSyphilis === "Yes" &&
+        (temp.testResultSyphilis = objValues.testResultSyphilis
+          ? ""
+          : "This field is required");
+      temp.staticHivStatus = objValues.staticHivStatus
         ? ""
-        : "This field is required");
-    temp.staticHivStatus = objValues.staticHivStatus
-      ? ""
-      : "This field is required";
-    temp.ancNo = objValues.ancNo ? "" : "This field is required";
+        : "This field is required";
+      temp.ancNo = objValues.ancNo ? "" : "This field is required";
+    }
 
-
-
-
-}
-
-setErrors({ ...temp });
+    setErrors({ ...temp });
 
     return Object.values(temp).every((x) => x == "");
   };
@@ -623,246 +632,242 @@ setErrors({ ...temp });
           newConatctsInfo.push(contactInfo);
         });
 
-        // ANC ENTRY POINT
-  if(state.showANC){
-    try {
-      const patientForm = {
-        active: true,
-        address: [
-          {
-            city: basicInfo.address,
-            countryId: basicInfo.countryId,
-            district: basicInfo.district,
-            line: [basicInfo.landmark],
-            organisationUnitId: 0,
-            postalCode: "",
-            stateId: basicInfo.stateId,
-          },
-        ],
-        contact: newConatctsInfo,
-        contactPoint: [],
-        dateOfBirth: basicInfo.dob,
-        deceased: false,
-        deceasedDateTime: null,
-        firstName: basicInfo.firstName,
-        genderId: basicInfo.sexId,
-        sexId: basicInfo.sexId,
-        identifier: [
-          {
-            assignerId: 1,
-            type: "HospitalNumber",
-            value: basicInfo.hospitalNumber,
-          },
-        ],
-        otherName: basicInfo.middleName,
-        maritalStatusId: basicInfo.maritalStatusId,
-        surname: basicInfo.lastName,
-        educationId: basicInfo.educationId,
-        employmentStatusId: basicInfo.employmentStatusId,
-        dateOfRegistration: basicInfo.dateOfRegistration,
-        isDateOfBirthEstimated:
-          basicInfo.dateOfBirth == "Actual" ? false : true,
-        ninNumber: basicInfo.ninNumber,
-      };
-      const phone = {
-        type: "phone",
-        value: basicInfo.phoneNumber,
-      };
-      if (basicInfo.email) {
-        const email = {
-          type: "email",
-          value: basicInfo.email,
-        };
-        patientForm.contactPoint.push(email);
-      }
-      if (basicInfo.altPhonenumber) {
-        const altPhonenumber = {
-          type: "altphone",
-          value: basicInfo.altPhonenumber,
-        };
-        patientForm.contactPoint.push(altPhonenumber);
-      }
-      patientForm.contactPoint.push(phone);
-      patientForm.id = patientId;
-      objValues.personDto = patientForm;
-      //patientDTO.personDto=objValues;
-      //console.log(objValues)
-      const response = await axios.post(
-        `${baseUrl}pmtct/anc/anc-new-registration`,
-        objValues,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Patient Register successful", {
-        position: toast.POSITION.BOTTOM_CENTER,
-      });
+      // ANC ENTRY POINT
+      if (state.showANC) {
+        try {
+          const patientForm = {
+            active: true,
+            address: [
+              {
+                city: basicInfo.address,
+                countryId: basicInfo.countryId,
+                district: basicInfo.district,
+                line: [basicInfo.landmark],
+                organisationUnitId: 0,
+                postalCode: "",
+                stateId: basicInfo.stateId,
+              },
+            ],
+            contact: newConatctsInfo,
+            contactPoint: [],
+            dateOfBirth: basicInfo.dob,
+            deceased: false,
+            deceasedDateTime: null,
+            firstName: basicInfo.firstName,
+            genderId: basicInfo.sexId,
+            sexId: basicInfo.sexId,
+            identifier: [
+              {
+                assignerId: 1,
+                type: "HospitalNumber",
+                value: basicInfo.hospitalNumber,
+              },
+            ],
+            otherName: basicInfo.middleName,
+            maritalStatusId: basicInfo.maritalStatusId,
+            surname: basicInfo.lastName,
+            educationId: basicInfo.educationId,
+            employmentStatusId: basicInfo.employmentStatusId,
+            dateOfRegistration: basicInfo.dateOfRegistration,
+            isDateOfBirthEstimated:
+              basicInfo.dateOfBirth == "Actual" ? false : true,
+            ninNumber: basicInfo.ninNumber,
+          };
+          const phone = {
+            type: "phone",
+            value: basicInfo.phoneNumber,
+          };
+          if (basicInfo.email) {
+            const email = {
+              type: "email",
+              value: basicInfo.email,
+            };
+            patientForm.contactPoint.push(email);
+          }
+          if (basicInfo.altPhonenumber) {
+            const altPhonenumber = {
+              type: "altphone",
+              value: basicInfo.altPhonenumber,
+            };
+            patientForm.contactPoint.push(altPhonenumber);
+          }
+          patientForm.contactPoint.push(phone);
+          patientForm.id = patientId;
+          objValues.personDto = patientForm;
+          //patientDTO.personDto=objValues;
+          console.log(objValues);
 
-      console.log(response.data)
-    //   history.push({
-    //     pathname: '/patient-history',
-    //     state: { patientObj: response.data }
-    // });     
-         history.push(
-      '/patient-history'
-       
-    );  
-    setSaving(false);
-    } catch (error) {
-      setSaving(false);
-      if (error.response && error.response.data) {
-        let errorMessage =
-          error.response.data.apierror &&
-          error.response.data.apierror.message !== ""
-            ? error.response.data.apierror.message
-            : "Something went wrong, please try again";
-        if (
-          error.response.data.apierror &&
-          error.response.data.apierror.message !== "" &&
-          error.response.data.apierror &&
-          error.response.data.apierror.subErrors[0].message !== ""
-        ) {
-          toast.error(
-            error.response.data.apierror.message +
-              " : " +
-              error.response.data.apierror.subErrors[0].field +
-              " " +
-              error.response.data.apierror.subErrors[0].message,
-            { position: toast.POSITION.BOTTOM_CENTER }
+          //
+          const response = await axios.post(
+            `${baseUrl}pmtct/anc/anc-new-registration`,
+            objValues,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-        } else {
-          toast.error(errorMessage, {
+          toast.success("Patient Register successful", {
             position: toast.POSITION.BOTTOM_CENTER,
           });
+          //
+          console.log(response.data);
+          history.push({
+            pathname: "/patient-history",
+            state: { patientObj: response.data, postValue: "ANC" },
+          });
+          // history.push("/");
+          setSaving(false);
+        } catch (error) {
+          setSaving(false);
+          if (error.response && error.response.data) {
+            let errorMessage =
+              error.response.data.apierror &&
+              error.response.data.apierror.message !== ""
+                ? error.response.data.apierror.message
+                : "Something went wrong, please try again";
+            if (
+              error.response.data.apierror &&
+              error.response.data.apierror.message !== "" &&
+              error.response.data.apierror &&
+              error.response.data.apierror.subErrors[0].message !== ""
+            ) {
+              toast.error(
+                error.response.data.apierror.message +
+                  " : " +
+                  error.response.data.apierror.subErrors[0].field +
+                  " " +
+                  error.response.data.apierror.subErrors[0].message,
+                { position: toast.POSITION.BOTTOM_CENTER }
+              );
+            } else {
+              toast.error(errorMessage, {
+                position: toast.POSITION.BOTTOM_CENTER,
+              });
+            }
+          } else {
+            toast.error("Something went wrong. Please try again...", {
+              position: toast.POSITION.BOTTOM_CENTER,
+            });
+          }
         }
       } else {
-        toast.error("Something went wrong. Please try again...", {
-          position: toast.POSITION.BOTTOM_CENTER,
-        });
-      }
-    }
-
-  }else{
-    // NOT ANC ENTRY POINT
-    try {
-      const patientForm = {
-        active: true,
-        address: [
-          {
-            city: basicInfo.address,
-            countryId: basicInfo.countryId,
-            district: basicInfo.district,
-            line: [basicInfo.landmark],
-            organisationUnitId: 0,
-            postalCode: "",
-            stateId: basicInfo.stateId,
-          },
-        ],
-        contact: newConatctsInfo,
-        contactPoint: [],
-        dateOfBirth: basicInfo.dob,
-        deceased: false,
-        deceasedDateTime: null,
-        firstName: basicInfo.firstName,
-        genderId: basicInfo.sexId,
-        sexId: basicInfo.sexId,
-        identifier: [
-          {
-            assignerId: 1,
-            type: "HospitalNumber",
-            value: basicInfo.hospitalNumber,
-          },
-        ],
-        otherName: basicInfo.middleName,
-        maritalStatusId: basicInfo.maritalStatusId,
-        surname: basicInfo.lastName,
-        educationId: basicInfo.educationId,
-        employmentStatusId: basicInfo.employmentStatusId,
-        dateOfRegistration: basicInfo.dateOfRegistration,
-        isDateOfBirthEstimated:
-          basicInfo.dateOfBirth == "Actual" ? false : true,
-        ninNumber: basicInfo.ninNumber,
-      };
-      const phone = {
-        type: "phone",
-        value: basicInfo.phoneNumber,
-      };
-      if (basicInfo.email) {
-        const email = {
-          type: "email",
-          value: basicInfo.email,
-        };
-        patientForm.contactPoint.push(email);
-      }
-      if (basicInfo.altPhonenumber) {
-        const altPhonenumber = {
-          type: "altphone",
-          value: basicInfo.altPhonenumber,
-        };
-        patientForm.contactPoint.push(altPhonenumber);
-      }
-      patientForm.contactPoint.push(phone);
-      patientForm.id = patientId;
-      enroll.personDto = patientForm;
-      //patientDTO.personDto=objValues;
-      //console.log(objValues)
-
-      console.log(enroll)
-      const response = await axios.post(
-        `${baseUrl}pmtct/anc/pmtct-enrollment`,
-        enroll,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Patient Register successful", {
-        position: toast.POSITION.BOTTOM_CENTER,
-      });
-      history.push("/");
-      setSaving(false);
-    } catch (error) {
-      setSaving(false);
-      if (error.response && error.response.data) {
-        let errorMessage =
-          error.response.data.apierror &&
-          error.response.data.apierror.message !== ""
-            ? error.response.data.apierror.message
-            : "Something went wrong, please try again";
-        if (
-          error.response.data.apierror &&
-          error.response.data.apierror.message !== "" &&
-          error.response.data.apierror &&
-          error.response.data.apierror.subErrors[0].message !== ""
-        ) {
-          toast.error(
-            error.response.data.apierror.message +
-              " : " +
-              error.response.data.apierror.subErrors[0].field +
-              " " +
-              error.response.data.apierror.subErrors[0].message,
-            { position: toast.POSITION.BOTTOM_CENTER }
+        // NOT ANC ENTRY POINT
+        console.log("here");
+        try {
+          const patientForm = {
+            active: true,
+            address: [
+              {
+                city: basicInfo.address,
+                countryId: basicInfo.countryId,
+                district: basicInfo.district,
+                line: [basicInfo.landmark],
+                organisationUnitId: 0,
+                postalCode: "",
+                stateId: basicInfo.stateId,
+              },
+            ],
+            contact: newConatctsInfo,
+            contactPoint: [],
+            dateOfBirth: basicInfo.dob,
+            deceased: false,
+            deceasedDateTime: null,
+            firstName: basicInfo.firstName,
+            genderId: basicInfo.sexId,
+            sexId: basicInfo.sexId,
+            identifier: [
+              {
+                assignerId: 1,
+                type: "HospitalNumber",
+                value: basicInfo.hospitalNumber,
+              },
+            ],
+            otherName: basicInfo.middleName,
+            maritalStatusId: basicInfo.maritalStatusId,
+            surname: basicInfo.lastName,
+            educationId: basicInfo.educationId,
+            employmentStatusId: basicInfo.employmentStatusId,
+            dateOfRegistration: basicInfo.dateOfRegistration,
+            isDateOfBirthEstimated:
+              basicInfo.dateOfBirth == "Actual" ? false : true,
+            ninNumber: basicInfo.ninNumber,
+          };
+          const phone = {
+            type: "phone",
+            value: basicInfo.phoneNumber,
+          };
+          if (basicInfo.email) {
+            const email = {
+              type: "email",
+              value: basicInfo.email,
+            };
+            patientForm.contactPoint.push(email);
+          }
+          if (basicInfo.altPhonenumber) {
+            const altPhonenumber = {
+              type: "altphone",
+              value: basicInfo.altPhonenumber,
+            };
+            patientForm.contactPoint.push(altPhonenumber);
+          }
+          patientForm.contactPoint.push(phone);
+          patientForm.id = patientId;
+          enroll.personDto = patientForm;
+          //patientDTO.personDto=objValues;
+          //console.log(objValues)
+          let payload = {
+            ...PMTCTObj,
+            personDto: patientForm,
+          };
+          console.log("payload", payload);
+          const response = await axios.post(
+            `${baseUrl}pmtct/anc/pmtct-enrollment`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-        } else {
-          toast.error(errorMessage, {
+          toast.success("Patient Register successful", {
             position: toast.POSITION.BOTTOM_CENTER,
           });
+          history.push({
+            pathname: "/patient-history",
+            state: { patientObj: response.data, postValue: "ANC" },
+          });
+
+          // history.push("/");
+          setSaving(false);
+        } catch (error) {
+          setSaving(false);
+          if (error.response && error.response.data) {
+            let errorMessage =
+              error.response.data.apierror &&
+              error.response.data.apierror.message !== ""
+                ? error.response.data.apierror.message
+                : "Something went wrong, please try again";
+            if (
+              error.response.data.apierror &&
+              error.response.data.apierror.message !== "" &&
+              error.response.data.apierror &&
+              error.response.data.apierror.subErrors[0].message !== ""
+            ) {
+              toast.error(
+                error.response.data.apierror.message +
+                  " : " +
+                  error.response.data.apierror.subErrors[0].field +
+                  " " +
+                  error.response.data.apierror.subErrors[0].message,
+                { position: toast.POSITION.BOTTOM_CENTER }
+              );
+            } else {
+              toast.error(errorMessage, {
+                position: toast.POSITION.BOTTOM_CENTER,
+              });
+            }
+          } else {
+            toast.error("Something went wrong. Please try again...", {
+              position: toast.POSITION.BOTTOM_CENTER,
+            });
+          }
         }
-      } else {
-        toast.error("Something went wrong. Please try again...", {
-          position: toast.POSITION.BOTTOM_CENTER,
-        });
       }
-    }
-
-  }
-
-
-     
-
-
     }
   };
-
-
-
-
-
 
   // end of submit
   const alphabetOnly = (value) => {
@@ -2457,13 +2462,18 @@ setErrors({ ...temp });
 
               {/* END OF HIV ENROLLEMENT FORM */}
 
-
-
-{/* PMTCT FORM FOR L&D AND POST PARTUM  */}
-              {
-                !state.showANC && <PmtctEnrollment patientObj={{}} setActiveContent={setActiveContent} activeContent={activeContent} hideUpdateButton={false}/>
-
-              }
+              {/* PMTCT FORM FOR L&D AND POST PARTUM  */}
+              {!state.showANC && (
+                <PmtctEnrollment
+                  getPMTCTInfo={getPMTCTInfo}
+                  patientObj={{}}
+                  showANC={state.showANC}
+                  setActiveContent={setActiveContent}
+                  activeContent={activeContent}
+                  hideUpdateButton={false}
+                  ancEntryType={false}
+                />
+              )}
               {saving ? <Spinner /> : ""}
 
               <br />
@@ -2494,26 +2504,26 @@ setErrors({ ...temp });
                 )} */}
 
               {
-                  <MatButton
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    hidden={disabledAgeBaseOnAge || hospitalNumStatus}
-                    className={classes.button}
-                    startIcon={<SaveIcon />}
-                    onClick={handleSubmit}
-                    disabled={saving}
-                    style={{ backgroundColor: "#014d88", fontWeight: "bolder" }}
-                  >
-                    {!saving ? (
-                      <span style={{ textTransform: "capitalize" }}>Save</span>
-                    ) : (
-                      <span style={{ textTransform: "capitalize" }}>
-                        Saving...
-                      </span>
-                    )}
-                  </MatButton>
-                }
+                <MatButton
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  hidden={disabledAgeBaseOnAge || hospitalNumStatus}
+                  className={classes.button}
+                  startIcon={<SaveIcon />}
+                  onClick={handleSubmit}
+                  disabled={saving}
+                  style={{ backgroundColor: "#014d88", fontWeight: "bolder" }}
+                >
+                  {!saving ? (
+                    <span style={{ textTransform: "capitalize" }}>Save</span>
+                  ) : (
+                    <span style={{ textTransform: "capitalize" }}>
+                      Saving...
+                    </span>
+                  )}
+                </MatButton>
+              }
               <MatButton
                 variant="contained"
                 className={classes.button}

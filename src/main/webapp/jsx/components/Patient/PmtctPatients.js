@@ -57,7 +57,7 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />),
 };
 
-const Patients = (props) => {
+const PmtctPatients = (props) => {
   const [showPPI, setShowPPI] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
@@ -96,12 +96,12 @@ const Patients = (props) => {
           new Promise((resolve, reject) =>
             axios
               .get(
-                `${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
+                `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
                 { headers: { Authorization: `Bearer ${token}` } }
               )
               .then((response) => response)
               .then((result) => {
-                console.log(result);
+                console.log("general PMTCT PATIENT", result);
                 resolve({
                   data: result.data.records.map((row) => ({
                     name: (
@@ -113,7 +113,7 @@ const Patients = (props) => {
                         title={"Click to view patient dashboard"}
                       >
                         {" "}
-                        {row.fullname}
+                        {row.surname ? row.surname : row.fullName}
                       </Link>
                     ),
 
@@ -219,4 +219,4 @@ const Patients = (props) => {
   );
 };
 
-export default Patients;
+export default PmtctPatients;
