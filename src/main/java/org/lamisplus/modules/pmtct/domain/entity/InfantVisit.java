@@ -26,6 +26,7 @@ public class InfantVisit implements Serializable, Persistable<Long>{
     private String ctxStatus;
     private String breastFeeding ;
     private String uuid;
+    private String motherPersonUuid;
 
 
     @Override

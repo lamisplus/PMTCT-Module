@@ -211,9 +211,19 @@ public class PMTCTController {
         return ResponseEntity.ok (deliveryService.getSingleDelivery2(ancNo));
     }
 
+    @GetMapping(value = "view-delivery-with-uuid/{personUuid}")
+    public ResponseEntity<Delivery> viewDeliveryWithUuid(@PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok (deliveryService.getSingleDeliveryWithUuid(personUuid));
+    }
+
     @GetMapping(value = "activities/{ancNo}")
     public List<ActivityTracker> getActivitiesByANC(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getANCActivities(ancNo);
+    }
+
+    @GetMapping(value = "getAllActivities/{personUuid}")
+    public List<ActivityTracker> getAllActivitiesByPersonUuid(@PathVariable("personUuid") String personUuid) {
+        return ancAcivityTracker.getAllActivities(personUuid);
     }
 
     @PostMapping(value = "add-infants")
@@ -245,6 +255,13 @@ public class PMTCTController {
         System.out.println("ANCNO "+ ancNo);
 
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
+    }
+
+    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
+    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+        System.out.println("personUuid "+ personUuid);
+
+        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
     }
 
     @GetMapping(value = "/all-infants")
@@ -326,6 +343,11 @@ public class PMTCTController {
     @GetMapping(value = "get-summary-chart/{ancNo}")
     public SummaryChart getSummaryChart(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getSummaryChart(ancNo);
+    }
+
+    @GetMapping(value = "get-pmtct-summary-chart/{personUuid}")
+    public SummaryChart getPmtctSummaryChart(@PathVariable("personUuid") String personUuid) {
+        return ancAcivityTracker.getPmtctSummaryChart(personUuid);
     }
 
     @GetMapping(value ="/calculate-ga/{lmp}")

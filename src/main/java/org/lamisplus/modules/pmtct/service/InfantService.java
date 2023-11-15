@@ -50,6 +50,7 @@ public class InfantService {
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
         Infant infant = new Infant();
+        infant.setMotherPersonUuid(infantDto.getPersonUuid());
         infant.setDateOfDelivery(infantDto.getDateOfDelivery());
         try{
             infant.setNin(calculateAgeInMonths(infantDto.getDateOfDelivery())+"");
@@ -181,4 +182,7 @@ public class InfantService {
         return date;
     }
 
+    public List<Infant> getInfantWithMotherPersonUuid(String personUuid) {
+        return infantRepository.findInfantByMotherPersonUuid(personUuid);
+    }
 }

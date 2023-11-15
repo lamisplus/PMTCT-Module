@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
     List<Infant> findInfantByAncNo (String ancNo);
 
+    List<Infant> findInfantByMotherPersonUuid(String personUuid);
+
     Optional<Infant> findInfantByHospitalNumber(String hospitalNumber);
 
     Optional<Infant> getInfantByHospitalNumber(String hospitalNumber);

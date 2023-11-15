@@ -937,10 +937,12 @@ public class ANCService {
     public ANCRespondDto getANCRespondDtoFromPerson(Person person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
         String ancNo = "";
+        String personUuidStr = "";
         Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getUuid(), 0L);
         if (ancs.isPresent()) {
             ANC anc = ancs.get();
             ancNo = anc.getAncNo();
+            personUuidStr = anc.getPersonUuid();
             ancRespondDto.setId(anc.getId());
             ancRespondDto.setAncNo(anc.getAncNo());
             ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
@@ -985,7 +987,7 @@ public class ANCService {
         }
 
 
-        if (activeOnPMTCT(ancNo)) {
+        if (activeOnPMTCT(ancNo) || activeOnPMTCTByPersonUuid(personUuidStr)) {
             PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancNo);
             ancRespondDto.setPmtctRegStatus(true);
             ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
@@ -1003,6 +1005,17 @@ public class ANCService {
     public boolean activeOnPMTCT(String ancNo) {
         boolean active = false;
         Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByAncNo(ancNo);//.findANCByPersonUuidAndArchived(personUuid, 0L);
+        if (pmtctEnrollment.isPresent()) {
+            active = true;
+        } else {
+            active = false;
+        }
+        return active;
+    }
+
+    public boolean activeOnPMTCTByPersonUuid(String personUuid) {
+        boolean active = false;
+        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);//.findANCByPersonUuidAndArchived(personUuid, 0L);
         if (pmtctEnrollment.isPresent()) {
             active = true;
         } else {

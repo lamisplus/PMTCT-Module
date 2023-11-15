@@ -73,6 +73,9 @@ public class PMTCTEnrollmentService {
       PMTCTEnrollment pmtctEnrollment = new PMTCTEnrollment();
       pmtctEnrollment.setHospitalNumber(person.getHospitalNumber());
       pmtctEnrollment.setPmtctType(pmtctEnrollmentRequestDto.getPmtctType());
+      System.out.println("got to the type parameter");
+      System.out.println(pmtctEnrollmentRequestDto.getPmtctType());
+      System.out.println(pmtctEnrollment.getPmtctType());
       pmtctEnrollment.setPersonUuid(person.getUuid());
       pmtctEnrollment.setHivStatus(pmtctEnrollmentRequestDto.getHivStatus());
      pmtctEnrollment.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
@@ -80,7 +83,7 @@ public class PMTCTEnrollmentService {
       pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
       pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
 
-      if(pmtctEnrollmentRequestDto.getPmtctType() == PmtctType.ANC) {
+      if(pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
          pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
      }
       pmtctEnrollment.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
@@ -255,6 +258,7 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setArtStartDate(pmtctEnrollment.getArtStartDate());
            pmtctEnrollmentRespondDto.setArtStartTime(pmtctEnrollment.getArtStartTime());
            pmtctEnrollmentRespondDto.setPmtctRegStatus(true);
+           pmtctEnrollmentRespondDto.setPersonUuid(pmtctEnrollment.getPersonUuid());
            PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
            if(pmtct != null) {
                pmtctEnrollmentRespondDto.setHospitalNumber(pmtct.getHospitalNumber());

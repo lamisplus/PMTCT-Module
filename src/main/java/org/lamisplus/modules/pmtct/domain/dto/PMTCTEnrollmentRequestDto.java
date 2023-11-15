@@ -25,7 +25,7 @@
      private String artStartTime;
      private String tbStatus;
      private PersonDto personDto;
-     private PmtctType pmtctType;
+     private String pmtctType;
      private String personUuid;
      private String hivStatus;
      private LocalDate lmp;

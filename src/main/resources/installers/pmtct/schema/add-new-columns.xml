@@ -236,4 +236,52 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true" author="peter-data-fi" id="20230209-019">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery
+                ADD COLUMN person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_delivery
+                ADD CONSTRAINT pmtct_delivery_person_uuid_fk
+                    FOREIGN KEY (person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" author="peter-data-fi" id="20230209-020">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_information
+                ADD CONSTRAINT pmtct_infant_information_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" author="peter-data-fi" id="20230209-021">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_information
+                ADD CONSTRAINT pmtct_infant_visit_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

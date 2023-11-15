@@ -23,5 +23,6 @@
      private String hivStatus;
      private LocalDate lmp;
      private boolean pmtctRegStatus;
+     private String personUuid;
 
  }

@@ -16,6 +16,7 @@ import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
+import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class DeliveryService
     private final PmtctVisitRepository pmtctVisitRepository;
     private final DeliveryRepository deliveryRepository;
     private final UserService userService;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     ObjectMapper mapper = new ObjectMapper();
 
     public DeliveryResponseDto save(DeliveryRequestDto deliveryRequestDto) {
@@ -70,12 +72,17 @@ public class DeliveryService
         delivery.setUuid(UUID.randomUUID().toString());
         delivery.setCreatedBy(user.getUserName());
         delivery.setLastModifiedBy(user.getUserName());
+        delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
+        PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
-        if (anc != null)
-        {
+
+        if(pmtct != null) {
+            delivery.setHospitalNumber(pmtct.getHospitalNumber());
+            delivery.setFacilityId(pmtct.getFacilityId());
+        } else if (anc != null) {
             delivery.setHospitalNumber(anc.getHospitalNumber());
             delivery.setFacilityId(anc.getFacilityId()); }
-        else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
+        else { throw new RuntimeException("YET TO REGISTER FOR ANC OR PERSON UUID"); }
 
         return this.deliveryRepository.save(delivery);
     }
@@ -83,9 +90,9 @@ public class DeliveryService
         DeliveryResponseDto deliveryResponseDto = new DeliveryResponseDto();
         deliveryResponseDto.setId(delivery.getId());
         deliveryResponseDto.setAncNo(delivery.getAncNo());
-        deliveryResponseDto.setHospitalNumber(delivery.getHospitalNumber());
-        deliveryResponseDto.setFullName(getFullName(delivery.getHospitalNumber()));
-        deliveryResponseDto.setAge(calculateAge(delivery.getHospitalNumber()));
+        deliveryResponseDto.setHospitalNumber(delivery.getPersonUuid());
+        deliveryResponseDto.setFullName(getFullName(delivery.getPersonUuid()));
+        deliveryResponseDto.setAge(calculateAge(delivery.getPersonUuid()));
         deliveryResponseDto.setUuid(delivery.getUuid());
         deliveryResponseDto.setDateOfDelivery(delivery.getDateOfDelivery());
         deliveryResponseDto.setBookingStatus(delivery.getBookingStatus());
@@ -106,7 +113,7 @@ public class DeliveryService
         deliveryResponseDto.setHCStatus(delivery.getHCStatus());
         deliveryResponseDto.setReferalSource(delivery.getReferalSource());
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
-
+        deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
 
         return deliveryResponseDto;
     }
@@ -229,4 +236,12 @@ public class DeliveryService
         this.deliveryRepository.delete(existingDelivery);
     }
 
+    public Delivery getSingleDeliveryWithUuid(String personUuid) {
+        Delivery deliveryOptional= deliveryRepository.getDeliveryByPersonUuid(personUuid);
+        Delivery delivery = new Delivery();
+        if (deliveryOptional != null) {
+            delivery =  deliveryOptional;
+        }
+        return delivery;
+    }
 }

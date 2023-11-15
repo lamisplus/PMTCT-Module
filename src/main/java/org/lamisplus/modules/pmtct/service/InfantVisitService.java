@@ -85,6 +85,7 @@ public class InfantVisitService
         infantVisit.setVisitStatus(infantVisitRequestDto.getVisitStatus());
         infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
+        infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
         try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
             if(infants.isPresent()){
