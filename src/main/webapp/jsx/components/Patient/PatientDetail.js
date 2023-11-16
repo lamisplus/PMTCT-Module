@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { withStyles } from "@material-ui/core/styles";
 import { Link } from "react-router-dom";
@@ -20,6 +20,8 @@ import AddPartners from "./../PmtctServices/Partners/AddNewPartner";
 import AddInfants from "./../PmtctServices/Infants/InfantRegistration";
 import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
+import axios from "axios";
+import { url as baseUrl, token as token } from "./../../../api";
 
 const styles = (theme) => ({
   root: {
@@ -59,6 +61,8 @@ const styles = (theme) => ({
 function PatientCard(props) {
   let history = useHistory();
   const [art, setArt] = useState(false);
+  const [PersonInfo, setPersonInfo] = useState({});
+
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
     id: "",
@@ -71,6 +75,21 @@ function PatientCard(props) {
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
+
+  console.log(patientObj);
+  useEffect(() => {
+    axios
+      .get(`${baseUrl}patient/${patientObj?.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log(response.data);
+        setPersonInfo(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  }, []);
   console.log(patientObj);
 
   return (

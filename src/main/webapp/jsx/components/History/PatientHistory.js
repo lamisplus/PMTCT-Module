@@ -98,7 +98,11 @@ const PatientnHistory = (props) => {
     } else {
       axios
         .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${props.patientObj.person_uuid}`,
+          `${baseUrl}pmtct/anc/getAllActivities/${
+            props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+          }`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

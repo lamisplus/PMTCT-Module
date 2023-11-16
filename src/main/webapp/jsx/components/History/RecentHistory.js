@@ -91,7 +91,11 @@ const RecentHistory = (props) => {
       //  if patient does not have ANC
       axios
         .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${props.patientObj.person_uuid}`,
+          `${baseUrl}pmtct/anc/getAllActivities/${
+            props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+          }`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -125,7 +129,11 @@ const RecentHistory = (props) => {
     } else {
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${props.patientObj.person_uuid}`,
+          `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${
+            props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+          }`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
