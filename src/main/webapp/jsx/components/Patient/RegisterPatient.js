@@ -606,6 +606,8 @@ const UserRegistration = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(locationState);
+
     if (validate()) {
       setSaving(true);
       let newConatctsInfo = [];
@@ -1512,7 +1514,6 @@ const UserRegistration = (props) => {
                   </div>
                 </div>
               </div>
-
               <div className="card">
                 <div
                   className="card-header"
@@ -1764,7 +1765,6 @@ const UserRegistration = (props) => {
                   </div>
                 </div>
               </div>
-
               <div className="card">
                 <div
                   className="card-header"
@@ -2459,12 +2459,13 @@ const UserRegistration = (props) => {
                   </div>
                 </div>
               )}
-
               {/* END OF HIV ENROLLEMENT FORM */}
 
+              {console.log("check load ups", locationState)}
               {/* PMTCT FORM FOR L&D AND POST PARTUM  */}
               {!state.showANC && (
                 <PmtctEnrollment
+                  // entryPoint={}
                   getPMTCTInfo={getPMTCTInfo}
                   patientObj={{}}
                   showANC={state.showANC}
@@ -2475,7 +2476,6 @@ const UserRegistration = (props) => {
                 />
               )}
               {saving ? <Spinner /> : ""}
-
               <br />
               {/* { 
                 basicInfo.age >= 10 &&
@@ -2502,7 +2502,6 @@ const UserRegistration = (props) => {
                     )}
                   </MatButton>
                 )} */}
-
               {
                 <MatButton
                   type="submit"

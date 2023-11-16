@@ -123,6 +123,7 @@ const LabourDelivery = (props) => {
     vaginalTear: "",
     numberOfInfantsAlive: "",
     numberOfInfantsDead: "",
+    personUuid: patientObj.person_uuid,
   });
   useEffect(() => {
     MODE_DELIVERY();
@@ -398,10 +399,11 @@ const LabourDelivery = (props) => {
     <div>
       <Card className={classes.root}>
         <CardBody>
+          {console.log(patientObj)}
           <form>
             <div className="row">
               <h2>Labour and Delivery</h2>
-              {true && (
+              {props.patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
                     <Label>ANC ID</Label>
