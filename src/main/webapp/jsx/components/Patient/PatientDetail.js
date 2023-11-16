@@ -121,6 +121,7 @@ function PatientCard(props) {
           )}
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
+              entrypointValue={patientObj.ancNo ? "619" : ""}
               ancEntryType={patientObj.ancNo ? true : false}
               patientObj={patientObj}
               setActiveContent={setActiveContent}

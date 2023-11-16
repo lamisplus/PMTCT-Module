@@ -1113,6 +1113,9 @@ const UserRegistration = (props) => {
                   setActiveContent={setActiveContent}
                   activeContent={activeContent}
                   hideUpdateButton={true}
+                  entrypointValue={
+                    patientObj.ancNo ? "619" : locationState.entrypointValue
+                  }
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
                 />

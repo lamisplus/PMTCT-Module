@@ -40,7 +40,12 @@ const PmtctEntryPoint = (props) => {
             <Link
               to={{
                 pathname: props.route,
-                state: { showANC: true, postValue: "ANC", ...props.info },
+                state: {
+                  showANC: true,
+                  postValue: "ANC",
+                  entrypointValue: "619",
+                  ...props.info,
+                },
               }}
             >
               <Button
@@ -65,7 +70,12 @@ const PmtctEntryPoint = (props) => {
             <Link
               to={{
                 pathname: props.route,
-                state: { showANC: false, postValue: "L&D", ...props.info },
+                state: {
+                  showANC: false,
+                  postValue: "L&D",
+                  entrypointValue: "620",
+                  ...props.info,
+                },
               }}
             >
               <Button
@@ -107,6 +117,8 @@ const PmtctEntryPoint = (props) => {
                   state: {
                     showANC: false,
                     postValue: e.target.value,
+                    entrypointValue: "621",
+
                     ...props.info,
                   },
                 });

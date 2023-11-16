@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Grid,
   Segment,
@@ -78,7 +78,7 @@ const ClinicVisit = (props) => {
   const [fp, setFp] = useState([]);
   const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support
-
+  const entrypointRef = useRef(null);
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
     dateOfViralLoad: "",
@@ -87,7 +87,16 @@ const ClinicVisit = (props) => {
     dsd: "",
     dsdModel: "",
     dsdOption: "",
-    enteryPoint: "",
+    enteryPoint:
+      props.patientObj.entryPoint === "619"
+        ? "POINT_ENTRY_PMTCT_ANC"
+        : props?.patientObj?.entryPoint === "620"
+        ? "POINT_ENTRY_PMTCT_L&D"
+        : props?.patientObj?.entryPoint === "621"
+        ? "POINT_ENTRY_PMTCT_POSTNATAL_WARD"
+        : props.patientObj.ancNo
+        ? "POINT_ENTRY_PMTCT_ANC"
+        : "",
     fpCounseling: "",
     fpMethod: "",
     gaOfViralLoad: "",
@@ -250,6 +259,7 @@ const ClinicVisit = (props) => {
     }
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
   };
+
   function DsdModelType(dsdmodel) {
     const dsd =
       dsdmodel === "Facility" ? "DSD_MODEL_FACILITY" : "DSD_MODEL_COMMUNITY";
@@ -387,6 +397,7 @@ const ClinicVisit = (props) => {
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
+                  {console.log("visiting patient", props.patientObj)}
                   <Input
                     type="date"
                     name="dateOfVisit"
@@ -425,15 +436,29 @@ const ClinicVisit = (props) => {
                       border: "1px solid #014D88",
                       borderRadius: "0.25rem",
                     }}
-                    disabled={disabledField}
+                    disabled={true}
                   >
-                    <option value="select">Select </option>
+                    {/* <option value="select">Select </option> */}
 
-                    {entryPoint.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
+                    {props?.patientObj?.entryPoint
+                      ? entryPoint.map(
+                          (value) =>
+                            Number(props.patientObj.entryPoint) ===
+                              Number(value.id) && (
+                              <option
+                                key={value.id}
+                                value={value.code}
+                                ref={entrypointRef}
+                              >
+                                {value.display}
+                              </option>
+                            )
+                        )
+                      : props.patientObj.ancNo && (
+                          <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
+                            ANC
+                          </option>
+                        )}
                   </Input>
                   {errors.enteryPoint !== "" ? (
                     <span className={classes.error}>{errors.enteryPoint}</span>

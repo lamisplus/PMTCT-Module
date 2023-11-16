@@ -110,7 +110,9 @@ const AncPnc = (props) => {
   const [enroll, setEnrollDto] = useState({
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
-    entryPoint: entryPointValue,
+    entryPoint: locationState.entrypointValue
+      ? locationState.entrypointValue
+      : props.entrypointValue,
     ga: props.patientObj.gaweeks,
     gravida: props.patientObj.gravida,
     artStartDate: "",
@@ -217,18 +219,21 @@ const AncPnc = (props) => {
         setentryPoint(response.data);
         console.log(response.data);
 
-        let ans = response.data.map((each) => {
-          if (each.display === locationState.postValue) {
-            console.log("compare", each.display, locationState.postValue);
-            setentryPointValue(each.code);
-            // setEnrollDto({ ...enroll, entryPoint: each.code });
-            return each;
-          } else {
-            // setentryPointValue("POINT_ENTRY_PMTCT_L&D");
-          }
-        });
-
-        console.log("deducted", ans);
+        if (props?.patientObj.ancNo || locationState?.patientObj?.ancNo) {
+          setentryPointValue("619");
+        } else {
+          let ans = response.data.map((each) => {
+            if (each.display === locationState.postValue) {
+              console.log("compare", each.display, locationState.postValue);
+              setentryPointValue(each.code);
+              // setEnrollDto({ ...enroll, entryPoint: each.code });
+              return each;
+            } else {
+              // setentryPointValue("POINT_ENTRY_PMTCT_L&D");
+            }
+          });
+        }
+        // console.log("deducted", ans);
       })
       .catch((error) => {
         //console.log(error);
@@ -311,6 +316,8 @@ const AncPnc = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    console.log(enroll);
     if (validate()) {
       setSaving(true);
       if (props.activeContent && props.activeContent.actionType) {
@@ -340,7 +347,6 @@ const AncPnc = (props) => {
           });
       } else {
         //perform operation for save action
-
         axios
           .post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll, {
             headers: { Authorization: `Bearer ${token}` },
@@ -351,7 +357,6 @@ const AncPnc = (props) => {
             toast.success("Enrollment save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
-
             if (props.handleRoute) {
               props.handleRoute(response.data);
             } else {
@@ -360,15 +365,6 @@ const AncPnc = (props) => {
                 route: "recent-history",
               });
             }
-            //return <Redirect to='/patient-history' />
-            //history.push("/patient-history");
-            // history.push({
-            //   pathname: "/patient-history",
-            //   state: {
-            //     patientObj: locationState.patientObj,
-            //   },
-            // });
-            // window.location.reload();
           })
           .catch((error) => {
             console.log(error);
