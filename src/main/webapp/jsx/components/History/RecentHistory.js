@@ -691,14 +691,25 @@ const RecentHistory = (props) => {
             </div>
           </>
         ) : (
-          <>
-            <div className="col-sm-6 col-md-6 col-lg-6">
-              <div className="card-body">
-                <b>Patient has no HTS record. Please refer for testing...</b>
-              </div>
-            </div>
-          </>
+          ""
         )}
+        {console.log(
+          props.patientObj.dynamicHivStatus === "Unknown",
+          props.patientObj.hivStatus === "Unknown"
+        )}
+        {/* props.patientObj.dynamicHivStatus === "Unknown" || */}
+        <>
+          <div className="col-sm-6 col-md-6 col-lg-6">
+            <div className="card-body">
+              {props.patientObj.hivStatus === "Unknown" ||
+              props.patientObj.staticHivStatus === "Unknown" ? (
+                <b>Patient has no HTS record. Please refer for testing...</b>
+              ) : (
+                ""
+              )}
+            </div>
+          </div>
+        </>
 
         <Modal
           show={open}

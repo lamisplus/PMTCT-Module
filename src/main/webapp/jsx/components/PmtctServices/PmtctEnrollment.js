@@ -241,7 +241,7 @@ const AncPnc = (props) => {
   };
   const TIME_ART_INITIATION_PMTCT = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`, {
+      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -672,7 +672,13 @@ const AncPnc = (props) => {
                       name="hivStatus"
                       id="hivStatus"
                       onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.hivStatus}
+                      value={
+                        patientObj.hivStatus
+                          ? patientObj.hivStatus
+                          : patientObj.staticHivStatus
+                          ? patientObj.staticHivStatus
+                          : enroll.hivStatus
+                      }
                     >
                       <option value="">Select</option>
                       <option value="Positive">Positive</option>
