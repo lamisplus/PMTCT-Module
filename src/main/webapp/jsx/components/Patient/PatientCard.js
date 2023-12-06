@@ -264,7 +264,7 @@ function PatientCard(props) {
                                 : ""}
                               {props.patientObj.hivStatus !== "Unknown"
                                 ? props.patientObj.hivStatus
-                                : ""}
+                                : props.patientObj.hivStatus}
                             </Label.Detail>
                           </Label>
                         </Typography>

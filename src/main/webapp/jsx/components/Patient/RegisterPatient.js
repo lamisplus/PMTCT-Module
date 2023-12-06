@@ -1396,7 +1396,7 @@ const UserRegistration = (props) => {
                         <p>
                           <b style={{ color: "red" }}>
                             {basicInfo.age !== "" && basicInfo.age < 10
-                              ? "The minimum age is 10"
+                              ? "Minimum age for PMTCT enrolment is 10 years"
                               : " "}{" "}
                           </b>
                         </p>

@@ -96,7 +96,7 @@ const PmtctPatients = (props) => {
           new Promise((resolve, reject) =>
             axios
               .get(
-                `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
+                `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
                 { headers: { Authorization: `Bearer ${token}` } }
               )
               .then((response) => response)
