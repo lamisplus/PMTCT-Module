@@ -1,8 +1,12 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
+import org.lamisplus.modules.patient.domain.entity.Person;
+import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.HtsClientProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -53,5 +57,17 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
             " GROUP BY person_uuid) p ON p.person_uuid=hc.person_uuid " +
             " AND p.max_date=hc.date_visit WHERE hc.person_uuid = ?1 and hc.facility_id =?2 ORDER BY id DESC", nativeQuery = true)
     Optional<HtsClientProjection> getHtsRecordByPersonsUuidAAndFacilityId(String puuid, Long facilityId);
+
+    @Query(
+            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE (first_name ilike ?1 OR surname ilike ?1 OR other_name ilike ?1 OR full_name ilike ?1 OR pp.hospital_number ilike ?1) AND pp.archived=?2 AND pp.facility_id=?3 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
+            nativeQuery = true
+    )
+    Page<PatientPerson> getActiveOnANCBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
+
+    @Query(
+            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
+            nativeQuery = true
+    )
+    Page<PatientPerson> getActiveOnANC(Integer archived, Long facilityId, Pageable pageable);
 
 }
