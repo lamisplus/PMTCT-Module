@@ -404,17 +404,17 @@ public class ANCService {
             currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
 
         }
-        Page<Person> persons = null;
+        Page<PatientPerson> persons = null;
         if ((searchValue == null) || (searchValue.equals("*"))) {
-            persons = personRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
+            persons = ancRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
         } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
             System.out.println("I got here Doc");
-            persons = personRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = ancRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         }
-        List<Person> personList = persons.getContent();
+        List<PatientPerson> personList = persons.getContent();
         ArrayList<ANCRespondDto> ancResponseDtos = new ArrayList<>();
         personList.forEach(person -> {
             ANCRespondDto ancResponseDto = getANCRespondDtoFromPerson(person);
@@ -450,7 +450,6 @@ public class ANCService {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            System.out.println("I got here Doc");
             persons = pmtctEnrollmentReporsitory.getActiveOnPMTCTBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         }
         List<PatientPerson> personList = persons.getContent();
@@ -934,11 +933,11 @@ public class ANCService {
         }
     }
 
-    public ANCRespondDto getANCRespondDtoFromPerson(Person person) {
+    public ANCRespondDto getANCRespondDtoFromPerson(PatientPerson person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
         String ancNo = "";
         String personUuidStr = "";
-        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getUuid(), 0L);
+        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
         if (ancs.isPresent()) {
             ANC anc = ancs.get();
             ancNo = anc.getAncNo();
@@ -948,8 +947,8 @@ public class ANCService {
             ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
             ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
             ancRespondDto.setAncUuid(anc.getUuid());
-            ancRespondDto.setPerson_uuid(person.getUuid());
-            ancRespondDto.setPersonId(person.getId());
+            ancRespondDto.setPerson_uuid(person.getPersonUuid());
+            ancRespondDto.setPersonId(person.getPersonId());
             ancRespondDto.setAddress(person.getAddress());
             ancRespondDto.setContactPoint(person.getContactPoint());
             ancRespondDto.setSex(person.getSex());
