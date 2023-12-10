@@ -304,7 +304,7 @@ const ClinicVisit = (props) => {
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
           .put(
-            `${baseUrl}pmtct/anc/pmtct-visit/${props.activeContent.id}`,
+            `${baseUrl}pmtct/anc/update-mother-visit/${props.activeContent.id}`,
             objValues,
             { headers: { Authorization: `Bearer ${token}` } }
           )
