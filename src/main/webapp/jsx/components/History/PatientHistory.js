@@ -72,60 +72,39 @@ const PatientnHistory = (props) => {
   const PatientHistory = () => {
     setLoading(true);
 
-    if (props.patientObj.ancNo) {
-      axios
-        .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`, {
+    // if (props.patientObj.ancNo) {
+    //   axios
+    //     .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`, {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then((response) => {
+
+    //       setRecentActivities(response.data);
+    //     })
+
+    //     .catch((error) => {
+    //     });
+    // } else {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/getAllActivities/${
+          props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : props.patientObj.personUuid
+        }`,
+        {
           headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          setLoading(false);
-          // let HistoryObject= []
-          // response.data.forEach(function(value, index, array) {
-          //     const dataObj = value.activities
-          //     console.log(dataObj)
-          //     if(dataObj[index]) {
-          //         dataObj.forEach(function(value, index, array) {
-          //             HistoryObject.push(value)
-          //         })
-          //     }
-          // });
-          setRecentActivities(response.data);
-        })
+        }
+      )
+      .then((response) => {
+        setLoading(false);
+        setRecentActivities(response.data);
+      })
 
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-          }`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setLoading(false);
-          // let HistoryObject= []
-          // response.data.forEach(function(value, index, array) {
-          //     const dataObj = value.activities
-          //     console.log(dataObj)
-          //     if(dataObj[index]) {
-          //         dataObj.forEach(function(value, index, array) {
-          //             HistoryObject.push(value)
-          //         })
-          //     }
-          // });
-          setRecentActivities(response.data);
-        })
-
-        .catch((error) => {
-          //console.log(error);
-        });
-    }
+      .catch((error) => {
+        //console.log(error);
+      });
+    // }
   };
 
   const LoadViewPage = (row, action) => {

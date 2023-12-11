@@ -119,7 +119,10 @@ const AncPnc = (props) => {
     artStartTime: "",
     id: "",
     tbStatus: "",
-    hivStatus: "",
+    hivStatus: patientObj.hivStatus
+      ? patientObj.hivStatus
+      : patientObj.staticHivStatus,
+
     lmp: props?.patientObj?.lmp ? props?.patientObj?.lmp : "",
     gaweeks: props?.patientObj?.gaweeks ? props?.patientObj?.gaweeks : "",
 
@@ -138,6 +141,10 @@ const AncPnc = (props) => {
         ? "POST_PARTUM"
         : "",
   });
+
+  console.log(
+    patientObj.hivStatus ? patientObj.hivStatus : patientObj.staticHivStatus
+  );
   useEffect(() => {
     POINT_ENTRY_PMTCT();
     TIME_ART_INITIATION_PMTCT();

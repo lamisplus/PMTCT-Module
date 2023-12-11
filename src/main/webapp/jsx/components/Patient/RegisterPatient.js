@@ -561,6 +561,10 @@ const UserRegistration = (props) => {
     temp.dateOfRegistration = basicInfo.dateOfRegistration
       ? ""
       : "Date of Registration is required.";
+    // temp.age =
+    //   basicInfo.age !== "" && basicInfo.age < 10
+    //     ? "Minimum age for PMTCT enrolment is 10 years"
+    //     : " ";
     temp.educationId = basicInfo.educationId ? "" : "Education is required.";
     temp.address = basicInfo.address ? "" : "Address is required.";
     temp.phoneNumber = basicInfo.phoneNumber
@@ -609,264 +613,268 @@ const UserRegistration = (props) => {
     console.log(locationState);
 
     if (validate()) {
-      setSaving(true);
-      let newConatctsInfo = [];
-      //Manipulate relatives contact  address:"",
-      const actualcontacts =
-        contacts &&
-        contacts.length > 0 &&
-        contacts.map((x) => {
-          const contactInfo = {
-            address: {
-              line: [x.address],
-            },
-            contactPoint: {
+      if (basicInfo.age > 9) {
+        setSaving(true);
+        let newConatctsInfo = [];
+        //Manipulate relatives contact  address:"",
+        const actualcontacts =
+          contacts &&
+          contacts.length > 0 &&
+          contacts.map((x) => {
+            const contactInfo = {
+              address: {
+                line: [x.address],
+              },
+              contactPoint: {
+                type: "phone",
+                value: x.phone,
+              },
+              firstName: x.firstName,
+              fullName: x.firstName + " " + x.middleName + " " + x.lastName,
+              relationshipId: x.relationshipId,
+              surname: x.lastName,
+              otherName: x.middleName,
+            };
+
+            newConatctsInfo.push(contactInfo);
+          });
+
+        // ANC ENTRY POINT
+        if (state.showANC) {
+          try {
+            const patientForm = {
+              active: true,
+              address: [
+                {
+                  city: basicInfo.address,
+                  countryId: basicInfo.countryId,
+                  district: basicInfo.district,
+                  line: [basicInfo.landmark],
+                  organisationUnitId: 0,
+                  postalCode: "",
+                  stateId: basicInfo.stateId,
+                },
+              ],
+              contact: newConatctsInfo,
+              contactPoint: [],
+              dateOfBirth: basicInfo.dob,
+              deceased: false,
+              deceasedDateTime: null,
+              firstName: basicInfo.firstName,
+              genderId: basicInfo.sexId,
+              sexId: basicInfo.sexId,
+              identifier: [
+                {
+                  assignerId: 1,
+                  type: "HospitalNumber",
+                  value: basicInfo.hospitalNumber,
+                },
+              ],
+              otherName: basicInfo.middleName,
+              maritalStatusId: basicInfo.maritalStatusId,
+              surname: basicInfo.lastName,
+              educationId: basicInfo.educationId,
+              employmentStatusId: basicInfo.employmentStatusId,
+              dateOfRegistration: basicInfo.dateOfRegistration,
+              isDateOfBirthEstimated:
+                basicInfo.dateOfBirth == "Actual" ? false : true,
+              ninNumber: basicInfo.ninNumber,
+            };
+            const phone = {
               type: "phone",
-              value: x.phone,
-            },
-            firstName: x.firstName,
-            fullName: x.firstName + " " + x.middleName + " " + x.lastName,
-            relationshipId: x.relationshipId,
-            surname: x.lastName,
-            otherName: x.middleName,
-          };
-
-          newConatctsInfo.push(contactInfo);
-        });
-
-      // ANC ENTRY POINT
-      if (state.showANC) {
-        try {
-          const patientForm = {
-            active: true,
-            address: [
-              {
-                city: basicInfo.address,
-                countryId: basicInfo.countryId,
-                district: basicInfo.district,
-                line: [basicInfo.landmark],
-                organisationUnitId: 0,
-                postalCode: "",
-                stateId: basicInfo.stateId,
-              },
-            ],
-            contact: newConatctsInfo,
-            contactPoint: [],
-            dateOfBirth: basicInfo.dob,
-            deceased: false,
-            deceasedDateTime: null,
-            firstName: basicInfo.firstName,
-            genderId: basicInfo.sexId,
-            sexId: basicInfo.sexId,
-            identifier: [
-              {
-                assignerId: 1,
-                type: "HospitalNumber",
-                value: basicInfo.hospitalNumber,
-              },
-            ],
-            otherName: basicInfo.middleName,
-            maritalStatusId: basicInfo.maritalStatusId,
-            surname: basicInfo.lastName,
-            educationId: basicInfo.educationId,
-            employmentStatusId: basicInfo.employmentStatusId,
-            dateOfRegistration: basicInfo.dateOfRegistration,
-            isDateOfBirthEstimated:
-              basicInfo.dateOfBirth == "Actual" ? false : true,
-            ninNumber: basicInfo.ninNumber,
-          };
-          const phone = {
-            type: "phone",
-            value: basicInfo.phoneNumber,
-          };
-          if (basicInfo.email) {
-            const email = {
-              type: "email",
-              value: basicInfo.email,
+              value: basicInfo.phoneNumber,
             };
-            patientForm.contactPoint.push(email);
-          }
-          if (basicInfo.altPhonenumber) {
-            const altPhonenumber = {
-              type: "altphone",
-              value: basicInfo.altPhonenumber,
-            };
-            patientForm.contactPoint.push(altPhonenumber);
-          }
-          patientForm.contactPoint.push(phone);
-          patientForm.id = patientId;
-          objValues.personDto = patientForm;
-          //patientDTO.personDto=objValues;
-          console.log(objValues);
+            if (basicInfo.email) {
+              const email = {
+                type: "email",
+                value: basicInfo.email,
+              };
+              patientForm.contactPoint.push(email);
+            }
+            if (basicInfo.altPhonenumber) {
+              const altPhonenumber = {
+                type: "altphone",
+                value: basicInfo.altPhonenumber,
+              };
+              patientForm.contactPoint.push(altPhonenumber);
+            }
+            patientForm.contactPoint.push(phone);
+            patientForm.id = patientId;
+            objValues.personDto = patientForm;
+            //patientDTO.personDto=objValues;
+            console.log(objValues);
 
-          //
-          const response = await axios.post(
-            `${baseUrl}pmtct/anc/anc-new-registration`,
-            objValues,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          toast.success("Patient Register successful", {
-            position: toast.POSITION.BOTTOM_CENTER,
-          });
-          //
-          console.log(response.data);
-          history.push({
-            pathname: "/patient-history",
-            state: { patientObj: response.data, postValue: "ANC" },
-          });
-          // history.push("/");
-          setSaving(false);
-        } catch (error) {
-          setSaving(false);
-          if (error.response && error.response.data) {
-            let errorMessage =
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== ""
-                ? error.response.data.apierror.message
-                : "Something went wrong, please try again";
-            if (
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== "" &&
-              error.response.data.apierror &&
-              error.response.data.apierror.subErrors[0].message !== ""
-            ) {
-              toast.error(
-                error.response.data.apierror.message +
-                  " : " +
-                  error.response.data.apierror.subErrors[0].field +
-                  " " +
-                  error.response.data.apierror.subErrors[0].message,
-                { position: toast.POSITION.BOTTOM_CENTER }
-              );
+            //
+            const response = await axios.post(
+              `${baseUrl}pmtct/anc/anc-new-registration`,
+              objValues,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Patient Register successful", {
+              position: toast.POSITION.BOTTOM_CENTER,
+            });
+            //
+            console.log(response.data);
+            history.push({
+              pathname: "/patient-history",
+              state: { patientObj: response.data, postValue: "ANC" },
+            });
+            // history.push("/");
+            setSaving(false);
+          } catch (error) {
+            setSaving(false);
+            if (error.response && error.response.data) {
+              let errorMessage =
+                error.response.data.apierror &&
+                error.response.data.apierror.message !== ""
+                  ? error.response.data.apierror.message
+                  : "Something went wrong, please try again";
+              if (
+                error.response.data.apierror &&
+                error.response.data.apierror.message !== "" &&
+                error.response.data.apierror &&
+                error.response.data.apierror.subErrors[0].message !== ""
+              ) {
+                toast.error(
+                  error.response.data.apierror.message +
+                    " : " +
+                    error.response.data.apierror.subErrors[0].field +
+                    " " +
+                    error.response.data.apierror.subErrors[0].message,
+                  { position: toast.POSITION.BOTTOM_CENTER }
+                );
+              } else {
+                toast.error(errorMessage, {
+                  position: toast.POSITION.BOTTOM_CENTER,
+                });
+              }
             } else {
-              toast.error(errorMessage, {
+              toast.error("Something went wrong. Please try again...", {
                 position: toast.POSITION.BOTTOM_CENTER,
               });
             }
-          } else {
-            toast.error("Something went wrong. Please try again...", {
+          }
+        } else {
+          // NOT ANC ENTRY POINT
+          console.log("here");
+          try {
+            const patientForm = {
+              active: true,
+              address: [
+                {
+                  city: basicInfo.address,
+                  countryId: basicInfo.countryId,
+                  district: basicInfo.district,
+                  line: [basicInfo.landmark],
+                  organisationUnitId: 0,
+                  postalCode: "",
+                  stateId: basicInfo.stateId,
+                },
+              ],
+              contact: newConatctsInfo,
+              contactPoint: [],
+              dateOfBirth: basicInfo.dob,
+              deceased: false,
+              deceasedDateTime: null,
+              firstName: basicInfo.firstName,
+              genderId: basicInfo.sexId,
+              sexId: basicInfo.sexId,
+              identifier: [
+                {
+                  assignerId: 1,
+                  type: "HospitalNumber",
+                  value: basicInfo.hospitalNumber,
+                },
+              ],
+              otherName: basicInfo.middleName,
+              maritalStatusId: basicInfo.maritalStatusId,
+              surname: basicInfo.lastName,
+              educationId: basicInfo.educationId,
+              employmentStatusId: basicInfo.employmentStatusId,
+              dateOfRegistration: basicInfo.dateOfRegistration,
+              isDateOfBirthEstimated:
+                basicInfo.dateOfBirth == "Actual" ? false : true,
+              ninNumber: basicInfo.ninNumber,
+            };
+            const phone = {
+              type: "phone",
+              value: basicInfo.phoneNumber,
+            };
+            if (basicInfo.email) {
+              const email = {
+                type: "email",
+                value: basicInfo.email,
+              };
+              patientForm.contactPoint.push(email);
+            }
+            if (basicInfo.altPhonenumber) {
+              const altPhonenumber = {
+                type: "altphone",
+                value: basicInfo.altPhonenumber,
+              };
+              patientForm.contactPoint.push(altPhonenumber);
+            }
+            patientForm.contactPoint.push(phone);
+            patientForm.id = patientId;
+            enroll.personDto = patientForm;
+            //patientDTO.personDto=objValues;
+            //console.log(objValues)
+            let payload = {
+              ...PMTCTObj,
+              personDto: patientForm,
+            };
+            console.log("payload", payload);
+            const response = await axios.post(
+              `${baseUrl}pmtct/anc/pmtct-enrollment`,
+              payload,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Patient Register successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
+            history.push({
+              pathname: "/patient-history",
+              state: { patientObj: response.data, postValue: "ANC" },
+            });
+
+            // history.push("/");
+            setSaving(false);
+          } catch (error) {
+            setSaving(false);
+            if (error.response && error.response.data) {
+              let errorMessage =
+                error.response.data.apierror &&
+                error.response.data.apierror.message !== ""
+                  ? error.response.data.apierror.message
+                  : "Something went wrong, please try again";
+              if (
+                error.response.data.apierror &&
+                error.response.data.apierror.message !== "" &&
+                error.response.data.apierror &&
+                error.response.data.apierror.subErrors[0].message !== ""
+              ) {
+                toast.error(
+                  error.response.data.apierror.message +
+                    " : " +
+                    error.response.data.apierror.subErrors[0].field +
+                    " " +
+                    error.response.data.apierror.subErrors[0].message,
+                  { position: toast.POSITION.BOTTOM_CENTER }
+                );
+              } else {
+                toast.error(errorMessage, {
+                  position: toast.POSITION.BOTTOM_CENTER,
+                });
+              }
+            } else {
+              toast.error("Something went wrong. Please try again...", {
+                position: toast.POSITION.BOTTOM_CENTER,
+              });
+            }
           }
         }
       } else {
-        // NOT ANC ENTRY POINT
-        console.log("here");
-        try {
-          const patientForm = {
-            active: true,
-            address: [
-              {
-                city: basicInfo.address,
-                countryId: basicInfo.countryId,
-                district: basicInfo.district,
-                line: [basicInfo.landmark],
-                organisationUnitId: 0,
-                postalCode: "",
-                stateId: basicInfo.stateId,
-              },
-            ],
-            contact: newConatctsInfo,
-            contactPoint: [],
-            dateOfBirth: basicInfo.dob,
-            deceased: false,
-            deceasedDateTime: null,
-            firstName: basicInfo.firstName,
-            genderId: basicInfo.sexId,
-            sexId: basicInfo.sexId,
-            identifier: [
-              {
-                assignerId: 1,
-                type: "HospitalNumber",
-                value: basicInfo.hospitalNumber,
-              },
-            ],
-            otherName: basicInfo.middleName,
-            maritalStatusId: basicInfo.maritalStatusId,
-            surname: basicInfo.lastName,
-            educationId: basicInfo.educationId,
-            employmentStatusId: basicInfo.employmentStatusId,
-            dateOfRegistration: basicInfo.dateOfRegistration,
-            isDateOfBirthEstimated:
-              basicInfo.dateOfBirth == "Actual" ? false : true,
-            ninNumber: basicInfo.ninNumber,
-          };
-          const phone = {
-            type: "phone",
-            value: basicInfo.phoneNumber,
-          };
-          if (basicInfo.email) {
-            const email = {
-              type: "email",
-              value: basicInfo.email,
-            };
-            patientForm.contactPoint.push(email);
-          }
-          if (basicInfo.altPhonenumber) {
-            const altPhonenumber = {
-              type: "altphone",
-              value: basicInfo.altPhonenumber,
-            };
-            patientForm.contactPoint.push(altPhonenumber);
-          }
-          patientForm.contactPoint.push(phone);
-          patientForm.id = patientId;
-          enroll.personDto = patientForm;
-          //patientDTO.personDto=objValues;
-          //console.log(objValues)
-          let payload = {
-            ...PMTCTObj,
-            personDto: patientForm,
-          };
-          console.log("payload", payload);
-          const response = await axios.post(
-            `${baseUrl}pmtct/anc/pmtct-enrollment`,
-            payload,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          toast.success("Patient Register successful", {
-            position: toast.POSITION.BOTTOM_CENTER,
-          });
-          history.push({
-            pathname: "/patient-history",
-            state: { patientObj: response.data, postValue: "ANC" },
-          });
-
-          // history.push("/");
-          setSaving(false);
-        } catch (error) {
-          setSaving(false);
-          if (error.response && error.response.data) {
-            let errorMessage =
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== ""
-                ? error.response.data.apierror.message
-                : "Something went wrong, please try again";
-            if (
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== "" &&
-              error.response.data.apierror &&
-              error.response.data.apierror.subErrors[0].message !== ""
-            ) {
-              toast.error(
-                error.response.data.apierror.message +
-                  " : " +
-                  error.response.data.apierror.subErrors[0].field +
-                  " " +
-                  error.response.data.apierror.subErrors[0].message,
-                { position: toast.POSITION.BOTTOM_CENTER }
-              );
-            } else {
-              toast.error(errorMessage, {
-                position: toast.POSITION.BOTTOM_CENTER,
-              });
-            }
-          } else {
-            toast.error("Something went wrong. Please try again...", {
-              position: toast.POSITION.BOTTOM_CENTER,
-            });
-          }
-        }
+        window.scrollTo(0, 0);
       }
     }
   };
@@ -2194,7 +2202,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <InputGroup>
                             <Input
-                              type="tel"
+                              type="number"
                               name="gravida"
                               id="gravida"
                               onChange={handleInputChange}

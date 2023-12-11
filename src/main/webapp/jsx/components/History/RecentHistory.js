@@ -76,38 +76,36 @@ const RecentHistory = (props) => {
 
   const RecentActivities = () => {
     // if patient has ANC No
-    if (props.patientObj.ancNo) {
-      axios
-        .get(`${baseUrl}pmtct/anc/activities/${props.patientObj.ancNo}`, {
+    // if (props.patientObj.ancNo) {
+    //   axios
+    //     .get(`${baseUrl}${props.patientObj.ancNo}`, {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then((response) => {
+    //       setRecentActivities(response.data);
+    //     })
+    //     .catch((error) => {
+    //     });
+    // } else {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/getAllActivities/${
+          props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : props.patientObj.personUuid
+        }`,
+        {
           headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          setRecentActivities(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else {
-      //  if patient does not have ANC
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-          }`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          console.log(response.data);
-          setRecentActivities(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-    }
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+        setRecentActivities(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+    // }
   };
   const SummaryChart = () => {
     // if patient has ANC No
