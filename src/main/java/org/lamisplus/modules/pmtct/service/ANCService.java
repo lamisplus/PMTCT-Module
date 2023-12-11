@@ -949,8 +949,8 @@ public class ANCService {
             ancRespondDto.setAncUuid(anc.getUuid());
             ancRespondDto.setPerson_uuid(person.getPersonUuid());
             ancRespondDto.setPersonId(person.getPersonId());
-            ancRespondDto.setAddress(person.getAddress());
-            ancRespondDto.setContactPoint(person.getContactPoint());
+            ancRespondDto.setAddress(parseJsonString(person.getAddress()));
+            ancRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
             ancRespondDto.setSex(person.getSex());
             ancRespondDto.setDateOfBirth(person.getDateOfBirth());
             ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
