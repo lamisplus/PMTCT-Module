@@ -108,7 +108,9 @@ const LabourinfantInfo = (props) => {
     surname: "",
     uuid: patientObj.ancUuid,
     dateOfDelivery: "",
-    hospitalNumber: patientObj?.hospitalNumber,
+    // hospitalNumber: patientObj?.hospitalNumber,
+    hospitalNumber: "",
+
     personUuid: patientObj?.person_uuid,
   });
 
@@ -313,7 +315,7 @@ const LabourinfantInfo = (props) => {
                         id="hospitalNumber"
                         onChange={handleInputChangeinfantInfoDto}
                         value={infantInfo.hospitalNumber}
-                        disabled={true}
+                        // disabled={true}
                       />
                     </InputGroup>
                     {errors.hospitalNumber !== "" ? (

@@ -644,39 +644,41 @@ const RecentHistory = (props) => {
                           className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
                         >
                           <ul className="timeline">
-                            {infants.map((obj) => (
-                              <li key={index}>
-                                <div
-                                  className={
-                                    index % 2 == 0
-                                      ? "timeline-badge info"
-                                      : "timeline-badge success"
-                                  }
-                                ></div>
-                                <span
-                                  className="timeline-panel text-muted"
-                                  //onClick={()=>redirectLink()}
-                                  //to=""
-                                >
-                                  <h6 className="mb-0">
-                                    Infant Given Name
-                                    <br />
-                                    {obj.firstName}
-                                  </h6>
-                                  <strong className="text-teal">
-                                    Infant DOB
-                                    <br />
-                                    {obj.dateOfDelivery}
-                                  </strong>
-                                  <br />
-                                  <strong className="text-warning">
-                                    Gender
-                                    <br />
-                                    {obj.sex}
-                                  </strong>
-                                </span>
-                              </li>
-                            ))}
+                            {infants.length > 0
+                              ? infants.map((obj) => (
+                                  <li key={index}>
+                                    <div
+                                      className={
+                                        index % 2 == 0
+                                          ? "timeline-badge info"
+                                          : "timeline-badge success"
+                                      }
+                                    ></div>
+                                    <span
+                                      className="timeline-panel text-muted"
+                                      //onClick={()=>redirectLink()}
+                                      //to=""
+                                    >
+                                      <h6 className="mb-0">
+                                        Infant Given Name
+                                        <br />
+                                        {obj.firstName}
+                                      </h6>
+                                      <strong className="text-teal">
+                                        Infant DOB
+                                        <br />
+                                        {obj.dateOfDelivery}
+                                      </strong>
+                                      <br />
+                                      <strong className="text-warning">
+                                        Gender
+                                        <br />
+                                        {obj.sex}
+                                      </strong>
+                                    </span>
+                                  </li>
+                                ))
+                              : ""}
                           </ul>
                         </PerfectScrollbar>
                       ) : (
