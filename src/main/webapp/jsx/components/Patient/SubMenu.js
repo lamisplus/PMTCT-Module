@@ -17,14 +17,33 @@ function SubMenu(props) {
   //const patientCurrentStatus=props.patientObj && props.patientObj.currentStatus==="Died (Confirmed)" ? true : false ;
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
+  const [deliveryStatus, setDeliveryStatus] = useState(false);
+
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
+    props.deliveryInfo.filter((each) => {
+      if (each.activityName === "Labour and Delivery") {
+        setDeliveryStatus(true);
+      }
+    });
+
     Observation();
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
   }, [props.patientObj]);
+
+  useEffect(() => {
+    props.deliveryInfo.filter((each) => {
+      // console.log(each);
+
+      if (each.activityName === "Labour and Delivery") {
+        setDeliveryStatus(true);
+      }
+    });
+    // console.log(props.deliveryInfo);
+  }, [props.deliveryInfo]);
   //Get list of RegimenLine
   const Observation = () => {
     axios
@@ -100,11 +119,13 @@ function SubMenu(props) {
                 <Menu.Item onClick={() => onClickConsultation()}>
                   Follow Up Visit
                 </Menu.Item>
-                {patientObj.deliveryStatus !== true && (
-                  <Menu.Item onClick={() => loadLabourDelivery()}>
-                    Labour and Delivery
-                  </Menu.Item>
-                )}
+
+                {patientObj.deliveryStatus !== true &&
+                  deliveryStatus !== true && (
+                    <Menu.Item onClick={() => loadLabourDelivery()}>
+                      Labour and Delivery
+                    </Menu.Item>
+                  )}
                 {patientObj?.ancNo && (
                   <Menu.Item onClick={() => onClickPartner()}>
                     {" "}
@@ -121,6 +142,7 @@ function SubMenu(props) {
         )}
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
+      {console.log(patientObj)}
     </div>
   );
 }

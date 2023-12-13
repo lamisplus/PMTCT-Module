@@ -62,6 +62,7 @@ function PatientCard(props) {
   let history = useHistory();
   const [art, setArt] = useState(false);
   const [PersonInfo, setPersonInfo] = useState({});
+  const [deliveryInfo, setDeliveryInfo] = useState([]);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -76,8 +77,42 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
-  console.log(patientObj);
+  const RecentActivities = () => {
+    // if patient has ANC No
+    // if (props.patientObj.ancNo) {
+    //   axios
+    //     .get(`${baseUrl}${props.patientObj.ancNo}`, {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then((response) => {
+    //       setRecentActivities(response.data);
+    //     })
+    //     .catch((error) => {
+    //     });
+    // } else {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/getAllActivities/${
+          patientObj.person_uuid
+            ? patientObj.person_uuid
+            : patientObj.personUuid
+        }`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+        setDeliveryInfo(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+    // }
+  };
+
   useEffect(() => {
+    RecentActivities();
     axios
       .get(`${baseUrl}patient/${patientObj?.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -120,6 +155,7 @@ function PatientCard(props) {
             patientObj={patientObj}
             art={art}
             setActiveContent={setActiveContent}
+            deliveryInfo={deliveryInfo}
           />
           <br />
           {/* Patient dashboard menu route */}
