@@ -3,6 +3,7 @@ package org.lamisplus.modules.pmtct.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class InfantVisitService
@@ -276,15 +278,29 @@ public class InfantVisitService
         FormFilterResponseDto filterResponseDto = new FormFilterResponseDto();
         filterResponseDto.setInfantArv(this.infantArvAdministered(hospitalNumber));
         Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
+//        List<Infant> infants = this.infantRepository.findInfantsByHospitalNumber(hospitalNumber);
+//        log.info("list of infant: {}", infants);
+//        if(!(infants.isEmpty())) {
+//            Infant infant = infants.get(1);
+//            filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(infant.getAncNo()));
+//
+//        } else {
+//            filterResponseDto.setMotherArt(Boolean.FALSE);
+//        }
 
         //Optional<Delivery> deliveryOptional = this.deliveryRepository.findDeliveryByHospitalNumber(hospitalNumber);
         if (infants.isPresent()){
             filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(infants.get().getAncNo()));
+        } else {
+            filterResponseDto.setMotherArt(Boolean.FALSE);
         }
-        else filterResponseDto.setMotherArt(Boolean.FALSE);
+
         int infantAge = this.calculateAge(hospitalNumber);
-        if(infantAge>= 18) filterResponseDto.setOutCome(Boolean.TRUE);
-        else filterResponseDto.setOutCome(Boolean.FALSE);
+        if(infantAge>= 18) {
+            filterResponseDto.setOutCome(Boolean.TRUE);
+        } else {
+            filterResponseDto.setOutCome(Boolean.FALSE);
+        }
         return filterResponseDto;
     }
 
