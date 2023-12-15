@@ -848,10 +848,10 @@ const UserRegistration = (props) => {
                   ? error.response.data.apierror.message
                   : "Something went wrong, please try again";
               if (
-                error.response.data.apierror &&
-                error.response.data.apierror.message !== "" &&
-                error.response.data.apierror &&
-                error.response.data.apierror.subErrors[0].message !== ""
+                error?.response?.data?.apierror &&
+                error?.response?.data?.apierror?.message !== "" &&
+                error?.response?.data?.apierror &&
+                error?.response?.data?.apierror?.subErrors[0]?.message !== ""
               ) {
                 toast.error(
                   error.response.data.apierror.message +

@@ -90,20 +90,16 @@ const ClinicVisit = (props) => {
     enteryPoint:
       props.patientObj.entryPoint === "619"
         ? "POINT_ENTRY_PMTCT_ANC"
-        : props?.patientObj?.entryPoint === "620"
-        ? "POINT_ENTRY_PMTCT_L&D"
-        : props?.patientObj?.entryPoint === "621"
-        ? "POINT_ENTRY_PMTCT_POSTNATAL_WARD"
-        : props.patientObj.ancNo
-        ? "POINT_ENTRY_PMTCT_ANC"
-        : "",
+        : "POINT_ENTRY_PMTCT",
     fpCounseling: "",
     fpMethod: "",
     gaOfViralLoad: "",
     id: "",
     maternalOutcome: "",
     nextAppointmentDate: "",
-    personUuid: patientObj.person_uuid,
+    personUuid: patientObj.person_uuid
+      ? patientObj.person_uuid
+      : patientObj.personUuid,
     resultOfViralLoad: "",
     transferTo: "",
     visitStatus: "",
@@ -122,6 +118,7 @@ const ClinicVisit = (props) => {
   //   temperature:"",
   //   respiratoryRate:""
   // })
+  console.log(objValues.enteryPoint);
   useEffect(() => {
     ///VitalSigns();
     VISIT_STATUS_PMTCT();
@@ -168,11 +165,11 @@ const ClinicVisit = (props) => {
   };
   const POINT_ENTRY_PMTCT = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`, {
+      .get(`${baseUrl}application-codesets/v2/POINT_ENTRY`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        //console.log(response.data);
+        console.log(response.data);
         setEntryPoint(response.data);
       })
       .catch((error) => {
@@ -218,7 +215,7 @@ const ClinicVisit = (props) => {
           `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
-              : props.patientObj.uuid
+              : props.patientObj.personUuid
           }&visitDate=${dateOfViralLoad}`,
           {
             headers: {
@@ -440,25 +437,35 @@ const ClinicVisit = (props) => {
                   >
                     {/* <option value="select">Select </option> */}
 
-                    {props?.patientObj?.entryPoint
-                      ? entryPoint.map(
-                          (value) =>
-                            Number(props.patientObj.entryPoint) ===
-                              Number(value.id) && (
-                              <option
-                                key={value.id}
-                                value={value.code}
-                                ref={entrypointRef}
-                              >
-                                {value.display}
-                              </option>
-                            )
-                        )
-                      : props.patientObj.ancNo && (
-                          <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
-                            ANC
-                          </option>
-                        )}
+                    {
+                      props.patientObj.ancNo ? (
+                        <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
+                          ANC
+                        </option>
+                      ) : (
+                        <option key={619} value={"POINT_ENTRY_PMTCT"}>
+                          PMTCT
+                        </option>
+                      )
+                      // :entryPoint.map(
+                      // (value) =>
+                      //   Number(props.patientObj.entryPoint) ===
+                      //     Number(value.id) && (
+                      //     <option
+                      //       key={value.id}
+                      //       value={value.code}
+                      //       ref={entrypointRef}
+                      //     >
+                      //       {value.display}
+                      //     </option>
+                      //   )
+                      //   )
+                      // : props.patientObj.ancNo && (
+                      //     <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
+                      //       ANC
+                      //     </option>
+                      //   )
+                    }
                   </Input>
                   {errors.enteryPoint !== "" ? (
                     <span className={classes.error}>{errors.enteryPoint}</span>
@@ -595,7 +602,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName>Result </FormLabelName>
                   <Input
-                    type="text"
+                    type="number"
                     name="resultOfViralLoad"
                     id="resultOfViralLoad"
                     value={objValues.resultOfViralLoad}
