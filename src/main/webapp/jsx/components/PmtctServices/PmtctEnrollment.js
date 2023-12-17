@@ -106,13 +106,15 @@ const AncPnc = (props) => {
   const [artStartTime, setartStartTime] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [entryValueDisplay, setEntryValueDisplay] = useState({});
+  const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
+  console.log("pmtct state received from any", locationState);
 
+  console.log(locationState.entrypointValue, props.entrypointValue);
   const [enroll, setEnrollDto] = useState({
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
-    entryPoint: locationState.entrypointValue
-      ? locationState.entrypointValue
-      : props.entrypointValue,
+    entryPoint: entryValueDisplay?.id,
     ga: props.patientObj.gaweeks,
     gravida: props.patientObj.gravida,
     artStartDate: "",
@@ -121,8 +123,9 @@ const AncPnc = (props) => {
     tbStatus: "",
     hivStatus: patientObj.hivStatus
       ? patientObj.hivStatus
-      : patientObj.staticHivStatus,
-
+      : patientObj.staticHivStatus
+      ? patientObj.staticHivStatus
+      : "",
     lmp: props?.patientObj?.lmp ? props?.patientObj?.lmp : "",
     gaweeks: props?.patientObj?.gaweeks ? props?.patientObj?.gaweeks : "",
 
@@ -130,25 +133,54 @@ const AncPnc = (props) => {
     //   locationState && locationState.patientObj
     //     ? locationState.patientObj.uuid
     //     : null,
-    pmtctType:
-      locationState.postValue === "ANC"
-        ? "ANC"
-        : locationState.postValue === "L&D"
-        ? "LABOUR_AND_DELIVERY"
-        : locationState.postValue !== "" &&
-          locationState.postValue !== "L&D" &&
-          locationState.postValue !== "ANC"
-        ? "POST_PARTUM"
-        : "",
+    pmtctType: entryValueDisplay.display,
   });
 
-  console.log(
-    patientObj.hivStatus ? patientObj.hivStatus : patientObj.staticHivStatus
-  );
+  console.log(props.allEntryPoint);
+
+  const NEW_POINT_ENTRY_PMTCT = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setAllNewEntryPoint(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  const getPatientEntryType = (id) => {
+    if (locationState.entrypointValue) {
+      allNewEntryPoint.map((each, i) => {
+        // console.log(each.id, props.entrypointValue);
+
+        if (Number(each.id) === Number(locationState.entrypointValue)) {
+          setEntryValueDisplay(each);
+          console.log("location choosennn", each);
+        }
+      });
+    } else if (props.entrypointValue) {
+      props.allEntryPoint.map((each, i) => {
+        // console.log(each.id, props.entrypointValue);
+        console.log("props choosennn", each);
+
+        if (Number(each.id) === Number(props.entrypointValue)) {
+          setEntryValueDisplay(each);
+        }
+      });
+
+      // locationState.entrypointValue
+    } else {
+    }
+  };
   useEffect(() => {
+    NEW_POINT_ENTRY_PMTCT();
     POINT_ENTRY_PMTCT();
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
+
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -188,8 +220,23 @@ const AncPnc = (props) => {
     //         : null,
     //   });
     // }
+
+    // setEnrollDto(
+    //   patientObj.hivStatus
+    //     ? patientObj.hivStatus
+    //     : patientObj.staticHivStatus
+    //     ? patientObj.staticHivStatus
+    //     : ""
+    // );
   }, []);
 
+  useEffect(() => {
+    // if (props?.allEntryPoint) {
+    getPatientEntryType();
+    // }
+  }, [allNewEntryPoint]);
+
+  console.log(entryValueDisplay);
   useEffect(() => {
     if (props.getPMTCTInfo) {
       props.getPMTCTInfo(enroll);
@@ -225,21 +272,6 @@ const AncPnc = (props) => {
       .then((response) => {
         setentryPoint(response.data);
         console.log(response.data);
-
-        if (props?.patientObj.ancNo || locationState?.patientObj?.ancNo) {
-          setentryPointValue("619");
-        } else {
-          let ans = response.data.map((each) => {
-            if (each.display === locationState.postValue) {
-              console.log("compare", each.display, locationState.postValue);
-              setentryPointValue(each.code);
-              // setEnrollDto({ ...enroll, entryPoint: each.code });
-              return each;
-            } else {
-              // setentryPointValue("POINT_ENTRY_PMTCT_L&D");
-            }
-          });
-        }
         // console.log("deducted", ans);
       })
       .catch((error) => {
@@ -299,6 +331,7 @@ const AncPnc = (props) => {
     }
   };
 
+  console.log(props.patientObj);
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };
@@ -324,7 +357,6 @@ const AncPnc = (props) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log(enroll);
     if (validate()) {
       setSaving(true);
       if (props.activeContent && props.activeContent.actionType) {
@@ -354,8 +386,22 @@ const AncPnc = (props) => {
           });
       } else {
         //perform operation for save action
+        let payload = {
+          ...enroll,
+          entryPoint: locationState.entrypointValue
+            ? locationState.entrypointValue
+            : props.entrypointValue,
+          personUuid:
+            locationState && locationState.patientObj
+              ? locationState.patientObj.uuid
+              : props.patientObj.uuid,
+          personUuid: props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : locationState.patientObj.uuid,
+        };
+
         axios
-          .post(`${baseUrl}pmtct/anc/pmtct-enrollment`, enroll, {
+          .post(`${baseUrl}pmtct/anc/pmtct-enrollment`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
@@ -406,13 +452,27 @@ const AncPnc = (props) => {
               </div>
 
               <h3 className="mb-3">
-                <span>Point of Entry: </span>{" "}
-                {locationState.postValue === "L&D"
-                  ? "Labour and Delivery"
-                  : locationState.postValue === "ANC"
-                  ? "ANC"
-                  : `Post Partum:  ${locationState.postValue}`}
+                <span>Point of Entry: </span>
+                {/* 
+                {locationState.postValue}
+                <span>
+                  {` ${
+                    locationState?.subPostValue
+                      ? locationState?.subPostValue
+                      : ""
+                  }`}
+                </span> */}
+
+                {entryValueDisplay.display}
               </h3>
+              {console.log(
+                "entryValueDisplay.display",
+                entryValueDisplay.display
+              )}
+              {console.log("locationState.postValue", locationState.postValue)}
+              {console.log("locationState", locationState)}
+
+              {console.log("props", props)}
 
               {props?.ancEntryType && (
                 <div className="form-group mb-3 col-md-4">
@@ -570,7 +630,7 @@ const AncPnc = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="text"
+                      type="number"
                       name="gravida"
                       id="gravida"
                       min="1"
@@ -678,14 +738,15 @@ const AncPnc = (props) => {
                       type="select"
                       name="hivStatus"
                       id="hivStatus"
+                      // disabled={
+                      //   patientObj.hivStatus
+                      //     ? true
+                      //     : patientObj.staticHivStatus
+                      //     ? true
+                      //     : false
+                      // }
                       onChange={handleInputChangeEnrollmentDto}
-                      value={
-                        patientObj.hivStatus
-                          ? patientObj.hivStatus
-                          : patientObj.staticHivStatus
-                          ? patientObj.staticHivStatus
-                          : enroll.hivStatus
-                      }
+                      value={enroll.hivStatus}
                     >
                       <option value="">Select</option>
                       <option value="Positive">Positive</option>

@@ -111,7 +111,11 @@ const LabourinfantInfo = (props) => {
     // hospitalNumber: patientObj?.hospitalNumber,
     hospitalNumber: "",
 
-    personUuid: patientObj?.person_uuid,
+    personUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid
+      ? props.patientObj.personUuid
+      : props.patientObj.uuid,
   });
 
   useEffect(() => {
@@ -343,6 +347,7 @@ const LabourinfantInfo = (props) => {
                     <InputGroup>
                       <Input
                         type="date"
+                        disabled={true}
                         name="dateOfDelivery"
                         id="dateOfDelivery"
                         onChange={handleInputChangeinfantInfoDto}

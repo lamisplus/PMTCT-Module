@@ -21,6 +21,8 @@ const RecentHistory = (props) => {
   const [infants, setInfants] = useState([]);
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = useState(false);
+  // const [entryValueDisplay, setEntryValueDisplay] = useState({});
+
   const [record, setRecord] = useState(null);
   const toggle = () => setOpen(!open);
   let notToBeUpdated = ["pmtct_infant_information"];
@@ -33,7 +35,21 @@ const RecentHistory = (props) => {
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
 
+  // const getPatientEntryType = (id) => {
+  //   props.allEntryPoint.map((each, i) => {
+  //     // console.log(each.id, props.entrypointValue);
+
+  //     if (Number(each.id) === Number(props.patientObj.entryPoint)) {
+  //       setEntryValueDisplay(each);
+  //     }
+  //   });
+  // };
+
+  console.log(props);
   useEffect(() => {
+    if (props?.allEntryPoint) {
+      // getPatientEntryType();
+    }
     InfantInfo();
     RecentActivities();
     SummaryChart();
@@ -61,6 +77,8 @@ const RecentHistory = (props) => {
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
               : props.patientObj.personUuid
+              ? props.patientObj.personUuid
+              : props.patientObj.uuid
           }`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
@@ -171,6 +189,8 @@ const RecentHistory = (props) => {
           id: row.recordId,
           patientObj: props.patientObj,
           actionType: action,
+          postValue: "ANC",
+          entrypointValue: props.entrypointValue,
         },
       });
     } else if (row.path === "anc-delivery") {
