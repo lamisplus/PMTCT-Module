@@ -218,6 +218,7 @@ const UserRegistration = (props) => {
 
   const toggle = () => setOpen(!open);
   const locationState = location.state;
+  console.log("state recieved from location", locationState);
   let patientId = null;
   patientId = locationState ? locationState.patientId : null;
 
@@ -301,9 +302,7 @@ const UserRegistration = (props) => {
       .then((response) => {
         setCountries(response.data);
       })
-      .catch((error) => {
-        //console.log(error);
-      });
+      .catch((error) => {});
   };
 
   //Get list of State
@@ -313,16 +312,17 @@ const UserRegistration = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         setStates(response.data);
       })
-      .catch((error) => {
-        //console.log(error);
-      });
+      .catch((error) => {});
   };
   //fetch province
   const getProvinces = (e) => {
     const stateId = e.target.value;
+    if (e.target.value) {
+      setErrors({ ...errors, stateId: "" });
+    }
     setBasicInfo({ ...basicInfo, stateId: e.target.value });
     axios
       .get(
@@ -339,6 +339,8 @@ const UserRegistration = (props) => {
   //Date of Birth and Age handle
   const handleDobChange = (e) => {
     if (e.target.value) {
+      setErrors({ ...errors, dob: "" });
+
       const today = new Date();
       const birthDate = new Date(e.target.value);
       let age_now = today.getFullYear() - birthDate.getFullYear();
@@ -478,7 +480,7 @@ const UserRegistration = (props) => {
 
   // GET PMTCT INPUT FROM THE PMTCT COMPONENT
   const getPMTCTInfo = (info) => {
-    console.log(info);
+    // console.log(info);
     setPMTCTObj(info);
     return info;
   };
@@ -573,6 +575,8 @@ const UserRegistration = (props) => {
     temp.countryId = basicInfo.countryId ? "" : "Country is required.";
     temp.stateId = basicInfo.stateId ? "" : "State is required.";
     temp.district = basicInfo.district ? "" : "Province/LGA is required.";
+    temp.dob = basicInfo.dateOfRegistration ? "" : "Date is required";
+
     //ANC FORM VALIDATION
     if (state.showANC) {
       temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
@@ -610,7 +614,7 @@ const UserRegistration = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(locationState);
+    console.log("hereeeeee");
 
     if (validate()) {
       if (basicInfo.age > 9) {
@@ -717,7 +721,11 @@ const UserRegistration = (props) => {
             console.log(response.data);
             history.push({
               pathname: "/patient-history",
-              state: { patientObj: response.data, postValue: "ANC" },
+              state: {
+                patientObj: response.data,
+                postValue: locationState.postValue,
+                entrypointValue: locationState.entrypointValue,
+              },
             });
             // history.push("/");
             setSaving(false);
@@ -817,11 +825,13 @@ const UserRegistration = (props) => {
             patientForm.contactPoint.push(phone);
             patientForm.id = patientId;
             enroll.personDto = patientForm;
+            // enroll.entryPoint = locationState.entrypointValue;
             //patientDTO.personDto=objValues;
             //console.log(objValues)
             let payload = {
               ...PMTCTObj,
               personDto: patientForm,
+              entryPoint: locationState.entrypointValue,
             };
             console.log("payload", payload);
             const response = await axios.post(
@@ -834,7 +844,11 @@ const UserRegistration = (props) => {
             });
             history.push({
               pathname: "/patient-history",
-              state: { patientObj: response.data, postValue: "ANC" },
+              state: {
+                patientObj: response.data,
+                postValue: locationState.postValue,
+                entrypointValue: locationState.entrypointValue,
+              },
             });
 
             // history.push("/");
@@ -968,6 +982,7 @@ const UserRegistration = (props) => {
         if (response.data > 0) {
           objValues.gaweeks = response.data;
           setObjValues({ ...objValues, [e.target.name]: e.target.value });
+          setErrors({ ...errors, gaweeks: "" });
         } else {
           objValues.gaweeks = response.data;
           toast.error("Please select a validate date");
@@ -1025,8 +1040,12 @@ const UserRegistration = (props) => {
     setRelatives({ ...relatives, [inputName]: e.slice(0, limit) });
   };
   const checkPhoneNumberBasic = (e, inputName) => {
+    console.log(e, inputName);
+    if (e) {
+      setErrors({ ...errors, phoneNumber: "" });
+    }
     const limit = 10;
-    setBasicInfo({ ...basicInfo, [inputName]: e.slice(0, limit) });
+    setBasicInfo({ ...basicInfo, phoneNumber: e.slice(0, limit) });
   };
   const checkNINLimit = (e) => {
     const limit = 11;
@@ -1381,6 +1400,11 @@ const UserRegistration = (props) => {
                             }}
                           />
                         </FormGroup>
+                        {errors.dob !== "" ? (
+                          <span className={classes.error}>{errors.dob}</span>
+                        ) : (
+                          ""
+                        )}
                       </div>
 
                       <div className="form-group mb-3 col-md-4">
@@ -1562,6 +1586,7 @@ const UserRegistration = (props) => {
                           }}
                           //onChange={(e)=>{handleInputChangeBasic(e,'phoneNumber')}}
                         />
+
                         {errors.phoneNumber !== "" ? (
                           <span className={classes.error}>
                             {errors.phoneNumber}
@@ -2469,7 +2494,6 @@ const UserRegistration = (props) => {
               )}
               {/* END OF HIV ENROLLEMENT FORM */}
 
-              {console.log("check load ups", locationState)}
               {/* PMTCT FORM FOR L&D AND POST PARTUM  */}
               {!state.showANC && (
                 <PmtctEnrollment

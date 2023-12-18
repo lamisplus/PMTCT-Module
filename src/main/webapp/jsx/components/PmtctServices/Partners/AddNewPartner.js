@@ -94,6 +94,7 @@ const Labourpartner = (props) => {
   const [errors, setErrors] = useState({});
   const [syphills, setSyphills] = useState([]);
   const [referred, setReferred] = useState([]);
+  const [partnerHivStatus, setPartnerHivStatus] = useState("");
   const [partner, setpartner] = useState({
     age: "",
     dateOfBirth: "",
@@ -113,6 +114,13 @@ const Labourpartner = (props) => {
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
+    }
+    if (props.patientObj.hivStatus) {
+      setPartnerHivStatus(props.patientObj.hivStatus);
+    } else if (props?.patientObj?.staticHivStatus) {
+      setPartnerHivStatus(props?.patientObj?.staticHivStatus);
+    } else if (props?.patientObj?.dynamicHivStatus) {
+      setPartnerHivStatus(props?.patientObj?.dynamicHivStatus);
     }
   }, [props.patientObj.id, props.activeContent]);
   //Get list
@@ -261,15 +269,14 @@ const Labourpartner = (props) => {
                       name="partnerHivSTatus"
                       id="partnerHivSTatus"
                       //onChange={handleInputChangepartnerDto}
-                      value={
-                        props.patientObj.dynamicHivStatus
-                          ? props?.patientObj?.dynamicHivStatus
-                            ? props?.patientObj?.dynamicHivStatus
-                            : props?.patientObj?.staticHivStatus
-                          : props?.patientObj?.hivStatus
-                      }
+                      value={partnerHivStatus}
                       disabled
                     />
+                    {console.log(
+                      props.patientObj.dynamicHivStatus,
+                      props?.patientObj?.staticHivStatus,
+                      props?.patientObj?.hivStatus
+                    )}
                   </InputGroup>
                   {errors.ancNo !== "" ? (
                     <span className={classes.error}>{errors.ancNo}</span>

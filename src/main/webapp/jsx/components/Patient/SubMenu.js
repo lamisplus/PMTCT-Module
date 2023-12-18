@@ -126,11 +126,12 @@ function SubMenu(props) {
                       Labour and Delivery
                     </Menu.Item>
                   )}
-                {/* {patientObj?.ancNo && ( */}
-                <Menu.Item onClick={() => onClickPartner()}>
-                  {" "}
-                  Partners
-                </Menu.Item>
+                {patientObj?.ancNo && (
+                  <Menu.Item onClick={() => onClickPartner()}>
+                    {" "}
+                    Partners
+                  </Menu.Item>
+                )}
                 {/* )} */}
                 <Menu.Item onClick={() => onClickInfant()}>
                   {" "}

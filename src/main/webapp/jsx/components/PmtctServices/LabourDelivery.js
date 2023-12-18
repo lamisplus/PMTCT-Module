@@ -123,7 +123,11 @@ const LabourDelivery = (props) => {
     vaginalTear: "",
     numberOfInfantsAlive: "",
     numberOfInfantsDead: "",
-    personUuid: patientObj.person_uuid,
+    personUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid
+      ? props.patientObj.personUuid
+      : props.patientObj.uuid,
   });
   useEffect(() => {
     MODE_DELIVERY();
@@ -260,6 +264,8 @@ const LabourDelivery = (props) => {
           `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+              ? props.patientObj.personUuid
               : props.patientObj.uuid
           }&visitDate=${ga}`,
           {
