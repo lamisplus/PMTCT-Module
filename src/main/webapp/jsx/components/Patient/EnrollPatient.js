@@ -164,6 +164,7 @@ const UserRegistration = (props) => {
     sourceOfReferral: "",
     staticHivStatus: "",
   });
+  console.log("location", location.state);
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
   //set ro show the facility name field if is transfer in
 
@@ -473,6 +474,8 @@ const UserRegistration = (props) => {
       // ANC ENTRY POINT
       if (locationState.showANC) {
         try {
+          objValues.entryPoint = locationState.entrypointValue;
+
           objValues.person_uuid = patientObj.uuid;
           const response = await axios.post(
             `${baseUrl}pmtct/anc/anc-enrollement`,
@@ -484,7 +487,11 @@ const UserRegistration = (props) => {
           });
           history.push({
             pathname: "/patient-history",
-            state: { patientObj: response.data, postValue: "ANC" },
+            state: {
+              patientObj: response.data,
+              postValue: locationState.postValue,
+              entrypointValue: locationState.entrypointValue,
+            },
           });
           // history.push("/");
         } catch (error) {
@@ -532,7 +539,11 @@ const UserRegistration = (props) => {
           // history.push("/");
           history.push({
             pathname: "/patient-history",
-            state: { patientObj: response.data, postValue: "ANC" },
+            state: {
+              patientObj: response.data,
+              postValue: locationState.postValue,
+              entrypointValue: locationState.entrypointValue,
+            },
           });
 
           toast.success("Patient Register successful", {
@@ -606,7 +617,7 @@ const UserRegistration = (props) => {
               startIcon={<TiArrowBack />}
             >
               <span style={{ textTransform: "capitalize", color: "#fff" }}>
-                Back{" "}
+                Back
               </span>
             </Button>
           </Link>
@@ -643,7 +654,9 @@ const UserRegistration = (props) => {
                             name="firstName"
                             id="firstName"
                             value={
-                              basicInfo.firstName + " " + basicInfo.lastName
+                              basicInfo?.fullname
+                                ? basicInfo?.fullname
+                                : `${basicInfo.firstName} ${basicInfo.lastName}`
                             }
                             onChange={handleInputChangeBasic}
                             style={{
@@ -653,6 +666,7 @@ const UserRegistration = (props) => {
                             }}
                             //disabled
                           />
+
                           {errors.firstName !== "" ? (
                             <span className={classes.error}>
                               {errors.firstName}
@@ -1113,9 +1127,7 @@ const UserRegistration = (props) => {
                   setActiveContent={setActiveContent}
                   activeContent={activeContent}
                   hideUpdateButton={true}
-                  entrypointValue={
-                    patientObj.ancNo ? "619" : locationState.entrypointValue
-                  }
+                  entrypointValue={locationState.entrypointValue}
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
                 />

@@ -139,6 +139,7 @@ const UserRegistration = (props) => {
   const [open, setOpen] = React.useState(false);
   const toggle = () => setOpen(!open);
   const locationState = location.state;
+  console.log(locationState);
   let patientId = null;
   let actionType = null;
   let recordId = null;
@@ -149,6 +150,34 @@ const UserRegistration = (props) => {
   patientObj = locationState ? locationState.patientObj : {};
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
   const [disabledField, setDisabledField] = useState(false);
+  const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
+  const [entryValueDisplay, setEntryValueDisplay] = useState({});
+
+  const NEW_POINT_ENTRY_PMTCT = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setAllNewEntryPoint(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+  const getPatientEntryType = (id) => {
+    allNewEntryPoint.map((each, i) => {
+      // console.log(each.id, props.entrypointValue);
+
+      if (Number(each.id) === Number(locationState.entrypointValue)) {
+        setEntryValueDisplay(each);
+        console.log("location choosennn", each);
+      }
+    });
+  };
+
   useEffect(() => {
     loadGenders();
     getSex();
@@ -169,6 +198,9 @@ const UserRegistration = (props) => {
 
   useEffect(() => {
     viewANCInfo();
+    if (locationState.entrypointValue) {
+      getPatientEntryType();
+    }
   }, []);
   //Get list of Source of Referral
   const SOURCE_REFERRAL_PMTCT = () => {
@@ -425,7 +457,11 @@ const UserRegistration = (props) => {
         });
         history.push({
           pathname: "/patient-history",
-          state: { patientObj: patientObj },
+          state: {
+            patientObj: patientObj,
+            postValue: entryValueDisplay.display,
+            entrypointValue: entryValueDisplay.id,
+          },
         });
       } catch (error) {
         if (error.response && error.response.data) {
@@ -530,7 +566,11 @@ const UserRegistration = (props) => {
                             type="text"
                             name="firstName"
                             id="firstName"
-                            value={location.state.patientObj.fullName}
+                            value={
+                              location.state?.patientObj?.fullName
+                                ? location?.state.patientObj?.fullName
+                                : location?.state?.patientObj?.fullname
+                            }
                             onChange={handleInputChangeBasic}
                             style={{
                               border: "none",

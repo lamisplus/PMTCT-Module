@@ -124,7 +124,11 @@ const ANCPatients = (props) => {
                         <Link
                           to={{
                             pathname: "/patient-history",
-                            state: { patientObj: row, postValue: "ANC" },
+                            state: {
+                              patientObj: row,
+                              postValue: "ANC",
+                              entrypointValue: 1134,
+                            },
                           }}
                         >
                           <ButtonGroup

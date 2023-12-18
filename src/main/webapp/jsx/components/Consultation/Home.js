@@ -105,20 +105,32 @@ const ClinicVisit = (props) => {
     visitStatus: "",
     timeOfViralLoad: "",
   });
-  // const [vital, setVitalSignDto] = useState({
-  //   bodyWeight: "",
-  //   diastolic: "",
-  //   encounterDate: "",
-  //   facilityId: 1,
-  //   height: "",
-  //   personId: props.patientObj.id,
-  //   serviceTypeId: 1,
-  //   systolic: "",
-  //   pulse:"",
-  //   temperature:"",
-  //   respiratoryRate:""
-  // })
+  const [entryValueDisplay, setEntryValueDisplay] = useState({});
+
   console.log(objValues.enteryPoint);
+  const POINT_ENTRY_PMTCT = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setEntryPoint(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  const getPatientEntryType = (id) => {
+    entryPoint.map((each, i) => {
+      // console.log(each.id, props.entrypointValue);
+
+      if (Number(each.id) === Number(props.patientObj.entryPoint)) {
+        setEntryValueDisplay(each);
+      }
+    });
+  };
+
   useEffect(() => {
     ///VitalSigns();
     VISIT_STATUS_PMTCT();
@@ -136,6 +148,10 @@ const ClinicVisit = (props) => {
       );
     }
   }, [props.activeContent]);
+
+  useEffect(() => {
+    getPatientEntryType();
+  }, []);
 
   const GetVisit = (id) => {
     axios
@@ -163,19 +179,19 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
-  const POINT_ENTRY_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/POINT_ENTRY`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        console.log(response.data);
-        setEntryPoint(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+  // const POINT_ENTRY_PMTCT = () => {
+  //   axios
+  //     .get(`${baseUrl}application-codesets/v2/POINT_ENTRY`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     })
+  //     .then((response) => {
+  //       console.log(response.data);
+  //       setEntryPoint(response.data);
+  //     })
+  //     .catch((error) => {
+  //       //console.log(error);
+  //     });
+  // };
   const FAMILY_PLANNING_METHOD = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`, {
@@ -418,6 +434,7 @@ const ClinicVisit = (props) => {
                 </FormGroup>
               </div>
 
+              {console.log(patientObj.entryPoint)}
               <div className=" mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName>
@@ -427,7 +444,7 @@ const ClinicVisit = (props) => {
                     type="select"
                     name="enteryPoint"
                     id="enteryPoint"
-                    value={objValues.enteryPoint}
+                    value={props.patientObj.entryPoint}
                     onChange={handleInputChange}
                     style={{
                       border: "1px solid #014D88",
@@ -437,35 +454,13 @@ const ClinicVisit = (props) => {
                   >
                     {/* <option value="select">Select </option> */}
 
-                    {
-                      props.patientObj.ancNo ? (
-                        <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
-                          ANC
+                    {entryPoint.map((each, i) => {
+                      return (
+                        <option key={i} value={each.id}>
+                          {each.display}
                         </option>
-                      ) : (
-                        <option key={619} value={"POINT_ENTRY_PMTCT"}>
-                          PMTCT
-                        </option>
-                      )
-                      // :entryPoint.map(
-                      // (value) =>
-                      //   Number(props.patientObj.entryPoint) ===
-                      //     Number(value.id) && (
-                      //     <option
-                      //       key={value.id}
-                      //       value={value.code}
-                      //       ref={entrypointRef}
-                      //     >
-                      //       {value.display}
-                      //     </option>
-                      //   )
-                      //   )
-                      // : props.patientObj.ancNo && (
-                      //     <option key={619} value={"POINT_ENTRY_PMTCT_ANC"}>
-                      //       ANC
-                      //     </option>
-                      //   )
-                    }
+                      );
+                    })}
                   </Input>
                   {errors.enteryPoint !== "" ? (
                     <span className={classes.error}>{errors.enteryPoint}</span>

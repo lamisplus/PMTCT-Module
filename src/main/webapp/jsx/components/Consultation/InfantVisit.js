@@ -195,35 +195,40 @@ const ClinicVisit = (props) => {
   ///GET LIST OF Infants
   const InfantInfo = () => {
     //setLoading(true)
-    if (props.patientObj.ancNo) {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //setLoading(false)
-          setInfants(response.data);
-        })
+    // if (props.patientObj.ancNo) {
+    //   axios
+    //     .get(
+    //       `${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+    //       { headers: { Authorization: `Bearer ${token}` } }
+    //     )
+    //     .then((response) => {
+    //       setInfants(response.data);
+    //     })
 
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else {
-      axios
-        .get(
-          `${baseUrl}get-infant-by-mother-person-uuid/${props.patientObj.uuid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-          //setLoading(false)
-          setInfants(response.data);
-        })
+    //     .catch((error) => {
+    //     });
+    // } else {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
+          props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : props.patientObj.personUuid
+            ? props.patientObj.personUuid
+            : props.patientObj.uuid
+        }`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
 
-        .catch((error) => {
-          //console.log(error);
-        });
-    }
+      .then((response) => {
+        //setLoading(false)
+        setInfants(response.data);
+      })
+
+      .catch((error) => {
+        //console.log(error);
+      });
+    // }
   };
   const TIME_ART_INITIATION_PMTCT = () => {
     axios
@@ -541,21 +546,23 @@ const ClinicVisit = (props) => {
                 </span>
               </List.Item>
             </List>
-            {infants.map((row) => (
-              <List celled>
-                <List.Item
-                  onClick={() => GetInfantDetail(row)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <Label as="a" color="blue">
-                    {row.firstName}
-                  </Label>
-                  <Label as="a" color="teal" className="float-end" tag>
-                    {row.hospitalNumber}
-                  </Label>
-                </List.Item>
-              </List>
-            ))}
+
+            {infants &&
+              infants.map((row) => (
+                <List celled>
+                  <List.Item
+                    onClick={() => GetInfantDetail(row)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <Label as="a" color="blue">
+                      {row.firstName}
+                    </Label>
+                    <Label as="a" color="teal" className="float-end" tag>
+                      {row.hospitalNumber}
+                    </Label>
+                  </List.Item>
+                </List>
+              ))}
           </Segment>
         </Grid.Column>
         <Grid.Column width={12}>
@@ -634,7 +641,8 @@ const ClinicVisit = (props) => {
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName>
-                    Mother ANC number <span style={{ color: "red" }}> *</span>
+                    Mother ANC number
+                    {/* <span style={{ color: "red" }}> *</span> */}
                   </FormLabelName>
                   <Input
                     type="text"

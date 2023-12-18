@@ -62,13 +62,13 @@ const InfantInformation = (props) => {
   const [record, setRecord] = useState(null);
   const toggle = () => setOpen(!open);
   useEffect(() => {
-    if (props.patientObj.ancNo) {
-      InfantInfo();
-      console.log("it has anc ");
-    } else {
-      InfantInfoByUuid(0);
-      console.log("it has  no anc ");
-    }
+    // if (props.patientObj.ancNo) {
+    //   InfantInfo();
+    //   console.log("it has anc ");
+    // } else {
+    InfantInfoByUuid();
+    //   console.log("it has  no anc ");
+    // }
     DeliveryInfo();
   }, []);
   ///GET LIST OF Infants
@@ -97,6 +97,8 @@ const InfantInformation = (props) => {
           props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : props.patientObj.personUuid
+            ? props.patientObj.personUuid
+            : props.patientObj.uuid
         }`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -137,6 +139,8 @@ const InfantInformation = (props) => {
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
               : props.patientObj.personUuid
+              ? props.patientObj.personUuid
+              : props.patientObj.uuid
           }`,
           {
             headers: { Authorization: `Bearer ${token}` },

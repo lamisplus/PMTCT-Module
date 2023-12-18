@@ -14,11 +14,7 @@ const ClinicVisitPage = (props) => {
   const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
   const [aliveChild, setAliveChild] = useState(0);
-  useEffect(() => {
-    setKey(props.activeContent.activeTab);
-    DeliveryInfo();
-  }, [props.patientObj.id, props.activeContent.activeTab]);
-  ///GET Delivery Object
+
   const DeliveryInfo = () => {
     if (props.patientObj.ancNo) {
       axios
@@ -26,7 +22,7 @@ const ClinicVisitPage = (props) => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
-          console.log(response.data);
+          // console.log(response.data);
           setAliveChild(
             response.data && response.data.numberOfInfantsAlive
               ? response.data.numberOfInfantsAlive
@@ -38,11 +34,20 @@ const ClinicVisitPage = (props) => {
         });
     } else {
       axios
-        .get(`${baseUrl}view-delivery-with-uuid/${props.patientObj.uuid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        .get(
+          `${baseUrl}pmtct/anc/view-delivery-with-uuid/${
+            props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+              ? props.patientObj.personUuid
+              : props.patientObj.uuid
+          }`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
         .then((response) => {
-          console.log(response.data);
+          // console.log(response.data);
           setAliveChild(
             response.data && response.data.numberOfInfantsAlive
               ? response.data.numberOfInfantsAlive
@@ -54,6 +59,12 @@ const ClinicVisitPage = (props) => {
         });
     }
   };
+
+  useEffect(() => {
+    setKey(props.activeContent.activeTab);
+    DeliveryInfo();
+  }, [props.patientObj.id, props.activeContent.activeTab]);
+  ///GET Delivery Object
 
   return (
     <Fragment>

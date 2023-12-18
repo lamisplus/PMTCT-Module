@@ -63,6 +63,7 @@ function PatientCard(props) {
   const [art, setArt] = useState(false);
   const [PersonInfo, setPersonInfo] = useState({});
   const [deliveryInfo, setDeliveryInfo] = useState([]);
+  const [allEntryPoint, setAllEntryPoint] = useState([]);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -111,6 +112,20 @@ function PatientCard(props) {
     // }
   };
 
+  const POINT_ENTRY_PMTCT = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setAllEntryPoint(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
   useEffect(() => {
     RecentActivities();
     axios
@@ -124,6 +139,8 @@ function PatientCard(props) {
       .catch((error) => {
         //console.log(error);
       });
+
+    POINT_ENTRY_PMTCT();
   }, []);
   console.log(patientObj);
 
@@ -161,9 +178,11 @@ function PatientCard(props) {
           {/* Patient dashboard menu route */}
           {activeContent.route === "recent-history" && (
             <RecentHistory
+              allEntryPoint={allEntryPoint}
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              entrypointValue={ patientObj.ancNo? 1134: patientObj.entryPoint }
             />
           )}
 
@@ -176,7 +195,8 @@ function PatientCard(props) {
           )}
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
-              entrypointValue={patientObj.ancNo ? "619" : ""}
+              allEntryPoint={allEntryPoint}
+              entrypointValue={patientObj.entryPoint}
               ancEntryType={patientObj.ancNo ? true : false}
               patientObj={patientObj}
               setActiveContent={setActiveContent}
