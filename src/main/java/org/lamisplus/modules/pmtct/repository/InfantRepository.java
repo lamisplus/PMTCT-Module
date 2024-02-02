@@ -16,6 +16,8 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
 
     List<Infant> findInfantByMotherPersonUuid(String personUuid);
 
+    List<Infant> findInfantsByHospitalNumber(String hospitalNumber);
+
     Optional<Infant> findInfantByHospitalNumber(String hospitalNumber);
 
     Optional<Infant> getInfantByHospitalNumber(String hospitalNumber);
