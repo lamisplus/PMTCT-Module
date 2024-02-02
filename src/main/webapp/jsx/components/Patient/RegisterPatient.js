@@ -586,7 +586,7 @@ const UserRegistration = (props) => {
           ? ""
           : "This field is required");
       temp.lmp = objValues.lmp ? "" : "This field is required";
-      temp.parity = objValues.parity ? "" : "This field is required";
+      temp.parity = objValues.parity !== "" ? "" : "This field is required";
       temp.testedSyphilis = objValues.testedSyphilis
         ? ""
         : "This field is required";
@@ -994,9 +994,9 @@ const UserRegistration = (props) => {
     if (
       e.target.name === "parity" &&
       e.target.value !== "" &&
-      e.target.value <= 0
+      e.target.value < 0
     ) {
-      //The field will  not accept zero as a value
+      //The field will  not accept less zero as a value
       return;
     } //gravida
     if (
@@ -2211,7 +2211,7 @@ const UserRegistration = (props) => {
                           ) : (
                             ""
                           )}
-                          {objValues.parity !== "" && objValues.parity <= 0 ? (
+                          {objValues.parity !== "" && objValues.parity < 0 ? (
                             <span className={classes.error}>
                               Parity should not be less than 1
                             </span>

@@ -83,6 +83,7 @@ const PmtctEntryPoint = (props) => {
                         backgroundColor: "#007bb6",
                         borderRadius: "3px",
                         border: "none",
+                        padding: "0px",
                       }}
                     >
                       <span style={{ textTransform: "capitalize" }}>
