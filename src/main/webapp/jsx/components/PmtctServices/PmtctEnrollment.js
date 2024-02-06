@@ -118,7 +118,7 @@ const AncPnc = (props) => {
     ga: props.patientObj.gaweeks,
     gravida: props.patientObj.gravida,
     artStartDate: "",
-    artStartTime: "",
+    artStartTime: patientObj.artStartTime ? patientObj.artStartTime : "",
     id: "",
     tbStatus: "",
     hivStatus: patientObj.hivStatus

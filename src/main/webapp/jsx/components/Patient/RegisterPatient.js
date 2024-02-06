@@ -1041,11 +1041,19 @@ const UserRegistration = (props) => {
   };
   const checkPhoneNumberBasic = (e, inputName) => {
     console.log(e, inputName);
+    if(inputName === 'phoneNumber'){
     if (e) {
       setErrors({ ...errors, phoneNumber: "" });
     }
     const limit = 10;
     setBasicInfo({ ...basicInfo, phoneNumber: e.slice(0, limit) });
+
+    }
+      if (inputName === "altPhonenumber") {
+       
+        const limit = 10;
+        setBasicInfo({ ...basicInfo, altPhonenumber: e.slice(0, limit) });
+      }  
   };
   const checkNINLimit = (e) => {
     const limit = 11;
