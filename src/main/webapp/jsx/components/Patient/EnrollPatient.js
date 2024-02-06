@@ -823,7 +823,7 @@ const UserRegistration = (props) => {
                               id="parity"
                               onChange={handleInputChange}
                               value={objValues.parity}
-                              min={1}
+                              min={0}
                             />
                           </InputGroup>
                           {errors.parity !== "" ? (

@@ -1041,11 +1041,17 @@ const UserRegistration = (props) => {
   };
   const checkPhoneNumberBasic = (e, inputName) => {
     console.log(e, inputName);
-    if (e) {
-      setErrors({ ...errors, phoneNumber: "" });
+    if (inputName === "phoneNumber") {
+      if (e) {
+        setErrors({ ...errors, phoneNumber: "" });
+      }
+      const limit = 10;
+      setBasicInfo({ ...basicInfo, phoneNumber: e.slice(0, limit) });
     }
-    const limit = 10;
-    setBasicInfo({ ...basicInfo, phoneNumber: e.slice(0, limit) });
+    if (inputName === "altPhonenumber") {
+      const limit = 10;
+      setBasicInfo({ ...basicInfo, altPhonenumber: e.slice(0, limit) });
+    }
   };
   const checkNINLimit = (e) => {
     const limit = 11;
@@ -2201,7 +2207,7 @@ const UserRegistration = (props) => {
                               id="parity"
                               onChange={handleInputChange}
                               value={objValues.parity}
-                              min="2"
+                              min="0"
                             />
                           </InputGroup>
                           {errors.parity !== "" ? (
