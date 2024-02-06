@@ -46,5 +46,6 @@ public class ANCRespondDto implements Serializable {
     private String treatedSyphilis;
     private String referredSyphilisTreatment;
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
+    private LocalDate artStartDate;
 
 }
