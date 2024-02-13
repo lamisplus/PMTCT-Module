@@ -179,7 +179,7 @@ const LabourDelivery = (props) => {
   };
   const TIME_HIV_DIAGNOSIS = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`, {
+      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS_PMTCT`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {

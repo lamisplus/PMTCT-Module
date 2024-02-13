@@ -108,9 +108,7 @@ const AncPnc = (props) => {
   const [errors, setErrors] = useState({});
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
   const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
-  console.log("pmtct state received from any", locationState);
 
-  console.log(locationState.entrypointValue, props.entrypointValue);
   const [enroll, setEnrollDto] = useState({
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
@@ -154,24 +152,16 @@ const AncPnc = (props) => {
   const getPatientEntryType = (id) => {
     if (locationState.entrypointValue) {
       allNewEntryPoint.map((each, i) => {
-        // console.log(each.id, props.entrypointValue);
-
-        if (Number(each.id) === Number(locationState.entrypointValue)) {
+        if (each.code === locationState.entrypointValue) {
           setEntryValueDisplay(each);
-          console.log("location choosennn", each);
         }
       });
     } else if (props.entrypointValue) {
       props.allEntryPoint.map((each, i) => {
-        // console.log(each.id, props.entrypointValue);
-        console.log("props choosennn", each);
-
-        if (Number(each.id) === Number(props.entrypointValue)) {
+        if (each.code === props.entrypointValue) {
           setEntryValueDisplay(each);
         }
       });
-
-      // locationState.entrypointValue
     } else {
     }
   };
@@ -636,6 +626,7 @@ const AncPnc = (props) => {
                       min="1"
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.gravida}
+                      disabled={disabledField}
                     />
                   </InputGroup>
                   {errors.gravida !== "" ? (
@@ -738,13 +729,13 @@ const AncPnc = (props) => {
                       type="select"
                       name="hivStatus"
                       id="hivStatus"
-                      // disabled={
-                      //   patientObj.hivStatus
-                      //     ? true
-                      //     : patientObj.staticHivStatus
-                      //     ? true
-                      //     : false
-                      // }
+                      disabled={
+                        patientObj.hivStatus
+                          ? true
+                          : patientObj.staticHivStatus
+                          ? true
+                          : false
+                      }
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.hivStatus}
                     >

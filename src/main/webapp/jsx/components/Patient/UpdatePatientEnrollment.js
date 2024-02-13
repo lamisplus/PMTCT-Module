@@ -169,9 +169,8 @@ const UserRegistration = (props) => {
 
   const getPatientEntryType = (id) => {
     allNewEntryPoint.map((each, i) => {
-      // console.log(each.id, props.entrypointValue);
 
-      if (Number(each.id) === Number(locationState.entrypointValue)) {
+      if (each.code === locationState.entrypointValue) {
         setEntryValueDisplay(each);
         console.log("location choosennn", each);
       }
@@ -460,7 +459,7 @@ const UserRegistration = (props) => {
           state: {
             patientObj: patientObj,
             postValue: entryValueDisplay.display,
-            entrypointValue: entryValueDisplay.id,
+            entrypointValue: entryValueDisplay.code,
           },
         });
       } catch (error) {

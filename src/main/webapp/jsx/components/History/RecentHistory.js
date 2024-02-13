@@ -35,15 +35,6 @@ const RecentHistory = (props) => {
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
 
-  // const getPatientEntryType = (id) => {
-  //   props.allEntryPoint.map((each, i) => {
-  //     // console.log(each.id, props.entrypointValue);
-
-  //     if (Number(each.id) === Number(props.patientObj.entryPoint)) {
-  //       setEntryValueDisplay(each);
-  //     }
-  //   });
-  // };
 
   console.log(props);
   useEffect(() => {

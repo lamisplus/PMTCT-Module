@@ -127,7 +127,7 @@ const ANCPatients = (props) => {
                             state: {
                               patientObj: row,
                               postValue: "ANC",
-                              entrypointValue: 1134,
+                              entrypointValue: "PMTCT_ENTRY_POINT_ANC",
                             },
                           }}
                         >

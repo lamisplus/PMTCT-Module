@@ -65,7 +65,7 @@ const PmtctEntryPoint = (props) => {
                       state: {
                         showANC: true,
                         postValue: each.display,
-                        entrypointValue: each.id,
+                        entrypointValue: each.code,
                         ...props.info,
                       },
                     }}
@@ -100,7 +100,7 @@ const PmtctEntryPoint = (props) => {
                       state: {
                         showANC: false,
                         postValue: each.display,
-                        entrypointValue: each.id,
+                        entrypointValue: each.code,
                         ...props.info,
                       },
                     }}
@@ -149,7 +149,7 @@ const PmtctEntryPoint = (props) => {
                           showANC: false,
                           postValue: each.display,
                           subPostValue: e.target.value,
-                          entrypointValue: each.id,
+                          entrypointValue: each.code,
 
                           ...props.info,
                         },

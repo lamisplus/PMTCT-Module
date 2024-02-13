@@ -123,7 +123,7 @@ const ClinicVisit = (props) => {
   };
   const getPatientEntryType = (id) => {
     entryPoint.map((each, i) => {
-      // console.log(each.id, props.entrypointValue);
+  
 
       if (Number(each.id) === Number(props.patientObj.entryPoint)) {
         setEntryValueDisplay(each);

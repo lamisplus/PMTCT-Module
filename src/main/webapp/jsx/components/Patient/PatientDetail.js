@@ -182,7 +182,11 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
-              entrypointValue={ patientObj.ancNo? 1134: patientObj.entryPoint }
+              entrypointValue={
+                patientObj.ancNo
+                  ? "PMTCT_ENTRY_POINT_ANC"
+                  : patientObj.entryPoint
+              }
             />
           )}
 

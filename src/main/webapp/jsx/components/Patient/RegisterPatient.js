@@ -108,12 +108,13 @@ const UserRegistration = (props) => {
 
   const [basicInfo, setBasicInfo] = useState({
     active: true,
-    address: [],
+    address: "",
     contact: [],
     contactPoint: [],
     dateOfBirth: "",
     deceased: false,
     deceasedDateTime: null,
+    hospitalNumber: "",
     firstName: "",
     genderId: "",
     identifier: "",
@@ -390,28 +391,22 @@ const UserRegistration = (props) => {
   //Handle Input Change for Basic Infor
   const handleInputChangeBasic = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
-    setBasicInfo({ ...basicInfo, [e.target.name]: e.target.value });
     //manupulate inpute fields base on gender/sex
     if (e.target.name === "sexId" && e.target.value === "377") {
       setfemaleStatus(true);
-    }
-    if (e.target.name === "firstName" && e.target.value !== "") {
+    } else if (e.target.name === "firstName" && e.target.value !== "") {
       const name = alphabetOnly(e.target.value);
       setBasicInfo({ ...basicInfo, [e.target.name]: name });
-    }
-    if (e.target.name === "lastName" && e.target.value !== "") {
+    } else if (e.target.name === "lastName" && e.target.value !== "") {
       const name = alphabetOnly(e.target.value);
       setBasicInfo({ ...basicInfo, [e.target.name]: name });
-    }
-    if (e.target.name === "middleName" && e.target.value !== "") {
+    } else if (e.target.name === "middleName" && e.target.value !== "") {
       const name = alphabetOnly(e.target.value);
       setBasicInfo({ ...basicInfo, [e.target.name]: name });
-    }
-    if (e.target.name === "ninNumber" && e.target.value !== "") {
+    } else if (e.target.name === "ninNumber" && e.target.value !== "") {
       const ninNumberValue = checkNINLimit(e.target.value);
       setBasicInfo({ ...basicInfo, [e.target.name]: ninNumberValue });
-    }
-    if (e.target.name === "ancNo" && e.target.value !== "") {
+    } else if (e.target.name === "ancNo" && e.target.value !== "") {
       async function getAncNumber() {
         const ancNumber = e.target.value;
         const response = await axios.get(
@@ -431,8 +426,11 @@ const UserRegistration = (props) => {
         }
       }
       getAncNumber();
-    }
-    if (e.target.name === "hospitalNumber" && e.target.value !== "") {
+    } else if (e.target.name === "hospitalNumber" && e.target.value !== "") {
+      setBasicInfo({
+        ...basicInfo,
+        hospitalNumber: e.target.value,
+      });
       async function getHosiptalNumber() {
         const hosiptalNumber = e.target.value;
         const response = await axios.post(
@@ -455,6 +453,8 @@ const UserRegistration = (props) => {
         }
       }
       getHosiptalNumber();
+    } else {
+      setBasicInfo({ ...basicInfo, [e.target.name]: e.target.value });
     }
   };
   //Function to show relatives
@@ -556,6 +556,7 @@ const UserRegistration = (props) => {
     temp.hospitalNumber = basicInfo.hospitalNumber
       ? ""
       : "Hospital Number  is required.";
+    console.log(temp.hospitalNumber);
     //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
     //temp.landmark = basicInfo.landmark ? "" : "This field is required."
     temp.lastName = basicInfo.lastName ? "" : "Last Name  is required.";
