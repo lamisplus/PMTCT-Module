@@ -970,6 +970,7 @@ public class ANCService {
             ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
             ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
             ancRespondDto.setHivStatus(anc.getStaticHivStatus());
+            ancRespondDto.setArtStartDate(person.getArtStartDate());
 
             String hivStatus = "Unknown";
             try {
@@ -1012,15 +1013,20 @@ public class ANCService {
         return active;
     }
 
+//    public boolean activeOnPMTCTByPersonUuid(String personUuid) {
+//        boolean active = false;
+//        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);//.findANCByPersonUuidAndArchived(personUuid, 0L);
+//        if (pmtctEnrollment.isPresent()) {
+//            active = true;
+//        } else {
+//            active = false;
+//        }
+//        return active;
+//    }
+
     public boolean activeOnPMTCTByPersonUuid(String personUuid) {
-        boolean active = false;
-        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);//.findANCByPersonUuidAndArchived(personUuid, 0L);
-        if (pmtctEnrollment.isPresent()) {
-            active = true;
-        } else {
-            active = false;
-        }
-        return active;
+        List<PMTCTEnrollment> pmtctEnrollments = pmtctEnrollmentReporsitory.getAllByPersonUuid(personUuid);
+        return pmtctEnrollments.stream().findFirst().isPresent();
     }
 
     private ANC getExistingANC(Long id) {

@@ -1,6 +1,8 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.lamisplus.modules.patient.domain.entity.Person;
@@ -18,6 +20,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   Optional  <PMTCTEnrollment> getByAncNo(String ancNo);
 
   Optional<PMTCTEnrollment> getByPersonUuid(String personUuid);
+
 
   PMTCTEnrollment findByPersonUuidAndArchived(String personUuid, Long archived);
   PMTCTEnrollment getPMTCTEnrollmentById(Long id);
@@ -38,4 +41,5 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);
 
 
+  List<PMTCTEnrollment> getAllByPersonUuid(String personUuid);
 }
