@@ -1,6 +1,7 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
+import org.lamisplus.modules.pmtct.domain.dto.InfantPCRTestDto;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
 
@@ -12,6 +13,7 @@ public interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRT
 {
     List<InfantPCRTest> findByAncNumber (String ancNo);
     List<InfantPCRTest> findByInfantHospitalNumber  (String hospitalNumber);
+    Optional<InfantPCRTestDto> findTopByInfantHospitalNumber  (String hospitalNumber);
 
     Optional<InfantPCRTest> findByInfantHospitalNumberAndVisitDate  (String hospitalNumber, LocalDate visitDate);
 }

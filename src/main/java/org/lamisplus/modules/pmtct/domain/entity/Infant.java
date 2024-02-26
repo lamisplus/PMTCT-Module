@@ -25,4 +25,5 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private LocalDate nextAppointmentDate;
     private Integer defaultDays;
     private String motherPersonUuid;
+    private Double bodyWeight;
    }

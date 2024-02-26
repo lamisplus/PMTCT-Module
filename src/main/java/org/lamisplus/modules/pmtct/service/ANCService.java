@@ -411,7 +411,7 @@ public class ANCService {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            System.out.println("I got here Doc");
+            //System.out.println("I got here Doc");
             persons = ancRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         }
         List<PatientPerson> personList = persons.getContent();
