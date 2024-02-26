@@ -321,7 +321,7 @@ public class ANCService {
         personList.forEach(person -> {
             int age = this.calculateAge(person.getDateOfBirth());
             String sex = person.getSex();
-            if ((age >= 10) && (sex.contains("F")) && (person.getActive())) {
+            if ((age >= 5) && (sex.contains("F")) && (person.getActive())) {
                 PMTCTPersonDto pmtctPersonDto = new PMTCTPersonDto();
                 pmtctPersonDto.setAge(age);
                 pmtctPersonDto.setDescriptiveAddress(person.getAddress());
@@ -479,7 +479,7 @@ public class ANCService {
                 String sex = person.getSex();
                 Integer archive = person.getArchived();
 
-                if ((age >= 10) && (sex.contains("F")) && (archive == 0)) {
+                if ((age >= 5) && (sex.contains("F")) && (archive == 0)) {
                     pmtctPersonDto.setAge(age);
                     pmtctPersonDto.setDescriptiveAddress(person.getAddress());
                     pmtctPersonDto.setHospitalNumber(person.getHospitalNumber());
