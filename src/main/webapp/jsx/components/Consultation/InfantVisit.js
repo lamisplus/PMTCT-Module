@@ -1095,7 +1095,7 @@ const ClinicVisit = (props) => {
               style={{ width: "106%", height: "35px" }}
               ribbon
             >
-              <h4 style={{ color: "#fff" }}> Infant PCR </h4>
+              <h4 style={{ color: "#fff" }}> Infant PCR/HIV test </h4>
             </Label>
             <br />
             <br />
