@@ -1398,7 +1398,8 @@ const UserRegistration = (props) => {
                             name="dob"
                             min="1940-01-01"
                             id="dob"
-                            max={basicInfo.dateOfRegistration}
+                            // max={basicInfo.dateOfRegistration}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
                             value={basicInfo.dob}
                             onChange={handleDobChange}
                             style={{
@@ -1422,7 +1423,7 @@ const UserRegistration = (props) => {
                             name="age"
                             className="form-control"
                             id="age"
-                            min="10"
+                            min="5"
                             value={basicInfo.age}
                             disabled={ageDisabled}
                             onChange={handleAgeChange}
@@ -1434,8 +1435,8 @@ const UserRegistration = (props) => {
                         </FormGroup>
                         <p>
                           <b style={{ color: "red" }}>
-                            {basicInfo.age !== "" && basicInfo.age < 10
-                              ? "Minimum age for PMTCT enrolment is 10 years"
+                            {basicInfo.age !== "" && basicInfo.age < 5
+                              ? "Minimum age for PMTCT enrolment is 5 years"
                               : " "}{" "}
                           </b>
                         </p>
