@@ -233,8 +233,8 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant/{id}")
-    public ResponseEntity<InfantDto> viewInfant(@PathVariable("id") Long id) {
-        return ResponseEntity.ok (infantService.getSingleInfantById(id));
+    public ResponseEntity<Infant> viewInfant(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantService.getSingleInfant(id));
     }
 
     @PutMapping(value = "update-infant/{id}")
@@ -258,11 +258,18 @@ public class PMTCTController {
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
     }
 
+//    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
+//    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+//        System.out.println("personUuid "+ personUuid);
+//
+//        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+//    }
+
     @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+    public ResponseEntity<List<InfantDto> > getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
         System.out.println("personUuid "+ personUuid);
 
-        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+        return ResponseEntity.ok (infantService.getSingleInfantByPersonUUID(personUuid));
     }
 
     @GetMapping(value = "/all-infants")

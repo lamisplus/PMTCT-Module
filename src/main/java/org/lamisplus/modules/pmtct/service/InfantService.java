@@ -1,36 +1,30 @@
 package org.lamisplus.modules.pmtct.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import liquibase.util.ObjectUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.service.UserService;
-import org.lamisplus.modules.patient.domain.dto.PageDTO;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
-import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.util.CollectionUtils;
 import reactor.util.StringUtils;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,29 +70,31 @@ public class InfantService {
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
-        saveInfantArv(infantDto.getInfantArvDto(),result);
+        saveInfantArv(infantDto,infantDto.getInfantArvDto(),result);
 
-        //save InfantArv
-        saveInfantPCRTest(infantDto.getInfantPCRTestDto(),result);
+        //save InfantPCRTest
+        saveInfantPCRTest(infantDto,infantDto.getInfantPCRTestDto(),result);
 
         return infant;
     }
 
-    private void saveInfantArv(InfantArvDto infantArvDto, Infant infantDto) {
+    private void saveInfantArv(InfantDto infantDto,InfantArvDto infantArvDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
-            infantArvDto.setId(infantDto.getId());
+            infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
-            infantArvDto.setInfantHospitalNumber(infantDto.getHospitalNumber());
-            infantArvDto.setAncNumber(infantDto.getAncNo());
+            infantArvDto.setUuid(infantDto.getPersonUuid());
+            infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
+            infantArvDto.setAncNumber(infant.getAncNo());
         }
         infantVisitService.save(infantArvDto);
     }
 
-    private void saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infantDto) {
+    private void saveInfantPCRTest(InfantDto infantDto,InfantPCRTestDto infantPCRTestDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
-            infantPCRTestDto.setId(infantDto.getId());
-            infantPCRTestDto.setInfantHospitalNumber(infantDto.getHospitalNumber());
-            infantPCRTestDto.setAncNumber(infantDto.getAncNo());
+            infantPCRTestDto.setId(infant.getId());
+            infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
+            infantPCRTestDto.setAncNumber(infant.getAncNo());
+            infantPCRTestDto.setUuid(infantDto.getPersonUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
         }
         infantVisitService.save(infantPCRTestDto);
@@ -113,8 +109,24 @@ public class InfantService {
     }
 
 
-    public InfantDto getSingleInfantById(Long id) {
-        Infant infant = getInfantById(id);
+    public List<InfantDto> getSingleInfantByPersonUUID(String personUuid) {
+
+        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
+        List<InfantDto> infantDtoList = new ArrayList<>();
+
+        for (Infant infant : infantList) {
+
+            if (ObjectUtils.isNotEmpty(infant)) {
+                infantDtoList.add(buildInfantDTO(infant, personUuid));
+            }
+
+        }
+
+        return infantDtoList;
+
+    }
+
+    public InfantDto buildInfantDTO(Infant infant, String personUuid){
         return InfantDto.builder()
                 .dateOfDelivery(infant.getDateOfDelivery())
                 .firstName(infant.getFirstName())
@@ -129,13 +141,22 @@ public class InfantService {
                 .ancNo(infant.getInfantOutcomeAt18_months())
                 .personUuid(infant.getMotherPersonUuid())
                 .bodyWeight(infant.getBodyWeight())
-                .infantArvDto(infantVisitService.getInfantArvByByInfantHospitalNumber(infant.getHospitalNumber()))
-                .infantPCRTestDto(infantVisitService.getInfantPCRTestByByInfantHospitalNumber(infant.getHospitalNumber()))
+                .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
+                .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
                 .build();
     }
 
+
+    public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
+        List<Infant> infantList = infantRepository.findInfantsByHospitalNumber(personUuid);
+        if (CollectionUtils.isEmpty(infantList)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
+        }
+        return infantList;
+    }
+
     @SneakyThrows
-    public Infant getInfantById(Long id){
+    public Infant getSingleInfant(Long id){
         return this.infantRepository.findById(id)
                 .orElseThrow(() -> new Exception("Infant NOT FOUND"));
     }
@@ -240,7 +261,7 @@ public class InfantService {
     }
 
     public void deleteInfant(Long id) {
-        Infant exist = this.getInfantById(id);
+        Infant exist = this.getSingleInfant(id);
         this.infantRepository.delete(exist);
 
         //delete InfantARV
