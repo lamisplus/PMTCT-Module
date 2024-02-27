@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.audit4j.core.util.Log;
+import org.hsqldb.lib.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
@@ -32,7 +33,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.util.ObjectUtils;
+import reactor.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -247,8 +252,11 @@ public class ANCService {
         return entityToDto(anc);
     }
 
+
+
     public ANCRequestDto updateAnc(Long id, ANCRequestDto ancRequestDto) {
         ANC exist = getExistAnc(id);
+
         ANC anc = convertDtoToEntity(ancRequestDto);
         anc.setId(id);
         anc.setFacilityId(exist.getFacilityId());
@@ -261,6 +269,7 @@ public class ANCService {
         anc.setCreatedDate(exist.getCreatedDate());
         anc.setUuid(exist.getUuid());
         anc.setPersonUuid(exist.getPersonUuid());
+        anc.setAncSetting(ancRequestDto.getAncSetting());
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -272,6 +281,7 @@ public class ANCService {
         ancRepository.save(anc);
         return ancRequestDto;
     }
+
 
     public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
@@ -847,7 +857,7 @@ public class ANCService {
             anc.setHospitalNumber(person.getHospitalNumber());
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
-            anc.setAncSetting(anc.getAncSetting());
+            anc.setAncSetting(ancWithPersonRequestDto.getAncSetting());
             anc.setStatus("NV");
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
