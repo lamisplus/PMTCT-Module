@@ -34,11 +34,12 @@ public class DomainConfiguration {
 
     @Bean(name = "pmtctTransactionManger")
     @Primary
-    public TransactionManager transactionManager(){
+    public TransactionManager transactionManager() {
         JpaTransactionManager jpaTransactionManager = new JpaTransactionManager();
         jpaTransactionManager.setDataSource(dataSource);
-        jpaTransactionManager.setEntityManagerFactory (entityManagerFactory);
+        jpaTransactionManager.setEntityManagerFactory(entityManagerFactory);
         return jpaTransactionManager;
     }
+
 
 }

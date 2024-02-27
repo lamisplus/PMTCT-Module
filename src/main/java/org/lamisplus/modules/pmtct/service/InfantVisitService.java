@@ -493,10 +493,10 @@ public class InfantVisitService
 //            Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto().getId());;
 //            if(infantArvOptional.isPresent()) infantArvRepository.delete(infantArvOptional.get());
 //        }
-//        if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) {
-//            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findById(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
-//            if(infantMotherArtOptional.isPresent()) infantMotherArtRepository.delete(infantMotherArtOptional.get());
-//        }
+        if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) {
+            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findById(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
+            if(infantMotherArtOptional.isPresent()) infantMotherArtRepository.delete(infantMotherArtOptional.get());
+        }
 //        if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) {
 //            Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findById(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
 //            if(infantPCRTestOptional.isPresent()) infantPCRTestRepository.delete(infantPCRTestOptional.get());
@@ -505,15 +505,15 @@ public class InfantVisitService
         //return infantVisitationConsolidatedDto;
     }
 
-//    public void deleteInfantArv(Long id){
-//        Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
-//        infantArvOptional.ifPresent(infantArvRepository::delete);
-//    }
-//
-//    public void deleteInfantArv(Long id){
-//        Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
-//        infantArvOptional.ifPresent(infantArvRepository::delete);
-//    }
+    public void deleteInfantArv(Long id){
+        Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
+        infantArvOptional.ifPresent(infantArvRepository::delete);
+    }
+
+    public void deleteInfantPCRTestDt(Long id){
+        Optional<InfantPCRTest> infantArvOptional = this.infantPCRTestRepository.findById(id);
+        infantArvOptional.ifPresent(infantPCRTestRepository::delete);
+    }
 
 
     public int defaultDate (LocalDate day1, LocalDate day2){

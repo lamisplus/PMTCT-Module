@@ -185,6 +185,7 @@
                 last_visit_date date,
                 next_appointment_date date,
                 default_days integer,
+                body_weight bigint,
                 CONSTRAINT pmtct_infant_information_pkey PRIMARY KEY (id)
 
                 )

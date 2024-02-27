@@ -76,16 +76,17 @@ public class InfantService {
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
-        saveInfantArv(infantDto.getInfantArvDto(),infantDto);
+        saveInfantArv(infantDto.getInfantArvDto(),result);
 
         //save InfantArv
-        saveInfantPCRTest(infantDto.getInfantPCRTestDto(),infantDto);
+        saveInfantPCRTest(infantDto.getInfantPCRTestDto(),result);
 
         return infant;
     }
 
-    private void saveInfantArv(InfantArvDto infantArvDto, InfantDto infantDto) {
+    private void saveInfantArv(InfantArvDto infantArvDto, Infant infantDto) {
         if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
+            infantArvDto.setId(infantDto.getId());
             infantArvDto.setVisitDate(LocalDate.now());
             infantArvDto.setInfantHospitalNumber(infantDto.getHospitalNumber());
             infantArvDto.setAncNumber(infantDto.getAncNo());
@@ -93,8 +94,9 @@ public class InfantService {
         infantVisitService.save(infantArvDto);
     }
 
-    private void saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, InfantDto infantDto) {
+    private void saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infantDto) {
         if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
+            infantPCRTestDto.setId(infantDto.getId());
             infantPCRTestDto.setInfantHospitalNumber(infantDto.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infantDto.getAncNo());
             infantPCRTestDto.setVisitDate(LocalDate.now());
@@ -240,6 +242,12 @@ public class InfantService {
     public void deleteInfant(Long id) {
         Infant exist = this.getInfantById(id);
         this.infantRepository.delete(exist);
+
+        //delete InfantARV
+        infantVisitService.deleteInfantArv(id);
+
+        //delete InfantARV
+        infantVisitService.deleteInfantArv(id);
     }
 
 

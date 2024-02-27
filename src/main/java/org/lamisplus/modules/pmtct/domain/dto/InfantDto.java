@@ -21,7 +21,7 @@ public class InfantDto implements Serializable
     private String ancNo;
     private String infantOutcomeAt18Months;
     private String personUuid;
-    private Double bodyWeight;
+    private Long bodyWeight;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
 }
