@@ -15,6 +15,7 @@ public class ANCRespondDto implements Serializable {
     private Long id;
     private String hospitalNumber;
     private String ancNo;
+    private String ancSetting;
     private String fullname;
     private String ancUuid;
     private Integer age;

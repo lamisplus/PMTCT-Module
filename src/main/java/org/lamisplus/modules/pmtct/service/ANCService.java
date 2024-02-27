@@ -753,6 +753,7 @@ public class ANCService {
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setStatus("NV");
+            anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
 
