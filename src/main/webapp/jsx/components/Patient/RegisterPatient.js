@@ -177,6 +177,7 @@ const UserRegistration = (props) => {
   const [femaleStatus, setfemaleStatus] = useState(false);
   //const [values, setValues] = useState([]);
   const [objValues, setObjValues] = useState({
+    ancSetting: "",
     ancNo: "",
     gaweeks: "",
     gravida: "",
@@ -216,6 +217,7 @@ const UserRegistration = (props) => {
   const [hospitalNumStatus, setHospitalNumStatus] = useState(false);
   const [open, setOpen] = React.useState(false);
   const [PMTCTObj, setPMTCTObj] = useState({});
+  const [ANCSetting, setANCSetting] = useState([]);
 
   const toggle = () => setOpen(!open);
   const locationState = location.state;
@@ -226,6 +228,7 @@ const UserRegistration = (props) => {
   let temp = { ...errors };
 
   useEffect(() => {
+    getANCSetting();
     loadGenders();
     loadMaritalStatus();
     loadEducation();
@@ -233,7 +236,7 @@ const UserRegistration = (props) => {
     loadRelationships();
     loadTopLevelCountry();
     CareEntryPoint();
-    SourceReferral();
+    // SourceReferral();
     PregnancyStatus();
     GetCountry();
     setStateByCountryId();
@@ -332,6 +335,21 @@ const UserRegistration = (props) => {
       )
       .then((response) => {
         setProvinces(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+  //get ANC setting
+  const getANCSetting = (e) => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log(response);
+        setANCSetting(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -595,9 +613,9 @@ const UserRegistration = (props) => {
         (temp.treatedSyphilis = objValues.treatedSyphilis
           ? ""
           : "This field is required");
-      temp.sourceOfReferral = objValues.sourceOfReferral
-        ? ""
-        : "This field is required";
+      // temp.sourceOfReferral = objValues.sourceOfReferral
+      //   ? ""
+      //   : "This field is required";
       objValues.testedSyphilis === "Yes" &&
         (temp.testResultSyphilis = objValues.testResultSyphilis
           ? ""
@@ -1398,7 +1416,8 @@ const UserRegistration = (props) => {
                             name="dob"
                             min="1940-01-01"
                             id="dob"
-                            max={basicInfo.dateOfRegistration}
+                            // max={basicInfo.dateOfRegistration}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
                             value={basicInfo.dob}
                             onChange={handleDobChange}
                             style={{
@@ -1422,7 +1441,7 @@ const UserRegistration = (props) => {
                             name="age"
                             className="form-control"
                             id="age"
-                            min="10"
+                            min="5"
                             value={basicInfo.age}
                             disabled={ageDisabled}
                             onChange={handleAgeChange}
@@ -1434,8 +1453,8 @@ const UserRegistration = (props) => {
                         </FormGroup>
                         <p>
                           <b style={{ color: "red" }}>
-                            {basicInfo.age !== "" && basicInfo.age < 10
-                              ? "Minimum age for PMTCT enrolment is 10 years"
+                            {basicInfo.age !== "" && basicInfo.age < 5
+                              ? "Minimum age for PMTCT enrolment is 5 years"
                               : " "}{" "}
                           </b>
                         </p>
@@ -2142,6 +2161,31 @@ const UserRegistration = (props) => {
                     <div className="row">
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
+                          <Label>ANC Setting</Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="ancSetting"
+                              id="encounterDate"
+                              onChange={handleInputChangeANC}
+                              value={objValues.ancSetting}
+                            >
+                              <option value="">Select</option>
+                              {ANCSetting.length > 0 &&
+                                ANCSetting.map((each) => {
+                                  return (
+                                    <option value={each.code}>
+                                      {each.display}
+                                    </option>
+                                  );
+                                })}
+                            </Input>
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+
+                      <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
                           <Label>
                             ANC No <span style={{ color: "red" }}> *</span>
                           </Label>
@@ -2314,7 +2358,7 @@ const UserRegistration = (props) => {
                         </FormGroup>
                       </div>
 
-                      <div className="form-group mb-3 col-md-6">
+                      {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
                             Source of Referral{" "}
@@ -2328,7 +2372,7 @@ const UserRegistration = (props) => {
                               onChange={handleInputChange}
                               value={objValues.sourceOfReferral}
                             >
-                              {/* sourceReferral */}
+                          
                               <option value="">Select</option>
                               {sourceReferral.map((value, index) => (
                                 <option key={index} value={value.code}>
@@ -2345,7 +2389,7 @@ const UserRegistration = (props) => {
                             ""
                           )}
                         </FormGroup>
-                      </div>
+                      </div> */}
 
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
