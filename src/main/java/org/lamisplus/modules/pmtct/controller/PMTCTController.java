@@ -233,8 +233,8 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant/{id}")
-    public ResponseEntity<Infant> viewInfant(@PathVariable("id") Long id) {
-        return ResponseEntity.ok (infantService.getSingleInfant(id));
+    public ResponseEntity<InfantDto> viewInfant(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantService.getSingleInfantById(id));
     }
 
     @PutMapping(value = "update-infant/{id}")
