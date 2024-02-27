@@ -914,7 +914,7 @@ const LabourDelivery = (props) => {
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Maternal Outcome {delivery.maternalOutcome}<span style={{ color: "red" }}> *</span>
+                    Maternal Outcome <span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>
                     <Input
