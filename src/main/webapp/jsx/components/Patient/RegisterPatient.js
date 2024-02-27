@@ -2369,7 +2369,7 @@ const UserRegistration = (props) => {
                               type="select"
                               name="sourceOfReferral"
                               id="sourceOfReferral"
-                              onChange={handleInputChange}
+                              onChange={hasourceOfReferralndleInputChange}
                               value={objValues.sourceOfReferral}
                             >
                           
