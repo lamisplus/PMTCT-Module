@@ -110,9 +110,11 @@ const UserRegistration = (props) => {
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
+  const [ANCSetting, setANCSetting] = useState([]);
 
   //const [values, setValues] = useState([]);
   const [objValues, setObjValues] = useState({
+    ancSetting: "",
     ancNo: "",
     gaweeks: "",
     gravida: "",
@@ -130,7 +132,7 @@ const UserRegistration = (props) => {
     pmtctHtsInfo: {},
     syphilisInfo: {},
     partnerNotification: {},
-    sourceOfReferral: "",
+    // sourceOfReferral: "",
     staticHivStatus: "",
   });
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
@@ -169,7 +171,6 @@ const UserRegistration = (props) => {
 
   const getPatientEntryType = (id) => {
     allNewEntryPoint.map((each, i) => {
-
       if (each.code === locationState.entrypointValue) {
         setEntryValueDisplay(each);
         console.log("location choosennn", each);
@@ -178,6 +179,7 @@ const UserRegistration = (props) => {
   };
 
   useEffect(() => {
+    getANCSetting();
     loadGenders();
     getSex();
     PregnancyStatus();
@@ -192,7 +194,7 @@ const UserRegistration = (props) => {
       //syphilisInfo
     }
 
-    SOURCE_REFERRAL_PMTCT();
+    // SOURCE_REFERRAL_PMTCT();
   }, [patientObj, patientId, actionType]);
 
   useEffect(() => {
@@ -222,6 +224,20 @@ const UserRegistration = (props) => {
       .then((response) => {
         console.log(response.data);
         setObjValues({ ...response.data });
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  //get ANC setting
+  const getANCSetting = (e) => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log(response);
+        setANCSetting(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -300,16 +316,16 @@ const UserRegistration = (props) => {
         : "This field is required");
     temp.lmp = objValues.lmp ? "" : "This field is required";
     temp.parity = objValues.parity !== "" ? "" : "This field is required";
-        temp.testedSyphilis = objValues.testedSyphilis
+    temp.testedSyphilis = objValues.testedSyphilis
       ? ""
       : "This field is required";
     objValues.testResultSyphilis === "Yes" &&
       (temp.treatedSyphilis = objValues.treatedSyphilis
         ? ""
         : "This field is required");
-    temp.sourceOfReferral = objValues.sourceOfReferral
-      ? ""
-      : "This field is required";
+    // temp.sourceOfReferral = objValues.sourceOfReferral
+    //   ? ""
+    //   : "This field is required";
     objValues.testedSyphilis === "Yes" &&
       (temp.testResultSyphilis = objValues.testResultSyphilis
         ? ""
@@ -668,6 +684,32 @@ const UserRegistration = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-6">
                       <FormGroup>
+                        <Label>ANC Setting</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="ancSetting"
+                            id="encounterDate"
+                            onChange={handleInputChange}
+                            value={objValues.ancSetting}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {ANCSetting.length > 0 &&
+                              ANCSetting.map((each) => {
+                                return (
+                                  <option value={each.code}>
+                                    {each.display}
+                                  </option>
+                                );
+                              })}
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
                         <Label>
                           ANC No <span style={{ color: "red" }}> *</span>
                         </Label>
@@ -838,7 +880,7 @@ const UserRegistration = (props) => {
                       </FormGroup>
                     </div>
 
-                    <div className="form-group mb-3 col-md-6">
+                    {/* <div className="form-group mb-3 col-md-6">
                       <FormGroup>
                         <Label>
                           Source of Referral{" "}
@@ -869,7 +911,7 @@ const UserRegistration = (props) => {
                           ""
                         )}
                       </FormGroup>
-                    </div>
+                    </div> */}
 
                     <div className="form-group mb-3 col-md-6">
                       <FormGroup>
