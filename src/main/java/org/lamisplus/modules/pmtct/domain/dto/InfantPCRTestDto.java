@@ -30,5 +30,6 @@ public class InfantPCRTestDto implements Serializable
     private LocalDate dateResultReceivedByCaregiver;
     private String results;
     private String uuid;
+    private InfantArvDto infantArvDto;
 
 }
