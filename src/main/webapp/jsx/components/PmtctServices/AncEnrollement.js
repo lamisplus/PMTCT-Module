@@ -93,8 +93,10 @@ const AncEnrollement = (props) => {
   //const [values, setValues] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [ANCSetting, setANCSetting] = useState([]);
 
   const [vital, setVitalSignDto] = useState({
+    ancSetting: "",
     bodyWeight: "",
     diastolic: "",
     encounterDate: "",
@@ -122,7 +124,20 @@ const AncEnrollement = (props) => {
     });
     return Object.values(temp).every((x) => x == "");
   };
-
+  //get ANC setting
+  const getANCSetting = (e) => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log(response);
+        setANCSetting(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -147,6 +162,10 @@ const AncEnrollement = (props) => {
       });
   };
 
+  useEffect(() => {
+    getANCSetting();
+  }, []);
+
   return (
     <div>
       <Card className={classes.root}>
@@ -154,6 +173,29 @@ const AncEnrollement = (props) => {
           <form>
             <div className="row">
               <h2>ANC Enrollment</h2>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>ANC Setting</Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="ancSetting"
+                      id="encounterDate"
+                      onChange={handleInputChangeVitalSignDto}
+                      value={vital.ancSetting}
+                    >
+                      <option value="">Select</option>
+                      {ANCSetting.length > 0 &&
+                        ANCSetting.map((each) => {
+                          return (
+                            <option value={each.code}>{each.display}</option>
+                          );
+                        })}
+                    </Input>
+                  </InputGroup>
+                </FormGroup>
+              </div>
+
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
@@ -277,7 +319,7 @@ const AncEnrollement = (props) => {
                   </InputGroup>
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
+              {/* <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>Source of Referral</Label>
                   <InputGroup>
@@ -290,7 +332,7 @@ const AncEnrollement = (props) => {
                     />
                   </InputGroup>
                 </FormGroup>
-              </div>
+              </div> */}
 
               <h3>Syphilis Information</h3>
               <hr />
