@@ -284,4 +284,28 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true"  id="20240227-001" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="anc_setting" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ADD anc_setting character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20240227-002" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="body_weight" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD body_weight bigint
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
