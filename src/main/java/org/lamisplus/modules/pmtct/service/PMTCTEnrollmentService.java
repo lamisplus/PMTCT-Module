@@ -24,12 +24,10 @@ import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.ANCRequestDto;
+import org.lamisplus.modules.pmtct.domain.dto.InfantMotherArtDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRespondDto;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.Delivery;
-import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
+import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
@@ -46,64 +44,68 @@ public class PMTCTEnrollmentService {
   private final PersonService personService;
   private final OrganisationUnitRepository organisationUnitRepository;
   private final ApplicationCodesetRepository applicationCodesetRepository;
+  private final InfantVisitService infantVisitService;
 
     public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
       //System.out.println(pmtctEnrollmentRequestDto);
      return convertEntitytoRespondDto(convertEntitytoRespondDto(pmtctEnrollmentRequestDto));
   }
-  
-  public PMTCTEnrollment convertEntitytoRespondDto(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
-      Optional<User> currentUser = this.userService.getUserWithRoles();
-      User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
 
-      String personUuid = pmtctEnrollmentRequestDto.getPersonUuid();
-      Person person;
+    public PMTCTEnrollment convertEntitytoRespondDto(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
 
-      if (personUuid != null) {
-          person = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0)
-                  .orElseThrow(() -> new RuntimeException("Person not found"));
-      } else if (pmtctEnrollmentRequestDto.getPersonDto() != null) {
-          String person1 = createPerson(pmtctEnrollmentRequestDto.getPersonDto());
-          person = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(person1, user.getCurrentOrganisationUnitId(), 0)
-                  .orElseThrow(() -> new RuntimeException("Person not found"));
-      } else {
-          throw new IllegalArgumentException("Neither personUuid nor personDto provided");
-      }
+        String personUuid = pmtctEnrollmentRequestDto.getPersonUuid();
+        Person person;
 
-      PMTCTEnrollment pmtctEnrollment = new PMTCTEnrollment();
-      pmtctEnrollment.setHospitalNumber(person.getHospitalNumber());
-      pmtctEnrollment.setPmtctType(pmtctEnrollmentRequestDto.getPmtctType());
-      System.out.println("got to the type parameter");
-      System.out.println(pmtctEnrollmentRequestDto.getPmtctType());
-      System.out.println(pmtctEnrollment.getPmtctType());
-      pmtctEnrollment.setPersonUuid(person.getUuid());
-      pmtctEnrollment.setHivStatus(pmtctEnrollmentRequestDto.getHivStatus());
-     pmtctEnrollment.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
-     pmtctEnrollment.setLmp(pmtctEnrollmentRequestDto.getLmp());
-      pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
-      pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
+        if (personUuid != null) {
+            person = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0)
+                    .orElseThrow(() -> new RuntimeException("Person not found"));
+        } else if (pmtctEnrollmentRequestDto.getPersonDto() != null) {
+            String person1 = createPerson(pmtctEnrollmentRequestDto.getPersonDto());
+            person = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(person1, user.getCurrentOrganisationUnitId(), 0)
+                    .orElseThrow(() -> new RuntimeException("Person not found"));
+        } else {
+            throw new IllegalArgumentException("Neither personUuid nor personDto provided");
+        }
 
-      if(pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
-         pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
-     }
-      pmtctEnrollment.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
-      pmtctEnrollment.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
-      pmtctEnrollment.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
-      pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
-      pmtctEnrollment.setUuid(UUID.randomUUID().toString());
-      pmtctEnrollment.setArchived(0L);
-      ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
-       if (anc != null)
-      { pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
-        pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
-        pmtctEnrollment.setFacilityId(anc.getFacilityId());
-        pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
-        pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
-      }
+        PMTCTEnrollment pmtctEnrollment = new PMTCTEnrollment();
+        pmtctEnrollment.setHospitalNumber(person.getHospitalNumber());
+        pmtctEnrollment.setPmtctType(pmtctEnrollmentRequestDto.getPmtctType());
+//      System.out.println("got to the type parameter");
+//      System.out.println(pmtctEnrollmentRequestDto.getPmtctType());
+//      System.out.println(pmtctEnrollment.getPmtctType());
+        pmtctEnrollment.setPersonUuid(person.getUuid());
+        pmtctEnrollment.setHivStatus(pmtctEnrollmentRequestDto.getHivStatus());
+        pmtctEnrollment.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
+        pmtctEnrollment.setLmp(pmtctEnrollmentRequestDto.getLmp());
+        pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
+        pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
+
+        if (pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
+            pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
+        }
+        pmtctEnrollment.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
+        pmtctEnrollment.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
+        pmtctEnrollment.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
+        pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
+        pmtctEnrollment.setUuid(UUID.randomUUID().toString());
+        pmtctEnrollment.setArchived(0L);
+        ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
+        if (anc != null) {
+            pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
+            pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
+            pmtctEnrollment.setFacilityId(anc.getFacilityId());
+            pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
+            pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
+        }
+        pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
+        pmtctEnrollment.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
+        pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
-    
-      return (PMTCTEnrollment)this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
-  }
+
+        return (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+    }
 
     public String createPerson(PersonDto personDto) {
         Person person = this.getPersonFromDto(personDto);
@@ -259,6 +261,9 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setArtStartTime(pmtctEnrollment.getArtStartTime());
            pmtctEnrollmentRespondDto.setPmtctRegStatus(true);
            pmtctEnrollmentRespondDto.setPersonUuid(pmtctEnrollment.getPersonUuid());
+           pmtctEnrollmentRespondDto.setMotherArtInitiationTime(pmtctEnrollment.getMotherArtInitiationTime());
+           pmtctEnrollmentRespondDto.setRegimenTypeId(pmtctEnrollment.getRegimenTypeId());
+           pmtctEnrollmentRespondDto.setRegimenId(pmtctEnrollment.getRegimenId());
            PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
            if(pmtct != null) {
                pmtctEnrollmentRespondDto.setHospitalNumber(pmtct.getHospitalNumber());
@@ -272,6 +277,7 @@ public class PMTCTEnrollmentService {
                pmtctEnrollmentRespondDto.setAge(calculateAge(anc.getPersonUuid()));
            }
        }
+
      return pmtctEnrollmentRespondDto;
   }
   
@@ -365,6 +371,9 @@ public class PMTCTEnrollmentService {
             pmtctEnrollment1.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
             pmtctEnrollment1.setHivStatus(pmtctEnrollmentRequestDto.getHivStatus());
             pmtctEnrollment1.setPmtctType(pmtctEnrollmentRequestDto.getPmtctType());
+            pmtctEnrollment1.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
+            pmtctEnrollment1.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
+            pmtctEnrollment1.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
         }
         return pmtctEnrollmentRequestDto;

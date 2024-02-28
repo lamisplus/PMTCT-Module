@@ -35,6 +35,9 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String hivStatus;
     private String hospitalNumber;
     private LocalDate lmp;
+    private String  motherArtInitiationTime;
+    private Long regimenTypeId;
+    private String regimenId;
 
 
 
