@@ -76,92 +76,104 @@ const ADR = (props) => {
 
   return (
     <div>
-        <div className="row">
+      <div className="row">
         {props.enableUpdate && (
-        <>
-        <div className="form-group mb-3 col-md-5">
+          <>
+            <div className="form-group mb-3 col-md-5">
+              <FormGroup>
+                <Label>ADR </Label>
 
-            <FormGroup>
-            <Label >ADR </Label>
-            
-              <Input
+                <Input
                   type="select"
                   name="adr"
                   id="adr"
                   value={props.adrObj.adr}
                   onChange={handAdrleInputChange}
-                  style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
+                  style={{
+                    border: "1px solid #014D88",
+                    borderRadius: "0.25rem",
+                  }}
                   required
-                  >
-                    <option value=""> Select</option>
-                      {prepSideEffect.map((value) => (
-                          <option key={value.id} value={value.display}>
-                              {value.display}
-                          </option>
-                      ))}
-              </Input>
-                {errors.adr !=="" ? (
-                    <span className={classes.error}>{errors.adr}</span>
-                ) : "" }
-            </FormGroup>
-        </div>
-        <div className="form-group mb-3 col-md-5">        
-        <FormGroup>
-            <Label > Onset Date</Label>
-            <Input
-                type="date"
-                name="adrOnsetDate"
-                id="adrOnsetDate"
-                value={props.adrObj.adrOnsetDate}
-                min={props.artStartDate}
-                onChange={handAdrleInputChange}
-                style={{border: "1px solid #014D88", borderRadius:"0.25rem"}}
-                max= {moment(new Date()).format("YYYY-MM-DD") }
-                required
-                > 
-            </Input>
-            {errors.adrOnsetDate !=="" ? (
-                <span className={classes.error}>{errors.adrOnsetDate}</span>
-            ) : "" }
-            </FormGroup>
-        </div>
-        
-        <div className="form-group mb-3 col-md-2">
-          <LabelSui as='a' color='black'  onClick={addADR}  size='tiny' style={{ marginTop:35}}>
-              <Icon name='plus' /> Add
-          </LabelSui>
-        </div>
-        </>)}
-        {props.adrList.length >0 
-          ?
-            <List>
-            <Table  striped responsive>
-                  <thead >
-                      <tr>
-                          <th>ADR</th>
-                          <th>OnSetDate</th>
-                          <th ></th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                {props.adrList.map((relative, index) => (
-
-                  <RelativeList
-                      key={index}
-                      index={index}
-                      relative={relative}
-                      removeRelativeLocation={removeRelativeLocation}
-                  />
+                >
+                  <option value=""> Select</option>
+                  {prepSideEffect.map((value) => (
+                    <option key={value.id} value={value.code}>
+                      {value.display}
+                    </option>
                   ))}
-                  </tbody>
-                  </Table>
-            </List>
-            :
-            ""
-        }       
+                </Input>
+                {errors.adr !== "" ? (
+                  <span className={classes.error}>{errors.adr}</span>
+                ) : (
+                  ""
+                )}
+              </FormGroup>
+            </div>
+            <div className="form-group mb-3 col-md-5">
+              <FormGroup>
+                <Label> Onset Date</Label>
+                <Input
+                  type="date"
+                  name="adrOnsetDate"
+                  id="adrOnsetDate"
+                  value={props.adrObj.adrOnsetDate}
+                  min={props.artStartDate}
+                  onChange={handAdrleInputChange}
+                  style={{
+                    border: "1px solid #014D88",
+                    borderRadius: "0.25rem",
+                  }}
+                  max={moment(new Date()).format("YYYY-MM-DD")}
+                  required
+                ></Input>
+                {errors.adrOnsetDate !== "" ? (
+                  <span className={classes.error}>{errors.adrOnsetDate}</span>
+                ) : (
+                  ""
+                )}
+              </FormGroup>
+            </div>
+
+            <div className="form-group mb-3 col-md-2">
+              <LabelSui
+                as="a"
+                color="black"
+                onClick={addADR}
+                size="tiny"
+                style={{ marginTop: 35 }}
+              >
+                <Icon name="plus" /> Add
+              </LabelSui>
+            </div>
+          </>
+        )}
+        {props.adrList.length > 0 ? (
+          <List>
+            <Table striped responsive>
+              <thead>
+                <tr>
+                  <th>ADR</th>
+                  <th>OnSetDate</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {props.adrList.map((relative, index) => (
+                  <RelativeList
+                    key={index}
+                    index={index}
+                    relative={relative}
+                    removeRelativeLocation={removeRelativeLocation}
+                  />
+                ))}
+              </tbody>
+            </Table>
+          </List>
+        ) : (
+          ""
+        )}
+      </div>
     </div>
-    </div>
-     
   );
 };
 
