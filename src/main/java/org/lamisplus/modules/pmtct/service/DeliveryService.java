@@ -1,7 +1,6 @@
 package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jdk.nashorn.internal.runtime.options.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
@@ -9,7 +8,6 @@ import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
-import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
@@ -73,6 +71,7 @@ public class DeliveryService
         delivery.setCreatedBy(user.getUserName());
         delivery.setLastModifiedBy(user.getUserName());
         delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
+        delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
         PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
 
@@ -114,6 +113,7 @@ public class DeliveryService
         deliveryResponseDto.setReferalSource(delivery.getReferalSource());
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
         deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
+        deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
 
         return deliveryResponseDto;
     }
@@ -224,6 +224,7 @@ public class DeliveryService
             delivery.setReferalSource(deliveryRequestDto.getReferalSource());
             delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
+            delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
 
 
             this.deliveryRepository.save(delivery);

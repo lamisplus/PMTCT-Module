@@ -82,7 +82,7 @@ public class InfantService {
         if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
-            infantArvDto.setUuid(infantDto.getPersonUuid());
+            infantArvDto.setUuid(infant.getUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
         }
@@ -94,7 +94,7 @@ public class InfantService {
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
-            infantPCRTestDto.setUuid(infantDto.getPersonUuid());
+            infantPCRTestDto.setUuid(infant.getUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
         }
         infantVisitService.save(infantPCRTestDto);
@@ -111,9 +111,9 @@ public class InfantService {
 
     public List<InfantDto> getSingleInfantByPersonUUID(String personUuid) {
 
-        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
         List<InfantDto> infantDtoList = new ArrayList<>();
 
+        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
         for (Infant infant : infantList) {
 
             if (ObjectUtils.isNotEmpty(infant)) {
@@ -121,7 +121,6 @@ public class InfantService {
             }
 
         }
-
         return infantDtoList;
 
     }
@@ -148,9 +147,9 @@ public class InfantService {
 
 
     public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
-        List<Infant> infantList = infantRepository.findInfantsByHospitalNumber(personUuid);
+        List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
         if (CollectionUtils.isEmpty(infantList)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
+           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
         }
         return infantList;
     }
