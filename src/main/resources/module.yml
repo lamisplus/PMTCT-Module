@@ -9,6 +9,7 @@ menus:
     state: pmtct
     url: /across/resources/static/pmtct/index.html
 umdLocation: /across/resources/static/pmtct/index.html
+#gitHubLink: https://api.github.com/repos/lamisplus/PMTCT-Module/releases/latest
 webModules:
   - breadcrumb: PMTCT
     name: PMTCTModule

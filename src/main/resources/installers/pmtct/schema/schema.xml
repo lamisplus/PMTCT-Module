@@ -6,7 +6,7 @@
 
     <property name="autoIncrement" value="true"/>
 
-    <changeSet id="20221007-001" author="drkarim-data-fi">
+    <changeSet id="20240227-001" author="israel-data-fi">
         <sql>
             CREATE TABLE IF NOT EXISTS public.pmtct_anc
             (
@@ -41,6 +41,7 @@
                 partner_information jsonb,
                 static_hiv_status character varying(255) COLLATE pg_catalog."default",
                 source_of_referral character varying(255) COLLATE pg_catalog."default",
+                anc_setting character varying(255) COLLATE pg_catalog."default",
                 CONSTRAINT pmtct_anc_pkey PRIMARY KEY (id),
                 CONSTRAINT anc_no UNIQUE (anc_no)
                 )
@@ -162,7 +163,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20221215-005" author="drkarim-data-fi">
+    <changeSet id="2026776677" author="israel-data-fi">
         <sql>
             CREATE TABLE IF NOT EXISTS public.pmtct_infant_information
             (
@@ -185,6 +186,7 @@
                 last_visit_date date,
                 next_appointment_date date,
                 default_days integer,
+                body_weight bigint,
                 CONSTRAINT pmtct_infant_information_pkey PRIMARY KEY (id)
 
                 )

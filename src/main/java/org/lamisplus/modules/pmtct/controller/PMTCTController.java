@@ -258,11 +258,18 @@ public class PMTCTController {
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
     }
 
+//    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
+//    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+//        System.out.println("personUuid "+ personUuid);
+//
+//        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+//    }
+
     @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+    public ResponseEntity<List<InfantDto> > getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
         System.out.println("personUuid "+ personUuid);
 
-        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+        return ResponseEntity.ok (infantService.getSingleInfantByPersonUUID(personUuid));
     }
 
     @GetMapping(value = "/all-infants")

@@ -803,7 +803,7 @@ const LabourDelivery = (props) => {
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Time of Diagnosis <span style={{ color: "red" }}> *</span>
+                    Time of HIV Diagnosis <span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>
                     <Input
@@ -915,7 +915,7 @@ const LabourDelivery = (props) => {
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Maternal Outcome <span style={{ color: "red" }}> *</span>
+                    Maternal Outcome {delivery.maternalOutcome}<span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>
                     <Input
@@ -1029,7 +1029,13 @@ const LabourDelivery = (props) => {
                 </>
               )}
             </div>
-
+            {/* Display notification when maternal outcome is IIT and transfer out */}
+            {
+                (delivery.maternalOutcome !=="" && delivery.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT")  && (delivery.maternalOutcome!=="" &&  delivery.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE") ? (
+                    <h2 style={{color:"red"}}>Kindly fill tracking form</h2>
+                ) : ""
+            }
+            
             {saving ? <Spinner /> : ""}
             <br />
             {props.activeContent && props.activeContent.actionType ? (
