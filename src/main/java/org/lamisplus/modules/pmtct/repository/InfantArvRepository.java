@@ -17,6 +17,7 @@ public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long
 
     Optional<InfantArv> getByInfantHospitalNumber (String hospitalNumber);
     Optional<InfantArvDto> getTopByInfantHospitalNumber (String hospitalNumber);
+    Optional<InfantArvDto> getTopByUuid (String uuid);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_visit where infant_hospital_number = ?1 and date_of_visit <= ?2 order by date_of_visit DESC", nativeQuery = true)
     List<InfantArv> getANCVisits(String ancNo, LocalDate deliveryDate);

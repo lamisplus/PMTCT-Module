@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class ANCEnrollementRequestDto{
     private Long id;
     private String ancNo;
+    private String ancSetting;
     private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;
@@ -28,6 +29,6 @@ public class ANCEnrollementRequestDto{
     private String referredSyphilisTreatment;
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
-    private String sourceOfReferral;
+   // private String sourceOfReferral;
     private final String person_uuid;
 }

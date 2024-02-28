@@ -91,6 +91,7 @@ const LabourDelivery = (props) => {
   //let history = useHistory();
   const classes = useStyles();
   const [delieryMode, setDelieryMode] = useState([]);
+  const [placeOfDelivery, setPlaceOfDelivery] = useState([]);
   const [feedingDecision, setfeedingDecision] = useState([]);
   const [maternalOutCome, setmaternalOutCome] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -101,6 +102,7 @@ const LabourDelivery = (props) => {
   const [romdelivery, setRomdelivery] = useState([]);
   const [timehiv, setTimehiv] = useState([]);
   const [delivery, setDelivery] = useState({
+    placeOfDelivery: "",
     ancNo: patientObj.ancNo,
     artStartedLdWard: "",
     bookingStatus: "",
@@ -137,6 +139,7 @@ const LabourDelivery = (props) => {
     BOOKING_STATUS();
     ROM_DELIVERY_INTERVAL();
     TIME_HIV_DIAGNOSIS();
+    getPlaceOfDelivery();
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -177,9 +180,22 @@ const LabourDelivery = (props) => {
         //console.log(error);
       });
   };
+  const getPlaceOfDelivery = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PLACE_OF_DELIVERY`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        //console.log(response.data);
+        setPlaceOfDelivery(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   const TIME_HIV_DIAGNOSIS = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS_PMTCT`, {
+      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -546,6 +562,39 @@ const LabourDelivery = (props) => {
                   )}
                 </FormGroup>
               </div>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    Place of delivery <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="placeOfDelivery"
+                      id="placeOfDelivery"
+                      onChange={handleInputChangeDeliveryDto}
+                      value={delivery.placeOfDelivery}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+
+                      {placeOfDelivery.map((value) => (
+                        <option key={value.id} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+                  {errors.bookingStatus !== "" ? (
+                    <span className={classes.error}>
+                      {errors.bookingStatus}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
@@ -980,7 +1029,13 @@ const LabourDelivery = (props) => {
                 </>
               )}
             </div>
-
+            {/* Display notification when maternal outcome is IIT and transfer out */}
+            {
+                (delivery.maternalOutcome !=="" && delivery.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT")  && (delivery.maternalOutcome!=="" &&  delivery.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE") ? (
+                    <h2 style={{color:"red"}}>Kindly fill tracking form</h2>
+                ) : ""
+            }
+            
             {saving ? <Spinner /> : ""}
             <br />
             {props.activeContent && props.activeContent.actionType ? (

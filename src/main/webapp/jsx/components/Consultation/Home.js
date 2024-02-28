@@ -821,6 +821,13 @@ const ClinicVisit = (props) => {
                 </div>
               )}
             </div>
+             {/* Display notification when maternal outcome is IIT and transfer out */}
+             {
+                (objValues.maternalOutcome !=="" && objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT")  && (objValues.maternalOutcome!=="" &&  objValues.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE") ? (
+                  <h2 style={{color:"red"}}>Kindly fill tracking form</h2>
+                ) : ""
+            }
+            
             <br />
             {props.activeContent && props.activeContent.actionType ? (
               <>

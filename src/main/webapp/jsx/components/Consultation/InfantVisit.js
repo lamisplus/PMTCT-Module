@@ -951,143 +951,143 @@ const ClinicVisit = (props) => {
               </>
             )}
             <br />
-            {formFilter && formFilter.infantArv === false && (
-              <>
-                <Label
-                  as="a"
-                  color="blue"
-                  style={{ width: "106%", height: "35px" }}
-                  ribbon
-                >
-                  <h4 style={{ color: "#fff" }}> Infant ARV & CTX</h4>
-                </Label>
-                <br />
-                <br />
-                {/* LAB Screening Form */}
-                <div className="row">
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Age at CTX Initiation </FormLabelName>
-                      <Input
-                        type="select"
-                        name="ageAtCtx"
-                        id="ageAtCtx"
-                        value={infantArvDto.ageAtCtx}
-                        onChange={handleInputChangeInfantArvDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        {agectx.map((value, index) => (
-                          <option key={index} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.ageAtCtx !== "" ? (
-                        <span className={classes.error}>{errors.ageAtCtx}</span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Infant ARV Type </FormLabelName>
-                      <Input
-                        type="select"
-                        name="infantArvType"
-                        id="infantArvType"
-                        value={infantArvDto.infantArvType}
-                        onChange={handleInputChangeInfantArvDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        {infantArv.map((value) => (
-                          <option key={value.id} value={value.id}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.infantArvType !== "" ? (
-                        <span className={classes.error}>
-                          {errors.infantArvType}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
-                      <Input
-                        type="select"
-                        name="arvDeliveryPoint"
-                        id="arvDeliveryPoint"
-                        value={infantArvDto.arvDeliveryPoint}
-                        onChange={handleInputChangeInfantArvDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        <option value="Within 72 hour">Within 72 hour </option>
-                        <option value="After 72 hour ">After 72 hour </option>
-                      </Input>
-                      {errors.arvDeliveryPoint !== "" ? (
-                        <span className={classes.error}>
-                          {errors.arvDeliveryPoint}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Place of Delivery </FormLabelName>
-                      <Input
-                        type="select"
-                        name="infantArvTime"
-                        id="infantArvTime"
-                        value={infantArvDto.infantArvTime}
-                        onChange={handleInputChangeInfantArvDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        <option value="Facility Delivery">
-                          Facility Delivery
+            {/* {formFilter && formFilter.infantArv === false && ( */}
+            <>
+              <Label
+                as="a"
+                color="blue"
+                style={{ width: "106%", height: "35px" }}
+                ribbon
+              >
+                <h4 style={{ color: "#fff" }}> Infant ARV & CTX</h4>
+              </Label>
+              <br />
+              <br />
+              {/* LAB Screening Form */}
+              <div className="row">
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Age at CTX Initiation </FormLabelName>
+                    <Input
+                      type="select"
+                      name="ageAtCtx"
+                      id="ageAtCtx"
+                      value={infantArvDto.ageAtCtx}
+                      onChange={handleInputChangeInfantArvDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="select">Select </option>
+                      {agectx.map((value, index) => (
+                        <option key={index} value={value.code}>
+                          {value.display}
                         </option>
-                        <option value="Delivered outside facility">
-                          Delivered outside facility{" "}
-                        </option>
-                      </Input>
-                      {errors.infantArvTime !== "" ? (
-                        <span className={classes.error}>
-                          {errors.infantArvTime}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
+                      ))}
+                    </Input>
+                    {errors.ageAtCtx !== "" ? (
+                      <span className={classes.error}>{errors.ageAtCtx}</span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
                 </div>
-              </>
-            )}
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Infant ARV Type </FormLabelName>
+                    <Input
+                      type="select"
+                      name="infantArvType"
+                      id="infantArvType"
+                      value={infantArvDto.infantArvType}
+                      onChange={handleInputChangeInfantArvDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="select">Select </option>
+                      {infantArv.map((value) => (
+                        <option key={value.id} value={value.id}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                    {errors.infantArvType !== "" ? (
+                      <span className={classes.error}>
+                        {errors.infantArvType}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
+                    <Input
+                      type="select"
+                      name="arvDeliveryPoint"
+                      id="arvDeliveryPoint"
+                      value={infantArvDto.arvDeliveryPoint}
+                      onChange={handleInputChangeInfantArvDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="select">Select </option>
+                      <option value="Within 72 hour">Within 72 hour </option>
+                      <option value="After 72 hour ">After 72 hour </option>
+                    </Input>
+                    {errors.arvDeliveryPoint !== "" ? (
+                      <span className={classes.error}>
+                        {errors.arvDeliveryPoint}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName> Place of Delivery </FormLabelName>
+                    <Input
+                      type="select"
+                      name="infantArvTime"
+                      id="infantArvTime"
+                      value={infantArvDto.infantArvTime}
+                      onChange={handleInputChangeInfantArvDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="select">Select </option>
+                      <option value="Facility Delivery">
+                        Facility Delivery
+                      </option>
+                      <option value="Delivered outside facility">
+                        Delivered outside facility{" "}
+                      </option>
+                    </Input>
+                    {errors.infantArvTime !== "" ? (
+                      <span className={classes.error}>
+                        {errors.infantArvTime}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+              </div>
+            </>
+            {/* )} */}
             <br />
             <Label
               as="a"
@@ -1095,7 +1095,7 @@ const ClinicVisit = (props) => {
               style={{ width: "106%", height: "35px" }}
               ribbon
             >
-              <h4 style={{ color: "#fff" }}> Infant PCR </h4>
+              <h4 style={{ color: "#fff" }}> Infant PCR/HIV test </h4>
             </Label>
             <br />
             <br />

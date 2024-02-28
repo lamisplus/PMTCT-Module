@@ -1,22 +1,15 @@
 package org.lamisplus.modules.pmtct.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
-import org.lamisplus.modules.base.domain.entities.User;
-import org.lamisplus.modules.patient.domain.dto.PersonDto;
-import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
-import org.lamisplus.modules.patient.domain.entity.Person;
-import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -353,7 +346,7 @@ public class InfantVisitService
         return infantVisitationConsolidatedDto;
     }
 
-    public InfantArvDto getInfantArvByByInfantHospitalNumber(String hospitalNumber) {
+    public InfantArvDto getInfantArvByInfantHospitalNumber(String hospitalNumber) {
         InfantArvDto infantArvDto = null;
         Optional<InfantArvDto> infantArvOptional = this.infantArvRepository.getTopByInfantHospitalNumber(hospitalNumber);
         if (infantArvOptional.isPresent()) {
@@ -362,9 +355,27 @@ public class InfantVisitService
         return infantArvDto;
     }
 
-    public InfantPCRTestDto getInfantPCRTestByByInfantHospitalNumber(String hospitalNumber) {
+    public InfantArvDto getInfantArvByUUID(String personUuid) {
+        InfantArvDto infantArvDto = null;
+        Optional<InfantArvDto> infantArvOptional = this.infantArvRepository.getTopByUuid(personUuid);
+        if (infantArvOptional.isPresent()) {
+            infantArvDto = infantArvOptional.get();
+        }
+        return infantArvDto;
+    }
+
+    public InfantPCRTestDto getInfantPCRTestByInfantHospitalNumber(String hospitalNumber) {
         InfantPCRTestDto infantPCRTestDto = null;
         Optional<InfantPCRTestDto> infantPCRTestOptional = this.infantPCRTestRepository.findTopByInfantHospitalNumber(hospitalNumber);
+        if (infantPCRTestOptional.isPresent()) {
+            infantPCRTestDto = infantPCRTestOptional.get();
+        }
+        return infantPCRTestDto;
+    }
+
+    public InfantPCRTestDto getInfantPCRTestByUUID(String personUuid) {
+        InfantPCRTestDto infantPCRTestDto = null;
+        Optional<InfantPCRTestDto> infantPCRTestOptional = this.infantPCRTestRepository.getTopByUuid(personUuid);
         if (infantPCRTestOptional.isPresent()) {
             infantPCRTestDto = infantPCRTestOptional.get();
         }
@@ -416,7 +427,7 @@ public class InfantVisitService
 
         return  infantVisitationConsolidatedDto;
     }
-    public void updateInfantPCRTest(InfantPCRTestDto dto){
+    public InfantPCRTest updateInfantPCRTest(InfantPCRTestDto dto){
         InfantPCRTest exist = infantPCRTestRepository
                 .findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantPCRTest.class,"InfantPCRTest not found "));
         exist.setVisitDate(dto.getVisitDate());
@@ -428,7 +439,7 @@ public class InfantVisitService
         exist.setDateResultReceivedByCaregiver(dto.getDateResultReceivedByCaregiver());
         exist.setResults(dto.getResults());
 
-        this.infantPCRTestRepository.save(exist);
+       return this.infantPCRTestRepository.save(exist);
     }
 
 
@@ -459,7 +470,7 @@ public class InfantVisitService
 
     }
 
-    public void updateInfantArv(InfantArvDto infantArvDto){
+    public InfantArv updateInfantArv(InfantArvDto infantArvDto){
         InfantArv exist = infantArvRepository
                 .findById(infantArvDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantArv.class,"InfantArv not found "));
         exist.setVisitDate(infantArvDto.getVisitDate());
@@ -468,7 +479,7 @@ public class InfantVisitService
         exist.setInfantArvTime(infantArvDto.getInfantArvTime());
         exist.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
         exist.setAgeAtCtx(infantArvDto.getAgeAtCtx());
-        this.infantArvRepository.save(exist);
+       return  this.infantArvRepository.save(exist);
     }
 
 

@@ -33,4 +33,5 @@ public class DeliveryResponseDto implements Serializable {
     private String HCStatus;
     private String referalSource;
     private String personUuid;
+    private String placeOfDelivery;
 }

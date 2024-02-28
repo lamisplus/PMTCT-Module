@@ -228,17 +228,17 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "add-infants")
-    public ResponseEntity<Infant> AddInfants(@RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoResponse> AddInfants(@RequestBody InfantDto infantDto) {
          return ResponseEntity.ok(infantService.save(infantDto));
     }
 
     @GetMapping(value = "view-infant/{id}")
-    public ResponseEntity<InfantDto> viewInfant(@PathVariable("id") Long id) {
-        return ResponseEntity.ok (infantService.getSingleInfantById(id));
+    public ResponseEntity<Infant> viewInfant(@PathVariable("id") Long id) {
+        return ResponseEntity.ok (infantService.getSingleInfant(id));
     }
 
     @PutMapping(value = "update-infant/{id}")
-    public ResponseEntity<Infant> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoUpdateResponse> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
         return ResponseEntity.ok (infantService.updateInfant(id, infantDto));
     }
 
@@ -258,11 +258,18 @@ public class PMTCTController {
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
     }
 
+//    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
+//    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+//        System.out.println("personUuid "+ personUuid);
+//
+//        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+//    }
+
     @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
+    public ResponseEntity<List<InfantDto> > getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
         System.out.println("personUuid "+ personUuid);
 
-        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+        return ResponseEntity.ok (infantService.getSingleInfantByPersonUUID(personUuid));
     }
 
     @GetMapping(value = "/all-infants")

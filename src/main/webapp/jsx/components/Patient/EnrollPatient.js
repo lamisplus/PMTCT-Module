@@ -141,9 +141,11 @@ const UserRegistration = (props) => {
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
+  const [ANCSetting, setANCSetting] = useState([]);
 
   //const [values, setValues] = useState([]);
   const [objValues, setObjValues] = useState({
+    ancSetting: "",
     ancNo: "",
     gaweeks: "",
     gravida: "",
@@ -161,7 +163,7 @@ const UserRegistration = (props) => {
     pmtctHtsInfo: {},
     syphilisInfo: {},
     partnerNotification: {},
-    sourceOfReferral: "",
+    // sourceOfReferral: "",
     staticHivStatus: "",
   });
   console.log("location", location.state);
@@ -177,7 +179,7 @@ const UserRegistration = (props) => {
   patientObj = locationState ? locationState.patientObj : {};
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
   useEffect(() => {
-    console.log(locationState);
+    getANCSetting();
     loadGenders();
     getSex();
     PregnancyStatus();
@@ -225,6 +227,20 @@ const UserRegistration = (props) => {
       })
       .then((response) => {
         setSourceOfReferral(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  //get ANC setting
+  const getANCSetting = (e) => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log(response);
+        setANCSetting(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -332,9 +348,9 @@ const UserRegistration = (props) => {
       (temp.treatedSyphilis = objValues.treatedSyphilis
         ? ""
         : "This field is required");
-    temp.sourceOfReferral = objValues.sourceOfReferral
-      ? ""
-      : "This field is required";
+    // temp.sourceOfReferral = objValues.sourceOfReferral
+    //   ? ""
+    //   : "This field is required";
     objValues.testedSyphilis === "Yes" &&
       (temp.testResultSyphilis = objValues.testResultSyphilis
         ? ""
@@ -750,11 +766,36 @@ const UserRegistration = (props) => {
                     }}
                   >
                     <h5 className="card-title" style={{ color: "#fff" }}>
-                      ANC Enrollment
+                      ANC Enrollmentt
                     </h5>
                   </div>
                   <div className="card-body">
                     <div className="row">
+                      <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <Label>ANC Setting</Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="ancSetting"
+                              id="encounterDate"
+                              onChange={handleInputChange}
+                              value={objValues.ancSetting}
+                            >
+                              <option value="">Select</option>
+                              {ANCSetting.length > 0 &&
+                                ANCSetting.map((each) => {
+                                  return (
+                                    <option value={each.code}>
+                                      {each.display}
+                                    </option>
+                                  );
+                                })}
+                            </Input>
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
@@ -929,7 +970,7 @@ const UserRegistration = (props) => {
                         </FormGroup>
                       </div>
 
-                      <div className="form-group mb-3 col-md-6">
+                      {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
                             Source of Referral{" "}
@@ -959,7 +1000,7 @@ const UserRegistration = (props) => {
                             ""
                           )}
                         </FormGroup>
-                      </div>
+                      </div> */}
 
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
