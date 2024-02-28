@@ -4,6 +4,7 @@
  import lombok.Builder;
  import lombok.Data;
  import org.lamisplus.modules.patient.domain.dto.PersonDto;
+ import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
  import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 
  import java.io.Serializable;
@@ -29,5 +30,8 @@
      private String personUuid;
      private String hivStatus;
      private LocalDate lmp;
+     private String  motherArtInitiationTime;
+     private Long regimenTypeId;
+     private String regimenId;
  }
 

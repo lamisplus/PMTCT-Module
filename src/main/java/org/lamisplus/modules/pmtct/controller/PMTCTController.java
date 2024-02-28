@@ -324,7 +324,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-mother-art")
-    public ResponseEntity<InfantMotherArt> createInfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
+    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
         return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
     }
 

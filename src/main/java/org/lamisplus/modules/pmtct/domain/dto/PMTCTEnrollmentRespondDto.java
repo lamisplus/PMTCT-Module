@@ -1,6 +1,7 @@
  package org.lamisplus.modules.pmtct.domain.dto;
 
  import lombok.Data;
+ import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
 
  import java.time.LocalDate;
 
@@ -24,5 +25,8 @@
      private LocalDate lmp;
      private boolean pmtctRegStatus;
      private String personUuid;
+     private String  motherArtInitiationTime;
+     private Long regimenTypeId;
+     private String regimenId;
 
  }
