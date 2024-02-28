@@ -228,7 +228,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "add-infants")
-    public ResponseEntity<Infant> AddInfants(@RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoResponse> AddInfants(@RequestBody InfantDto infantDto) {
          return ResponseEntity.ok(infantService.save(infantDto));
     }
 
@@ -238,7 +238,7 @@ public class PMTCTController {
     }
 
     @PutMapping(value = "update-infant/{id}")
-    public ResponseEntity<Infant> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoUpdateResponse> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
         return ResponseEntity.ok (infantService.updateInfant(id, infantDto));
     }
 
@@ -324,7 +324,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-mother-art")
-    public ResponseEntity<InfantMotherArt> createInfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
+    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
         return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
     }
 

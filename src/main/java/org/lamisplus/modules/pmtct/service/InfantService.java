@@ -12,6 +12,8 @@ import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
+import org.lamisplus.modules.pmtct.domain.entity.InfantArv;
+import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.springframework.data.domain.Page;
@@ -44,7 +46,7 @@ public class InfantService {
     private ObjectMapper mapper = new ObjectMapper();
     private final ApplicationCodesetRepository applicationCodesetRepository;
 
-    public Infant save(InfantDto infantDto) {
+    public InfantDtoResponse save(InfantDto infantDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
@@ -67,37 +69,42 @@ public class InfantService {
         infant.setLastVisitDate(infantDto.getDateOfDelivery());
         infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
         infant.setDefaultDays(0);
+        infant.setBodyWeight(infantDto.getBodyWeight());
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
-        saveInfantArv(infantDto,infantDto.getInfantArvDto(),result);
+        InfantArv infantArv =  saveInfantArv(infantDto,infantDto.getInfantArvDto(),result);
 
         //save InfantPCRTest
-        saveInfantPCRTest(infantDto,infantDto.getInfantPCRTestDto(),result);
+        InfantPCRTest infantPCRTest = saveInfantPCRTest(infantDto,infantDto.getInfantPCRTestDto(),result);
 
-        return infant;
+        return InfantDtoResponse.builder()
+                .infant(result)
+                .infantArv(infantArv)
+                .infantPCRTest(infantPCRTest)
+                .build();
     }
 
-    private void saveInfantArv(InfantDto infantDto,InfantArvDto infantArvDto, Infant infant) {
+    private InfantArv saveInfantArv(InfantDto infantDto, InfantArvDto infantArvDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
-            infantArvDto.setUuid(infantDto.getPersonUuid());
+            infantArvDto.setUuid(infant.getUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
         }
-        infantVisitService.save(infantArvDto);
+        return infantVisitService.save(infantArvDto);
     }
 
-    private void saveInfantPCRTest(InfantDto infantDto,InfantPCRTestDto infantPCRTestDto, Infant infant) {
+    private InfantPCRTest saveInfantPCRTest(InfantDto infantDto, InfantPCRTestDto infantPCRTestDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
-            infantPCRTestDto.setUuid(infantDto.getPersonUuid());
+            infantPCRTestDto.setUuid(infant.getUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
         }
-        infantVisitService.save(infantPCRTestDto);
+        return infantVisitService.save(infantPCRTestDto);
     }
 
     public int calculateAgeInMonths(LocalDate dob){
@@ -111,9 +118,9 @@ public class InfantService {
 
     public List<InfantDto> getSingleInfantByPersonUUID(String personUuid) {
 
-        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
         List<InfantDto> infantDtoList = new ArrayList<>();
 
+        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
         for (Infant infant : infantList) {
 
             if (ObjectUtils.isNotEmpty(infant)) {
@@ -121,7 +128,6 @@ public class InfantService {
             }
 
         }
-
         return infantDtoList;
 
     }
@@ -148,9 +154,9 @@ public class InfantService {
 
 
     public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
-        List<Infant> infantList = infantRepository.findInfantsByHospitalNumber(personUuid);
+        List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
         if (CollectionUtils.isEmpty(infantList)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
+           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
         }
         return infantList;
     }
@@ -161,7 +167,7 @@ public class InfantService {
                 .orElseThrow(() -> new Exception("Infant NOT FOUND"));
     }
 
-     public Infant updateInfant(Long id, InfantDto infantDto) {
+     public InfantDtoUpdateResponse updateInfant(Long id, InfantDto infantDto) {
          Optional<User> currentUser = this.userService.getUserWithRoles();
          User user = (User) currentUser.get();
          Long facilityId = user.getCurrentOrganisationUnitId();
@@ -184,28 +190,37 @@ public class InfantService {
          infant.setLastVisitDate(infantDto.getDateOfDelivery());
          infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
          infant.setDefaultDays(0);
+         infant.setBodyWeight(infantDto.getBodyWeight());
 
          Infant result =  infantRepository.save(infant);
 
          //update InfantArvDto
-         updateInfantArvDto(infantDto);
+        InfantArv infantArv = updateInfantArvDto(infantDto);
 
          //update InfantPCRTest
-         updateInfantPCRTest(infantDto);
+         InfantPCRTest infantPCRTest = updateInfantPCRTest(infantDto);
 
-        return result;
+        return InfantDtoUpdateResponse.builder()
+                .infant(result)
+                .infantArv(infantArv)
+                .infantPCRTest(infantPCRTest)
+                .build();
     }
 
-    private void updateInfantArvDto(InfantDto infantDto) {
+    private InfantArv updateInfantArvDto(InfantDto infantDto) {
+        InfantArv infantArv = null;
         if (infantDto.getInfantArvDto().getId() != null) {
-            infantVisitService.updateInfantArv(infantDto.getInfantArvDto());
+            infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto());
         }
+        return infantArv;
     }
 
-    private void updateInfantPCRTest(InfantDto infantDto) {
+    private InfantPCRTest updateInfantPCRTest(InfantDto infantDto) {
+        InfantPCRTest infantPCRTest = null;
         if (infantDto.getInfantPCRTestDto().getId() != null) {
-            infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto());
+            infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto());
         }
+        return infantPCRTest;
     }
 
     public List<Infant> getInfantByAncNo(String ancNo)

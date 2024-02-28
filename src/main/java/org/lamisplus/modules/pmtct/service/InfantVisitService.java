@@ -427,7 +427,7 @@ public class InfantVisitService
 
         return  infantVisitationConsolidatedDto;
     }
-    public void updateInfantPCRTest(InfantPCRTestDto dto){
+    public InfantPCRTest updateInfantPCRTest(InfantPCRTestDto dto){
         InfantPCRTest exist = infantPCRTestRepository
                 .findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantPCRTest.class,"InfantPCRTest not found "));
         exist.setVisitDate(dto.getVisitDate());
@@ -439,7 +439,7 @@ public class InfantVisitService
         exist.setDateResultReceivedByCaregiver(dto.getDateResultReceivedByCaregiver());
         exist.setResults(dto.getResults());
 
-        this.infantPCRTestRepository.save(exist);
+       return this.infantPCRTestRepository.save(exist);
     }
 
 
@@ -470,7 +470,7 @@ public class InfantVisitService
 
     }
 
-    public void updateInfantArv(InfantArvDto infantArvDto){
+    public InfantArv updateInfantArv(InfantArvDto infantArvDto){
         InfantArv exist = infantArvRepository
                 .findById(infantArvDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantArv.class,"InfantArv not found "));
         exist.setVisitDate(infantArvDto.getVisitDate());
@@ -479,7 +479,7 @@ public class InfantVisitService
         exist.setInfantArvTime(infantArvDto.getInfantArvTime());
         exist.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
         exist.setAgeAtCtx(infantArvDto.getAgeAtCtx());
-        this.infantArvRepository.save(exist);
+       return  this.infantArvRepository.save(exist);
     }
 
 
