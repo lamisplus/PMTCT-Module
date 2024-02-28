@@ -96,11 +96,12 @@ const AncPnc = (props) => {
   const location = useLocation();
   const locationState = location && location.state ? location.state : null;
   console.log(locationState);
-
+  const [regimenType, setRegimenType] = useState([]);
   const classes = useStyles();
   const [disabledField, setSisabledField] = useState(false);
   const [entryPoint, setentryPoint] = useState([]);
   const [entryPointValue, setentryPointValue] = useState("");
+  const [timeMotherArt, setTimeMotherArt] = useState([]);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -108,6 +109,7 @@ const AncPnc = (props) => {
   const [errors, setErrors] = useState({});
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
   const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
+  const [adultRegimenLine, setAdultRegimenLine] = useState([]);
 
   const [enroll, setEnrollDto] = useState({
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
@@ -133,9 +135,74 @@ const AncPnc = (props) => {
     //     : null,
     pmtctType: entryValueDisplay.display,
   });
+  const [infantMotherArtDto, setInfantMotherArtDto] = useState({
+    ancNumber: props.patientObj.ancNo,
+    motherArtInitiationTime: "",
+    motherArtRegimen: "",
+    regimenTypeId: "",
+    regimenId: "",
+  });
+  const RegimenType = (id) => {
+    axios
+      .get(`${baseUrl}hiv/regimen/types/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        //console.log(response.data);
+        setRegimenType(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
 
+  const handleInputChangeInfantMotherArtDto = (e) => {
+    setErrors({ ...errors, [e.target.name]: "" });
+    //console.log(e.target.name),
+    setInfantMotherArtDto({
+      ...infantMotherArtDto,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const handleSelecteRegimen = (e) => {
+    let regimenID = e.target.value;
+    //regimenTypeId regimenId
+    setInfantMotherArtDto({
+      ...infantMotherArtDto,
+      regimenTypeId: regimenID,
+    });
+    RegimenType(regimenID);
+    //setErrors({...temp, [e.target.name]:""})
+  };
   console.log(props.allEntryPoint);
-
+  const TIMING_MOTHERS_ART_INITIATION = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setTimeMotherArt(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  //GET AdultRegimenLine
+  const AdultRegimenLine = () => {
+    axios
+      .get(`${baseUrl}hiv/regimen/arv/adult`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const artRegimen = response.data.filter(
+          (x) => x.id === 1 || x.id === 2 || x.id === 14
+        );
+        setAdultRegimenLine(artRegimen);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   const NEW_POINT_ENTRY_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
@@ -166,6 +233,8 @@ const AncPnc = (props) => {
     }
   };
   useEffect(() => {
+    AdultRegimenLine();
+    TIMING_MOTHERS_ART_INITIATION();
     NEW_POINT_ENTRY_PMTCT();
     POINT_ENTRY_PMTCT();
     TIME_ART_INITIATION_PMTCT();
@@ -293,7 +362,13 @@ const AncPnc = (props) => {
   const handleInputChangeEnrollmentDto = (e) => {
     setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
     console.log("payload", enroll);
-
+    // artStartTime
+    if (e.target.name === "artStartTime" && e.target.value !== "") {
+      setInfantMotherArtDto({
+        ...infantMotherArtDto,
+        motherArtInitiationTime: e.target.value,
+      });
+    }
     if (e.target.name === "lmp" && e.target.value !== "") {
       console.log("calculate ", e.target.name, e.target.value);
 
@@ -346,6 +421,9 @@ const AncPnc = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
+    enroll.motherArtInitiationTime = infantMotherArtDto.motherArtInitiationTime;
+    enroll.regimenTypeId = infantMotherArtDto.regimenTypeId;
+    enroll.regimenId = infantMotherArtDto.regimenId;
 
     if (validate()) {
       setSaving(true);
@@ -689,6 +767,105 @@ const AncPnc = (props) => {
                   )}
                 </FormGroup>
               </div>
+              {/* <div className=" mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName>
+                    Timing of mother's ART Initiation{" "}
+                  </FormLabelName>
+                  <Input
+                    type="select"
+                    name="motherArtInitiationTime"
+                    id="motherArtInitiationTime"
+                    value={infantMotherArtDto.motherArtInitiationTime}
+                    onChange={handleInputChangeInfantMotherArtDto}
+                    style={{
+                      border: "1px solid #014D88",
+                      borderRadius: "0.25rem",
+                    }}
+                    disabled={disabledField}
+                  >
+                    <option value="select">Select </option>
+                    {timeMotherArt.map((value, index) => (
+                      <option key={index} value={value.code}>
+                        {value.display}
+                      </option>
+                    ))}
+                  </Input>
+                  {errors.motherArtInitiationTime !== "" ? (
+                    <span className={classes.error}>
+                      {errors.motherArtInitiationTime}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div> */}
+
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName>Original Regimen Line </FormLabelName>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="regimenTypeId"
+                      id="regimenTypeId"
+                      value={infantMotherArtDto.regimenTypeId}
+                      onChange={handleSelecteRegimen}
+                      required
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value=""> Select</option>
+
+                      {adultRegimenLine.map((value) => (
+                        <option key={value.id} value={value.id}>
+                          {value.description}
+                        </option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+                  {errors.regimenTypeId !== "" ? (
+                    <span className={classes.error}>
+                      {errors.regimenTypeId}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName>Original Regimen </FormLabelName>
+                  <Input
+                    type="select"
+                    name="regimenId"
+                    id="regimenId"
+                    value={infantMotherArtDto.regimenId}
+                    onChange={handleInputChangeInfantMotherArtDto}
+                    style={{
+                      border: "1px solid #014D88",
+                      borderRadius: "0.25rem",
+                    }}
+                    disabled={disabledField}
+                  >
+                    <option value=""> Select</option>
+                    {regimenType.map((value) => (
+                      <option key={value.id} value={value.id}>
+                        {value.description}
+                      </option>
+                    ))}
+                  </Input>
+                  {errors.regimenId !== "" ? (
+                    <span className={classes.error}>{errors.regimenId}</span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
@@ -753,7 +930,23 @@ const AncPnc = (props) => {
                 </FormGroup>
               </div>
             </div>
-
+            <div>
+              {" "}
+              <>
+                {/* <Label
+                  as="a"
+                  color="teal"
+                  style={{ width: "106%", height: "35px" }}
+                  ribbon
+                >
+                  <h4 style={{ color: "#fff" }}> Mother's ART </h4>
+                </Label>
+                <br />
+                <br /> */}
+                {/* <div className="row">
+                </div> */}
+              </>
+            </div>
             {saving ? <Spinner /> : ""}
             <br />
 

@@ -139,6 +139,7 @@ const LabourDelivery = (props) => {
     BOOKING_STATUS();
     ROM_DELIVERY_INTERVAL();
     TIME_HIV_DIAGNOSIS();
+    getPlaceOfDelivery();
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -181,7 +182,7 @@ const LabourDelivery = (props) => {
   };
   const getPlaceOfDelivery = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/BOOKING STATUS`, {
+      .get(`${baseUrl}application-codesets/v2/PLACE_OF_DELIVERY`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
