@@ -139,9 +139,12 @@ const AncPnc = (props) => {
     ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
     motherArtRegimen: "",
-    regimenTypeId: "",
-    regimenId: "",
+    regimenTypeId: props?.patientObj?.regimenTypeId
+      ? props?.patientObj?.regimenTypeId
+      : "",
+    regimenId: props?.patientObj?.regimenId ? props?.patientObj?.regimenId : "",
   });
+  console.log("props", props?.patientObj);
   const RegimenType = (id) => {
     axios
       .get(`${baseUrl}hiv/regimen/types/${id}`, {
@@ -316,6 +319,12 @@ const AncPnc = (props) => {
       .then((response) => {
         //console.log(response.data.find((x)=> x.id===id));
         setEnrollDto({ ...enroll, ...response.data });
+        setInfantMotherArtDto({
+          ...infantMotherArtDto,
+          regimenTypeId: response.data.regimenTypeId,
+          regimenId: response.data.regimenId,
+          motherArtInitiationTime: response.data.motherArtInitiationTime,
+        });
       })
       .catch((error) => {
         //console.log(error);
@@ -533,14 +542,6 @@ const AncPnc = (props) => {
 
                 {entryValueDisplay.display}
               </h3>
-              {console.log(
-                "entryValueDisplay.display",
-                entryValueDisplay.display
-              )}
-              {console.log("locationState.postValue", locationState.postValue)}
-              {console.log("locationState", locationState)}
-
-              {console.log("props", props)}
 
               {props?.ancEntryType && (
                 <div className="form-group mb-3 col-md-4">
@@ -853,7 +854,7 @@ const AncPnc = (props) => {
                   >
                     <option value=""> Select</option>
                     {regimenType.map((value) => (
-                      <option key={value.id} value={value.id}>
+                      <option key={value.id} value={value.code}>
                         {value.description}
                       </option>
                     ))}

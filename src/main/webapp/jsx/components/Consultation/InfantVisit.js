@@ -902,7 +902,7 @@ const ClinicVisit = (props) => {
                         <option value=""> Select</option>
 
                         {adultRegimenLine.map((value) => (
-                          <option key={value.id} value={value.id}>
+                          <option key={value.id} value={value.code}>
                             {value.description}
                           </option>
                         ))}
@@ -933,7 +933,7 @@ const ClinicVisit = (props) => {
                       >
                         <option value=""> Select</option>
                         {regimenType.map((value) => (
-                          <option key={value.id} value={value.id}>
+                          <option key={value.id} value={value.code}>
                             {value.description}
                           </option>
                         ))}
@@ -1011,7 +1011,7 @@ const ClinicVisit = (props) => {
                     >
                       <option value="select">Select </option>
                       {infantArv.map((value) => (
-                        <option key={value.id} value={value.id}>
+                        <option key={value.id} value={value.code}>
                           {value.display}
                         </option>
                       ))}

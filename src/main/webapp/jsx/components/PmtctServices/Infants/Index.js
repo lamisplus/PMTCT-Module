@@ -90,6 +90,10 @@ const InfantInformation = (props) => {
   };
 
   const InfantInfoByUuid = () => {
+    console.log("props.patientObj.person_uuid", props.patientObj.person_uuid);
+    console.log("props.patientObj.personUuid", props.patientObj.personUuid);
+    console.log("props.patientObj.uuid", props.patientObj.uuid);
+
     setLoading(true);
     axios
       .get(
