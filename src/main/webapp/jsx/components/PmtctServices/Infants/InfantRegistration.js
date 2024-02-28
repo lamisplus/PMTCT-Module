@@ -373,7 +373,7 @@ const LabourinfantInfo = (props) => {
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
                     <Label>
-                      Infant Given Name 
+                      Infant Given Name
                       {/* <span style={{ color: "red" }}> *</span> */}
                     </Label>
                     <InputGroup>

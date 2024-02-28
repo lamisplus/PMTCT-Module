@@ -73,10 +73,10 @@ public class InfantService {
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
-        InfantArv infantArv =  saveInfantArv(infantDto,infantDto.getInfantArvDto(),result);
+        InfantArv infantArv =  saveInfantArv(infantDto.getInfantArvDto(),result);
 
         //save InfantPCRTest
-        InfantPCRTest infantPCRTest = saveInfantPCRTest(infantDto,infantDto.getInfantPCRTestDto(),result);
+        InfantPCRTest infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(),result);
 
         return InfantDtoResponse.builder()
                 .infant(result)
@@ -85,23 +85,23 @@ public class InfantService {
                 .build();
     }
 
-    private InfantArv saveInfantArv(InfantDto infantDto, InfantArvDto infantArvDto, Infant infant) {
+    private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
-            infantArvDto.setUuid(infant.getUuid());
+            infantArvDto.setUuid(infant.getMotherPersonUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
         }
         return infantVisitService.save(infantArvDto);
     }
 
-    private InfantPCRTest saveInfantPCRTest(InfantDto infantDto, InfantPCRTestDto infantPCRTestDto, Infant infant) {
+    private InfantPCRTest saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infant) {
         if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
-            infantPCRTestDto.setUuid(infant.getUuid());
+            infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
         }
         return infantVisitService.save(infantPCRTestDto);
