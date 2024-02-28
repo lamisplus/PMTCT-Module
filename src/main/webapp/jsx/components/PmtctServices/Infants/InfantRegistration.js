@@ -3,10 +3,12 @@ import {
   Card,
   CardBody,
   FormGroup,
-  Label,
+  Label as FormLabelName,
   Input,
   InputGroup,
+  InputGroupText,
 } from "reactstrap";
+
 import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
@@ -20,6 +22,7 @@ import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import moment from "moment";
 import { NoStroller } from "@mui/icons-material";
+import { Grid, Segment, Label, List } from "semantic-ui-react";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -96,7 +99,14 @@ const LabourinfantInfo = (props) => {
   const [disabledField, setDisabledField] = useState(false);
   const [genders, setGenders] = useState([]);
   const [newDateOfDelivery, setNewDateOfDelivery] = useState("");
-
+  const [infantHospitalNumber, setInfantHospitalNumber] = useState("");
+  const [agectx, setAgeCTX] = useState([]);
+  const [infantArv, setInfantArv] = useState([]);
+  //Vital signs clinical decision support
+  const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
+    bodyWeight: "",
+  });
+  const [pcrResult, setPcrResult] = useState([]);
   const [hospitalNumStatus, setHospitalNumStatus] = useState(false);
   const [infantInfo, setInfantInfo] = useState({
     ancNo: patientObj?.ancNo,
@@ -106,20 +116,95 @@ const LabourinfantInfo = (props) => {
     nin: "",
     sex: "",
     surname: "",
+    bodyWeight: "",
     uuid: patientObj.ancUuid,
     dateOfDelivery: "",
+    infantArvDto: "",
+    ctxStatus: "",
     // hospitalNumber: patientObj?.hospitalNumber,
     hospitalNumber: "",
-
     personUuid: props.patientObj.person_uuid
       ? props.patientObj.person_uuid
       : props.patientObj.personUuid
       ? props.patientObj.personUuid
       : props.patientObj.uuid,
   });
+  const [infantPCRTestDto, setInfantPCRTestDto] = useState({
+    ageAtTest: "",
+    ancNumber: props.patientObj.ancNo,
+    dateResultReceivedAtFacility: "",
+    dateResultReceivedByCaregiver: "",
+    dateSampleCollected: "",
+    dateSampleSent: "",
+    infantHospitalNumber: infantHospitalNumber,
+    results: "",
+    testType: "",
+  });
+  const [infantArvDto, setInfantArvDto] = useState({
+    ageAtCtx: "",
+    ancNumber: props.patientObj.ancNo,
+    arvDeliveryPoint: "",
+    infantArvTime: "",
+    infantArvType: "",
+    infantHospitalNumber: infantHospitalNumber ? infantHospitalNumber : "",
+  });
+  const INFANT_PCR_RESULT = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/INFANT_PCR_RESULT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setPcrResult(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  const handleInputChangeInfantPCRTestDto = (e) => {
+    setErrors({ ...errors, [e.target.name]: "" });
+    //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
+    setInfantPCRTestDto({
+      ...infantPCRTestDto,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const handleInputChangeInfantArvDto = (e) => {
+    setErrors({ ...errors, [e.target.name]: "" });
+    //console.log(e.target.name),
+    setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+  };
 
+  //This is to get infant hospital numbet when viewing or updating infant
+  const INFANT_ARV_PROPHYLAXIS_TYPE = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/INFANT_ARV_PROPHYLAXIS_TYPE`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setInfantArv(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  const handleInputValueCheckweight = (e) => {
+    if (
+      e.target.name === "bodyWeight" &&
+      (e.target.value < 3 || e.target.value > 150)
+    ) {
+      const message =
+        "Body weight must not be greater than 150 and less than 3";
+      setVitalClinicalSupport({ ...vitalClinicalSupport, bodyWeight: message });
+    } else {
+      setVitalClinicalSupport({ ...vitalClinicalSupport, bodyWeight: "" });
+    }
+  };
+  console.log(props);
   useEffect(() => {
+    INFANT_PCR_RESULT();
     SEX();
+    AGE_CTX_INITIATION();
+    INFANT_ARV_PROPHYLAXIS_TYPE();
     //console.log(props.activeContent.obj)
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
@@ -175,10 +260,22 @@ const LabourinfantInfo = (props) => {
     setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
   };
 
+  const AGE_CTX_INITIATION = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/AGE_CTX_INITIATION`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setAgeCTX(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };
-    temp.firstName = infantInfo.firstName ? "" : "This field is required";
+    // temp.firstName = infantInfo.firstName ? "" : "This field is required";
     temp.surname = infantInfo.surname ? "" : "This field is required";
     temp.hospitalNumber = infantInfo.hospitalNumber
       ? ""
@@ -195,7 +292,9 @@ const LabourinfantInfo = (props) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      setSaving(true);
+      // setSaving(true);
+      infantInfo.infantArvDto = infantArvDto;
+      infantInfo.infantPCRTestDto = infantPCRTestDto;
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
           .put(
@@ -221,13 +320,13 @@ const LabourinfantInfo = (props) => {
             });
           });
       } else {
+        console.log(infantInfo);
         axios
           .post(`${baseUrl}pmtct/anc/add-infants`, infantInfo, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
             setSaving(false);
-            //props.patientObj.commenced=true
             toast.success("Record save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
@@ -259,9 +358,6 @@ const LabourinfantInfo = (props) => {
     });
   };
 
-  console.log("date Of Delivery", patientObj);
-  console.log("date Of Delivery", props.activeContent.obj);
-
   return (
     <div>
       <Button
@@ -287,7 +383,7 @@ const LabourinfantInfo = (props) => {
                 {patientObj?.ancNo && (
                   <div className="form-group mb-3 col-md-6">
                     <FormGroup>
-                      <Label>ANC Number</Label>
+                      <FormLabelName>ANC Number</FormLabelName>
                       <InputGroup>
                         <Input
                           type="text"
@@ -309,9 +405,9 @@ const LabourinfantInfo = (props) => {
 
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
-                    <Label>
-                      Child's Hospital ID Number <span style={{ color: "red" }}> *</span>
-                    </Label>
+                    <FormLabelName>
+                      Hospital Number <span style={{ color: "red" }}> *</span>
+                    </FormLabelName>
                     <InputGroup>
                       <Input
                         type="text"
@@ -341,9 +437,9 @@ const LabourinfantInfo = (props) => {
 
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
-                    <Label>
+                    <FormLabelName>
                       Date of Delivery <span style={{ color: "red" }}> *</span>
-                    </Label>
+                    </FormLabelName>
                     <InputGroup>
                       <Input
                         type="date"
@@ -372,10 +468,10 @@ const LabourinfantInfo = (props) => {
                 </div>
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
-                    <Label>
+                    <FormLabelName>
                       Infant Given Name
                       {/* <span style={{ color: "red" }}> *</span> */}
-                    </Label>
+                    </FormLabelName>
                     <InputGroup>
                       <Input
                         type="text"
@@ -386,16 +482,17 @@ const LabourinfantInfo = (props) => {
                         disabled={disabledField}
                       />
                     </InputGroup>
-                    {errors.firstName !== "" ? (
+                    {/* {errors.firstName !== "" ? (
                       <span className={classes.error}>{errors.firstName}</span>
                     ) : (
                       ""
-                    )}
+                    )} */}
                   </FormGroup>
                 </div>
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
-                    <Label>Infant Surname</Label>
+                    <FormLabelName>Infant Surname</FormLabelName>
+                    <span style={{ color: "red" }}> *</span>
                     <InputGroup>
                       <Input
                         type="input"
@@ -406,8 +503,64 @@ const LabourinfantInfo = (props) => {
                         disabled={disabledField}
                       ></Input>
                     </InputGroup>
+
                     {errors.surname !== "" ? (
                       <span className={classes.error}>{errors.surname}</span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-6">
+                  <FormGroup>
+                    <FormLabelName>
+                      Birth Weight <span style={{ color: "red" }}> *</span>
+                    </FormLabelName>
+                    <InputGroup>
+                      <Input
+                        type="number"
+                        name="bodyWeight"
+                        id="bodyWeight"
+                        onChange={handleInputChangeinfantInfoDto}
+                        min="1"
+                        max="150"
+                        onKeyUp={handleInputValueCheckweight}
+                        value={infantInfo.bodyWeight}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0rem",
+                        }}
+                        disabled={disabledField}
+                      />
+                      <InputGroupText
+                        addonType="append"
+                        style={{
+                          backgroundColor: "#014D88",
+                          color: "#fff",
+                          border: "1px solid #014D88",
+                          borderRadius: "0rem",
+                        }}
+                      >
+                        kg
+                      </InputGroupText>
+                    </InputGroup>
+                    {errors.bodyWeight !== "" ? (
+                      <span className={classes.error}>{errors.bodyWeight}</span>
+                    ) : (
+                      ""
+                    )}
+                    {vitalClinicalSupport.weight !== "" ? (
+                      <span className={classes.error}>
+                        {vitalClinicalSupport.weight}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                    {infantInfo.bodyWeight !== "" &&
+                    infantInfo.bodyWeight <= 0 ? (
+                      <span className={classes.error}>
+                        Invalid Body Weight{" "}
+                      </span>
                     ) : (
                       ""
                     )}
@@ -416,9 +569,9 @@ const LabourinfantInfo = (props) => {
 
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
-                    <Label>
+                    <FormLabelName>
                       Sex <span style={{ color: "red" }}> *</span>
-                    </Label>
+                    </FormLabelName>
                     <InputGroup>
                       <Input
                         type="select"
@@ -447,7 +600,385 @@ const LabourinfantInfo = (props) => {
 
                 {/*  */}
               </div>
+              <>
+                <Label
+                  as="a"
+                  color="blue"
+                  style={{ width: "106%", height: "35px" }}
+                  horizontal
+                >
+                  <h4 style={{ color: "#fff" }}> Infant ARV & CTX</h4>
+                </Label>
+                <br />
+                <br />
+                {/* LAB Screening Form */}
+                <div className="row mt-4">
+                  <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName>CTX </FormLabelName>
+                      <Input
+                        type="select"
+                        name="ctxStatus"
+                        id="ctxStatus"
+                        value={infantInfo.ctxStatus}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        onChange={handleInputChangeinfantInfoDto}
+                        disabled={disabledField}
+                      >
+                        <option value="">Select </option>
+                        <option value="YES">YES </option>
+                        <option value="NO">NO </option>
+                      </Input>
+                      {errors.ctxStatus !== "" ? (
+                        <span className={classes.error}>
+                          {errors.ctxStatus}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
 
+                  <div className=" mb-3 col-md-4 ">
+                    <FormGroup>
+                      <FormLabelName>Date of CTX Initiation </FormLabelName>
+                      <Input
+                        type="select"
+                        name="ageAtCtx"
+                        id="ageAtCtx"
+                        value={infantArvDto.ageAtCtx}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        {agectx.map((value, index) => (
+                          <option key={index} value={value.code}>
+                            {value.display}
+                          </option>
+                        ))}
+                      </Input>
+                      {errors.ageAtCtx !== "" ? (
+                        <span className={classes.error}>{errors.ageAtCtx}</span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName>Infant ARV Type </FormLabelName>
+                      <Input
+                        type="select"
+                        name="infantArvType"
+                        id="infantArvType"
+                        value={infantArvDto.infantArvType}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        {infantArv.map((value) => (
+                          <option key={value.id} value={value.id}>
+                            {value.display}
+                          </option>
+                        ))}
+                      </Input>
+                      {errors.infantArvType !== "" ? (
+                        <span className={classes.error}>
+                          {errors.infantArvType}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
+                      <Input
+                        type="select"
+                        name="arvDeliveryPoint"
+                        id="arvDeliveryPoint"
+                        value={infantArvDto.arvDeliveryPoint}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        <option value="Within 72 hour">Within 72 hour </option>
+                        <option value="After 72 hour ">After 72 hour </option>
+                      </Input>
+                      {errors.arvDeliveryPoint !== "" ? (
+                        <span className={classes.error}>
+                          {errors.arvDeliveryPoint}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName> Place of Delivery </FormLabelName>
+                      <Input
+                        type="select"
+                        name="infantArvTime"
+                        id="infantArvTime"
+                        value={infantArvDto.infantArvTime}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        <option value="Facility Delivery">
+                          Facility Delivery
+                        </option>
+                        <option value="Delivered outside facility">
+                          Delivered outside facility{" "}
+                        </option>
+                      </Input>
+                      {errors.infantArvTime !== "" ? (
+                        <span className={classes.error}>
+                          {errors.infantArvTime}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                </div>
+              </>
+              <>
+                <Label
+                  as="a"
+                  color="black"
+                  style={{ width: "106%", height: "35px" }}
+                  horizontal
+                >
+                  <h4 style={{ color: "#fff" }}> Infant PCR/HIV Test </h4>
+                </Label>
+                <br />
+                <br />
+                {/* LAB Screening Form */}
+                <div className="row mt-3">
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Age at Test(months)</FormLabelName>
+                      <Input
+                        type="number"
+                        name="ageAtTest"
+                        id="ageAtTest"
+                        value={infantPCRTestDto.ageAtTest}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled
+                      />
+                      {errors.ageAtTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.ageAtTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName> Sample Type</FormLabelName>
+                      <Input
+                        type="select"
+                        name="testType"
+                        id="testType"
+                        value={infantPCRTestDto.testType}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="">Select </option>
+                        <option value="First PCR">First PCR</option>
+                        <option value="Second PCR">Second PCR</option>
+                        <option value="Confirmatory PCR">
+                          Confirmatory PCR
+                        </option>
+                        <option value="First Rapid Antibody">
+                          First Rapid Antibody{" "}
+                        </option>
+                        <option value="Second Rapid Antibody ">
+                          Second Rapid Antibody{" "}
+                        </option>
+                      </Input>
+                      {errors.testType !== "" ? (
+                        <span className={classes.error}>{errors.testType}</span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Date sample collected</FormLabelName>
+                      <Input
+                        type="date"
+                        name="dateSampleCollected"
+                        id="dateSampleCollected"
+                        value={infantPCRTestDto.dateSampleCollected}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={
+                          props.patientObj &&
+                          props.patientObj.pmtctEnrollmentRespondDto
+                            ? props.patientObj.pmtctEnrollmentRespondDto
+                                .pmtctEnrollmentDate
+                            : ""
+                        }
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateSampleCollected !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateSampleCollected}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Date Result Received</FormLabelName>
+                      <Input
+                        type="date"
+                        name="dateResultReceivedAtFacility"
+                        id="dateResultReceivedAtFacility"
+                        value={infantPCRTestDto.dateResultReceivedAtFacility}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantPCRTestDto.dateSampleCollected}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateResultReceivedAtFacility !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateResultReceivedAtFacility}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>
+                        Date Result Received By Caregiver
+                      </FormLabelName>
+                      <Input
+                        type="date"
+                        name="dateResultReceivedByCaregiver"
+                        id="dateResultReceivedByCaregiver"
+                        value={infantPCRTestDto.dateResultReceivedByCaregiver}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantPCRTestDto.dateSampleCollected}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateResultReceivedByCaregiver !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateResultReceivedByCaregiver}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Date Sample Sent</FormLabelName>
+                      <Input
+                        type="date"
+                        name="dateSampleSent"
+                        id="dateSampleSent"
+                        value={infantPCRTestDto.dateSampleSent}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantPCRTestDto.dateSampleCollected}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateSampleSent !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateSampleSent}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Result *</FormLabelName>
+                      <Input
+                        type="select"
+                        name="results"
+                        id="results"
+                        value={infantPCRTestDto.results}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        {pcrResult.map((value) => (
+                          <option key={value.id} value={value.id}>
+                            {value.display}
+                          </option>
+                        ))}
+                      </Input>
+                      {errors.results !== "" ? (
+                        <span className={classes.error}>{errors.results}</span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                </div>
+              </>
               {/* <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >National Identity  Number(NIN)</Label>
