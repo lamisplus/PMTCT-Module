@@ -46,7 +46,8 @@ public class InfantVisitService
         InfantArv infantArv = new InfantArv();
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
-        infantArv.setUuid(UUID.randomUUID().toString());
+        //infantArv.setUuid(UUID.randomUUID().toString());
+        infantArv.setUuid(infantArvDto.getUuid());
         infantArv.setVisitDate(infantArvDto.getVisitDate());
         infantArv.setInfantArvType(infantArvDto.getInfantArvType());
         infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
@@ -62,7 +63,8 @@ public class InfantVisitService
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
         infantPCRTest.setAncNumber(infantPCRTestDto.getAncNumber());
         infantPCRTest.setResults(infantPCRTestDto.getResults());
-        infantPCRTest.setUuid(UUID.randomUUID().toString());
+        //infantPCRTest.setUuid(UUID.randomUUID().toString());
+        infantPCRTest.setUuid(infantPCRTestDto.getUuid());
         infantPCRTest.setVisitDate(infantPCRTestDto.getVisitDate());
         infantPCRTest.setDateResultReceivedAtFacility(infantPCRTestDto.getDateResultReceivedAtFacility());
         infantPCRTest.setDateResultReceivedByCaregiver(infantPCRTestDto.getDateResultReceivedByCaregiver());
@@ -357,9 +359,9 @@ public class InfantVisitService
 
     public InfantArvDto getInfantArvByUUID(String personUuid) {
         InfantArvDto infantArvDto = null;
-        Optional<InfantArvDto> infantArvOptional = this.infantArvRepository.getTopByUuid(personUuid);
-        if (infantArvOptional.isPresent()) {
-            infantArvDto = infantArvOptional.get();
+        Optional<InfantArvDto> infantArvDtoOptional = Optional.ofNullable(convertInfantArvDtoRequestDtoToEntity(infantArvRepository.getTopByUuid(personUuid)));
+        if (infantArvDtoOptional.isPresent()) {
+            infantArvDto = infantArvDtoOptional.get();
         }
         return infantArvDto;
     }
@@ -375,29 +377,29 @@ public class InfantVisitService
 
     public InfantPCRTestDto getInfantPCRTestByUUID(String personUuid) {
         InfantPCRTestDto infantPCRTestDto = null;
-        Optional<InfantPCRTestDto> infantPCRTestOptional = this.infantPCRTestRepository.getTopByUuid(personUuid);
+        Optional<InfantPCRTestDto> infantPCRTestOptional = Optional.ofNullable(convertInfantPCRTestDtoRequestDtoToEntity(infantPCRTestRepository.getTopByUuid(personUuid)));
         if (infantPCRTestOptional.isPresent()) {
             infantPCRTestDto = infantPCRTestOptional.get();
         }
         return infantPCRTestDto;
     }
 
-    public InfantArvDto  converRequestDtotoEntity(InfantArv infantArvDto) {
-    InfantArvDto infantArv = new InfantArvDto();
-        infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
-        infantArv.setAncNumber(infantArvDto.getAncNumber());
-        infantArv.setUuid(infantArvDto.getUuid());
-        infantArv.setId(infantArvDto.getId());
-        infantArv.setVisitDate(infantArvDto.getVisitDate());
-        infantArv.setInfantArvType(infantArvDto.getInfantArvType());
-        infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
-        infantArv.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
-        infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
+    public InfantArvDto  convertInfantArvDtoRequestDtoToEntity(InfantArv infantArv) {
+        InfantArvDto infantArvDto = new InfantArvDto();
+        infantArvDto.setInfantHospitalNumber(infantArv.getInfantHospitalNumber());
+        infantArvDto.setAncNumber(infantArv.getAncNumber());
+        infantArvDto.setUuid(infantArv.getUuid());
+        infantArvDto.setId(infantArv.getId());
+        infantArvDto.setVisitDate(infantArv.getVisitDate());
+        infantArvDto.setInfantArvType(infantArv.getInfantArvType());
+        infantArvDto.setInfantArvTime(infantArv.getInfantArvTime());
+        infantArvDto.setArvDeliveryPoint(infantArv.getArvDeliveryPoint());
+        infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
 
-        return infantArv;
+        return infantArvDto;
     }
 
-    public InfantPCRTestDto converRequestDtotoEntity(InfantPCRTest infantPCRTestDto) {
+    public InfantPCRTestDto convertInfantPCRTestDtoRequestDtoToEntity(InfantPCRTest infantPCRTestDto) {
         InfantPCRTestDto infantPCRTest = new InfantPCRTestDto();
         infantPCRTest.setInfantHospitalNumber(infantPCRTestDto.getInfantHospitalNumber());
         infantPCRTest.setAgeAtTest(infantPCRTestDto.getAgeAtTest());
