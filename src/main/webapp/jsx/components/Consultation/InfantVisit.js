@@ -94,7 +94,7 @@ const ClinicVisit = (props) => {
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
     breastFeeding: "",
-    ctxStatus: "",
+    // ctxStatus: "",
     infantHospitalNumber: "",
     uuid: "",
     visitDate: "",
@@ -414,9 +414,9 @@ const ClinicVisit = (props) => {
     if (validate()) {
       setSaving(true);
       objValues.infantVisitRequestDto = infantVisitRequestDto;
-      objValues.infantArvDto = infantArvDto;
-      objValues.infantMotherArtDto = infantMotherArtDto;
-      objValues.infantPCRTestDto = infantPCRTestDto;
+      // objValues.infantArvDto = infantArvDto;
+      // objValues.infantMotherArtDto = infantMotherArtDto;
+      // objValues.infantPCRTestDto = infantPCRTestDto;
       if (props.activeContent && props.activeContent.actionType) {
         //Perform operation for updation action
         axios
@@ -584,7 +584,7 @@ const ClinicVisit = (props) => {
             <br />
             <br />
             <div className="row">
-              <div className="form-group mb-3 col-md-4">
+              <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
@@ -638,7 +638,7 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-4">
+              <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>
                     Mother ANC number
@@ -745,7 +745,7 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
+              {/* <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>CTX </FormLabelName>
                   <Input
@@ -770,7 +770,7 @@ const ClinicVisit = (props) => {
                     ""
                   )}
                 </FormGroup>
-              </div>
+              </div> */}
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>Visit Status</FormLabelName>
@@ -836,7 +836,7 @@ const ClinicVisit = (props) => {
             </div>
 
             <br />
-            {formFilter && formFilter.motherArt === false && (
+            {/* {formFilter && formFilter.motherArt === false && (
               <>
                 <Label
                   as="a"
@@ -902,7 +902,7 @@ const ClinicVisit = (props) => {
                         <option value=""> Select</option>
 
                         {adultRegimenLine.map((value) => (
-                          <option key={value.id} value={value.code}>
+                          <option key={value.id} value={value.id}>
                             {value.description}
                           </option>
                         ))}
@@ -949,10 +949,10 @@ const ClinicVisit = (props) => {
                   </div>
                 </div>
               </>
-            )}
+            )} */}
             <br />
             {/* {formFilter && formFilter.infantArv === false && ( */}
-            <>
+            {/* <>
               <Label
                 as="a"
                 color="blue"
@@ -963,7 +963,6 @@ const ClinicVisit = (props) => {
               </Label>
               <br />
               <br />
-              {/* LAB Screening Form */}
               <div className="row">
                 <div className=" mb-3 col-md-4">
                   <FormGroup>
@@ -1086,21 +1085,21 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
               </div>
-            </>
+            </> */}
             {/* )} */}
             <br />
-            <Label
+            {/* <Label
               as="a"
               color="black"
               style={{ width: "106%", height: "35px" }}
               ribbon
             >
               <h4 style={{ color: "#fff" }}> Infant PCR/HIV test </h4>
-            </Label>
+            </Label> */}
             <br />
             <br />
             {/* LAB Screening Form */}
-            <div className="row">
+            {/* <div className="row">
               <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>Age at Test(months)</FormLabelName>
@@ -1297,7 +1296,7 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-            </div>
+            </div> */}
             <br />
             <br />
             {infantVisitRequestDto &&

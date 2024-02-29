@@ -195,7 +195,7 @@ const LabourDelivery = (props) => {
   };
   const TIME_HIV_DIAGNOSIS = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`, {
+      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS_PMTCT`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -682,67 +682,6 @@ const LabourDelivery = (props) => {
                   )}
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <Label>
-                    Feeding decision <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="feedingDecision"
-                      id="feedingDecision"
-                      onChange={handleInputChangeDeliveryDto}
-                      value={delivery.feedingDecision}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select </option>
-
-                      {feedingDecision.map((value) => (
-                        <option key={value.id} value={value.code}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.feedingDecision !== "" ? (
-                    <span className={classes.error}>
-                      {errors.feedingDecision}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <Label>
-                    Child given ARV within 72 hrs{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="childGivenArvWithin72"
-                      id="childGivenArvWithin72"
-                      onChange={handleInputChangeDeliveryDto}
-                      value={delivery.childGivenArvWithin72}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </Input>
-                  </InputGroup>
-                  {errors.childGivenArvWithin72 !== "" ? (
-                    <span className={classes.error}>
-                      {errors.childGivenArvWithin72}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
 
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
@@ -770,40 +709,12 @@ const LabourDelivery = (props) => {
                   )}
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <Label>
-                    HIV exposed infant given Hep B within 24 hrs of birth{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="hivExposedInfantGivenHbWithin24hrs"
-                      id="hivExposedInfantGivenHbWithin24hrs"
-                      onChange={handleInputChangeDeliveryDto}
-                      value={delivery.hivExposedInfantGivenHbWithin24hrs}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </Input>
-                  </InputGroup>
-                  {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
-                    <span className={classes.error}>
-                      {errors.hivExposedInfantGivenHbWithin24hrs}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
 
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Time of HIV Diagnosis <span style={{ color: "red" }}> *</span>
+                    Time of HIV Diagnosis{" "}
+                    <span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>
                     <Input
@@ -911,6 +822,97 @@ const LabourDelivery = (props) => {
                   )}
                 </FormGroup>
               </div>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    Feeding decision <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="feedingDecision"
+                      id="feedingDecision"
+                      onChange={handleInputChangeDeliveryDto}
+                      value={delivery.feedingDecision}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+
+                      {feedingDecision.map((value) => (
+                        <option key={value.id} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+                  {errors.feedingDecision !== "" ? (
+                    <span className={classes.error}>
+                      {errors.feedingDecision}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    Child given ARV within 72 hrs{" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="childGivenArvWithin72"
+                      id="childGivenArvWithin72"
+                      onChange={handleInputChangeDeliveryDto}
+                      value={delivery.childGivenArvWithin72}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.childGivenArvWithin72 !== "" ? (
+                    <span className={classes.error}>
+                      {errors.childGivenArvWithin72}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    HIV exposed infant given Hep B within 24 hrs of birth{" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hivExposedInfantGivenHbWithin24hrs"
+                      id="hivExposedInfantGivenHbWithin24hrs"
+                      onChange={handleInputChangeDeliveryDto}
+                      value={delivery.hivExposedInfantGivenHbWithin24hrs}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
+                    <span className={classes.error}>
+                      {errors.hivExposedInfantGivenHbWithin24hrs}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
               <h3>Maternal Outcome</h3>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
@@ -1030,12 +1032,15 @@ const LabourDelivery = (props) => {
               )}
             </div>
             {/* Display notification when maternal outcome is IIT and transfer out */}
-            {
-                (delivery.maternalOutcome !=="" && delivery.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT")  && (delivery.maternalOutcome!=="" &&  delivery.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE") ? (
-                    <h2 style={{color:"red"}}>Kindly fill tracking form</h2>
-                ) : ""
-            }
-            
+            {delivery.maternalOutcome !== "" &&
+            delivery.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" &&
+            delivery.maternalOutcome !== "" &&
+            delivery.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE" ? (
+              <h2 style={{ color: "red" }}>Kindly fill tracking form</h2>
+            ) : (
+              ""
+            )}
+
             {saving ? <Spinner /> : ""}
             <br />
             {props.activeContent && props.activeContent.actionType ? (

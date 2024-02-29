@@ -205,12 +205,20 @@ const LabourinfantInfo = (props) => {
     SEX();
     AGE_CTX_INITIATION();
     INFANT_ARV_PROPHYLAXIS_TYPE();
-    //console.log(props.activeContent.obj)
+    // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
     }
     if (props.activeContent && props.activeContent.id) {
       setInfantInfo({ ...infantInfo, ...props.activeContent.obj });
+      setInfantArvDto({
+        ...infantArvDto,
+        ...props.activeContent.obj.infantArvDto,
+      });
+      setInfantPCRTestDto({
+        ...infantArvDto,
+        ...props.activeContent.obj.infantPCRTestDto,
+      });
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
@@ -406,7 +414,8 @@ const LabourinfantInfo = (props) => {
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
                     <FormLabelName>
-                      Hospital Number <span style={{ color: "red" }}> *</span>
+                      Child’s Hospital ID Number
+                      <span style={{ color: "red" }}> *</span>
                     </FormLabelName>
                     <InputGroup>
                       <Input
@@ -673,7 +682,9 @@ const LabourinfantInfo = (props) => {
                   </div>
                   <div className=" mb-3 col-md-4">
                     <FormGroup>
-                      <FormLabelName>Infant ARV Type </FormLabelName>
+                      <FormLabelName>
+                        Infant ARV Prophylaxis Type{" "}
+                      </FormLabelName>
                       <Input
                         type="select"
                         name="infantArvType"
