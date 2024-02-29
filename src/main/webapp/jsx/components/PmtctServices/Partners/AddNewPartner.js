@@ -7,6 +7,7 @@ import {
   Input,
   InputGroup,
 } from "reactstrap";
+import moment from "moment";
 import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
@@ -105,6 +106,8 @@ const Labourpartner = (props) => {
     referredTo: "",
     syphillsStatus: "",
     referredToOthers: "",
+    hivStatus: "",
+    dateConfirmedHivTest: "",
   });
   useEffect(() => {
     PARTNER_SYPHILIS_STATUS();
@@ -171,6 +174,8 @@ const Labourpartner = (props) => {
       ? ""
       : "This field is required";
     temp.fullName = partner.fullName ? "" : "This field is required";
+    temp.hivStatus = partner.hivStatus ? "" : "This field is required";
+
     //temp.syphillisStatus = partner.syphillisStatus ? "" : "This field is required"
     setErrors({
       ...temp,
@@ -384,6 +389,66 @@ const Labourpartner = (props) => {
                   )}
                 </FormGroup>
               </div>
+
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    Partner HIV Status <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hivStatus"
+                      id="hivStatus"
+                      onChange={handleInputChangepartnerDto}
+                      value={partner.hivStatus}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                      <option value="Unknown">Unknown</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.hivStatus !== "" ? (
+                    <span className={classes.error}>{errors.hivStatus}</span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
+              {partner.hivStatus.toLowerCase() === "positive" && (
+                <div className="form-group mb-3 col-md-6">
+                  <FormGroup>
+                    <Label>
+                      Date Confirmed HIV Test{" "}
+                      <span style={{ color: "red" }}> *</span>
+                    </Label>
+
+                    <Input
+                      type="date"
+                      name="dateConfirmedHivTest"
+                      id="dateConfirmedHivTest"
+                      value={partner.dateConfirmedHivTest}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      onChange={handleInputChangepartnerDto}
+                      // min={props.patientObj.firstAncDate}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                      disabled={disabledField}
+                    />
+                    {/* {errors.dateConfirmedHivTest !== "" ? (
+                    <span className={classes.error}>{errors.dateOfVisit}</span>
+                  ) : (
+                    ""
+                  )} */}
+                  </FormGroup>
+                </div>
+              )}
+
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>Post-test counseled/ received test result</Label>
