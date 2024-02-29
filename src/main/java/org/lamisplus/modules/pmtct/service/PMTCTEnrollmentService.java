@@ -102,6 +102,8 @@ public class PMTCTEnrollmentService {
         pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
         pmtctEnrollment.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
+        pmtctEnrollment.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
+        pmtctEnrollment.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         return (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
@@ -264,6 +266,8 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setMotherArtInitiationTime(pmtctEnrollment.getMotherArtInitiationTime());
            pmtctEnrollmentRespondDto.setRegimenTypeId(pmtctEnrollment.getRegimenTypeId());
            pmtctEnrollmentRespondDto.setRegimenId(pmtctEnrollment.getRegimenId());
+           pmtctEnrollmentRespondDto.setHepatitisB(pmtctEnrollment.getHepatitisB());
+           pmtctEnrollmentRespondDto.setUrinalysis(pmtctEnrollment.getUrinalysis());
            PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
            if(pmtct != null) {
                pmtctEnrollmentRespondDto.setHospitalNumber(pmtct.getHospitalNumber());
@@ -374,6 +378,8 @@ public class PMTCTEnrollmentService {
             pmtctEnrollment1.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
             pmtctEnrollment1.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
             pmtctEnrollment1.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
+            pmtctEnrollment1.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
+            pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
         }
         return pmtctEnrollmentRequestDto;
