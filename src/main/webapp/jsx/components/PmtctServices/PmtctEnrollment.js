@@ -110,8 +110,11 @@ const AncPnc = (props) => {
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
   const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
   const [adultRegimenLine, setAdultRegimenLine] = useState([]);
+  const [urinalysisList, setUrinalysisList] = useState([]);
 
   const [enroll, setEnrollDto] = useState({
+    hepatitisB: patientObj.hepatitisB ? patientObj.hepatitisB : "",
+    urinalysis: patientObj.urinalysis ? patientObj.urinalysis : "",
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
     entryPoint: entryValueDisplay?.id,
@@ -190,6 +193,18 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
+  const GET_URINALYSIS = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PMTCT_URINALYSIS_RESULT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setUrinalysisList(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   //GET AdultRegimenLine
   const AdultRegimenLine = () => {
     axios
@@ -236,6 +251,7 @@ const AncPnc = (props) => {
     }
   };
   useEffect(() => {
+    GET_URINALYSIS();
     AdultRegimenLine();
     TIMING_MOTHERS_ART_INITIATION();
     NEW_POINT_ENTRY_PMTCT();
@@ -544,6 +560,7 @@ const AncPnc = (props) => {
                 {entryValueDisplay.display}
               </h3>
 
+{console.log()}
               {props?.ancEntryType && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
@@ -895,6 +912,64 @@ const AncPnc = (props) => {
                   ) : (
                     ""
                   )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Hepatitis B Status <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hepatitisB"
+                      id="hepatitisB"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.hepatitisB}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                    </Input>
+                  </InputGroup>
+                  {/* {errors.hbstatus !== "" ? (
+                    <span className={classes.error}>{errors.hbstatus}</span>
+                  ) : (
+                    ""
+                  )} */}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Urinalysis<span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="urinalysis"
+                      id="urinalysis"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.urinalysis}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      {urinalysisList.length > 0 &&
+                        urinalysisList.map((each) => {
+                          return (
+                            <option value={each.code} key={each.id}>
+                              {each.display}
+                            </option>
+                          );
+                        })}
+                    </Input>
+                  </InputGroup>
+                  {/* {errors.hbstatus !== "" ? (
+                    <span className={classes.error}>{errors.hbstatus}</span>
+                  ) : (
+                    ""
+                  )} */}
                 </FormGroup>
               </div>
 

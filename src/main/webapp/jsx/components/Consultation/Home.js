@@ -123,8 +123,6 @@ const ClinicVisit = (props) => {
   };
   const getPatientEntryType = (id) => {
     entryPoint.map((each, i) => {
-  
-
       if (Number(each.id) === Number(props.patientObj.entryPoint)) {
         setEntryValueDisplay(each);
       }
@@ -434,11 +432,12 @@ const ClinicVisit = (props) => {
                 </FormGroup>
               </div>
 
-              {console.log(patientObj.entryPoint)}
+              {console.log("entry point list ", entryPoint)}
+
               <div className=" mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName>
-                    Point of Entry <span style={{ color: "red" }}> *</span>
+                    Point of Entry<span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
                     type="select"
@@ -456,7 +455,7 @@ const ClinicVisit = (props) => {
 
                     {entryPoint.map((each, i) => {
                       return (
-                        <option key={i} value={each.id}>
+                        <option key={i} value={each.code}>
                           {each.display}
                         </option>
                       );
@@ -821,13 +820,16 @@ const ClinicVisit = (props) => {
                 </div>
               )}
             </div>
-             {/* Display notification when maternal outcome is IIT and transfer out */}
-             {
-                (objValues.maternalOutcome !=="" && objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT")  && (objValues.maternalOutcome!=="" &&  objValues.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE") ? (
-                  <h2 style={{color:"red"}}>Kindly fill tracking form</h2>
-                ) : ""
-            }
-            
+            {/* Display notification when maternal outcome is IIT and transfer out */}
+            {objValues.maternalOutcome !== "" &&
+            objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" &&
+            objValues.maternalOutcome !== "" &&
+            objValues.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE" ? (
+              <h2 style={{ color: "red" }}>Kindly fill tracking form</h2>
+            ) : (
+              ""
+            )}
+
             <br />
             {props.activeContent && props.activeContent.actionType ? (
               <>

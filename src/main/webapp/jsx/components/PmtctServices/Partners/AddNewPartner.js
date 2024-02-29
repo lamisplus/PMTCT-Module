@@ -267,7 +267,7 @@ const Labourpartner = (props) => {
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <Label>Partner HIV Status </Label>
+                  <Label>Partner HIV Status (Pregnant Woman)</Label>
                   <InputGroup>
                     <Input
                       type="text"
@@ -277,11 +277,11 @@ const Labourpartner = (props) => {
                       value={partnerHivStatus}
                       disabled
                     />
-                    {console.log(
+                    {/* {console.log(
                       props.patientObj.dynamicHivStatus,
                       props?.patientObj?.staticHivStatus,
                       props?.patientObj?.hivStatus
-                    )}
+                    )} */}
                   </InputGroup>
                   {errors.ancNo !== "" ? (
                     <span className={classes.error}>{errors.ancNo}</span>
@@ -402,6 +402,7 @@ const Labourpartner = (props) => {
                       id="hivStatus"
                       onChange={handleInputChangepartnerDto}
                       value={partner.hivStatus}
+                      disabled={disabledField}
                     >
                       <option value="">Select</option>
                       <option value="Positive">Positive</option>
@@ -417,37 +418,38 @@ const Labourpartner = (props) => {
                 </FormGroup>
               </div>
 
-              {partner.hivStatus.toLowerCase() === "positive" && (
-                <div className="form-group mb-3 col-md-6">
-                  <FormGroup>
-                    <Label>
-                      Date Confirmed HIV Test{" "}
-                      <span style={{ color: "red" }}> *</span>
-                    </Label>
+              {partner?.hivStatus &&
+                partner?.hivStatus.toLowerCase() === "positive" && (
+                  <div className="form-group mb-3 col-md-6">
+                    <FormGroup>
+                      <Label>
+                        Date Confirmed HIV Test{" "}
+                        <span style={{ color: "red" }}> *</span>
+                      </Label>
 
-                    <Input
-                      type="date"
-                      name="dateConfirmedHivTest"
-                      id="dateConfirmedHivTest"
-                      value={partner.dateConfirmedHivTest}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.25rem",
-                      }}
-                      onChange={handleInputChangepartnerDto}
-                      // min={props.patientObj.firstAncDate}
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                      disabled={disabledField}
-                    />
-                    {/* {errors.dateConfirmedHivTest !== "" ? (
+                      <Input
+                        type="date"
+                        name="dateConfirmedHivTest"
+                        id="dateConfirmedHivTest"
+                        value={partner.dateConfirmedHivTest}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        onChange={handleInputChangepartnerDto}
+                        // min={props.patientObj.firstAncDate}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
+                        disabled={disabledField}
+                      />
+                      {/* {errors.dateConfirmedHivTest !== "" ? (
                     <span className={classes.error}>{errors.dateOfVisit}</span>
                   ) : (
                     ""
                   )} */}
-                  </FormGroup>
-                </div>
-              )}
+                    </FormGroup>
+                  </div>
+                )}
 
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>

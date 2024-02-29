@@ -347,9 +347,10 @@ const LabourDelivery = (props) => {
         ? ""
         : "This field is required");
     delivery.maternalOutcomeChild !== "" &&
-      (temp.numberOfInfantsDead = delivery.numberOfInfantsDead
-        ? ""
-        : "This field is required");
+      (temp.numberOfInfantsDead =
+        delivery.numberOfInfantsDead !== ""  ? "" : "This field is required");
+    // temp.numberOfInfantsDead =
+    //   delivery.numberOfInfantsDead === 0 ? "" : "This field is required";
 
     setErrors({
       ...temp,
