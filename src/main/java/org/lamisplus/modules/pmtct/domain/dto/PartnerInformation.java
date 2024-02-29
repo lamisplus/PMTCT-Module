@@ -18,4 +18,6 @@ public class PartnerInformation
     private String referredTo;
     private String referredToOthers;
     private int age;
+    private String hivStatus; //(this hivStatus belongs to the mother's(client currently enrolled on PMTCT) partner)
+    private LocalDate dateConfirmedHivTest;
 }
