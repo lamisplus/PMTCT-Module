@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class InfantVisitationConsolidatedDto implements Serializable
 {
     private InfantVisitRequestDto infantVisitRequestDto;
-    private InfantMotherArtDto infantMotherArtDto;
+   // private InfantMotherArtDto infantMotherArtDto;
     //private InfantArvDto infantArvDto;
     //private InfantPCRTestDto infantPCRTestDto;
 

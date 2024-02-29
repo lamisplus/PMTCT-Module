@@ -70,6 +70,7 @@ public class InfantService {
         infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
         infant.setDefaultDays(0);
         infant.setBodyWeight(infantDto.getBodyWeight());
+        infant.setCtxStatus(infantDto.getCtxStatus());
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
@@ -147,6 +148,7 @@ public class InfantService {
                 .ancNo(infant.getInfantOutcomeAt18_months())
                 .personUuid(infant.getMotherPersonUuid())
                 .bodyWeight(infant.getBodyWeight())
+                .ctxStatus(infant.getCtxStatus())
                 .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
                 .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
                 .build();
@@ -182,7 +184,7 @@ public class InfantService {
          infant.setSex(infantDto.getSex());
          infant.setAncNo(infantDto.getAncNo());
          infant.setHospitalNumber(infantDto.getHospitalNumber());
-         infant.setUuid(UUID.randomUUID().toString());
+         infant.setUuid(infantDto.getUuid());
          infant.setFacilityId(facilityId);
          infant.setCreatedBy(user.getUserName());
          infant.setLastModifiedBy(user.getUserName());
@@ -191,14 +193,16 @@ public class InfantService {
          infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
          infant.setDefaultDays(0);
          infant.setBodyWeight(infantDto.getBodyWeight());
+         infant.setCtxStatus(infantDto.getCtxStatus());
+         infant.setMotherPersonUuid(infantDto.getPersonUuid());
 
          Infant result =  infantRepository.save(infant);
 
          //update InfantArvDto
-        InfantArv infantArv = updateInfantArvDto(infantDto);
+        InfantArv infantArv = updateInfantArvDto(infantDto,result);
 
          //update InfantPCRTest
-         InfantPCRTest infantPCRTest = updateInfantPCRTest(infantDto);
+         InfantPCRTest infantPCRTest = updateInfantPCRTest(infantDto,result);
 
         return InfantDtoUpdateResponse.builder()
                 .infant(result)
@@ -207,18 +211,18 @@ public class InfantService {
                 .build();
     }
 
-    private InfantArv updateInfantArvDto(InfantDto infantDto) {
+    private InfantArv updateInfantArvDto(InfantDto infantDto, Infant infant) {
         InfantArv infantArv = null;
         if (infantDto.getInfantArvDto().getId() != null) {
-            infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto());
+            infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto(),infant);
         }
         return infantArv;
     }
 
-    private InfantPCRTest updateInfantPCRTest(InfantDto infantDto) {
+    private InfantPCRTest updateInfantPCRTest(InfantDto infantDto,Infant infant) {
         InfantPCRTest infantPCRTest = null;
         if (infantDto.getInfantPCRTestDto().getId() != null) {
-            infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto());
+            infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(),infant);
         }
         return infantPCRTest;
     }
