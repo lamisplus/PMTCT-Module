@@ -262,7 +262,6 @@ const AncPnc = (props) => {
         "locationState.patientObj.person_uuid",
         locationState.patientObj.person_uuidd
       );
-
       setEnrollDto({
         ...enroll,
         personUuid: locationState.patientObj.person_uuid,
@@ -317,7 +316,7 @@ const AncPnc = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        //console.log(response.data.find((x)=> x.id===id));
+        console.log("testing", response.data);
         setEnrollDto({ ...enroll, ...response.data });
         setInfantMotherArtDto({
           ...infantMotherArtDto,
@@ -325,6 +324,8 @@ const AncPnc = (props) => {
           regimenId: response.data.regimenId,
           motherArtInitiationTime: response.data.motherArtInitiationTime,
         });
+        RegimenType(response.data.regimenTypeId);
+        //regimenTypeId
       })
       .catch((error) => {
         //console.log(error);
