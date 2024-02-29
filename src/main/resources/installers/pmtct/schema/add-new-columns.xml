@@ -368,4 +368,28 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true"  id="2024022802-105" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="hepatitisb" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD hepatitisb character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="2024022803-106" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="urinalysis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD urinalysis character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

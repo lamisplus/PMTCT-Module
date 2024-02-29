@@ -33,5 +33,7 @@
      private String  motherArtInitiationTime;
      private Long regimenTypeId;
      private String regimenId;
+     private String hepatitisB;
+     private String urinalysis;
  }
 
