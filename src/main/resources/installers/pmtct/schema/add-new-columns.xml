@@ -356,4 +356,16 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true"  id="2024022801-104" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="ctx_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+            ADD ctx_status character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
