@@ -424,7 +424,7 @@ const LabourinfantInfo = (props) => {
                         id="hospitalNumber"
                         onChange={handleInputChangeinfantInfoDto}
                         value={infantInfo.hospitalNumber}
-                        // disabled={true}
+                        disabled={disabledField}
                       />
                     </InputGroup>
                     {errors.hospitalNumber !== "" ? (
@@ -452,7 +452,7 @@ const LabourinfantInfo = (props) => {
                     <InputGroup>
                       <Input
                         type="date"
-                        disabled={true}
+                        // disabled={true}
                         name="dateOfDelivery"
                         id="dateOfDelivery"
                         onChange={handleInputChangeinfantInfoDto}
@@ -593,7 +593,7 @@ const LabourinfantInfo = (props) => {
                         <option value="">Select </option>
 
                         {genders.map((value) => (
-                          <option key={value.id} value={value.display}>
+                          <option key={value.id} value={value.code}>
                             {value.display}
                           </option>
                         ))}
@@ -697,9 +697,11 @@ const LabourinfantInfo = (props) => {
                         }}
                         disabled={disabledField}
                       >
+                        {console.log(infantArvDto.infantArvType)}
+
                         <option value="select">Select </option>
                         {infantArv.map((value) => (
-                          <option key={value.id} value={value.id}>
+                          <option key={value.id} value={value.code}>
                             {value.display}
                           </option>
                         ))}
@@ -976,7 +978,7 @@ const LabourinfantInfo = (props) => {
                       >
                         <option value="select">Select </option>
                         {pcrResult.map((value) => (
-                          <option key={value.id} value={value.id}>
+                          <option key={value.id} value={value.code}>
                             {value.display}
                           </option>
                         ))}
@@ -990,6 +992,13 @@ const LabourinfantInfo = (props) => {
                   </div>
                 </div>
               </>
+              {/* Display notification when maternal outcome is IIT and transfer out */}
+              {infantPCRTestDto.results !== "" &&
+              infantPCRTestDto.results === "INFANT_PCR_RESULT_POSITIVE" ? (
+                <h2 style={{ color: "red" }}>Kindly fill ART form</h2>
+              ) : (
+                ""
+              )}
               {/* <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >National Identity  Number(NIN)</Label>
