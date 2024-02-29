@@ -320,4 +320,40 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true"  id="20240228-101" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="mother_art_initiation_time" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD mother_art_initiation_time character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20240228-102" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="regimen_type_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD regimen_type_id bigint
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20240228-103" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="regimen_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD regimen_id character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
