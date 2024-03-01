@@ -247,6 +247,40 @@ const ClinicVisit = (props) => {
         }
       }
       getGa();
+
+      // get the value of the viral load according to the viral load date
+      async function getViralLoadValue() {
+        const dateOfViralLoad = e.target.value;
+        //?ancNo=001&visitDate=2023-02-01
+        const response = await axios.get(
+          `${baseUrl}laboratory/result/patients/${
+            props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+          }/${dateOfViralLoad}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "text/plain",
+            },
+          }
+        );
+        console.log(response);
+
+        console.log(response.data.result);
+        if (response.data.result) {
+          setObjValues({
+            ...objValues,
+            resultOfViralLoad: response.data.result,
+          });
+        }
+        // else {
+        //   setObjValues({ ...objValues, [e.target.name]: e.target.value });
+        // }
+      }
+      getViralLoadValue();
+
+      //
     }
     if (e.target.name === "fpCounseling" && e.target.value === "No") {
       objValues.fpMethod = "";

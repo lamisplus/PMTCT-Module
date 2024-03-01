@@ -35,7 +35,6 @@ const RecentHistory = (props) => {
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
 
-
   console.log(props);
   useEffect(() => {
     if (props?.allEntryPoint) {
@@ -309,7 +308,7 @@ const RecentHistory = (props) => {
       setSaving(true);
       //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
       axios
-        .delete(`${baseUrl}pmtct/anc/delete/delivery/${row.recordId}`, {
+        .delete(`${baseUrl}pmtct/anc/delete/mothervisit/${row.recordId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
