@@ -116,6 +116,68 @@ public class PmtctVisitService {
         return this.pmtctVisitRepository.save(pmtctVisit);
     }
 
+    public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
+        PmtctVisit pmtctVisit = new PmtctVisit();
+        pmtctVisit.setId(id);
+        pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
+        pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
+        pmtctVisit.setUuid(existingVisit.getUuid());
+        pmtctVisit.setPersonUuid(existingVisit.getUuid());
+        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
+        pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
+        pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
+        pmtctVisit.setGaOfViralLoad(pmtctVisitRequestDto.getGaOfViralLoad());
+        pmtctVisit.setResultOfViralLoad(pmtctVisitRequestDto.getResultOfViralLoad());
+        if(pmtctVisitRequestDto.getGaOfViralLoad()!=null) {
+            int ga = pmtctVisitRequestDto.getGaOfViralLoad();
+            String tVL = "Other Time";
+            if ((ga >= 32) || (ga <= 36)) tVL = "Between 32 and 36";
+            pmtctVisit.setTimeOfViralLoad(tVL);
+        }
+        pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
+        pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
+        pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
+        pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
+        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
+        pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
+        pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
+        pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        String visitStatus = pmtctVisitRequestDto.getVisitStatus();
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = (User) currentUser.get();
+            Long facilityId = user.getCurrentOrganisationUnitId();
+            System.out.println("facilityId = "+facilityId);
+            System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
+            if (persons.isPresent()) {
+                Person person = persons.get();
+                pmtctVisit.setHospitalNumber(person.getHospitalNumber());
+                pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                //System.out.println("visitStatus = " + visitStatus);
+                if (visitStatus != null) {
+                    System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
+                    Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
+                    if(ancs.isPresent()) {
+                        ANC anc = ancs.get();
+                        if (visitStatus.contains("_IN")) {
+
+                            ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
+                        } else {
+                            ancService.graduateFromANC(anc, visitStatus);
+                        }
+                    }
+
+                }
+
+
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return this.pmtctVisitRepository.save(pmtctVisit);
+    }
+
 
     public PmtctVisitResponseDto convertEntitytoRespondDto(PmtctVisit pmtctVisit) {
         PmtctVisitResponseDto pmtctVisitResponseDto = new PmtctVisitResponseDto();
@@ -232,11 +294,12 @@ public class PmtctVisitService {
                 .orElseThrow(() -> new EntityNotFoundException(VisitService.class, "errorMessage", "No visit was found with given Id " + id));
     }
     public PmtctVisitResponseDto updatePmtctVisit(Long id, PmtctVisitRequestDto pmtctVisitRequestDto) {
-        // PmtctVisit existVisit = getExistVisit(id);
-        PmtctVisit pmtctVisit = converRequestDtotoEntity(pmtctVisitRequestDto);
-        pmtctVisit.setId(id);
+        PmtctVisit existVisit = getExistVisit(id);
+        PmtctVisit pmtctVisit = convertRequestDtoToEntityUpdate( id, pmtctVisitRequestDto,existVisit);
+        //pmtctVisit.setId(id);
         //pmtctVisit.setArchived(0);
-        return convertEntitytoRespondDto(pmtctVisitRepository.save(pmtctVisit));
+       // return convertEntitytoRespondDto(pmtctVisitRepository.save(pmtctVisit));
+        return convertEntitytoRespondDto(pmtctVisit);
     }
 
     public PmtctVisitResponseDto viewPmtctVisit(Long id) {

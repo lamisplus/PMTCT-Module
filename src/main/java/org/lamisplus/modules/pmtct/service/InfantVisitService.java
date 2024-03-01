@@ -7,7 +7,9 @@ import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -80,7 +82,7 @@ public class InfantVisitService
         infantVisit.setAncNumber(infantVisitRequestDto.getAncNumber());
         infantVisit.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         infantVisit.setVisitStatus(infantVisitRequestDto.getVisitStatus());
-        infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+        //infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
         try{
@@ -101,6 +103,7 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
 
         return this.infantVisitRepository.save(infantVisit);
+       // return this.infantVisitRepository.save(infantVisit);
     }
 
 
@@ -118,7 +121,6 @@ public class InfantVisitService
         infantVisitResponseDto.setUuid(infantVisit.getUuid());
         infantVisitResponseDto.setVisitDate(infantVisit.getVisitDate());
         infantVisitResponseDto.setVisitStatus(infantVisit.getVisitStatus());
-
 
         return infantVisitResponseDto;
     }
@@ -172,7 +174,7 @@ public class InfantVisitService
         infantVisitResponseDto.setAncNumber(infantVisit.getAncNumber());
         infantVisitResponseDto.setBodyWeight(infantVisit.getBodyWeight());
         infantVisitResponseDto.setBreastFeeding(infantVisit.getBreastFeeding());
-        infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
+        //infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
         infantVisitResponseDto.setId(infantVisit.getId());
         infantVisitResponseDto.setInfantHospitalNumber(infantVisit.getInfantHospitalNumber());
         infantVisitResponseDto.setUuid(infantVisit.getUuid());
@@ -245,7 +247,7 @@ public class InfantVisitService
 
     public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto)
     {
-        this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        InfantVisitResponseDto infantVisitResponseDto =  this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
 //        if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
 //        {
 //            infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
@@ -269,7 +271,25 @@ public class InfantVisitService
 //
 //            this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
 //        }
-        return infantVisitationConsolidatedDto;
+        return InfantVisitationConsolidatedDto.builder()
+                .infantVisitRequestDto(convertEntitytoRequestDto(infantVisitResponseDto,infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPersonUuid()))
+                .build();
+    }
+
+    public InfantVisitRequestDto convertEntitytoRequestDto(InfantVisitResponseDto infantVisitResponseDto, String personUuid) {
+        InfantVisitRequestDto infantVisitResponseDto1 = new InfantVisitRequestDto();
+        infantVisitResponseDto1.setId(infantVisitResponseDto.getId());
+        infantVisitResponseDto1.setVisitDate(infantVisitResponseDto.getVisitDate());
+        infantVisitResponseDto1.setAncNumber(infantVisitResponseDto.getAncNumber());
+        infantVisitResponseDto1.setBodyWeight(infantVisitResponseDto.getBodyWeight());
+        infantVisitResponseDto1.setVisitStatus(infantVisitResponseDto.getVisitStatus());
+       // infantVisitResponseDto1.setCtxStatus(infantVisitResponseDto.getCtxStatus());
+        infantVisitResponseDto1.setBreastFeeding(infantVisitResponseDto.getBreastFeeding());
+        infantVisitResponseDto1.setUuid(infantVisitResponseDto.getUuid());
+        infantVisitResponseDto1.setInfantOutcomeAt18Months(infantVisitResponseDto.getInfantOutcomeAt18Months());
+        infantVisitResponseDto1.setPersonUuid(personUuid);
+
+        return infantVisitResponseDto1;
     }
 
     public FormFilterResponseDto getFormFilter(String hospitalNumber){
@@ -422,7 +442,14 @@ public class InfantVisitService
         //saveConsolidation(infantVisitationConsolidatedDto)
         //System.out.println(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
        // System.out.println(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
-        if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null) this.updateInfantVisit(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        System.out.println("================================================");
+        System.out.println(infantVisitationConsolidatedDto);
+        System.out.println("================================================");
+        if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null){
+            System.out.println("CODE WORKING....");
+            this.updateInfantVisit(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        }
+
         //if(infantVisitationConsolidatedDto.getInfantArvDto().getId() != null) this.updateInfantArv(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto());
        // if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) this.updateInfantMotherArt(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         //if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) this.updateInfantPCRTest(infantVisitationConsolidatedDto.getInfantPCRTestDto());
@@ -448,15 +475,27 @@ public class InfantVisitService
 
 
     public void updateInfantVisit(InfantVisitRequestDto infantVisitRequestDto) {
-        InfantVisit exist = infantVisitRepository
-                .findById(infantVisitRequestDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantVisit.class, "InfantVisit_NOT_FOUND_MESSAGE" ));
+       // InfantVisit exist = infantVisitRepository.findById(infantVisitRequestDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantVisit.class, "InfantVisit_NOT_FOUND_MESSAGE" ));
+        System.out.println("ENTERED UPDATE INFANT....");
+        InfantVisit exist = infantVisitRepository.findById(infantVisitRequestDto.getId()).get();
+        System.out.println("ENTERED UPDATE INFANT2....");
+        if(exist == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No Infant found with id "+ infantVisitRequestDto.getId());
+        }
         exist.setVisitDate(infantVisitRequestDto.getVisitDate());
         exist.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         exist.setVisitStatus(infantVisitRequestDto.getVisitStatus());
-        exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+       // exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
-        try{
+        System.out.println("=================EXIST==========================");
+        System.out.println(exist);
+        System.out.println("================================================");
+     //   try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
+            System.out.println("=================INFANTS==========================");
+            System.out.println(infants);
+            System.out.println("================================================");
+
             if(infants.isPresent()){
                 Infant infant = infants.get();
                 LocalDate nad = this.calculateNAD(infantVisitRequestDto.getVisitDate());
@@ -466,9 +505,13 @@ public class InfantVisitService
                 infant.setNextAppointmentDate(nad);
                 infantRepository.save(infant);
 
-
             }
-        }catch(Exception e) {}
+//
+//        }catch(Exception e) {
+//            System.out.println("=================================");
+//            System.out.println(e.getMessage());
+//            System.out.println("=================================");
+       // }
        this.infantVisitRepository.save(exist);
 
     }
