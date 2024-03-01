@@ -85,18 +85,22 @@ const ClinicVisit = (props) => {
   const [disabledField, setDisabledField] = useState(false);
   const [objValues, setObjValues] = useState({
     infantVisitRequestDto: "",
-    infantArvDto: "",
-    infantMotherArtDto: "",
-    infantPCRTestDto: "",
+    // infantArvDto: "",
+    // infantMotherArtDto: "",
+    // infantPCRTestDto: "",
   });
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     ageAtCtx: "",
+    personUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid
+      ? props.patientObj.personUuid
+      : "",
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
     breastFeeding: "",
     // ctxStatus: "",
     infantHospitalNumber: "",
-    uuid: "",
     visitDate: "",
     visitStatus: "",
     infantOutcomeAt18Months: "",
@@ -419,12 +423,12 @@ const ClinicVisit = (props) => {
       // objValues.infantPCRTestDto = infantPCRTestDto;
       if (props.activeContent && props.activeContent.actionType) {
         //Perform operation for updation action
+        //`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`,
+
         axios
-          .put(
-            `${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`,
-            objValues,
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
+          .put(`${baseUrl}pmtct/anc/update-infant-visit`, objValues, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
           .then((response) => {
             setSaving(false);
             toast.success("Clinic Visit save successful", {
