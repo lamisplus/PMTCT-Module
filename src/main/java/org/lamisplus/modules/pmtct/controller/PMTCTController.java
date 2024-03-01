@@ -403,7 +403,7 @@ public class PMTCTController {
         return ResponseEntity.accepted ().build ();
     }
 
-    @PutMapping(value = "update-infant-visit}")
+    @PutMapping(value = "update-infant-visit")
     public ResponseEntity<InfantVisitationConsolidatedDto> updateInfantVisit(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         return ResponseEntity.ok (infantVisitService.updateInfantVisit(infantVisitationConsolidatedDto));
     }
