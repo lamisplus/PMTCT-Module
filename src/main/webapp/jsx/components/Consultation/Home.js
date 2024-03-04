@@ -253,11 +253,11 @@ const ClinicVisit = (props) => {
         const dateOfViralLoad = e.target.value;
         //?ancNo=001&visitDate=2023-02-01
         const response = await axios.get(
-          `${baseUrl}laboratory/result/patients/${
+          `${baseUrl}laboratory/result/patients?patientUuid=${
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
               : props.patientObj.personUuid
-          }/${dateOfViralLoad}`,
+          }&dateResultReceived=${dateOfViralLoad}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
