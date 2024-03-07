@@ -574,7 +574,6 @@ const UserRegistration = (props) => {
     temp.hospitalNumber = basicInfo.hospitalNumber
       ? ""
       : "Hospital Number  is required.";
-    console.log(temp.hospitalNumber);
     //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
     //temp.landmark = basicInfo.landmark ? "" : "This field is required."
     temp.lastName = basicInfo.lastName ? "" : "Last Name  is required.";
@@ -633,10 +632,10 @@ const UserRegistration = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("hereeeeee");
+    console.log(errors);
 
     if (validate()) {
-      if (basicInfo.age > 9) {
+      if (basicInfo.age > 4) {
         setSaving(true);
         let newConatctsInfo = [];
         //Manipulate relatives contact  address:"",
