@@ -1,16 +1,12 @@
 package org.lamisplus.modules.pmtct.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.lamisplus.modules.patient.domain.dto.PersonDto;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
-import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
-import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +28,7 @@ public class PMTCTController {
     private final ANCAcivityTracker ancAcivityTracker;
 
     private final InfantService infantService;
+    private final CurrentUserOrganizationService organizationService;
 
     private final InfantVisitService infantVisitService;
     @PostMapping(value = "anc-enrollement")
@@ -116,6 +113,23 @@ public class PMTCTController {
         return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
     }
 
+    @GetMapping("/art/")
+    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid){
+        Long facility = organizationService.getCurrentUserOrganization();
+        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
+    }
+
+    @GetMapping("/vl-result/")
+    public List<SingleResultProjectionDTO> vlResultOnDate (@RequestParam String PersonUuid,
+                                                @RequestParam String dateResultReceived){
+        Long facility = organizationService.getCurrentUserOrganization();
+        return pmtctEnrollmentService.getVlResult(PersonUuid,dateResultReceived);
+    }
+
+//    @GetMapping("{id}")
+//    public ResponseEntity<PatientArtData>  getPatientArtData (@PathVariable String PersonUuid) {
+//        return ResponseEntity.ok(pmtctEnrollmentService.getArtDate(PersonUuid));
+//    }
 //    @GetMapping(value = "/get-all-pmtct-enrollment")
 //    public ResponseEntity<List<PMTCTEnrollmentRespondDto>> getAllPmtctEnrollment() {
 //        return ResponseEntity.ok(this.pmtctEnrollmentService.getAllPmtctEnrollment());

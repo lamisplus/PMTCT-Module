@@ -253,7 +253,7 @@ const ClinicVisit = (props) => {
         const dateOfViralLoad = e.target.value;
         //?ancNo=001&visitDate=2023-02-01
         const response = await axios.get(
-          `${baseUrl}laboratory/result/patients?patientUuid=${
+          `${baseUrl}laboratory/result/patient?patientUuid=${
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
               : props.patientObj.personUuid
@@ -261,14 +261,14 @@ const ClinicVisit = (props) => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "text/plain",
+              "Content-Type": "application/json",
             },
           }
         );
         console.log(response);
 
         console.log(response.data.result);
-        if (response.data.result) {
+        if (response?.data?.result) {
           setObjValues({
             ...objValues,
             resultOfViralLoad: response.data.result,

@@ -23,16 +23,14 @@ import org.lamisplus.modules.patient.domain.dto.*;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
-import org.lamisplus.modules.pmtct.domain.dto.ANCRequestDto;
-import org.lamisplus.modules.pmtct.domain.dto.InfantMotherArtDto;
-import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRequestDto;
-import org.lamisplus.modules.pmtct.domain.dto.PMTCTEnrollmentRespondDto;
+import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.lamisplus.modules.pmtct.service.CurrentUserOrganizationService;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +43,7 @@ public class PMTCTEnrollmentService {
   private final OrganisationUnitRepository organisationUnitRepository;
   private final ApplicationCodesetRepository applicationCodesetRepository;
   private final InfantVisitService infantVisitService;
+  private final CurrentUserOrganizationService currentUserOrganizationService;
 
     public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
       //System.out.println(pmtctEnrollmentRequestDto);
@@ -149,6 +148,17 @@ public class PMTCTEnrollmentService {
     private OrgUnitDto getOrgUnit(Long id) {
         OrganisationUnit organizationUnit = (OrganisationUnit) this.organisationUnitRepository.getOne(id);
         return new OrgUnitDto(organizationUnit.getId(), organizationUnit.getName());
+    }
+
+    public List <PatientArtData> getArtDate (String PersonUuid, Long FacilityId) {
+        List<PatientArtData> getStartDate = pmtctEnrollmentReporsitory.getArtDate(PersonUuid, currentUserOrganizationService.getCurrentUserOrganization());
+        return getStartDate;
+    }
+
+    public List <SingleResultProjectionDTO> getVlResult (String PersonUuid, String dateResultReceived) {
+        LocalDate date = LocalDate.parse(dateResultReceived);
+        List<SingleResultProjectionDTO> getResult = pmtctEnrollmentReporsitory.findByPatientUuidAndDateResultReceived(PersonUuid, date.atStartOfDay(), currentUserOrganizationService.getCurrentUserOrganization());
+        return getResult;
     }
 
     @NotNull

@@ -259,6 +259,9 @@ const AncPnc = (props) => {
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
 
+    // if (props?.patientObj.id) {
+    //   getARTStartDate();
+    // }
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -278,6 +281,7 @@ const AncPnc = (props) => {
         "locationState.patientObj.person_uuid",
         locationState.patientObj.person_uuidd
       );
+
       setEnrollDto({
         ...enroll,
         personUuid: locationState.patientObj.person_uuid,
@@ -347,6 +351,22 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
+
+  // .get(`${baseUrl}hiv/enrollment/${props?.patientObj.id}`, {
+  const getARTStartDate = (id) => {
+    axios
+      .get(`${baseUrl}hiv/enrollment/${props?.patientObj.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log("testing art start", response.data);
+        // setEnrollDto({ ...enroll, ...response.data });
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
   const POINT_ENTRY_PMTCT = () => {
     console.log("former", enroll);
 
@@ -560,7 +580,7 @@ const AncPnc = (props) => {
                 {entryValueDisplay.display}
               </h3>
 
-{console.log()}
+              {console.log()}
               {props?.ancEntryType && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
