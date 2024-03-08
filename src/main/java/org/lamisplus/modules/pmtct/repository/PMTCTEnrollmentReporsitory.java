@@ -43,7 +43,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "SELECT active, deceased_date_time, deceased, date_of_registration AS dateOfRegistration, CAST(identifier AS TEXT) AS identifier, CAST(education AS TEXT) AS education, CAST(employment_status AS TEXT) AS employmentStatus, CAST(marital_status AS TEXT) AS maritalStatus, CAST(gender AS TEXT) AS gender, CAST(organization AS TEXT) AS organization, CAST(contact_point AS TEXT) AS contactPoint, CAST(address AS TEXT) AS address,CAST(contact AS TEXT) AS contact, is_date_of_birth_estimated AS isDateOfBirthEstimated, facility_id AS facilityId, emr_id AS emrId, nin_number AS niNumber, date_of_birth AS dateOfBirth, pp.id, pp.uuid, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber FROM patient_person pp WHERE uuid NOT IN (SELECT person_uuid FROM pmtct_anc pa where pa.archived = 0 UNION SELECT person_uuid FROM pmtct_enrollment pe where pe.archived = 0) and pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike '%FEMALE%' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pp.id desc", nativeQuery = true)
   Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);
 
-  @Query(value = "SELECT date_started AS artStartDate from hiv_enrollment WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0", nativeQuery = true)
+  @Query(value = "SELECT CASE WHEN date_started IS NULL THEN date_of_registration ELSE date_started END AS artStartDate from hiv_enrollment WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0", nativeQuery = true)
   List<PatientArtData> getArtDate (String personUuid, Long facilityId);
 
 
