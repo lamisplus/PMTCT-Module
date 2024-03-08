@@ -359,6 +359,8 @@ const AncPnc = (props) => {
             ? props?.patientObj.person_Uuud
             : props?.patientObj?.personUuud
             ? props?.patientObj?.personUuud
+            : props?.patientObj?.person_uuid
+            ? props?.patientObj?.person_uuid
             : props?.patientObj?.uuid
         }`,
         {
