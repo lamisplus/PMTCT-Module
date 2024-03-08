@@ -259,9 +259,9 @@ const AncPnc = (props) => {
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
 
-    // if (props?.patientObj.id) {
-    //   getARTStartDate();
-    // }
+    if (props?.patientObj.id) {
+      getARTStartDate();
+    }
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -351,16 +351,27 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
-
-  // .get(`${baseUrl}hiv/enrollment/${props?.patientObj.id}`, {
   const getARTStartDate = (id) => {
     axios
-      .get(`${baseUrl}hiv/enrollment/${props?.patientObj.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}pmtct/anc/art/?PersonUuid=${
+          props?.patientObj.person_Uuud
+            ? props?.patientObj.person_Uuud
+            : props?.patientObj?.personUuud
+            ? props?.patientObj?.personUuud
+            : props?.patientObj?.uuid
+        }`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
-        console.log("testing art start", response.data);
-        // setEnrollDto({ ...enroll, ...response.data });
+        if (response.data[0] !== null && response?.data[0]?.artStartDate) {
+          setEnrollDto({
+            ...enroll,
+            artStartDate: response?.data[0]?.artStartDate,
+          });
+        }
       })
       .catch((error) => {
         //console.log(error);
@@ -937,7 +948,8 @@ const AncPnc = (props) => {
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
-                    Hepatitis B Status <span style={{ color: "red" }}> *</span>
+                    Hepatitis B Status
+                    {/* <span style={{ color: "red" }}> *</span> */}
                   </Label>
                   <InputGroup>
                     <Input
@@ -963,7 +975,8 @@ const AncPnc = (props) => {
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
-                    Urinalysis<span style={{ color: "red" }}> *</span>
+                    Urinalysis
+                    {/* <span style={{ color: "red" }}> *</span> */}
                   </Label>
                   <InputGroup>
                     <Input
