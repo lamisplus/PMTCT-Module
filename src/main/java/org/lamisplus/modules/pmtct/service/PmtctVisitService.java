@@ -59,6 +59,7 @@ public class PmtctVisitService {
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
+        pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(UUID.randomUUID().toString());
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
@@ -120,6 +121,7 @@ public class PmtctVisitService {
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setId(id);
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
+        pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(existingVisit.getUuid());
         pmtctVisit.setPersonUuid(existingVisit.getUuid());
@@ -184,6 +186,7 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setId(pmtctVisit.getId());
         pmtctVisitResponseDto.setAncNo(pmtctVisit.getAncNo());
         pmtctVisitResponseDto.setDateOfVisit(pmtctVisit.getDateOfVisit());
+        pmtctVisitResponseDto.setDateOfDelivery(pmtctVisit.getDateOfDelivery());
         pmtctVisitResponseDto.setEnteryPoint(pmtctVisit.getEntryPoint());
         pmtctVisitResponseDto.setFpCounseling(pmtctVisit.getFpCounseling());
         pmtctVisitResponseDto.setFpMethod(pmtctVisit.getFpMethod());
