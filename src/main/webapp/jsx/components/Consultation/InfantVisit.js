@@ -1668,7 +1668,7 @@ const ClinicVisit = (props) => {
                   style={{ width: "106%", height: "35px" }}
                   ribbon
                 >
-                  <h4 style={{ color: "#fff" }}> 1st Rapid Antibody Test</h4>
+                  <h4 style={{ color: "#fff" }}> Rapid Antibody Test</h4>
                 </Label>
                 <br />
                 <br />
@@ -1676,7 +1676,7 @@ const ClinicVisit = (props) => {
                 <div className="row">
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
-                      <FormLabelName> Rapid Test Type</FormLabelName>
+                      <FormLabelName>Infant Test (Rapid Test)</FormLabelName>
                       <Input
                         type="select"
                         name="rapidTestType"
