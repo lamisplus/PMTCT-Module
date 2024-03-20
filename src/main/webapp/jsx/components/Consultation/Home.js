@@ -136,10 +136,12 @@ const ClinicVisit = (props) => {
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
     POINT_ENTRY_PMTCT();
+    console.log(props.activeContent.activeTab);
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null
+      props.activeContent.id !== null &&
+      props.activeContent.activeTab === "home"
     ) {
       GetVisit(props.activeContent.id);
       setDisabledField(

@@ -979,8 +979,8 @@ const LabourinfantInfo = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        // disabled={disabledField}
-                        disabled
+                        disabled={disabledField}
+                        // disabled
                       >
                         <option value="">Select </option>
                         <option value="First PCR">First PCR</option>
