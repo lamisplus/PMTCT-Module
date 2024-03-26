@@ -73,6 +73,8 @@ const ClinicVisit = (props) => {
     motherArt: false,
     outCome: false,
   });
+  const [visitDateStatus, setVisitDateStatus] = useState(false);
+
   const [ageAtTestList, setAtTestList] = useState([]);
   const [genders, setGenders] = useState([]);
   const [timingOfArtInitiation, setTimingOfArtInitiation] = useState([]);
@@ -94,7 +96,6 @@ const ClinicVisit = (props) => {
   });
   const [timingProphylaxisList, setTimingProphylaxisList] = useState([]);
   const [weeksValues, setWeeksValue] = useState(0);
-
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     ageAtCtx: "",
@@ -230,7 +231,6 @@ const ClinicVisit = (props) => {
     }
   };
   const filterOutTheChosenChildForView = (child) => {
-
     axios
       .get(
         `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
@@ -245,17 +245,13 @@ const ClinicVisit = (props) => {
 
       .then((response) => {
         let resultInfo = response.data.filter((each) => {
-         
-
           return each.hospitalNumber.toString() === child.toString();
         });
-     
 
         let weeks = calculateAgeInWeek(resultInfo[0].dateOfDelivery);
-   
+
         calculateAgeAtTestMonth(weeks);
         setChoosenInfant(resultInfo[0]);
-
       })
 
       .catch((error) => {
@@ -483,6 +479,27 @@ const ClinicVisit = (props) => {
     setErrors({ ...temp, [e.target.name]: "" });
     //console.log(e.target.name)
     if (e.target.name === "visitDate" && e.target.value !== "") {
+      async function checkForVisitDate() {
+        const ga = e.target.value;
+        const response = await axios.get(
+          `${baseUrl}pmtct/anc/is-infant-visit-date-exists?hospitalNumber=${infantHospitalNumber}&visitDate=${e.target.value}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "text/plain",
+            },
+          }
+        );
+        if (response.data) {
+          errors.visitDate = "";
+          toast.error("Visit Date already exist");
+
+          setVisitDateStatus(true);
+        } else {
+          setVisitDateStatus(false);
+        }
+      }
+
       async function getGa() {
         const ga = e.target.value;
         const response = await axios.get(
@@ -503,6 +520,7 @@ const ClinicVisit = (props) => {
         }
       }
       getGa();
+      checkForVisitDate();
     }
     setInfantVisitRequestDto({
       ...infantVisitRequestDto,
@@ -727,7 +745,6 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
-  console.log(choosenInfant);
   function GetInfantDetail(obj) {
     setChoosenInfant(obj);
 
@@ -774,7 +791,6 @@ const ClinicVisit = (props) => {
     };
     InfantVisit();
   }
-  console.log(choosenInfant);
   return (
     <div>
       <h2>Clinic Follow-up Visit</h2>
@@ -854,6 +870,13 @@ const ClinicVisit = (props) => {
                   />
                   {errors.visitDate !== "" ? (
                     <span className={classes.error}>{errors.visitDate}</span>
+                  ) : (
+                    ""
+                  )}
+                  {visitDateStatus === true ? (
+                    <span className={classes.error}>
+                      {"Visit Date already exist"}
+                    </span>
                   ) : (
                     ""
                   )}
