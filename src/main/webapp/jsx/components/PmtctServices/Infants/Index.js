@@ -27,6 +27,7 @@ import "@reach/menu-button/styles.css";
 import { FaUserPlus } from "react-icons/fa";
 import { Dropdown, Button, Menu, Icon } from "semantic-ui-react";
 import { toast } from "react-toastify";
+import { calculate_age } from "../../../utils";
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -254,7 +255,7 @@ const InfantInformation = (props) => {
             field: "hospital",
           },
           { title: "ANC NO.", field: "anc" },
-          { title: "Age", field: "nin" },
+          { title: "Age", field: "age" },
           { title: "Date of Delivery", field: "date" },
           { title: "Sex", field: "sex", filtering: false },
           { title: "Actions", field: "actions", filtering: false },
@@ -264,11 +265,8 @@ const InfantInformation = (props) => {
           name: row.firstName + " " + row.surname,
           hospital: row.hospitalNumber,
           anc: row.ancNo,
-          nin:
-            row.nin !== "0" && row.nin !== "1"
-              ? row.nin + " Months"
-              : row.nin + " Month",
-          sex: row.sex,
+          age: calculate_age(row.dateOfDelivery),
+          sex: row.sex === "SEX_FEMALE" ? "Female" : "Male",
           date: row.dateOfDelivery,
           actions: (
             <div>
