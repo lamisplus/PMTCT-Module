@@ -170,8 +170,8 @@ public class PMTCTController {
 //        return ResponseEntity.ok(this.deliveryService.getSingleDelivery(id));
 //    }
 
-    @PostMapping("/exist/anc-number/{ancNo}")
-    public boolean isANCNumberExisting(@PathVariable("ancNo") String ancNo) {
+    @PostMapping("/exist/anc-number")
+    public boolean isANCNumberExisting(@RequestParam("ancNo") String ancNo) {
         return ancService.isANCExisting(ancNo);
     }
 
@@ -265,8 +265,8 @@ public class PMTCTController {
     public void deletePartnerInformation(@PathVariable("id") Long id) {
         ancService.deletePartnerInfo(id);
     }
-    @GetMapping(value = "get-infant-by-ancno/{ancNo}")
-    public ResponseEntity<List<Infant>> getInfantByAncNo(@PathVariable("ancNo") String ancNo){
+    @GetMapping(value = "get-infant-by-ancno")
+    public ResponseEntity<List<Infant>> getInfantByAncNo(@RequestParam("ancNo") String ancNo){
         System.out.println("ANCNO "+ ancNo);
 
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
@@ -362,8 +362,8 @@ public class PMTCTController {
         return infantVisitService.getFormFilter(hospitalNumber);
     }
 
-    @GetMapping(value = "get-summary-chart/{ancNo}")
-    public SummaryChart getSummaryChart(@PathVariable("ancNo") String ancNo) {
+    @GetMapping(value = "get-summary-chart")
+    public SummaryChart getSummaryChart(@RequestParam("ancNo") String ancNo) {
         return ancAcivityTracker.getSummaryChart(ancNo);
     }
 
