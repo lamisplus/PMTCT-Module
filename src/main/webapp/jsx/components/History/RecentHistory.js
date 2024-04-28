@@ -50,7 +50,7 @@ const RecentHistory = (props) => {
     if (props.patientObj.ancNo) {
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+          `${baseUrl}pmtct/anc/get-infant-by-ancno?ancNo=${props.patientObj.ancNo}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
@@ -121,7 +121,7 @@ const RecentHistory = (props) => {
     if (props.patientObj.ancNo) {
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-summary-chart/${props.patientObj.ancNo}`,
+          `${baseUrl}pmtct/anc/get-summary-chart?ancNo=${props.patientObj.ancNo}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

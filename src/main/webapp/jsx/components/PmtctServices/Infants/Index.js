@@ -77,7 +77,7 @@ const InfantInformation = (props) => {
     setLoading(true);
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-infant-by-ancno/${props.patientObj.ancNo}`,
+        `${baseUrl}pmtct/anc/get-infant-by-ancno?ancNo=${props.patientObj.ancNo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
