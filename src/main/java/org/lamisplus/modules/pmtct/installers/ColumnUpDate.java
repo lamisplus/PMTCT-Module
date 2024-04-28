@@ -7,7 +7,7 @@ import com.foreach.across.core.installers.InstallerRunCondition;
 import org.springframework.core.annotation.Order;
 
 
-@Order(2)
+@Order(3)
 @Installer(name = "update-columns",
         description = "add new columns",
         runCondition = InstallerRunCondition.AlwaysRun)

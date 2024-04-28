@@ -92,7 +92,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                     "    AND pp.archived = :archived " +
                     "    AND pp.facility_id = :facilityId " +
                     "    AND pp.sex ILIKE 'FEMALE' " +
-                    "    AND (EXTRACT (YEAR FROM NOW()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) " +
+                    "    AND (EXTRACT (YEAR FROM NOW()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) " +
                     ") p " +
                     "ORDER BY p.personId DESC",
             nativeQuery = true
@@ -128,7 +128,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
             "  pp.archived = 0 " +
             "  AND pp.facility_id = :facilityId " +
             "  AND pp.sex ILIKE 'FEMALE' " +
-            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
+            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
             "ORDER BY " +
             "  pa.id DESC", nativeQuery = true)
     Page<PatientPerson> getActiveOnANC(Integer archived, Long facilityId, Pageable pageable);

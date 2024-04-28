@@ -54,7 +54,10 @@ public class InfantVisitService
         infantArv.setInfantArvType(infantArvDto.getInfantArvType());
         infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
         infantArv.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
-        infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
+        infantArv.setTimingOfAvrAfter72Hours(infantArvDto.getTimingOfAvrAfter72Hours());
+        infantArv.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
+
+
 
         return this.infantArvRepository.save(infantArv);
     }
@@ -121,6 +124,7 @@ public class InfantVisitService
         infantVisitResponseDto.setUuid(infantVisit.getUuid());
         infantVisitResponseDto.setVisitDate(infantVisit.getVisitDate());
         infantVisitResponseDto.setVisitStatus(infantVisit.getVisitStatus());
+
 
         return infantVisitResponseDto;
     }
@@ -245,35 +249,51 @@ public class InfantVisitService
         return (!infantArvList.isEmpty());
     }
 
-    public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto)
+    public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto)
     {
         InfantVisitResponseDto infantVisitResponseDto =  this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
-//        if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
-//        {
-//            infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
-//            infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
-//
-//            this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
-//        }
+        if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
+        {
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
 
-//        if ((infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType() != null)) {
-//            infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
-//            infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
-//            infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
-//            this.save(infantVisitationConsolidatedDto.getInfantArvDto());
-//        }
+            this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
+        }
+
+        if ((infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType() != null)) {
+            infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
+            infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+            this.save(infantVisitationConsolidatedDto.getInfantArvDto());
+        }
 
 
-//        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null) ){
-//            infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
-//            infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
-//            infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
-//
-//            this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
-//        }
+        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null) ){
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+
+            this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
+        }
+
+        if(infantRapidAntiBodyTestDto != null){
+//            InfantRapidAntiBodyTest infantRapidAntiBodyTest = convertDtoToEntity(infantRapidAntiBodyTestDto);
+            infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantRapidAntiBodyTestDto);
+        }
+
         return InfantVisitationConsolidatedDto.builder()
                 .infantVisitRequestDto(convertEntitytoRequestDto(infantVisitResponseDto,infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPersonUuid()))
                 .build();
+    }
+
+    public InfantRapidAntiBodyTest convertDtoToEntity(InfantRapidAntiBodyTestDto dto) {
+        InfantRapidAntiBodyTest entity = new InfantRapidAntiBodyTest();
+        entity.setRapidTestType(dto.getRapidTestType());
+        entity.setAncNumber(dto.getAncNumber());
+        entity.setAgeAtTest(dto.getAgeAtTest());
+        entity.setDateOfTest(dto.getDateOfTest());
+        entity.setResult(dto.getResult());
+        return entity;
     }
 
     public InfantVisitRequestDto convertEntitytoRequestDto(InfantVisitResponseDto infantVisitResponseDto, String personUuid) {
@@ -415,6 +435,8 @@ public class InfantVisitService
         infantArvDto.setInfantArvTime(infantArv.getInfantArvTime());
         infantArvDto.setArvDeliveryPoint(infantArv.getArvDeliveryPoint());
         infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
+        infantArvDto.setTimingOfAvrAfter72Hours(infantArv.getTimingOfAvrAfter72Hours());
+        infantArv.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
 
         return infantArvDto;
     }
