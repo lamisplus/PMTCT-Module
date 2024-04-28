@@ -101,6 +101,8 @@ const LabourinfantInfo = (props) => {
   const [newDateOfDelivery, setNewDateOfDelivery] = useState("");
   const [infantHospitalNumber, setInfantHospitalNumber] = useState("");
   const [agectx, setAgeCTX] = useState([]);
+  const [ageAtTestList, setAtTestList] = useState([]);
+
   const [infantArv, setInfantArv] = useState([]);
   //Vital signs clinical decision support
   const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
@@ -160,6 +162,66 @@ const LabourinfantInfo = (props) => {
         //console.log(error);
       });
   };
+  // caluculate the PCR
+  const calculateAgeInWeek = (dateOfBirth) => {
+    // let ex = "2024-01-01";
+    let ex = dateOfBirth;
+    let splitedInfantDate = ex.split("-");
+    let infantYear = Number(splitedInfantDate[0]);
+    let infantMonth = Number(splitedInfantDate[1]);
+    let infantDate = Number(splitedInfantDate[2]);
+
+    // must be greater than 6 weeks
+    let today = moment().format("YYYY-MM-DD");
+    let splitedTodayDate = today.split("-");
+    let todayYear = Number(splitedTodayDate[0]);
+    let todayMonth = Number(splitedTodayDate[1]);
+    let todayDate = Number(splitedTodayDate[2]);
+
+    let weekCounts = moment("20240313", "YYYYMMDD").fromNow();
+
+    // compare the year
+    if (Number(todayYear) === Number(infantYear)) {
+      // compare the month
+
+      if (todayMonth > infantMonth) {
+        let monthOld = todayMonth - infantMonth;
+
+        // convert to weeks
+        let convertMonthToWeeks = monthOld * 4;
+        return convertMonthToWeeks;
+      } else if (todayMonth === infantMonth) {
+        let dayOld = todayDate - infantDate;
+        // convert to weeks
+        let calculatingDaysToWeeks = dayOld / 7;
+        if (1 > calculatingDaysToWeeks) {
+          return 0;
+        } else {
+          let convertDayToWeeks = calculatingDaysToWeeks;
+
+          return Math.floor(convertDayToWeeks);
+        }
+      }
+    } else if (todayYear > infantYear) {
+      let yearOld = todayYear - infantYear;
+
+      let calculateYearInWeeks = yearOld * 52.1429;
+
+      return Math.floor(calculateYearInWeeks);
+    }
+  };
+  const getAgeAtTestMonthList = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/CHILD_TEST_AGE`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setAtTestList(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   const handleInputChangeInfantPCRTestDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
@@ -199,8 +261,9 @@ const LabourinfantInfo = (props) => {
       setVitalClinicalSupport({ ...vitalClinicalSupport, bodyWeight: "" });
     }
   };
-  console.log(props);
+
   useEffect(() => {
+    getAgeAtTestMonthList();
     INFANT_PCR_RESULT();
     SEX();
     AGE_CTX_INITIATION();
@@ -208,6 +271,39 @@ const LabourinfantInfo = (props) => {
     // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
+      let weeks = calculateAgeInWeek(infantInfo.dateOfDelivery);
+      if (weeks < 7) {
+        setInfantPCRTestDto({
+          ...infantPCRTestDto,
+          testType: "First PCR",
+        });
+        axios
+          .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setAtTestList(response.data);
+          })
+          .catch((error) => {
+            //console.log(error);
+          });
+      }
+      if (weeks > 11) {
+        setInfantPCRTestDto({
+          ...infantPCRTestDto,
+          testType: "Second PCR",
+        });
+        axios
+          .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setAtTestList(response.data);
+          })
+          .catch((error) => {
+            //console.log(error);
+          });
+      }
     }
     if (props.activeContent && props.activeContent.id) {
       setInfantInfo({ ...infantInfo, ...props.activeContent.obj });
@@ -222,6 +318,7 @@ const LabourinfantInfo = (props) => {
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
+
       //props.activeContent.obj.hospitalNumber2=props.activeContent.obj.hospitalNumber
     }
   }, [props.patientObj.id, props.activeContent.id]);
@@ -265,6 +362,52 @@ const LabourinfantInfo = (props) => {
       }
       getHosiptalNumber();
     }
+    if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
+      let weeks = calculateAgeInWeek(e.target.value);
+
+      if (weeks < 7) {
+        setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
+        axios
+          .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setAtTestList(response.data);
+          })
+          .catch((error) => {
+            //console.log(error);
+          });
+      }
+      if (weeks > 11) {
+        setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
+        axios
+          .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setAtTestList(response.data);
+          })
+          .catch((error) => {
+            //console.log(error);
+          });
+      }
+      // if (obj?.infantPCRTestDto?.results === "INFANT_PCR_RESULT_POSITIVE") {
+      //   setInfantPCRTestDto({
+      //     ...infantPCRTestDto,
+      //     testType: "Confirmatory PCR",
+      //   });
+      //   axios
+      //     .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
+      //       headers: { Authorization: `Bearer ${token}` },
+      //     })
+      //     .then((response) => {
+      //       setAtTestList(response.data);
+      //     })
+      //     .catch((error) => {
+      //       //console.log(error);
+      //     });
+      // }
+    }
     setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
   };
 
@@ -288,6 +431,7 @@ const LabourinfantInfo = (props) => {
     temp.hospitalNumber = infantInfo.hospitalNumber
       ? ""
       : "This field is required";
+    // temp.ageAtTest = infantPCRTestDto.ageAtTest ? "" : "This field is required";
     //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
     temp.sex = infantInfo.sex ? "" : "This field is required";
     //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
@@ -794,7 +938,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Age at Test(months)</FormLabelName>
                       <Input
-                        type="number"
+                        type="select"
                         name="ageAtTest"
                         id="ageAtTest"
                         value={infantPCRTestDto.ageAtTest}
@@ -803,8 +947,16 @@ const LabourinfantInfo = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        disabled
-                      />
+                        disabled={disabledField}
+                      >
+                        <option value="select">Select </option>
+                        {ageAtTestList.length > 0 &&
+                          ageAtTestList.map((value) => (
+                            <option key={value.id} value={value.code}>
+                              {value.display}
+                            </option>
+                          ))}
+                      </Input>
                       {errors.ageAtTest !== "" ? (
                         <span className={classes.error}>
                           {errors.ageAtTest}
@@ -828,6 +980,7 @@ const LabourinfantInfo = (props) => {
                           borderRadius: "0.25rem",
                         }}
                         disabled={disabledField}
+                        // disabled
                       >
                         <option value="">Select </option>
                         <option value="First PCR">First PCR</option>

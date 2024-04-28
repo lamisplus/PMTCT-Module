@@ -84,6 +84,7 @@ const ClinicVisit = (props) => {
     dateOfViralLoad: "",
     dateOfVisit: "",
     dateOfmeternalOutcome: "",
+    dateOfDelivery: "",
     dsd: "",
     dsdModel: "",
     dsdOption: "",
@@ -135,10 +136,12 @@ const ClinicVisit = (props) => {
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
     POINT_ENTRY_PMTCT();
+    console.log(props.activeContent.activeTab);
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null
+      props.activeContent.id !== null &&
+      props.activeContent.activeTab === "home"
     ) {
       GetVisit(props.activeContent.id);
       setDisabledField(
@@ -559,6 +562,34 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
               )}
+              {props.patientObj.entryPoint !== "PMTCT_ENTRY_POINT_ANC" && (
+                <div className="mb-3 col-md-3">
+                  <FormGroup>
+                    <FormLabelName>
+                      Date of Delivery <span style={{ color: "red" }}> *</span>
+                    </FormLabelName>
+
+                    <Input
+                      type="date"
+                      name="dateOfDelivery"
+                      id="dateOfDelivery"
+                      onChange={handleInputChange}
+                      value={objValues.dateOfDelivery}
+                      min={props.patientObj.firstAncDate}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+
+                    {errors.dateOfDelivery !== "" ? (
+                      <span className={classes.error}>
+                        {errors.dateOfDelivery}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+              )}
             </div>
             <br />
             <Label
@@ -827,7 +858,8 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-              {objValues.visitStatus === "VISIT_STATUS_PMTCT_TRANSFER_OUT" && (
+              {objValues.visitStatus ===
+                "VISIT_STATUS_PMTCT_TRANSITIONED_TO_ART_CLINIC" && (
                 <div className="form-group mb-3 col-md-3">
                   <FormGroup>
                     <FormLabelName>Name of ART Facility </FormLabelName>

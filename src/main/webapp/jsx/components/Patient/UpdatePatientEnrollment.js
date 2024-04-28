@@ -365,7 +365,7 @@ const UserRegistration = (props) => {
           ancNo: ancNumber,
         };
         const response = await axios.post(
-          `${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,
+          `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNumber}`,
           ancNo,
           {
             headers: {
