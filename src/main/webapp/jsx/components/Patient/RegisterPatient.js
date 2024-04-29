@@ -427,8 +427,8 @@ const UserRegistration = (props) => {
     } else if (e.target.name === "ancNo" && e.target.value !== "") {
       async function getAncNumber() {
         const ancNumber = e.target.value;
-        const response = await axios.get(
-          `${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,
+        const response = await axios.post(
+          `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNumber}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -546,7 +546,7 @@ const UserRegistration = (props) => {
           ancNo: ancNumber,
         };
         const response = await axios.post(
-          `${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,
+          `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNumber}`,
           ancNo,
           {
             headers: {
@@ -967,7 +967,7 @@ const UserRegistration = (props) => {
           ancNo: ancNumber,
         };
         const response = await axios.post(
-          `${baseUrl}pmtct/anc/exist/anc-number/${ancNumber}`,
+          `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNumber}`,
           ancNo,
           {
             headers: {

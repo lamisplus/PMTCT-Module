@@ -1018,13 +1018,7 @@ const AncPnc = (props) => {
                       type="select"
                       name="hivStatus"
                       id="hivStatus"
-                      disabled={
-                        patientObj.hivStatus
-                          ? true
-                          : patientObj.staticHivStatus
-                          ? true
-                          : false
-                      }
+                      disabled={patientObj.ancNo ? true : false}
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.hivStatus}
                     >
