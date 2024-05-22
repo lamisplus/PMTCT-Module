@@ -422,4 +422,23 @@
             ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_within_72_hours character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
+    <changeSet failOnError="true"  id="20240522-104" author="sam">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="age_at_test" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN age_at_test character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="20240522-105" author="sam">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_pcr" columnName="age_at_test" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr ALTER COLUMN age_at_test TYPE character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
 </databaseChangeLog>

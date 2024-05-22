@@ -249,7 +249,7 @@
                 visit_date date,
                 infant_hospital_number character varying COLLATE pg_catalog."default",
                 anc_number character varying COLLATE pg_catalog."default",
-                age_at_test bigint,
+                age_at_test character varying COLLATE pg_catalog."default",
                 test_type character varying COLLATE pg_catalog."default",
                 date_sample_collected date,
                 date_sample_sent date,

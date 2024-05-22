@@ -20,7 +20,7 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
-    private Long ageAtTest ;
+    private String ageAtTest ;
     private String testType;
     private LocalDate dateSampleCollected ;
     private LocalDate dateSampleSent;
