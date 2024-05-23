@@ -402,27 +402,27 @@
             ALTER TABLE pmtct_mother_visitation ADD COLUMN date_of_delivery DATE;
         </sql>
     </changeSet>
-    <changeSet failOnError="true"  id="20240521-102" author="sam">
+    <changeSet failOnError="true"  id="20240522-109" author="sam">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_arv" columnName="timing_of_avr_after_72_hours" />
+                <columnExists tableName="pmtct_infant_arv" columnName="timing_of_avr_after_72hours" />
             </not>
         </preConditions>
         <sql>
-            ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_after_72_hours character varying(255) COLLATE pg_catalog."default"
+            ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_after_72hours character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
-    <changeSet failOnError="true"  id="20240521-103" author="sam">
+    <changeSet failOnError="true"  id="20240522-108" author="sam">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_arv" columnName="timing_of_avr_within_72_hours" />
+                <columnExists tableName="pmtct_infant_arv" columnName="timing_of_avr_within_72hours" />
             </not>
         </preConditions>
         <sql>
-            ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_within_72_hours character varying(255) COLLATE pg_catalog."default"
+            ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_within_72hours character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
-    <changeSet failOnError="true"  id="20240522-104" author="sam">
+    <changeSet failOnError="true"  id="20240522-107" author="sam">
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="pmtct_infant_pcr" columnName="age_at_test" />
@@ -433,7 +433,7 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="true"  id="20240522-105" author="sam">
+    <changeSet failOnError="true"  id="20240522-106" author="sam">
         <preConditions onFail="MARK_RAN">
             <columnExists tableName="pmtct_infant_pcr" columnName="age_at_test" />
         </preConditions>
