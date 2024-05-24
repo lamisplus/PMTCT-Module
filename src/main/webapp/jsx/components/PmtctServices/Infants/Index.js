@@ -254,7 +254,7 @@ const InfantInformation = (props) => {
             title: "Hospital No.",
             field: "hospital",
           },
-          { title: "ANC NO.", field: "anc" },
+          // { title: "ANC NO.", field: "anc" },
           { title: "Age", field: "age" },
           { title: "Date of Delivery", field: "date" },
           { title: "Sex", field: "sex", filtering: false },
@@ -264,7 +264,7 @@ const InfantInformation = (props) => {
         data={infants.map((row) => ({
           name: row.firstName + " " + row.surname,
           hospital: row.hospitalNumber,
-          anc: row.ancNo,
+          // anc: row.ancNo,
           age: calculate_age(row.dateOfDelivery),
           sex: row.sex === "SEX_FEMALE" ? "Female" : "Male",
           date: row.dateOfDelivery,
