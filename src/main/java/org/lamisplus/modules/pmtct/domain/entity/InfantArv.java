@@ -26,7 +26,10 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private String arvDeliveryPoint;
     private String uuid;
     private String ageAtCtx;
+    @Column(name = "timing_of_avr_after_72hours")
     private String timingOfAvrAfter72Hours;
+
+    @Column(name = "timing_of_avr_within_72hours")
     private String timingOfAvrWithin72Hours;
 
 

@@ -217,7 +217,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20230118-002" author="drkarim-data-fi">
+    <changeSet id="20240522-002" author="sam-data-fi">
         <sql>
             CREATE TABLE IF NOT EXISTS public.pmtct_infant_arv
             (
@@ -230,6 +230,8 @@
                 infant_arv_time character varying COLLATE pg_catalog."default",
                 arv_delivery_point character varying COLLATE pg_catalog."default",
                 uuid character varying COLLATE pg_catalog."default" NOT NULL,
+                timing_of_avr_after_72hours character varying COLLATE pg_catalog."default",
+                timing_of_avr_within_72hours character varying COLLATE pg_catalog."default",
                 CONSTRAINT pmtct_infant_arv_pkey PRIMARY KEY (id)
                 )
 
@@ -239,8 +241,7 @@
                 OWNER to postgres;
         </sql>
     </changeSet>
-
-    <changeSet id="20230118-003" author="drkarim-data-fi">
+    <changeSet id="20240118-004" author="drkarim-data-fi">
         <sql>
             CREATE TABLE IF NOT EXISTS public.pmtct_infant_pcr
             (
@@ -248,7 +249,7 @@
                 visit_date date,
                 infant_hospital_number character varying COLLATE pg_catalog."default",
                 anc_number character varying COLLATE pg_catalog."default",
-                age_at_test bigint,
+                age_at_test character varying COLLATE pg_catalog."default",
                 test_type character varying COLLATE pg_catalog."default",
                 date_sample_collected date,
                 date_sample_sent date,
