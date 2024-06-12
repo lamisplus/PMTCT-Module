@@ -30,5 +30,6 @@
      private String regimenId;
      private String hepatitisB;
      private String urinalysis;
+     private String timeOfHivDiagnosis;
 
  }

@@ -619,9 +619,9 @@ const UserRegistration = (props) => {
         (temp.testResultSyphilis = objValues.testResultSyphilis
           ? ""
           : "This field is required");
-      temp.staticHivStatus = objValues.staticHivStatus
-        ? ""
-        : "This field is required";
+      // temp.staticHivStatus = objValues.staticHivStatus
+      //   ? ""
+      //   : "This field is required";
       temp.ancNo = objValues.ancNo ? "" : "This field is required";
     }
 
@@ -2510,7 +2510,7 @@ const UserRegistration = (props) => {
                             )}
                         </>
                       )}
-                      <div className="form-group mb-3 col-md-6">
+                      {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
                             HIV Status <span style={{ color: "red" }}> *</span>
@@ -2537,7 +2537,7 @@ const UserRegistration = (props) => {
                             ""
                           )}
                         </FormGroup>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
