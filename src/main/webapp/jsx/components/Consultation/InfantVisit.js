@@ -96,6 +96,7 @@ const ClinicVisit = (props) => {
   });
   const [timingProphylaxisList, setTimingProphylaxisList] = useState([]);
   const [weeksValues, setWeeksValue] = useState(0);
+  const [referToART, setReferToART] = useState(false);
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     ageAtCtx: "",
@@ -299,6 +300,15 @@ const ClinicVisit = (props) => {
         setInfantPCRTestDto({ ...response.data.infantPCRTestDto });
         setInfantRapidTestDTO({ ...response.data.infantRapidTestDTO });
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
+        if (
+          response.data.infantPCRTestDto.results ===
+            "INFANT_PCR_RESULT_POSITIVE" ||
+          response.data.infantRapidTestDTO.rapidResult ===
+            "INFANT_PCR_RESULT_POSITIVE"
+        ) {
+          setReferToART(true);
+          setSaving(true);
+        }
       })
       .catch((error) => {
         //console.log(error);
@@ -846,9 +856,9 @@ const ClinicVisit = (props) => {
             </Label>
             <br />
             <br />
-            <div className="row">
+            <div className="row" >
               <div className="form-group mb-3 col-md-6">
-                <FormGroup>
+                <FormGroup >
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
@@ -862,7 +872,8 @@ const ClinicVisit = (props) => {
                       borderRadius: "0.25rem",
                     }}
                     onChange={handleInputChangeInfantVisitRequestDto}
-                    min={props.patientObj.firstAncDate}
+                    // min={props.patientObj.firstAncDate}
+                    min={choosenInfant.dateOfDelivery}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
@@ -1711,7 +1722,7 @@ const ClinicVisit = (props) => {
                 )}
               <div className=" mb-3 col-md-6">
                 <FormGroup>
-                  <FormLabelName>Result *</FormLabelName>
+                  <FormLabelName>Result</FormLabelName>
                   <Input
                     type="select"
                     name="results"
@@ -1726,7 +1737,7 @@ const ClinicVisit = (props) => {
                   >
                     <option value="select">Select </option>
                     {pcrResult.map((value) => (
-                      <option key={value.id} value={value.id}>
+                      <option key={value.id} value={value.code}>
                         {value.display}
                       </option>
                     ))}
@@ -1876,7 +1887,7 @@ const ClinicVisit = (props) => {
                       >
                         <option value="select">Select </option>
                         {pcrResult.map((value) => (
-                          <option key={value.id} value={value.id}>
+                          <option key={value.id} value={value.code}>
                             {value.display}
                           </option>
                         ))}
@@ -1892,8 +1903,9 @@ const ClinicVisit = (props) => {
                   </div>
 
                   {/* Display notification when maternal outcome is IIT and transfer out */}
-                  {infantPCRTestDto.results !== "" &&
-                  infantPCRTestDto.results === "INFANT_PCR_RESULT_POSITIVE" ? (
+                  {infantRapidTestDTO.rapidResult !== "" &&
+                  infantRapidTestDTO.rapidResult ===
+                    "INFANT_PCR_RESULT_POSITIVE" ? (
                     <h2 style={{ color: "red" }}>Kindly fill ART form</h2>
                   ) : (
                     ""
