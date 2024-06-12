@@ -21,12 +21,7 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
     @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where anc_number = ?1", nativeQuery = true)
     Integer getChildVisits(String ancNO);
 
-    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_person_uuid = ?1", nativeQuery = true)
-    Integer getChildVisitsWithPersonUuid(String personUuid);
-
     List<InfantVisit> getInfantVisitsByAncNumber(String ancNO);
-
-    List<InfantVisit> getInfantVisitsByMotherPersonUuid(String motherPersonUuid);
 
 
 

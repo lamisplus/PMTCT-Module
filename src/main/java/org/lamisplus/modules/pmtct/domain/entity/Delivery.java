@@ -33,8 +33,6 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String referalSource;
     private Integer numberOfInfantsAlive;
     private Integer numberOfInfantsDead;
-    private String personUuid;
-    private String placeOfDelivery;
     @Override
     public boolean isNew() {
         return false;

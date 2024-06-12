@@ -1,30 +1,30 @@
 package org.lamisplus.modules.pmtct.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.ObjectUtils;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.patient.domain.dto.PageDTO;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
+import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
+import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
-import org.lamisplus.modules.pmtct.domain.entity.InfantArv;
-import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.util.CollectionUtils;
-import reactor.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -42,16 +42,14 @@ public class InfantService {
     private final InfantRepository infantRepository;
     private final UserService userService;
     private final PersonService personService;
-    private final InfantVisitService infantVisitService;
     private ObjectMapper mapper = new ObjectMapper();
     private final ApplicationCodesetRepository applicationCodesetRepository;
 
-    public InfantDtoResponse save(InfantDto infantDto) {
+    public Infant save(InfantDto infantDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
         Infant infant = new Infant();
-        infant.setMotherPersonUuid(infantDto.getPersonUuid());
         infant.setDateOfDelivery(infantDto.getDateOfDelivery());
         try{
             infant.setNin(calculateAgeInMonths(infantDto.getDateOfDelivery())+"");
@@ -69,43 +67,8 @@ public class InfantService {
         infant.setLastVisitDate(infantDto.getDateOfDelivery());
         infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
         infant.setDefaultDays(0);
-        infant.setBodyWeight(infantDto.getBodyWeight());
-        infant.setCtxStatus(infantDto.getCtxStatus());
-        Infant result = infantRepository.save(infant);
-
-        //save InfantArv
-        InfantArv infantArv =  saveInfantArv(infantDto.getInfantArvDto(),result);
-
-        //save InfantPCRTest
-        InfantPCRTest infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(),result);
-
-        return InfantDtoResponse.builder()
-                .infant(result)
-                .infantArv(infantArv)
-                .infantPCRTest(infantPCRTest)
-                .build();
-    }
-
-    private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
-        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
-            infantArvDto.setId(infant.getId());
-            infantArvDto.setVisitDate(LocalDate.now());
-            infantArvDto.setUuid(infant.getMotherPersonUuid());
-            infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
-            infantArvDto.setAncNumber(infant.getAncNo());
-        }
-        return infantVisitService.save(infantArvDto);
-    }
-
-    private InfantPCRTest saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infant) {
-        if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
-            infantPCRTestDto.setId(infant.getId());
-            infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
-            infantPCRTestDto.setAncNumber(infant.getAncNo());
-            infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
-            infantPCRTestDto.setVisitDate(LocalDate.now());
-        }
-        return infantVisitService.save(infantPCRTestDto);
+        infantRepository.save(infant);
+        return infant;
     }
 
     public int calculateAgeInMonths(LocalDate dob){
@@ -116,60 +79,13 @@ public class InfantService {
         return ga;
     }
 
-
-    public List<InfantDto> getSingleInfantByPersonUUID(String personUuid) {
-
-        List<InfantDto> infantDtoList = new ArrayList<>();
-
-        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid);
-        for (Infant infant : infantList) {
-
-            if (ObjectUtils.isNotEmpty(infant)) {
-                infantDtoList.add(buildInfantDTO(infant, personUuid));
-            }
-
-        }
-        return infantDtoList;
-
-    }
-
-    public InfantDto buildInfantDTO(Infant infant, String personUuid){
-        return InfantDto.builder()
-                .dateOfDelivery(infant.getDateOfDelivery())
-                .firstName(infant.getFirstName())
-                .middleName(infant.getMiddleName())
-                .surname(infant.getSurname())
-                .sex(infant.getSex())
-                .nin(infant.getNin())
-                .id(infant.getId())
-                .hospitalNumber(infant.getHospitalNumber())
-                .uuid(infant.getUuid())
-                .ancNo(infant.getAncNo())
-                .ancNo(infant.getInfantOutcomeAt18_months())
-                .personUuid(infant.getMotherPersonUuid())
-                .bodyWeight(infant.getBodyWeight())
-                .ctxStatus(infant.getCtxStatus())
-                .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
-                .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
-                .build();
-    }
-
-
-    public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
-        List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
-        if (CollectionUtils.isEmpty(infantList)) {
-           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
-        }
-        return infantList;
-    }
-
     @SneakyThrows
-    public Infant getSingleInfant(Long id){
+    public Infant getSingleInfant(Long id) {
         return this.infantRepository.findById(id)
                 .orElseThrow(() -> new Exception("Infant NOT FOUND"));
     }
 
-     public InfantDtoUpdateResponse updateInfant(Long id, InfantDto infantDto) {
+     public Infant updateInfant(Long id, InfantDto infantDto) {
          Optional<User> currentUser = this.userService.getUserWithRoles();
          User user = (User) currentUser.get();
          Long facilityId = user.getCurrentOrganisationUnitId();
@@ -184,7 +100,7 @@ public class InfantService {
          infant.setSex(infantDto.getSex());
          infant.setAncNo(infantDto.getAncNo());
          infant.setHospitalNumber(infantDto.getHospitalNumber());
-         infant.setUuid(infantDto.getUuid());
+         infant.setUuid(UUID.randomUUID().toString());
          infant.setFacilityId(facilityId);
          infant.setCreatedBy(user.getUserName());
          infant.setLastModifiedBy(user.getUserName());
@@ -192,39 +108,7 @@ public class InfantService {
          infant.setLastVisitDate(infantDto.getDateOfDelivery());
          infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
          infant.setDefaultDays(0);
-         infant.setBodyWeight(infantDto.getBodyWeight());
-         infant.setCtxStatus(infantDto.getCtxStatus());
-         infant.setMotherPersonUuid(infantDto.getPersonUuid());
-
-         Infant result =  infantRepository.save(infant);
-
-         //update InfantArvDto
-        InfantArv infantArv = updateInfantArvDto(infantDto,result);
-
-         //update InfantPCRTest
-         InfantPCRTest infantPCRTest = updateInfantPCRTest(infantDto,result);
-
-        return InfantDtoUpdateResponse.builder()
-                .infant(result)
-                .infantArv(infantArv)
-                .infantPCRTest(infantPCRTest)
-                .build();
-    }
-
-    private InfantArv updateInfantArvDto(InfantDto infantDto, Infant infant) {
-        InfantArv infantArv = null;
-        if (infantDto.getInfantArvDto().getId() != null) {
-            infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto(),infant);
-        }
-        return infantArv;
-    }
-
-    private InfantPCRTest updateInfantPCRTest(InfantDto infantDto,Infant infant) {
-        InfantPCRTest infantPCRTest = null;
-        if (infantDto.getInfantPCRTestDto().getId() != null) {
-            infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(),infant);
-        }
-        return infantPCRTest;
+        return infantRepository.save(infant);
     }
 
     public List<Infant> getInfantByAncNo(String ancNo)
@@ -282,12 +166,6 @@ public class InfantService {
     public void deleteInfant(Long id) {
         Infant exist = this.getSingleInfant(id);
         this.infantRepository.delete(exist);
-
-        //delete InfantARV
-        infantVisitService.deleteInfantArv(id);
-
-        //delete InfantARV
-        infantVisitService.deleteInfantArv(id);
     }
 
 
@@ -303,7 +181,4 @@ public class InfantService {
         return date;
     }
 
-    public List<Infant> getInfantWithMotherPersonUuid(String personUuid) {
-        return infantRepository.findInfantByMotherPersonUuid(personUuid);
-    }
 }

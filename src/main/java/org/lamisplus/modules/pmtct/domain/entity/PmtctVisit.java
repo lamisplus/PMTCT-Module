@@ -26,7 +26,6 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String uuid;
     private String entryPoint;
     private LocalDate dateOfVisit;
-    private LocalDate dateOfDelivery;
     private String fpCounseling;
     private String fpMethod;
     private String timeOfViralLoad;

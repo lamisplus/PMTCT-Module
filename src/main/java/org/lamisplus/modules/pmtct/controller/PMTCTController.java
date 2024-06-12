@@ -1,12 +1,16 @@
 package org.lamisplus.modules.pmtct.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.lamisplus.modules.patient.domain.dto.PersonDto;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
+import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
+import org.lamisplus.modules.patient.domain.dto.VisitDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +32,6 @@ public class PMTCTController {
     private final ANCAcivityTracker ancAcivityTracker;
 
     private final InfantService infantService;
-    private final CurrentUserOrganizationService organizationService;
 
     private final InfantVisitService infantVisitService;
     @PostMapping(value = "anc-enrollement")
@@ -78,16 +81,6 @@ public class PMTCTController {
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
 
-    @GetMapping(value = "/all-active-pmtct")
-    public ResponseEntity<PersonMetaDataDto> getANCFromPerson(
-            @RequestParam(defaultValue = "*") String searchParam,
-            @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "10") Integer pageSize)
-     {
-        PersonMetaDataDto personMetaDataDto = ancService.getActiveOnPMTCT(searchParam, pageNo, pageSize);
-        return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
-    }
-
 //    @GetMapping(value = "/pmtct-from-person-by-hospitalNumber/{hospitalNumber}")
 //    public ResponseEntity<PMTCTPersonDto> getpmtctFromPersonByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber) {
 //        return ResponseEntity.ok(this.ancService.getPMTCTPersonByHospitalNumber(hospitalNumber));
@@ -97,8 +90,7 @@ public class PMTCTController {
     public ResponseEntity<PersonMetaDataDto> getActiveOnANC(
             @RequestParam(defaultValue = "*") String searchParam,
             @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "10") Integer pageSize
-        )  {
+            @RequestParam(defaultValue = "10") Integer pageSize)  {
         PersonMetaDataDto personMetaDataDto = ancService.getActiveOnANC(searchParam, pageNo, pageSize);
         return new ResponseEntity<> (personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
@@ -113,23 +105,6 @@ public class PMTCTController {
         return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
     }
 
-    @GetMapping("/art/")
-    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid){
-        Long facility = organizationService.getCurrentUserOrganization();
-        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
-    }
-
-    @GetMapping("/vl-result/")
-    public List<SingleResultProjectionDTO> vlResultOnDate (@RequestParam String PersonUuid,
-                                                @RequestParam String dateResultReceived){
-        Long facility = organizationService.getCurrentUserOrganization();
-        return pmtctEnrollmentService.getVlResult(PersonUuid,dateResultReceived);
-    }
-
-//    @GetMapping("{id}")
-//    public ResponseEntity<PatientArtData>  getPatientArtData (@PathVariable String PersonUuid) {
-//        return ResponseEntity.ok(pmtctEnrollmentService.getArtDate(PersonUuid));
-//    }
 //    @GetMapping(value = "/get-all-pmtct-enrollment")
 //    public ResponseEntity<List<PMTCTEnrollmentRespondDto>> getAllPmtctEnrollment() {
 //        return ResponseEntity.ok(this.pmtctEnrollmentService.getAllPmtctEnrollment());
@@ -170,8 +145,8 @@ public class PMTCTController {
 //        return ResponseEntity.ok(this.deliveryService.getSingleDelivery(id));
 //    }
 
-    @PostMapping("/exist/anc-number")
-    public boolean isANCNumberExisting(@RequestParam("ancNo") String ancNo) {
+    @PostMapping("/exist/anc-number/{ancNo}")
+    public boolean isANCNumberExisting(@PathVariable("ancNo") String ancNo) {
         return ancService.isANCExisting(ancNo);
     }
 
@@ -226,23 +201,13 @@ public class PMTCTController {
         return ResponseEntity.ok (deliveryService.getSingleDelivery2(ancNo));
     }
 
-    @GetMapping(value = "view-delivery-with-uuid/{personUuid}")
-    public ResponseEntity<Delivery> viewDeliveryWithUuid(@PathVariable("personUuid") String personUuid) {
-        return ResponseEntity.ok (deliveryService.getSingleDeliveryWithUuid(personUuid));
-    }
-
     @GetMapping(value = "activities/{ancNo}")
     public List<ActivityTracker> getActivitiesByANC(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getANCActivities(ancNo);
     }
 
-    @GetMapping(value = "getAllActivities/{personUuid}")
-    public List<ActivityTracker> getAllActivitiesByPersonUuid(@PathVariable("personUuid") String personUuid) {
-        return ancAcivityTracker.getAllActivities(personUuid);
-    }
-
     @PostMapping(value = "add-infants")
-    public ResponseEntity<InfantDtoResponse> AddInfants(@RequestBody InfantDto infantDto) {
+    public ResponseEntity<Infant> AddInfants(@RequestBody InfantDto infantDto) {
          return ResponseEntity.ok(infantService.save(infantDto));
     }
 
@@ -252,7 +217,7 @@ public class PMTCTController {
     }
 
     @PutMapping(value = "update-infant/{id}")
-    public ResponseEntity<InfantDtoUpdateResponse> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
+    public ResponseEntity<Infant> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
         return ResponseEntity.ok (infantService.updateInfant(id, infantDto));
     }
 
@@ -265,25 +230,11 @@ public class PMTCTController {
     public void deletePartnerInformation(@PathVariable("id") Long id) {
         ancService.deletePartnerInfo(id);
     }
-    @GetMapping(value = "get-infant-by-ancno")
-    public ResponseEntity<List<Infant>> getInfantByAncNo(@RequestParam("ancNo") String ancNo){
+    @GetMapping(value = "get-infant-by-ancno/{ancNo}")
+    public ResponseEntity<List<Infant>> getInfantByAncNo(@PathVariable("ancNo") String ancNo){
         System.out.println("ANCNO "+ ancNo);
 
         return ResponseEntity.ok (infantService.getInfantByAncNo(ancNo));
-    }
-
-//    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-//    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
-//        System.out.println("personUuid "+ personUuid);
-//
-//        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
-//    }
-
-    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-    public ResponseEntity<List<InfantDto> > getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
-        System.out.println("personUuid "+ personUuid);
-
-        return ResponseEntity.ok (infantService.getSingleInfantByPersonUUID(personUuid));
     }
 
     @GetMapping(value = "/all-infants")
@@ -338,7 +289,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-mother-art")
-    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
+    public ResponseEntity<InfantMotherArt> createInfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
         return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
     }
 
@@ -352,9 +303,9 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-visit-consolidated")
-    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto ) {
+    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null) this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());
-        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantRapidAntiBodyTestDto ));
+        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto));
     }
 
     @GetMapping(value = "get-form-filter/{hospitalNumber}")
@@ -362,14 +313,9 @@ public class PMTCTController {
         return infantVisitService.getFormFilter(hospitalNumber);
     }
 
-    @GetMapping(value = "get-summary-chart")
-    public SummaryChart getSummaryChart(@RequestParam("ancNo") String ancNo) {
+    @GetMapping(value = "get-summary-chart/{ancNo}")
+    public SummaryChart getSummaryChart(@PathVariable("ancNo") String ancNo) {
         return ancAcivityTracker.getSummaryChart(ancNo);
-    }
-
-    @GetMapping(value = "get-pmtct-summary-chart/{personUuid}")
-    public SummaryChart getPmtctSummaryChart(@PathVariable("personUuid") String personUuid) {
-        return ancAcivityTracker.getPmtctSummaryChart(personUuid);
     }
 
     @GetMapping(value ="/calculate-ga/{lmp}")
@@ -380,11 +326,6 @@ public class PMTCTController {
     @GetMapping(value ="/calculate-ga2")
     public int calculateGa( @RequestParam("ancNo") String ancNo,  @RequestParam("visitDate") LocalDate visitDate) {
         return ancService.calculateGA(ancNo, visitDate);
-    }
-
-    @GetMapping(value = "/calculate-ga-from-person")
-    public int calculateGaFromPmtct(@RequestParam("personUuid") String personUuid, @RequestParam("visitDate") LocalDate visitDate) {
-        return ancService.calculateGaFromPmtct(personUuid, visitDate);
     }
 
     @GetMapping(value ="/calculate-ga3")
@@ -417,7 +358,7 @@ public class PMTCTController {
         return ResponseEntity.accepted ().build ();
     }
 
-    @PutMapping(value = "update-infant-visit")
+    @PutMapping(value = "update-infant-visit}")
     public ResponseEntity<InfantVisitationConsolidatedDto> updateInfantVisit(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         return ResponseEntity.ok (infantVisitService.updateInfantVisit(infantVisitationConsolidatedDto));
     }

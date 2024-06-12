@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.lamisplus.modules.pmtct.domain.entity.InfantRapidAntiBodyTest;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -18,7 +17,5 @@ public class InfantVisitationConsolidatedDto implements Serializable
     private InfantMotherArtDto infantMotherArtDto;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
-    private InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto;
-
 
 }

@@ -1,6 +1,7 @@
 package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jdk.nashorn.internal.runtime.options.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
@@ -8,13 +9,13 @@ import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
-import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
@@ -34,7 +35,6 @@ public class DeliveryService
     private final PmtctVisitRepository pmtctVisitRepository;
     private final DeliveryRepository deliveryRepository;
     private final UserService userService;
-    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     ObjectMapper mapper = new ObjectMapper();
 
     public DeliveryResponseDto save(DeliveryRequestDto deliveryRequestDto) {
@@ -70,18 +70,12 @@ public class DeliveryService
         delivery.setUuid(UUID.randomUUID().toString());
         delivery.setCreatedBy(user.getUserName());
         delivery.setLastModifiedBy(user.getUserName());
-        delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
-        delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
-        PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
-
-        if(pmtct != null) {
-            delivery.setHospitalNumber(pmtct.getHospitalNumber());
-            delivery.setFacilityId(pmtct.getFacilityId());
-        } else if (anc != null) {
+        if (anc != null)
+        {
             delivery.setHospitalNumber(anc.getHospitalNumber());
             delivery.setFacilityId(anc.getFacilityId()); }
-        else { throw new RuntimeException("YET TO REGISTER FOR ANC OR PERSON UUID"); }
+        else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         return this.deliveryRepository.save(delivery);
     }
@@ -89,9 +83,9 @@ public class DeliveryService
         DeliveryResponseDto deliveryResponseDto = new DeliveryResponseDto();
         deliveryResponseDto.setId(delivery.getId());
         deliveryResponseDto.setAncNo(delivery.getAncNo());
-        deliveryResponseDto.setHospitalNumber(delivery.getPersonUuid());
-        deliveryResponseDto.setFullName(getFullName(delivery.getPersonUuid()));
-        deliveryResponseDto.setAge(calculateAge(delivery.getPersonUuid()));
+        deliveryResponseDto.setHospitalNumber(delivery.getHospitalNumber());
+        deliveryResponseDto.setFullName(getFullName(delivery.getHospitalNumber()));
+        deliveryResponseDto.setAge(calculateAge(delivery.getHospitalNumber()));
         deliveryResponseDto.setUuid(delivery.getUuid());
         deliveryResponseDto.setDateOfDelivery(delivery.getDateOfDelivery());
         deliveryResponseDto.setBookingStatus(delivery.getBookingStatus());
@@ -112,8 +106,7 @@ public class DeliveryService
         deliveryResponseDto.setHCStatus(delivery.getHCStatus());
         deliveryResponseDto.setReferalSource(delivery.getReferalSource());
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
-        deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
-        deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
+
 
         return deliveryResponseDto;
     }
@@ -224,7 +217,6 @@ public class DeliveryService
             delivery.setReferalSource(deliveryRequestDto.getReferalSource());
             delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
-            delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
 
 
             this.deliveryRepository.save(delivery);
@@ -237,12 +229,4 @@ public class DeliveryService
         this.deliveryRepository.delete(existingDelivery);
     }
 
-    public Delivery getSingleDeliveryWithUuid(String personUuid) {
-        Delivery deliveryOptional= deliveryRepository.getDeliveryByPersonUuid(personUuid);
-        Delivery delivery = new Delivery();
-        if (deliveryOptional != null) {
-            delivery =  deliveryOptional;
-        }
-        return delivery;
-    }
 }

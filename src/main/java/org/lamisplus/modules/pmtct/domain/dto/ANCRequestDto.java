@@ -9,7 +9,6 @@ public class ANCRequestDto implements Serializable
 {
     private Long id;
     private String ancNo;
-    private String ancSetting;
     private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;

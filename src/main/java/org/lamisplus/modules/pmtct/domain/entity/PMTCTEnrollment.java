@@ -3,7 +3,6 @@ package org.lamisplus.modules.pmtct.domain.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 import org.springframework.data.domain.Persistable;
 
 
@@ -29,17 +28,8 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private LocalDate artStartDate;
     private String artStartTime;
     private String tbStatus;
-    private String pmtctType;
-    private String personUuid;
-    private Long archived;
-    private String hivStatus;
-    private String hospitalNumber;
-    private LocalDate lmp;
-    private String  motherArtInitiationTime;
-    private Long regimenTypeId;
-    private String regimenId;
-    private String hepatitisB;
-    private String urinalysis;
+    private String timeOfHivDiagnosis;
+
 
 
 

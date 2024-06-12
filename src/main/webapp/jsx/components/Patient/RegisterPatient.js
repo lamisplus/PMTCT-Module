@@ -619,9 +619,9 @@ const UserRegistration = (props) => {
         (temp.testResultSyphilis = objValues.testResultSyphilis
           ? ""
           : "This field is required");
-      temp.staticHivStatus = objValues.staticHivStatus
-        ? ""
-        : "This field is required";
+      // temp.staticHivStatus = objValues.staticHivStatus
+      //   ? ""
+      //   : "This field is required";
       temp.ancNo = objValues.ancNo ? "" : "This field is required";
     }
 
@@ -1253,9 +1253,9 @@ const UserRegistration = (props) => {
                                                         //onChange={handleInputChangeBasic}
                                                         style={{border: "1px solid #014D88",borderRadius:"0.2rem"}}
                                                     />
-                                                   
+
                                                 </FormGroup>
-                                            
+
                                             </div> */}
                     </div>
 
@@ -2371,7 +2371,7 @@ const UserRegistration = (props) => {
                               onChange={handleInputChange}
                               value={objValues.sourceOfReferral}
                             >
-                          
+
                               <option value="">Select</option>
                               {sourceReferral.map((value, index) => (
                                 <option key={index} value={value.code}>
@@ -2510,7 +2510,7 @@ const UserRegistration = (props) => {
                             )}
                         </>
                       )}
-                      <div className="form-group mb-3 col-md-6">
+                      {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
                             HIV Status <span style={{ color: "red" }}> *</span>
@@ -2537,7 +2537,7 @@ const UserRegistration = (props) => {
                             ""
                           )}
                         </FormGroup>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -2559,7 +2559,7 @@ const UserRegistration = (props) => {
               )}
               {saving ? <Spinner /> : ""}
               <br />
-              {/* { 
+              {/* {
                 basicInfo.age >= 10 &&
                 objValues.gaweeks > 0 &&
                 ancNumberCheck !== true &&

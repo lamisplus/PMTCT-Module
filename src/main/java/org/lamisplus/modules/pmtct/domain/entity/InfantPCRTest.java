@@ -20,7 +20,7 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
-    private String ageAtTest ;
+    private Long ageAtTest ;
     private String testType;
     private LocalDate dateSampleCollected ;
     private LocalDate dateSampleSent;
@@ -28,7 +28,6 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private LocalDate dateResultReceivedByCaregiver;
     private String results;
     private String uuid;
-
     @Override
     public boolean isNew() {
         return false;

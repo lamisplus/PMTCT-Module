@@ -1,23 +1,26 @@
 package org.lamisplus.modules.pmtct.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
+import org.lamisplus.modules.base.domain.entities.User;
+import org.lamisplus.modules.patient.domain.dto.PersonDto;
+import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
+import org.lamisplus.modules.patient.domain.entity.Person;
+import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @AllArgsConstructor
 public class InfantVisitService
@@ -48,16 +51,12 @@ public class InfantVisitService
         InfantArv infantArv = new InfantArv();
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
-        //infantArv.setUuid(UUID.randomUUID().toString());
-        infantArv.setUuid(infantArvDto.getUuid());
+        infantArv.setUuid(UUID.randomUUID().toString());
         infantArv.setVisitDate(infantArvDto.getVisitDate());
         infantArv.setInfantArvType(infantArvDto.getInfantArvType());
         infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
         infantArv.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
-        infantArv.setTimingOfAvrAfter72Hours(infantArvDto.getTimingOfAvrAfter72Hours());
-        infantArv.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
-
-
+        infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
 
         return this.infantArvRepository.save(infantArv);
     }
@@ -68,8 +67,7 @@ public class InfantVisitService
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
         infantPCRTest.setAncNumber(infantPCRTestDto.getAncNumber());
         infantPCRTest.setResults(infantPCRTestDto.getResults());
-        //infantPCRTest.setUuid(UUID.randomUUID().toString());
-        infantPCRTest.setUuid(infantPCRTestDto.getUuid());
+        infantPCRTest.setUuid(UUID.randomUUID().toString());
         infantPCRTest.setVisitDate(infantPCRTestDto.getVisitDate());
         infantPCRTest.setDateResultReceivedAtFacility(infantPCRTestDto.getDateResultReceivedAtFacility());
         infantPCRTest.setDateResultReceivedByCaregiver(infantPCRTestDto.getDateResultReceivedByCaregiver());
@@ -85,9 +83,8 @@ public class InfantVisitService
         infantVisit.setAncNumber(infantVisitRequestDto.getAncNumber());
         infantVisit.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         infantVisit.setVisitStatus(infantVisitRequestDto.getVisitStatus());
-        //infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+        infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
-        infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
         try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
             if(infants.isPresent()){
@@ -106,7 +103,6 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
 
         return this.infantVisitRepository.save(infantVisit);
-       // return this.infantVisitRepository.save(infantVisit);
     }
 
 
@@ -178,7 +174,7 @@ public class InfantVisitService
         infantVisitResponseDto.setAncNumber(infantVisit.getAncNumber());
         infantVisitResponseDto.setBodyWeight(infantVisit.getBodyWeight());
         infantVisitResponseDto.setBreastFeeding(infantVisit.getBreastFeeding());
-        //infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
+        infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
         infantVisitResponseDto.setId(infantVisit.getId());
         infantVisitResponseDto.setInfantHospitalNumber(infantVisit.getInfantHospitalNumber());
         infantVisitResponseDto.setUuid(infantVisit.getUuid());
@@ -249,9 +245,9 @@ public class InfantVisitService
         return (!infantArvList.isEmpty());
     }
 
-    public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto)
+    public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto)
     {
-        InfantVisitResponseDto infantVisitResponseDto =  this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
         if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
         {
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
@@ -259,86 +255,35 @@ public class InfantVisitService
 
             this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         }
-
         if ((infantVisitationConsolidatedDto.getInfantArvDto().getInfantArvType() != null)) {
             infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
-
-
-        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null) ){
+        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null)){
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
 
             this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
         }
-
-        if(infantRapidAntiBodyTestDto != null){
-//            InfantRapidAntiBodyTest infantRapidAntiBodyTest = convertDtoToEntity(infantRapidAntiBodyTestDto);
-            infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantRapidAntiBodyTestDto);
-        }
-
-        return InfantVisitationConsolidatedDto.builder()
-                .infantVisitRequestDto(convertEntitytoRequestDto(infantVisitResponseDto,infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPersonUuid()))
-                .build();
-    }
-
-    public InfantRapidAntiBodyTest convertDtoToEntity(InfantRapidAntiBodyTestDto dto) {
-        InfantRapidAntiBodyTest entity = new InfantRapidAntiBodyTest();
-        entity.setRapidTestType(dto.getRapidTestType());
-        entity.setAncNumber(dto.getAncNumber());
-        entity.setAgeAtTest(dto.getAgeAtTest());
-        entity.setDateOfTest(dto.getDateOfTest());
-        entity.setResult(dto.getResult());
-        return entity;
-    }
-
-    public InfantVisitRequestDto convertEntitytoRequestDto(InfantVisitResponseDto infantVisitResponseDto, String personUuid) {
-        InfantVisitRequestDto infantVisitResponseDto1 = new InfantVisitRequestDto();
-        infantVisitResponseDto1.setId(infantVisitResponseDto.getId());
-        infantVisitResponseDto1.setVisitDate(infantVisitResponseDto.getVisitDate());
-        infantVisitResponseDto1.setAncNumber(infantVisitResponseDto.getAncNumber());
-        infantVisitResponseDto1.setBodyWeight(infantVisitResponseDto.getBodyWeight());
-        infantVisitResponseDto1.setVisitStatus(infantVisitResponseDto.getVisitStatus());
-       // infantVisitResponseDto1.setCtxStatus(infantVisitResponseDto.getCtxStatus());
-        infantVisitResponseDto1.setBreastFeeding(infantVisitResponseDto.getBreastFeeding());
-        infantVisitResponseDto1.setUuid(infantVisitResponseDto.getUuid());
-        infantVisitResponseDto1.setInfantOutcomeAt18Months(infantVisitResponseDto.getInfantOutcomeAt18Months());
-        infantVisitResponseDto1.setPersonUuid(personUuid);
-
-        return infantVisitResponseDto1;
+        return infantVisitationConsolidatedDto;
     }
 
     public FormFilterResponseDto getFormFilter(String hospitalNumber){
         FormFilterResponseDto filterResponseDto = new FormFilterResponseDto();
         filterResponseDto.setInfantArv(this.infantArvAdministered(hospitalNumber));
         Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
-//        List<Infant> infants = this.infantRepository.findInfantsByHospitalNumber(hospitalNumber);
-//        log.info("list of infant: {}", infants);
-//        if(!(infants.isEmpty())) {
-//            Infant infant = infants.get(1);
-//            filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(infant.getAncNo()));
-//
-//        } else {
-//            filterResponseDto.setMotherArt(Boolean.FALSE);
-//        }
 
         //Optional<Delivery> deliveryOptional = this.deliveryRepository.findDeliveryByHospitalNumber(hospitalNumber);
         if (infants.isPresent()){
             filterResponseDto.setMotherArt(this.infantMotherArtDetailsCaptured(infants.get().getAncNo()));
-        } else {
-            filterResponseDto.setMotherArt(Boolean.FALSE);
         }
-
+        else filterResponseDto.setMotherArt(Boolean.FALSE);
         int infantAge = this.calculateAge(hospitalNumber);
-        if(infantAge>= 18) {
-            filterResponseDto.setOutCome(Boolean.TRUE);
-        } else {
-            filterResponseDto.setOutCome(Boolean.FALSE);
-        }
+        if(infantAge>= 18) filterResponseDto.setOutCome(Boolean.TRUE);
+        else filterResponseDto.setOutCome(Boolean.FALSE);
         return filterResponseDto;
     }
 
@@ -367,81 +312,43 @@ public class InfantVisitService
         if (infantVisitOptional.isPresent()){
             InfantVisit infantVisit = infantVisitOptional.get();
             infantVisitationConsolidatedDto.setInfantVisitRequestDto(convertEntitytoRequestDto(infantVisit));
-//            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findByAncNumberAndVisitDate(infantVisit.getAncNumber(), infantVisit.getVisitDate());
-//            if(infantMotherArtOptional.isPresent()) {
-//                InfantMotherArt infantMotherArt = infantMotherArtOptional.get();
-//                infantVisitationConsolidatedDto.setInfantMotherArtDto(converRequestDtotoEntity(infantMotherArt));
-//            }
+            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findByAncNumberAndVisitDate(infantVisit.getAncNumber(), infantVisit.getVisitDate());
+            if(infantMotherArtOptional.isPresent()) {
+                InfantMotherArt infantMotherArt = infantMotherArtOptional.get();
+                infantVisitationConsolidatedDto.setInfantMotherArtDto(converRequestDtotoEntity(infantMotherArt));
+            }
 
-//            Optional<InfantArv> infantArvOptional = this.infantArvRepository.getByInfantHospitalNumberAndVisitDate(infantVisit.getInfantHospitalNumber(), infantVisit.getVisitDate());
-//            if(infantArvOptional.isPresent()) {
-//                InfantArv infantArv = infantArvOptional.get();
-//                infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantArvDto(converRequestDtotoEntity(infantArv));
-//            }
+            Optional<InfantArv> infantArvOptional = this.infantArvRepository.getByInfantHospitalNumberAndVisitDate(infantVisit.getInfantHospitalNumber(), infantVisit.getVisitDate());
+            if(infantArvOptional.isPresent()) {
+                InfantArv infantArv = infantArvOptional.get();
+                infantVisitationConsolidatedDto.setInfantArvDto(converRequestDtotoEntity(infantArv));
+            }
 
-//            Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findByInfantHospitalNumberAndVisitDate(infantVisit.getInfantHospitalNumber(), infantVisit.getVisitDate());
-//            if(infantPCRTestOptional.isPresent()) {
-//                InfantPCRTest infantPCRTest = infantPCRTestOptional.get();
-//                infantVisitationConsolidatedDto.setInfantPCRTestDto(converRequestDtotoEntity(infantPCRTest));
-//            }
+            Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findByInfantHospitalNumberAndVisitDate(infantVisit.getInfantHospitalNumber(), infantVisit.getVisitDate());
+            if(infantPCRTestOptional.isPresent()) {
+                InfantPCRTest infantPCRTest = infantPCRTestOptional.get();
+                infantVisitationConsolidatedDto.setInfantPCRTestDto(converRequestDtotoEntity(infantPCRTest));
+            }
         }
         return infantVisitationConsolidatedDto;
     }
 
-    public InfantArvDto getInfantArvByInfantHospitalNumber(String hospitalNumber) {
-        InfantArvDto infantArvDto = null;
-        Optional<InfantArvDto> infantArvOptional = this.infantArvRepository.getTopByInfantHospitalNumber(hospitalNumber);
-        if (infantArvOptional.isPresent()) {
-            infantArvDto = infantArvOptional.get();
-        }
-        return infantArvDto;
+    public InfantArvDto  converRequestDtotoEntity(InfantArv infantArvDto) {
+    InfantArvDto infantArv = new InfantArvDto();
+        infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
+        infantArv.setAncNumber(infantArvDto.getAncNumber());
+        infantArv.setUuid(infantArvDto.getUuid());
+        infantArv.setId(infantArvDto.getId());
+        infantArv.setVisitDate(infantArvDto.getVisitDate());
+        infantArv.setInfantArvType(infantArvDto.getInfantArvType());
+        infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
+        infantArv.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
+        infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
+
+        return infantArv;
     }
 
-    public InfantArvDto getInfantArvByUUID(String personUuid) {
-        InfantArvDto infantArvDto = null;
-        Optional<InfantArvDto> infantArvDtoOptional = Optional.ofNullable(convertInfantArvDtoRequestDtoToEntity(infantArvRepository.getTopByUuid(personUuid)));
-        if (infantArvDtoOptional.isPresent()) {
-            infantArvDto = infantArvDtoOptional.get();
-        }
-        return infantArvDto;
-    }
-
-    public InfantPCRTestDto getInfantPCRTestByInfantHospitalNumber(String hospitalNumber) {
-        InfantPCRTestDto infantPCRTestDto = null;
-        Optional<InfantPCRTestDto> infantPCRTestOptional = this.infantPCRTestRepository.findTopByInfantHospitalNumber(hospitalNumber);
-        if (infantPCRTestOptional.isPresent()) {
-            infantPCRTestDto = infantPCRTestOptional.get();
-        }
-        return infantPCRTestDto;
-    }
-
-    public InfantPCRTestDto getInfantPCRTestByUUID(String personUuid) {
-        InfantPCRTestDto infantPCRTestDto = null;
-        Optional<InfantPCRTestDto> infantPCRTestOptional = Optional.ofNullable(convertInfantPCRTestDtoRequestDtoToEntity(infantPCRTestRepository.getTopByUuid(personUuid)));
-        if (infantPCRTestOptional.isPresent()) {
-            infantPCRTestDto = infantPCRTestOptional.get();
-        }
-        return infantPCRTestDto;
-    }
-
-    public InfantArvDto  convertInfantArvDtoRequestDtoToEntity(InfantArv infantArv) {
-        InfantArvDto infantArvDto = new InfantArvDto();
-        infantArvDto.setInfantHospitalNumber(infantArv.getInfantHospitalNumber());
-        infantArvDto.setAncNumber(infantArv.getAncNumber());
-        infantArvDto.setUuid(infantArv.getUuid());
-        infantArvDto.setId(infantArv.getId());
-        infantArvDto.setVisitDate(infantArv.getVisitDate());
-        infantArvDto.setInfantArvType(infantArv.getInfantArvType());
-        infantArvDto.setInfantArvTime(infantArv.getInfantArvTime());
-        infantArvDto.setArvDeliveryPoint(infantArv.getArvDeliveryPoint());
-        infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
-        infantArvDto.setTimingOfAvrAfter72Hours(infantArv.getTimingOfAvrAfter72Hours());
-        infantArv.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
-
-        return infantArvDto;
-    }
-
-    public InfantPCRTestDto convertInfantPCRTestDtoRequestDtoToEntity(InfantPCRTest infantPCRTestDto) {
+    public InfantPCRTestDto converRequestDtotoEntity(InfantPCRTest infantPCRTestDto) {
         InfantPCRTestDto infantPCRTest = new InfantPCRTestDto();
         infantPCRTest.setInfantHospitalNumber(infantPCRTestDto.getInfantHospitalNumber());
         infantPCRTest.setAgeAtTest(infantPCRTestDto.getAgeAtTest());
@@ -460,25 +367,18 @@ public class InfantVisitService
 
     public InfantVisitationConsolidatedDto updateInfantVisit(InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         System.out.println(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId());
-        //System.out.println(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto().getId());
+        System.out.println(infantVisitationConsolidatedDto.getInfantArvDto().getId());
         //saveConsolidation(infantVisitationConsolidatedDto)
-        //System.out.println(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
-       // System.out.println(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
-        System.out.println("================================================");
-        System.out.println(infantVisitationConsolidatedDto);
-        System.out.println("================================================");
-        if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null){
-            System.out.println("CODE WORKING....");
-            this.updateInfantVisit(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
-        }
-
-        //if(infantVisitationConsolidatedDto.getInfantArvDto().getId() != null) this.updateInfantArv(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto());
-       // if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) this.updateInfantMotherArt(infantVisitationConsolidatedDto.getInfantMotherArtDto());
-        //if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) this.updateInfantPCRTest(infantVisitationConsolidatedDto.getInfantPCRTestDto());
+        System.out.println(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
+        System.out.println(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
+        if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null) this.updateInfantVisit(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
+        if(infantVisitationConsolidatedDto.getInfantArvDto().getId() != null) this.updateInfantArv(infantVisitationConsolidatedDto.getInfantArvDto());
+        if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) this.updateInfantMotherArt(infantVisitationConsolidatedDto.getInfantMotherArtDto());
+        if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) this.updateInfantPCRTest(infantVisitationConsolidatedDto.getInfantPCRTestDto());
 
         return  infantVisitationConsolidatedDto;
     }
-    public InfantPCRTest updateInfantPCRTest(InfantPCRTestDto dto,Infant infant){
+    public void updateInfantPCRTest(InfantPCRTestDto dto){
         InfantPCRTest exist = infantPCRTestRepository
                 .findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantPCRTest.class,"InfantPCRTest not found "));
         exist.setVisitDate(dto.getVisitDate());
@@ -489,35 +389,22 @@ public class InfantVisitService
         exist.setDateResultReceivedAtFacility(dto.getDateResultReceivedAtFacility());
         exist.setDateResultReceivedByCaregiver(dto.getDateResultReceivedByCaregiver());
         exist.setResults(dto.getResults());
-        exist.setUuid(infant.getMotherPersonUuid());
 
-       return this.infantPCRTestRepository.save(exist);
+        this.infantPCRTestRepository.save(exist);
     }
 
 
 
     public void updateInfantVisit(InfantVisitRequestDto infantVisitRequestDto) {
-       // InfantVisit exist = infantVisitRepository.findById(infantVisitRequestDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantVisit.class, "InfantVisit_NOT_FOUND_MESSAGE" ));
-        System.out.println("ENTERED UPDATE INFANT....");
-        InfantVisit exist = infantVisitRepository.findById(infantVisitRequestDto.getId()).get();
-        System.out.println("ENTERED UPDATE INFANT2....");
-        if(exist == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No Infant found with id "+ infantVisitRequestDto.getId());
-        }
+        InfantVisit exist = infantVisitRepository
+                .findById(infantVisitRequestDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantVisit.class, "InfantVisit_NOT_FOUND_MESSAGE" ));
         exist.setVisitDate(infantVisitRequestDto.getVisitDate());
         exist.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         exist.setVisitStatus(infantVisitRequestDto.getVisitStatus());
-       // exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+        exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
-        System.out.println("=================EXIST==========================");
-        System.out.println(exist);
-        System.out.println("================================================");
-     //   try{
+        try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
-            System.out.println("=================INFANTS==========================");
-            System.out.println(infants);
-            System.out.println("================================================");
-
             if(infants.isPresent()){
                 Infant infant = infants.get();
                 LocalDate nad = this.calculateNAD(infantVisitRequestDto.getVisitDate());
@@ -527,18 +414,14 @@ public class InfantVisitService
                 infant.setNextAppointmentDate(nad);
                 infantRepository.save(infant);
 
+
             }
-//
-//        }catch(Exception e) {
-//            System.out.println("=================================");
-//            System.out.println(e.getMessage());
-//            System.out.println("=================================");
-       // }
+        }catch(Exception e) {}
        this.infantVisitRepository.save(exist);
 
     }
 
-    public InfantArv updateInfantArv(InfantArvDto infantArvDto,Infant infant){
+    public void updateInfantArv(InfantArvDto infantArvDto){
         InfantArv exist = infantArvRepository
                 .findById(infantArvDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantArv.class,"InfantArv not found "));
         exist.setVisitDate(infantArvDto.getVisitDate());
@@ -547,8 +430,7 @@ public class InfantVisitService
         exist.setInfantArvTime(infantArvDto.getInfantArvTime());
         exist.setArvDeliveryPoint(infantArvDto.getArvDeliveryPoint());
         exist.setAgeAtCtx(infantArvDto.getAgeAtCtx());
-        exist.setUuid(infant.getMotherPersonUuid());
-       return  this.infantArvRepository.save(exist);
+        this.infantArvRepository.save(exist);
     }
 
 
@@ -569,30 +451,20 @@ public class InfantVisitService
             Optional<InfantVisit> infantVisitOptional = this.infantVisitRepository.findById(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId());
             if(infantVisitOptional.isPresent()) infantVisitRepository.delete(infantVisitOptional.get());
         }
-//        if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto().getId() != null){
-//            Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(infantVisitationConsolidatedDto.getInfantPCRTestDto().getInfantArvDto().getId());;
-//            if(infantArvOptional.isPresent()) infantArvRepository.delete(infantArvOptional.get());
-//        }
-//        if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) {
-//            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findById(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
-//            if(infantMotherArtOptional.isPresent()) infantMotherArtRepository.delete(infantMotherArtOptional.get());
-//        }
-//        if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) {
-//            Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findById(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
-//            if(infantPCRTestOptional.isPresent()) infantPCRTestRepository.delete(infantPCRTestOptional.get());
-//        }
+        if(infantVisitationConsolidatedDto.getInfantArvDto().getId() != null){
+            Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(infantVisitationConsolidatedDto.getInfantArvDto().getId());;
+            if(infantArvOptional.isPresent()) infantArvRepository.delete(infantArvOptional.get());
+        }
+        if(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId() != null) {
+            Optional<InfantMotherArt> infantMotherArtOptional = this.infantMotherArtRepository.findById(infantVisitationConsolidatedDto.getInfantMotherArtDto().getId());
+            if(infantMotherArtOptional.isPresent()) infantMotherArtRepository.delete(infantMotherArtOptional.get());
+        }
+        if(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId() != null) {
+            Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findById(infantVisitationConsolidatedDto.getInfantPCRTestDto().getId());
+            if(infantPCRTestOptional.isPresent()) infantPCRTestRepository.delete(infantPCRTestOptional.get());
+        }
 
         //return infantVisitationConsolidatedDto;
-    }
-
-    public void deleteInfantArv(Long id){
-        Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
-        infantArvOptional.ifPresent(infantArvRepository::delete);
-    }
-
-    public void deleteInfantPCRTestDt(Long id){
-        Optional<InfantPCRTest> infantArvOptional = this.infantPCRTestRepository.findById(id);
-        infantArvOptional.ifPresent(infantPCRTestRepository::delete);
     }
 
 

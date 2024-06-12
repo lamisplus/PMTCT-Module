@@ -1,8 +1,8 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
-import org.lamisplus.modules.pmtct.domain.dto.InfantArvDto;
 import org.lamisplus.modules.pmtct.domain.entity.InfantArv;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
@@ -15,8 +15,6 @@ public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long
     List<InfantArv> findByInfantHospitalNumber  (String hospitalNumber);
 
     Optional<InfantArv> getByInfantHospitalNumber (String hospitalNumber);
-    Optional<InfantArvDto> getTopByInfantHospitalNumber (String hospitalNumber);
-    InfantArv getTopByUuid (String uuid);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_visit where infant_hospital_number = ?1 and date_of_visit <= ?2 order by date_of_visit DESC", nativeQuery = true)
     List<InfantArv> getANCVisits(String ancNo, LocalDate deliveryDate);
