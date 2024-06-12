@@ -311,9 +311,9 @@ const LabourDelivery = (props) => {
       ? ""
       : "This field is required";
     //temp.referalSource = delivery.referalSource ? "" : "This field is required"
-    temp.romDeliveryInterval = delivery.romDeliveryInterval
-      ? ""
-      : "This field is required";
+    // temp.romDeliveryInterval = delivery.romDeliveryInterval
+    //   ? ""
+    //   : "This field is required";
     temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required";
     temp.onArt = delivery.onArt ? "" : "This field is required";
     temp.modeOfDelivery = delivery.modeOfDelivery
@@ -533,8 +533,7 @@ const LabourDelivery = (props) => {
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    ROM Delivery Interval{" "}
-                    <span style={{ color: "red" }}> *</span>{" "}
+                    ROM Delivery Interval
                   </Label>
                   <InputGroup>
                     <Input
