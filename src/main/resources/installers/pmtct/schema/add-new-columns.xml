@@ -156,5 +156,16 @@
                 ADD source_of_referral character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
+    <changeSet failOnError="true"  id="20240611-001" author="israel_ace3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="time_of_hiv_diagnosis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+            ADD time_of_hiv_diagnosis character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
 
 </databaseChangeLog>
