@@ -265,7 +265,7 @@ const LabourDelivery = (props) => {
         let temp = { ...errors }
         temp.artStartedLdWard = delivery.artStartedLdWard ? "" : "This field is required"
         //temp.referalSource = delivery.referalSource ? "" : "This field is required"
-        temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
+        //temp.romDeliveryInterval = delivery.romDeliveryInterval ? "" : "This field is required"
         temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required"
         temp.onArt = delivery.onArt ? "" : "This field is required"
         temp.modeOfDelivery = delivery.modeOfDelivery ? "" : "This field is required"
@@ -431,7 +431,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-6">
                             <FormGroup>
-                            <Label >ROM Delivery Interval <span style={{ color:"red"}}> *</span> </Label>
+                            <Label >ROM Delivery Interval </Label>
                             <InputGroup> 
                                 <Input 
                                     type="select"

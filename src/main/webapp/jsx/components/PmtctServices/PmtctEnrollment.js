@@ -87,6 +87,7 @@ const AncPnc = (props) => {
     const classes = useStyles()
     const [disabledField, setSisabledField] = useState(false);
     const [entryPoint, setentryPoint] = useState([]);
+    const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
     const [tbStatus, setTbStatus] = useState([]);
     const [artStartTime, setartStartTime] = useState([]);
     const [saving, setSaving] = useState(false);
@@ -101,11 +102,13 @@ const AncPnc = (props) => {
             artStartDate: "",
             artStartTime: "",
             id: "",
-            tbStatus:""            
+            tbStatus:"",
+            timeOfHivDiagnosis:""
     })
     useEffect(() => { 
         POINT_ENTRY_PMTCT();
         TIME_ART_INITIATION_PMTCT();
+        TIMING_MOTHERS_ART_INITIATION()
         TB_STATUS();
         if(props.activeContent.id && props.activeContent.id!=="" && props.activeContent.id!==null){
             GetPatientPMTCT(props.activeContent.id)
@@ -138,6 +141,18 @@ const AncPnc = (props) => {
         //console.log(error);
         });        
     }
+    const TIMING_MOTHERS_ART_INITIATION =()=>{
+            axios
+            .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`,
+                { headers: {"Authorization" : `Bearer ${token}`} }
+            )
+            .then((response) => {
+                setTimeHivDiagnosis(response.data)
+            })
+            .catch((error) => {
+            //console.log(error);
+            });
+       }
     const TIME_ART_INITIATION_PMTCT =()=>{
         axios
         .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`,
@@ -171,7 +186,7 @@ const AncPnc = (props) => {
         let temp = { ...errors }        
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
-        //temp.ga = enroll.ga ? "" : "This field is required"
+        temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis ? "" : "This field is required"
         temp.gravida = enroll.gravida ? "" : "This field is required"
         temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate ? "" : "This field is required"
         temp.artStartDate = enroll.artStartDate ? "" : "This field is required"
@@ -389,6 +404,32 @@ const AncPnc = (props) => {
                         </InputGroup>
                         {errors.tbStatus !=="" ? (
                                 <span className={classes.error}>{errors.tbStatus}</span>
+                        ) : "" }
+                        </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                        <Label >Time Of HIV Diagnosis <span style={{ color:"red"}}> *</span></Label>
+                        <InputGroup>
+                            <Input
+                                type="select"
+                                name="timeOfHivDiagnosis"
+                                id="timeOfHivDiagnosis"
+                                onChange={handleInputChangeEnrollmentDto}
+                                value={enroll.timeHivDiagnosis}
+                                disabled={disabledField}
+                            >
+                                <option value="">Select</option>
+                                {timeHivDiagnosis.map((value, index) => (
+                                    <option key={index} value={value.code}>
+                                        {value.display}
+                                    </option>
+                                ))}
+                            </Input>
+
+                        </InputGroup>
+                        {errors.timeHivDiagnosis !=="" ? (
+                                <span className={classes.error}>{errors.timeHivDiagnosis}</span>
                         ) : "" }
                         </FormGroup>
                     </div>

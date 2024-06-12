@@ -22,5 +22,6 @@
      private LocalDate artStartDate;
      private String artStartTime;
      private String tbStatus;
+     private String timeOfHivDiagnosis;
  }
 

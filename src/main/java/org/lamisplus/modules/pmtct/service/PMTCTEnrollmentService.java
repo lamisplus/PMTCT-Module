@@ -54,6 +54,7 @@ public class PMTCTEnrollmentService {
       pmtctEnrollment.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
       pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
       pmtctEnrollment.setUuid(UUID.randomUUID().toString());
+      pmtctEnrollment.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
       ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
        if (anc != null)
       { pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
@@ -80,6 +81,7 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setGravida(pmtctEnrollment.getGravida());
            pmtctEnrollmentRespondDto.setArtStartDate(pmtctEnrollment.getArtStartDate());
            pmtctEnrollmentRespondDto.setArtStartTime(pmtctEnrollment.getArtStartTime());
+           pmtctEnrollmentRespondDto.setTimeOfHivDiagnosis(pmtctEnrollment.getTimeOfHivDiagnosis());
            ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollment.getAncNo(), Long.valueOf(0L));
            if (anc != null) {
                pmtctEnrollmentRespondDto.setHospitalNumber(anc.getHospitalNumber());
@@ -172,6 +174,7 @@ public class PMTCTEnrollmentService {
             pmtctEnrollment1.setGravida(pmtctEnrollmentRequestDto.getGravida());
             pmtctEnrollment1.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
             pmtctEnrollment1.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
+            pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
         }
         return pmtctEnrollmentRequestDto;
