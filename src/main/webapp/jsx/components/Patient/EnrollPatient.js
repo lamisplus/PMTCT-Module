@@ -165,6 +165,7 @@ const UserRegistration = (props) => {
     partnerNotification: {},
     // sourceOfReferral: "",
     staticHivStatus: "",
+    previouslyKnownHivStatus: "",
   });
   console.log("location", location.state);
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
@@ -212,7 +213,6 @@ const UserRegistration = (props) => {
       basicInfo.age = patientAge;
       objValues.personId = patientObj.id;
       basicInfo.ninNumber = patientObj.ninNumber;
-      basicInfo.staticHivStatus = patientObj.dynamicHivStatus;
     }
     if (basicInfo.dateOfRegistration < basicInfo.dob) {
       alert("Date of registration can not be earlier than date of birth");
@@ -354,10 +354,13 @@ const UserRegistration = (props) => {
     objValues.testedSyphilis === "Yes" &&
       (temp.testResultSyphilis = objValues.testResultSyphilis
         ? ""
-        : "This field is required");
-    // temp.staticHivStatus = objValues.staticHivStatus
-    //   ? ""
-    //   : "This field is required";
+      : "This field is required");
+    temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
+    ? ""
+    : "This field is required";
+    temp.staticHivStatus = objValues.staticHivStatus
+      ? ""
+      : "This field is required";
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
     setErrors({ ...temp });
     return Object.values(temp).every((x) => x === "");
@@ -1126,7 +1129,35 @@ const UserRegistration = (props) => {
                             )}
                         </>
                       )}
-                      {/* <div className="form-group mb-3 col-md-6">
+                       <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <Label>
+                            Previously Known Hiv Status{" "}
+                            <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="previouslyKnownHivStatus"
+                              id="previouslyKnownHivStatus"
+                              onChange={handleInputChange}
+                              value={objValues.previouslyKnownHivStatus}
+                            >
+                              <option value="">Select</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </Input>
+                          </InputGroup>
+                          {errors.previouslyKnownHivStatus !== "" ? (
+                            <span className={classes.error}>
+                              {errors.previouslyKnownHivStatus}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                      <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
                             HIV Status <span style={{ color: "red" }}> *</span>
@@ -1158,7 +1189,7 @@ const UserRegistration = (props) => {
                             ""
                           )}
                         </FormGroup>
-                      </div> */}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -441,4 +441,13 @@
             ALTER TABLE pmtct_infant_pcr ALTER COLUMN age_at_test TYPE character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
+
+    <changeSet failOnError="true"  id="20240613-001" author="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="previously_known_hiv_status" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ALTER COLUMN previously_known_hiv_status TYPE character varying(255) COLLATE pg_catalog."default"
+        </sql>
+    </changeSet>
 </databaseChangeLog>
