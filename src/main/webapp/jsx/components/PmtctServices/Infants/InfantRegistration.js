@@ -864,9 +864,9 @@ const LabourinfantInfo = (props) => {
                       <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
                       <Input
                         type="select"
-                        name="arvDeliveryPoint"
-                        id="arvDeliveryPoint"
-                        value={infantArvDto.arvDeliveryPoint}
+                        name="infantArvTime"
+                        id="infantArvTime"
+                        value={infantArvDto.infantArvTime}
                         onChange={handleInputChangeInfantArvDto}
                         style={{
                           border: "1px solid #014D88",
@@ -878,9 +878,9 @@ const LabourinfantInfo = (props) => {
                         <option value="Within 72 hour">Within 72 hour </option>
                         <option value="After 72 hour ">After 72 hour </option>
                       </Input>
-                      {errors.arvDeliveryPoint !== "" ? (
+                      {errors.infantArvTime !== "" ? (
                         <span className={classes.error}>
-                          {errors.arvDeliveryPoint}
+                          {errors.infantArvTime}
                         </span>
                       ) : (
                         ""
@@ -892,9 +892,9 @@ const LabourinfantInfo = (props) => {
                       <FormLabelName> Place of Delivery </FormLabelName>
                       <Input
                         type="select"
-                        name="infantArvTime"
-                        id="infantArvTime"
-                        value={infantArvDto.infantArvTime}
+                        name="arvDeliveryPoint"
+                        id="arvDeliveryPoint"
+                        value={infantArvDto.arvDeliveryPoint}
                         onChange={handleInputChangeInfantArvDto}
                         style={{
                           border: "1px solid #014D88",
@@ -910,9 +910,9 @@ const LabourinfantInfo = (props) => {
                           Delivered outside facility{" "}
                         </option>
                       </Input>
-                      {errors.infantArvTime !== "" ? (
+                      {errors.arvDeliveryPoint !== "" ? (
                         <span className={classes.error}>
-                          {errors.infantArvTime}
+                          {errors.arvDeliveryPoint}
                         </span>
                       ) : (
                         ""

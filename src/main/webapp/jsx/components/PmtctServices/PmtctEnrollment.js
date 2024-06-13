@@ -111,6 +111,7 @@ const AncPnc = (props) => {
   const [adultRegimenLine, setAdultRegimenLine] = useState([]);
   const [urinalysisList, setUrinalysisList] = useState([]);
   const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
+  const [timeHivInitiation, setTimeHivInitiation] = useState([]);
 
   const [enroll, setEnrollDto] = useState({
     hepatitisB: patientObj.hepatitisB ? patientObj.hepatitisB : "",
@@ -163,6 +164,23 @@ const AncPnc = (props) => {
       });
   };
 
+
+    const getTimeHivInitiation = () => {
+      axios
+        .get(
+          `${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((response) => {
+          //console.log(response.data); TIMING_MOTHERS_ART_INITIATION
+          setTimeHivInitiation(response.data);
+        })
+        .catch((error) => {
+          //console.log(error);
+        });
+    };
   const handleInputChangeInfantMotherArtDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
@@ -264,6 +282,7 @@ const AncPnc = (props) => {
     }
   };
   useEffect(() => {
+    getTimeHivInitiation()
     GET_URINALYSIS();
     AdultRegimenLine();
     TIMING_MOTHERS_ART_INITIATION();
@@ -962,31 +981,37 @@ const AncPnc = (props) => {
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                        <Label >Time Of HIV Diagnosis <span style={{ color:"red"}}> *</span></Label>
-                        <InputGroup>
-                            <Input
-                                type="select"
-                                name="timeOfHivDiagnosis"
-                                id="timeOfHivDiagnosis"
-                                onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.timeHivDiagnosis}
-                                disabled={disabledField}
-                            >
-                                <option value="">Select</option>
-                                {timeHivDiagnosis.map((value, index) => (
-                                    <option key={index} value={value.code}>
-                                        {value.display}
-                                    </option>
-                                ))}
-                            </Input>
-
-                        </InputGroup>
-                        {errors.timeHivDiagnosis !=="" ? (
-                                <span className={classes.error}>{errors.timeHivDiagnosis}</span>
-                        ) : "" }
-                        </FormGroup>
-                    </div>
+                <FormGroup>
+                  <Label>
+                    Time Of HIV Diagnosis{" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="timeOfHivDiagnosis"
+                      id="timeOfHivDiagnosis"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.timeHivDiagnosis}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      {timeHivDiagnosis.map((value, index) => (
+                        <option key={index} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+                  {errors.timeHivDiagnosis !== "" ? (
+                    <span className={classes.error}>
+                      {errors.timeHivDiagnosis}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
@@ -1066,6 +1091,39 @@ const AncPnc = (props) => {
                       <option value="Positive">Positive</option>
                       <option value="Negative">Negative</option>
                       <option value="Unknown">Unknown</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.hivStatus !== "" ? (
+                    <span className={classes.error}>{errors.hivStatus}</span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Timing of HIV Initiation{" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="timeOfHivDiagnosis"
+                      id="timeOfHivDiagnosis"
+                      disabled={patientObj.ancNo ? true : false}
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.hivStatus}
+                    >
+                      <option value="">Select</option>
+                      {timeHivInitiation.length > 0 &&
+                        timeHivInitiation.map((each) => {
+                          return (
+                            <option value={each.code} key={each.id}>
+                              {each.display}
+                            </option>
+                          );
+                        })}
                     </Input>
                   </InputGroup>
                   {errors.hivStatus !== "" ? (
