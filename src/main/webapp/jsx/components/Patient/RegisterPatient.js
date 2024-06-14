@@ -619,10 +619,13 @@ const UserRegistration = (props) => {
         (temp.testResultSyphilis = objValues.testResultSyphilis
           ? ""
           : "This field is required");
-      // temp.staticHivStatus = objValues.staticHivStatus
-      //   ? ""
-      //   : "This field is required";
+      temp.staticHivStatus = objValues.staticHivStatus
+        ? ""
+        : "This field is required";
       temp.ancNo = objValues.ancNo ? "" : "This field is required";
+      temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
+        ? ""
+        : "This field is required";
     }
 
     setErrors({ ...temp });
@@ -2510,6 +2513,68 @@ const UserRegistration = (props) => {
                             )}
                         </>
                       )}
+
+                      <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <Label>
+                            Previously Known Hiv Status{" "}
+                            <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="previouslyKnownHivStatus"
+                              id="previouslyKnownHivStatus"
+                              onChange={handleInputChange}
+                              value={objValues.previouslyKnownHivStatus}
+                            >
+                              <option value="">Select</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </Input>
+                          </InputGroup>
+                          {errors.previouslyKnownHivStatus !== "" ? (
+                            <span className={classes.error}>
+                              {errors.previouslyKnownHivStatus}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                      <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <Label>
+                            HIV Status <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="staticHivStatus"
+                              id="staticHivStatus"
+                              onChange={handleInputChange}
+                              value={objValues.staticHivStatus}
+                              // disabled={
+                              //   patientObj?.dynamicHivStatus === "Positive"
+                              //     ? true
+                              //     : false
+                              // }
+                            >
+                              <option value="">Select</option>
+                              <option value="Positive">Positive</option>
+                              <option value="Negative">Negative</option>
+                              <option value="Unknown">Unknown</option>
+                            </Input>
+                          </InputGroup>
+                          {errors.staticHivStatus !== "" ? (
+                            <span className={classes.error}>
+                              {errors.staticHivStatus}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
                       {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
