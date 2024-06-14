@@ -270,6 +270,7 @@ public class ANCService {
         anc.setUuid(exist.getUuid());
         anc.setPersonUuid(exist.getPersonUuid());
         anc.setAncSetting(ancRequestDto.getAncSetting());
+        anc.setPreviouslyKnownHivStatus(ancRequestDto.getPreviouslyKnownHivStatus());
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 

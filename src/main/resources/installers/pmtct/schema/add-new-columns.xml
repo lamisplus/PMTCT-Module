@@ -442,12 +442,32 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="true"  id="20240613-001" author="israel-ace3">
+    <changeSet failOnError="true" author="20240613-003" id="israel-ace3">
         <preConditions onFail="MARK_RAN">
-            <columnExists tableName="pmtct_anc" columnName="previously_known_hiv_status" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_anc')
+                AND attname = 'previously_known_hiv_status';
+            </sqlCheck>
         </preConditions>
         <sql>
-            ALTER TABLE pmtct_anc ALTER COLUMN previously_known_hiv_status TYPE character varying(255) COLLATE pg_catalog."default"
+            ALTER TABLE IF EXISTS pmtct_anc ADD COLUMN previously_known_hiv_status character varying;
         </sql>
     </changeSet>
+
+    <changeSet failOnError="true" author="20240613-005" id="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_enrollment')
+                AND attname = 'time_of_hiv_diagnosis';
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS pmtct_enrollment ADD COLUMN time_of_hiv_diagnosis character varying;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
