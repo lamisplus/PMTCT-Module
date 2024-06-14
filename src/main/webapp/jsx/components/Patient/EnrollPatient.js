@@ -766,7 +766,7 @@ const UserRegistration = (props) => {
                     }}
                   >
                     <h5 className="card-title" style={{ color: "#fff" }}>
-                      ANC Enrollmentt
+                      ANC Enrollment
                     </h5>
                   </div>
                   <div className="card-body">
