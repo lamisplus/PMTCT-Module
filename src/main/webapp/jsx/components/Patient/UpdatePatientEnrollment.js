@@ -132,7 +132,7 @@ const UserRegistration = (props) => {
     pmtctHtsInfo: {},
     syphilisInfo: {},
     partnerNotification: {},
-    // sourceOfReferral: "",
+    previouslyKnownHivStatus: "",
     staticHivStatus: "",
   });
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
@@ -187,6 +187,7 @@ const UserRegistration = (props) => {
     if (patientObj) {
       setDisabledField(actionType === "view" ? true : false);
       setObjValues({ ...patientObj });
+      console.log(patientObj);
       basicInfo.fullname = patientObj.fullname;
       basicInfo.age = patientObj.age;
       basicInfo.hospitalNumber = patientObj.hospitalNumber;
@@ -1041,6 +1042,72 @@ const UserRegistration = (props) => {
                           )}
                       </>
                     )}
+
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <Label>
+                          Previously Known Hiv Status{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        {/* previouslyKnownHivStatus */}
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="previouslyKnownHivStatus"
+                            id="previouslyKnownHivStatus"
+                            onChange={handleInputChange}
+                            value={objValues.previouslyKnownHivStatus}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.previouslyKnownHivStatus !== "" ? (
+                          <span className={classes.error}>
+                            {errors.previouslyKnownHivStatus}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <Label>
+                          HIV Status <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="staticHivStatus"
+                            id="staticHivStatus"
+                            onChange={handleInputChange}
+                            value={objValues.staticHivStatus}
+                            disabled={disabledField}
+                            // disabled={
+                            //   patientObj?.dynamicHivStatus === "Positive"
+                            //     ? true
+                            //     : false
+                            // }
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Negative">Negative</option>
+                            <option value="Unknown">Unknown</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.staticHivStatus !== "" ? (
+                          <span className={classes.error}>
+                            {errors.staticHivStatus}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
                     {/* <div className="form-group mb-3 col-md-6">
                       <FormGroup>
                         <Label>
