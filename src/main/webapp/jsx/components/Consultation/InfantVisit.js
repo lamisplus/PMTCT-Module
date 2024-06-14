@@ -856,9 +856,9 @@ const ClinicVisit = (props) => {
             </Label>
             <br />
             <br />
-            <div className="row" >
+            <div className="row">
               <div className="form-group mb-3 col-md-6">
-                <FormGroup >
+                <FormGroup>
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
@@ -1312,7 +1312,7 @@ const ClinicVisit = (props) => {
                       >
                         <option value=""> Select</option>
                         {regimenType.map((value) => (
-                          <option key={value.id} value={value.code}>
+                          <option key={value.id} value={value.id}>
                             {value.description}
                           </option>
                         ))}
