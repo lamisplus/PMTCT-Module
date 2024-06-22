@@ -1100,6 +1100,11 @@ const AncPnc = (props) => {
                   )}
                 </FormGroup>
               </div>
+              {enroll.hivStatus == "Positive" && (
+                <div className="form-group mb-3 col-md-12">
+                  <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                </div>
+              )}
             </div>
             <div>
               {" "}
