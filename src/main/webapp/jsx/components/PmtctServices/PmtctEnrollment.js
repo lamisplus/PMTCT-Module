@@ -1102,7 +1102,7 @@ const AncPnc = (props) => {
               </div>
               {enroll.hivStatus == "Positive" && (
                 <div className="form-group mb-3 col-md-12">
-                  <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                  <h5 style={{ color: "red" }}>Kindly refer for ART</h5>
                 </div>
               )}
             </div>
