@@ -59,6 +59,7 @@ public class DeliveryService
         delivery.setChildGivenArvWithin72(deliveryRequestDto.getChildGivenArvWithin72());
         delivery.setChildStatus(deliveryRequestDto.getChildStatus());
         delivery.setHivExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs());
+        delivery.setNonHbvExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getNonHbvExposedInfantGivenHbWithin24hrs());
         delivery.setDeliveryTime(deliveryRequestDto.getDeliveryTime());
         delivery.setOnArt(deliveryRequestDto.getOnArt());
         delivery.setArtStartedLdWard(deliveryRequestDto.getArtStartedLdWard());
