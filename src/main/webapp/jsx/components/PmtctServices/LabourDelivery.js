@@ -302,6 +302,8 @@ const LabourDelivery = (props) => {
         }
       }
       getGa();
+      setDelivery({ ...delivery, [e.target.name]: e.target.value });
+
     }else if (e.target.name === "childStatus") {
       setDelivery({
         ...delivery,
@@ -929,7 +931,7 @@ const LabourDelivery = (props) => {
                   <InputGroup>
                     <Input
                       type="select"
-                      name="hivExposedInfantGivenHbWithin24hrs"
+                      name="nonHbvExposedInfantGivenHbWithin24hrs"
                       id="hivExposedInfantGivenHbWithin24hrs"
                       onChange={handleInputChangeDeliveryDto}
                       value={delivery.nonHbvExposedInfantGivenHbWithin24hrs}
