@@ -1612,13 +1612,7 @@ const ClinicVisit = (props) => {
                       border: "1px solid #014D88",
                       borderRadius: "0.25rem",
                     }}
-                    min={
-                      props.patientObj &&
-                      props.patientObj.pmtctEnrollmentRespondDto
-                        ? props.patientObj.pmtctEnrollmentRespondDto
-                            .pmtctEnrollmentDate
-                        : ""
-                    }
+                    min={choosenInfant.dateOfDelivery}
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     disabled={disabledField}
                   />
@@ -1851,13 +1845,7 @@ const ClinicVisit = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        min={
-                          props.patientObj &&
-                          props.patientObj.pmtctEnrollmentRespondDto
-                            ? props.patientObj.pmtctEnrollmentRespondDto
-                                .pmtctEnrollmentDate
-                            : ""
-                        }
+                        min={choosenInfant.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField}
                       />

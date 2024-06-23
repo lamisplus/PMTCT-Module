@@ -25,6 +25,7 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String childGivenArvWithin72;
     private String childStatus;
     private String hivExposedInfantGivenHbWithin24hrs;
+    private String nonHbvExposedInfantGivenHbWithin24hrs;
     private String deliveryTime;
     private String onArt;
     private String artStartedLdWard;
