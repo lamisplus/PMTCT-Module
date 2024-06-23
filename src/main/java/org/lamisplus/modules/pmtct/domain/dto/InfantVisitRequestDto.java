@@ -17,7 +17,7 @@ public class InfantVisitRequestDto implements Serializable
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
-    private Long bodyWeight;
+    private Double bodyWeight;
     private String visitStatus;
     //private String ctxStatus;
     private String breastFeeding ;
