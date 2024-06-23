@@ -484,4 +484,21 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="false" author="israel" id="hts-client-23062401">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_infant_information')
+                AND attname = 'body_weight'
+                AND atttypid != (SELECT oid FROM pg_type WHERE typname = 'float8');
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information ALTER COLUMN body_weight TYPE double precision;
+        </sql>
+    </changeSet>
+
+
+
 </databaseChangeLog>
