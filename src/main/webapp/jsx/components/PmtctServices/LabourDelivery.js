@@ -116,6 +116,7 @@ const LabourDelivery = (props) => {
     hbstatus: "",
     hcstatus: "",
     hivExposedInfantGivenHbWithin24hrs: "",
+    nonHbvExposedInfantGivenHbWithin24hrs: "",
     maternalOutcome: "",
     maternalOutcomeChild: "",
     modeOfDelivery: "",
@@ -272,6 +273,7 @@ const LabourDelivery = (props) => {
       });
   };
   const handleInputChangeDeliveryDto = (e) => {
+    console.log(e.target.value)
     setErrors({ ...errors, [e.target.name]: "" });
     if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
       async function getGa() {
@@ -300,8 +302,18 @@ const LabourDelivery = (props) => {
         }
       }
       getGa();
+      setDelivery({ ...delivery, [e.target.name]: e.target.value });
+
+    }else if (e.target.name === "childStatus") {
+      setDelivery({
+        ...delivery,
+        [e.target.name]: e.target.value,
+        numberOfInfantsAlive: "",
+        numberOfInfantsDead: "",
+      });
+    } else {
+      setDelivery({ ...delivery, [e.target.name]: e.target.value });
     }
-    setDelivery({ ...delivery, [e.target.name]: e.target.value });
   };
 
   //FORM VALIDATION
@@ -532,9 +544,7 @@ const LabourDelivery = (props) => {
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <Label>
-                    ROM Delivery Interval
-                  </Label>
+                  <Label>ROM Delivery Interval</Label>
                   <InputGroup>
                     <Input
                       type="select"
@@ -886,7 +896,7 @@ const LabourDelivery = (props) => {
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    HIV exposed infant given Hep B within 24 hrs of birth{" "}
+                    HBV exposed infant given Hep B within 24 hrs of birth{" "}
                     <span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>
@@ -896,6 +906,35 @@ const LabourDelivery = (props) => {
                       id="hivExposedInfantGivenHbWithin24hrs"
                       onChange={handleInputChangeDeliveryDto}
                       value={delivery.hivExposedInfantGivenHbWithin24hrs}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
+                    <span className={classes.error}>
+                      {errors.hivExposedInfantGivenHbWithin24hrs}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-6">
+                <FormGroup>
+                  <Label>
+                    Non HBV exposed infant given HBV vaccine within 24hrs of
+                    birth: <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="nonHbvExposedInfantGivenHbWithin24hrs"
+                      id="hivExposedInfantGivenHbWithin24hrs"
+                      onChange={handleInputChangeDeliveryDto}
+                      value={delivery.nonHbvExposedInfantGivenHbWithin24hrs}
                       disabled={disabledField}
                     >
                       <option value="">Select</option>
@@ -974,62 +1013,64 @@ const LabourDelivery = (props) => {
                   )}
                 </FormGroup>
               </div>
-              {delivery.childStatus === "CHILD_STATUS_DELIVERY_ALIVE" && (
-                <>
-                  <div className="form-group mb-3 col-md-6">
-                    <FormGroup>
-                      <Label>
-                        Number of Child Alive{" "}
-                        <span style={{ color: "red" }}> *</span>
-                      </Label>
-                      <InputGroup>
-                        <Input
-                          type="Number"
-                          name="numberOfInfantsAlive"
-                          id="numberOfInfantsAlive"
-                          onChange={handleInputChangeDeliveryDto}
-                          value={delivery.numberOfInfantsAlive}
-                          disabled={disabledField}
-                          min="0"
-                        />
-                      </InputGroup>
-                      {errors.numberOfInfantsAlive !== "" ? (
-                        <span className={classes.error}>
-                          {errors.numberOfInfantsAlive}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className="form-group mb-3 col-md-6">
-                    <FormGroup>
-                      <Label>
-                        Number of Child Dead{" "}
-                        <span style={{ color: "red" }}> *</span>
-                      </Label>
-                      <InputGroup>
-                        <Input
-                          type="Number"
-                          name="numberOfInfantsDead"
-                          id="numberOfInfantsDead"
-                          onChange={handleInputChangeDeliveryDto}
-                          value={delivery.numberOfInfantsDead}
-                          disabled={disabledField}
-                          min="0"
-                        />
-                      </InputGroup>
-                      {errors.numberOfInfantsDead !== "" ? (
-                        <span className={classes.error}>
-                          {errors.numberOfInfantsDead}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                </>
-              )}
+              {delivery.childStatus &&
+                delivery.childStatus !==
+                  "CHILD_STATUS_DELIVERY_STILL_BIRTH" && (
+                  <>
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <Label>
+                          Number of Child Alive{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="Number"
+                            name="numberOfInfantsAlive"
+                            id="numberOfInfantsAlive"
+                            onChange={handleInputChangeDeliveryDto}
+                            value={delivery.numberOfInfantsAlive}
+                            disabled={disabledField}
+                            min="0"
+                          />
+                        </InputGroup>
+                        {errors.numberOfInfantsAlive !== "" ? (
+                          <span className={classes.error}>
+                            {errors.numberOfInfantsAlive}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-6">
+                      <FormGroup>
+                        <Label>
+                          Number of Child Dead{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="Number"
+                            name="numberOfInfantsDead"
+                            id="numberOfInfantsDead"
+                            onChange={handleInputChangeDeliveryDto}
+                            value={delivery.numberOfInfantsDead}
+                            disabled={disabledField}
+                            min="0"
+                          />
+                        </InputGroup>
+                        {errors.numberOfInfantsDead !== "" ? (
+                          <span className={classes.error}>
+                            {errors.numberOfInfantsDead}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </>
+                )}
             </div>
             {/* Display notification when maternal outcome is IIT and transfer out */}
             {delivery.maternalOutcome !== "" &&
