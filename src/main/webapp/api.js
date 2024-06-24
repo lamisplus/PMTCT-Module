@@ -2,4 +2,4 @@
 //  export const url = "/api/v1/";
 export const url = "http://localhost:8383/api/v1/";
 export const token =
-  "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJndWVzdEBsYW1pc3BsdXMub3JnIiwiYXV0aCI6IlN1cGVyIEFkbWluIiwibmFtZSI6Ikd1ZXN0IEd1ZXN0IiwiZXhwIjoxNzE5MjUzNTI5fQ.enDVd-lo792JZzVU7w7z5OdNdv0J41ggiKo0esHbL-GzwcjwULvmsVroOCgUladE2qxn2ePp_uoQq3e0Uwaxsg";
+  "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJndWVzdEBsYW1pc3BsdXMub3JnIiwiYXV0aCI6IlN1cGVyIEFkbWluIiwibmFtZSI6Ikd1ZXN0IEd1ZXN0IiwiZXhwIjoxNzE5Mjk5ODQyfQ.NkxhL957lAw-YdEvHF5oxb_NWIa-ZIt-EFUG3u7OshCeoZf_Y19N5KlyDj8BWIt8QL_JuqFZ-k68NImLpWZCsg";
