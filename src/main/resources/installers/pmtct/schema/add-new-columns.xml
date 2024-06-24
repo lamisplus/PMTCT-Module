@@ -483,5 +483,14 @@
             ALTER TABLE IF EXISTS pmtct_delivery ADD COLUMN non_hbv_exposed_infant_given_hb_within_24hrs character varying;
         </sql>
     </changeSet>
+    <changeSet failOnError="true" author="Ganiyat" id="20240625-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="non_hbv_exposed_infant_given_hb_within_24hrs" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_delivery ADD non_hbv_exposed_infant_given_hb_within_24hrs VARCHAR(255);</sql>
+    </changeSet>
 
 </databaseChangeLog>
