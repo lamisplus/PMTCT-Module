@@ -351,10 +351,12 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.getSingleInfantMotherArt(id));
     }
 
+//    , @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto
+
     @PostMapping(value = "infant-visit-consolidated")
-    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto ) {
+    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto ) {
         if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null) this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());
-        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantRapidAntiBodyTestDto ));
+        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto() ));
     }
 
     @GetMapping(value = "get-form-filter/{hospitalNumber}")
