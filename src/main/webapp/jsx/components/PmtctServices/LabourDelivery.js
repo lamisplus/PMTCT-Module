@@ -342,7 +342,7 @@ const LabourDelivery = (props) => {
       ? ""
       : "This field is required";
     temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required";
-    delivery.maternalOutcomeChild !== "" &&
+    delivery.childStatus !== "" &&
       (temp.numberOfInfantsAlive = delivery.numberOfInfantsAlive
         ? ""
         : "This field is required");
