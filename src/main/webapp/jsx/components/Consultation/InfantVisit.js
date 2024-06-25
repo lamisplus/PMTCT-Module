@@ -113,8 +113,8 @@ const ClinicVisit = (props) => {
     visitDate: "",
     visitStatus: "",
     infantOutcomeAt18Months: "",
-    // id: "",
-    // uuid: "",
+    id: "",
+    uuid: "",
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "",
@@ -125,8 +125,8 @@ const ClinicVisit = (props) => {
     infantHospitalNumber: "",
     timingOfAvrWithin72Hours: "",
     timingOfAvrAfter72Hours: "",
-    // id: "",
-    // uuid: "",
+    id: "",
+    uuid: "",
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -134,8 +134,8 @@ const ClinicVisit = (props) => {
     // motherArtRegimen: "",
     regimenTypeId: "",
     regimenId: "",
-    // id: "",
-    // uuid: "",
+    id: "",
+    uuid: "",
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -148,13 +148,12 @@ const ClinicVisit = (props) => {
     infantHospitalNumber: "",
     results: "",
     testType: "",
-    // id: "",
-    // uuid: "",
+    id: "",
+    uuid: "",
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
     rapidTestType: "",
-    ancNumber: "",
     ageAtTest: "",
     dateOfTest: "",
     result: "",
