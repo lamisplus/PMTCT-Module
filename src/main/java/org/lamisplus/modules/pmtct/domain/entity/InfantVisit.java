@@ -9,12 +9,12 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "pmtct_infant_visit",  schema = "public")
+@Table(name = "pmtct_infant_visit", schema = "public")
 @Data
 @NoArgsConstructor
 
-public class InfantVisit implements Serializable, Persistable<Long>{
-   @Id
+public class InfantVisit implements Serializable, Persistable<Long> {
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
@@ -24,9 +24,11 @@ public class InfantVisit implements Serializable, Persistable<Long>{
     private Double bodyWeight;
     private String visitStatus;
     private String ctxStatus;
-    private String breastFeeding ;
+    private String breastFeeding;
     private String uuid;
     private String motherPersonUuid;
+    @Column(name = "unique_uuid")
+    private String uniqueUuid;
 
 
     @Override

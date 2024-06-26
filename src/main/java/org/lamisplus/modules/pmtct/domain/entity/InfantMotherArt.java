@@ -26,6 +26,8 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     private Long regimenTypeId;
     private Long regimenId;
     private String  uuid;
+    @Column(name = "unique_uuid")
+    private String  uniqueUuid;
 
 
     @Override

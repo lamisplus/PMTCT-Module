@@ -25,6 +25,7 @@ public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long
     List<InfantArv> getPNCVisits(String ancNo, LocalDate deliveryDate);
 
     Optional<InfantArv> getByInfantHospitalNumberAndVisitDate (String hospitalNumber, LocalDate visitDate);
+    Optional<InfantArv> findByUniqueUuid(String uniqueUuid);
 
 
 

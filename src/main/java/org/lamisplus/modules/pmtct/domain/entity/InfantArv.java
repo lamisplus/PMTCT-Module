@@ -31,6 +31,8 @@ public class InfantArv implements Serializable, Persistable<Long> {
 
     @Column(name = "timing_of_avr_within_72hours")
     private String timingOfAvrWithin72Hours;
+    @Column(name = "unique_uuid")
+    private String  uniqueUuid;
 
 
 
