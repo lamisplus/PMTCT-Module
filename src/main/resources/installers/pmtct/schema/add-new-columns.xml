@@ -484,7 +484,17 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="false" author="israel" id="hts-client-23062401">
+    <changeSet failOnError="true" author="Ganiyat" id="20240625-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="non_hbv_exposed_infant_given_hb_within_24hrs" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_delivery ADD non_hbv_exposed_infant_given_hb_within_24hrs VARCHAR(255);</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="pmtct-23062401">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="1">
                 SELECT COUNT(*)
@@ -499,7 +509,7 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="false" author="israel" id="hts-client-23062402">
+    <changeSet failOnError="false" author="israel" id="pmtct-23062402">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="1">
                 SELECT COUNT(*)
@@ -512,6 +522,46 @@
         <sql>
             ALTER TABLE pmtct_infant_visit ALTER COLUMN body_weight TYPE double precision;
         </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_arv ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_mother_art ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_pcr ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_visit ADD unique_uuid character varying;</sql>
     </changeSet>
 
 

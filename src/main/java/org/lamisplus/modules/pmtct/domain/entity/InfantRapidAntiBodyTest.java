@@ -14,4 +14,5 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String ageAtTest;
     private LocalDate dateOfTest;
     private String result;
+
 }

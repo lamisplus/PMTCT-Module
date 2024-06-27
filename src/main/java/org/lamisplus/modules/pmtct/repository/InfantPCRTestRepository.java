@@ -16,4 +16,5 @@ public interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRT
     Optional<InfantPCRTestDto> findTopByInfantHospitalNumber  (String hospitalNumber);
 
     Optional<InfantPCRTest> findByInfantHospitalNumberAndVisitDate  (String hospitalNumber, LocalDate visitDate);
+    Optional<InfantPCRTest> findByUniqueUuid(String uniqueUuid);
 }

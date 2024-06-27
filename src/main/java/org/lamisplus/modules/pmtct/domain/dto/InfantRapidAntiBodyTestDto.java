@@ -1,7 +1,6 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
-import scala.Int;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -13,5 +12,7 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String ageAtTest;
     private LocalDate dateOfTest;
     private String result;
+    private String uuid;
+    private String  uniqueUuid;
 
 }

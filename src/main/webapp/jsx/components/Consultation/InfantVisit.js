@@ -99,7 +99,7 @@ const ClinicVisit = (props) => {
   const [referToART, setReferToART] = useState(false);
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
-    ageAtCtx: "",
+    // ageAtCtx: "",
     personUuid: props.patientObj.person_uuid
       ? props.patientObj.person_uuid
       : props.patientObj.personUuid
@@ -108,11 +108,13 @@ const ClinicVisit = (props) => {
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
     breastFeeding: "",
-    ctxStatus: "",
+    // ctxStatus: "",
     infantHospitalNumber: "",
     visitDate: "",
     visitStatus: "",
     infantOutcomeAt18Months: "",
+    id: "",
+    uuid: "",
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "",
@@ -120,17 +122,22 @@ const ClinicVisit = (props) => {
     arvDeliveryPoint: "",
     infantArvTime: "",
     infantArvType: "",
-    infantHospitalNumber: infantHospitalNumber,
+    infantHospitalNumber: "",
     timingOfAvrWithin72Hours: "",
     timingOfAvrAfter72Hours: "",
+    id: "",
+    uuid: "",
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
-    motherArtRegimen: "",
+    // motherArtRegimen: "",
     regimenTypeId: "",
     regimenId: "",
+    id: "",
+    uuid: "",
   });
+
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
     ageAtTest: "",
     ancNumber: props.patientObj.ancNo,
@@ -138,17 +145,19 @@ const ClinicVisit = (props) => {
     dateResultReceivedByCaregiver: "",
     dateSampleCollected: "",
     dateSampleSent: "",
-    infantHospitalNumber: infantHospitalNumber,
+    infantHospitalNumber: "",
     results: "",
     testType: "",
+    id: "",
+    uuid: "",
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
     rapidTestType: "",
-    // ancNumber: props.patientObj.ancNo,
     ageAtTest: "",
     dateOfTest: "",
     result: "",
+    ancNumber: props.patientObj.ancNo,
   });
 
   //Vital signs clinical decision support
@@ -303,7 +312,7 @@ const ClinicVisit = (props) => {
         if (
           response.data.infantPCRTestDto.results ===
             "INFANT_PCR_RESULT_POSITIVE" ||
-          response.data.infantRapidTestDTO.rapidResult ===
+          response.data.infantRapidTestDTO.result ===
             "INFANT_PCR_RESULT_POSITIVE"
         ) {
           setReferToART(true);
@@ -624,11 +633,18 @@ const ClinicVisit = (props) => {
     e.preventDefault();
     if (validate()) {
       setSaving(true);
-      objValues.infantVisitRequestDto = infantVisitRequestDto;
       objValues.infantArvDto = infantArvDto;
+      objValues.infantArvDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantMotherArtDto = infantMotherArtDto;
+      objValues.infantMotherArtDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantPCRTestDto = infantPCRTestDto;
-      objValues.infantRapidTestDTO = infantRapidTestDTO;
+      objValues.infantPCRTestDto.visitDate = infantVisitRequestDto.visitDate;
+      objValues.infantPCRTestDto.infantHospitalNumber =
+        infantArvDto.infantHospitalNumber;
+
+      objValues.infantRapidAntiBodyTestDto = infantRapidTestDTO;
+      objValues.infantVisitRequestDto = infantVisitRequestDto;
+
       console.log(objValues);
       if (props.activeContent && props.activeContent.actionType) {
         //Perform operation for updation action
@@ -792,6 +808,9 @@ const ClinicVisit = (props) => {
         })
         .then((response) => {
           infantVisitRequestDto.infantHospitalNumber = obj.hospitalNumber;
+          infantArvDto.infantHospitalNumber = obj.hospitalNumber;
+          infantPCRTestDto.infantHospitalNumber = obj.hospitalNumber;
+
           setFormFilter(response.data);
         })
 
@@ -1124,7 +1143,8 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-              <div className="form-group mb-3 col-md-6">
+              {/* uncomment after when you are done  */}
+              {/* <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>CTX </FormLabelName>
                   <Input
@@ -1149,7 +1169,7 @@ const ClinicVisit = (props) => {
                     ""
                   )}
                 </FormGroup>
-              </div>
+              </div> */}
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>Visit Status</FormLabelName>
@@ -1863,9 +1883,9 @@ const ClinicVisit = (props) => {
                       <FormLabelName>Result *</FormLabelName>
                       <Input
                         type="select"
-                        name="rapidResult"
-                        id="rapidResult"
-                        value={infantRapidTestDTO.rapidResult}
+                        name="result"
+                        id="result"
+                        value={infantRapidTestDTO.result}
                         onChange={handleInputChangeRapidTestDto}
                         style={{
                           border: "1px solid #014D88",
@@ -1880,10 +1900,8 @@ const ClinicVisit = (props) => {
                           </option>
                         ))}
                       </Input>
-                      {errors.rapidResult !== "" ? (
-                        <span className={classes.error}>
-                          {errors.rapidResult}
-                        </span>
+                      {errors.result !== "" ? (
+                        <span className={classes.error}>{errors.result}</span>
                       ) : (
                         ""
                       )}
@@ -1891,9 +1909,8 @@ const ClinicVisit = (props) => {
                   </div>
 
                   {/* Display notification when maternal outcome is IIT and transfer out */}
-                  {infantRapidTestDTO.rapidResult !== "" &&
-                  infantRapidTestDTO.rapidResult ===
-                    "INFANT_PCR_RESULT_POSITIVE" ? (
+                  {infantRapidTestDTO.result !== "" &&
+                  infantRapidTestDTO.result === "INFANT_PCR_RESULT_POSITIVE" ? (
                     <h2 style={{ color: "red" }}>Kindly fill ART form</h2>
                   ) : (
                     ""

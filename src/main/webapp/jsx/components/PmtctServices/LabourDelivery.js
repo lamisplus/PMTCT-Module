@@ -311,6 +311,12 @@ const LabourDelivery = (props) => {
         numberOfInfantsAlive: "",
         numberOfInfantsDead: "",
       });
+
+       setErrors({
+         ...errors,
+         numberOfInfantsDead: "",
+         numberOfInfantsAlive: "",
+       });
     } else {
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     }
@@ -355,12 +361,14 @@ const LabourDelivery = (props) => {
       : "This field is required";
     temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required";
     delivery.childStatus !== "" &&
+      delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
       (temp.numberOfInfantsAlive = delivery.numberOfInfantsAlive
         ? ""
         : "This field is required");
-    delivery.maternalOutcomeChild !== "" &&
-      (temp.numberOfInfantsDead =
-        delivery.numberOfInfantsDead !== ""  ? "" : "This field is required");
+delivery.childStatus !== "" &&
+  delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
+  (temp.numberOfInfantsDead =
+    delivery.numberOfInfantsDead !== "" ? "" : "This field is required");
     // temp.numberOfInfantsDead =
     //   delivery.numberOfInfantsDead === 0 ? "" : "This field is required";
 
