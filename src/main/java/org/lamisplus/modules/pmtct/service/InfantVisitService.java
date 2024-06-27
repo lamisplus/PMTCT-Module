@@ -3,6 +3,7 @@ package org.lamisplus.modules.pmtct.service;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
@@ -534,6 +535,7 @@ public class InfantVisitService
     private Infant buildInfant(InfantVisitRequestDto infantVisitRequestDto){
         Infant infant = new Infant();
         infant.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
+        return infant;
     }
     public InfantPCRTest updateInfantPCRTest(InfantPCRTestDto dto,Infant infant){
         InfantPCRTest exist = infantPCRTestRepository
