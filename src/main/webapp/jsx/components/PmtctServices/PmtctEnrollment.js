@@ -624,8 +624,7 @@ const AncPnc = (props) => {
                 {entryValueDisplay.display}
               </h3>
 
-              {console.log()}
-              {props?.ancEntryType && (
+              {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                     <Label>
@@ -1098,13 +1097,13 @@ const AncPnc = (props) => {
                   ) : (
                     ""
                   )}
+                  {enroll.hivStatus == "Positive" && (
+                    <div className="mt-3 ">
+                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                    </div>
+                  )}
                 </FormGroup>
               </div>
-              {enroll.hivStatus == "Positive" && (
-                <div className="form-group mb-3 col-md-12">
-                  <h5 style={{ color: "red" }}>Kindly refer for ART</h5>
-                </div>
-              )}
             </div>
             <div>
               {" "}

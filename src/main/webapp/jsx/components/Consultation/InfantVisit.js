@@ -115,6 +115,7 @@ const ClinicVisit = (props) => {
     infantOutcomeAt18Months: "",
     id: "",
     uuid: "",
+    uniqueUuid: "",
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "",
@@ -127,6 +128,7 @@ const ClinicVisit = (props) => {
     timingOfAvrAfter72Hours: "",
     id: "",
     uuid: "",
+    uniqueUuid: "",
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -136,6 +138,7 @@ const ClinicVisit = (props) => {
     regimenId: "",
     id: "",
     uuid: "",
+    uniqueUuid: "",
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -150,6 +153,7 @@ const ClinicVisit = (props) => {
     testType: "",
     id: "",
     uuid: "",
+    uniqueUuid: "",
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -158,6 +162,8 @@ const ClinicVisit = (props) => {
     dateOfTest: "",
     result: "",
     ancNumber: props.patientObj.ancNo,
+    uniqueUuid: "",
+    uuid: "",
   });
 
   //Vital signs clinical decision support
@@ -216,7 +222,7 @@ const ClinicVisit = (props) => {
 
   const calculateAgeAtTestMonth = (weeks) => {
     if (weeks < 7) {
-      setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
+      // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
       axios
         .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -227,7 +233,7 @@ const ClinicVisit = (props) => {
         .catch((error) => {});
     }
     if (weeks > 11) {
-      setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
+      // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
       axios
         .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -290,7 +296,7 @@ const ClinicVisit = (props) => {
         props.activeContent.actionType === "view" ? true : false
       );
     }
-  }, [props.patientObj.ancNo, props.activeContent]);
+  }, [props.patientObj.hospitalNumber, props.activeContent]);
   //GEt visit information
   const GetVisit = (id) => {
     axios
@@ -302,13 +308,17 @@ const ClinicVisit = (props) => {
         filterOutTheChosenChildForView(
           response.data.infantVisitRequestDto.infantHospitalNumber
         );
+        console.log("view infant visit", response.data);
         setObjValues(response.data);
         setInfantVisitRequestDto({ ...response.data.infantVisitRequestDto });
         setInfantArvDto({ ...response.data.infantArvDto });
         setInfantMotherArtDto({ ...response.data.infantMotherArtDto });
         setInfantPCRTestDto({ ...response.data.infantPCRTestDto });
-        setInfantRapidTestDTO({ ...response.data.infantRapidTestDTO });
+        setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
+        RegimenType(response.data.infantMotherArtDto.regimenTypeId);
+        getTimingARVType(response.data.infantArvDto.arvDeliveryPoint);
+
         if (
           response.data.infantPCRTestDto.results ===
             "INFANT_PCR_RESULT_POSITIVE" ||
@@ -316,7 +326,6 @@ const ClinicVisit = (props) => {
             "INFANT_PCR_RESULT_POSITIVE"
         ) {
           setReferToART(true);
-          setSaving(true);
         }
       })
       .catch((error) => {
@@ -546,45 +555,49 @@ const ClinicVisit = (props) => {
       [e.target.name]: e.target.value,
     });
   };
+
+  const getTimingARVType = (value) => {
+    if (value === "Within 72 hour") {
+      axios
+        .get(
+          `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_WITHIN_72HRS`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((response) => {
+          setTimingProphylaxisList(response.data);
+        })
+
+        .catch((error) => {
+          //console.log(error);
+        });
+    } else if (value === "After 72 hour") {
+      axios
+        .get(
+          `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_After_72HRS`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((response) => {
+          setTimingProphylaxisList(response.data);
+        })
+
+        .catch((error) => {
+          //console.log(error);
+        });
+    } else if (e.target.value === "") {
+      // set the rr to empty string
+    }
+  };
   const handleInputChangeInfantArvDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
     //console.log(e.target.name),
     setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
 
     if (e.target.name === "arvDeliveryPoint") {
-      if (e.target.value === "Within 72 hour") {
-        axios
-          .get(
-            `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_WITHIN_72HRS`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          )
-          .then((response) => {
-            setTimingProphylaxisList(response.data);
-          })
-
-          .catch((error) => {
-            //console.log(error);
-          });
-      } else if (e.target.value === "After 72 hour") {
-        axios
-          .get(
-            `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_After_72HRS`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          )
-          .then((response) => {
-            setTimingProphylaxisList(response.data);
-          })
-
-          .catch((error) => {
-            //console.log(error);
-          });
-      } else if (e.target.value === "") {
-        // set the rr to empty string
-      }
+      getTimingARVType(e.target.value);
     }
   };
 
@@ -1235,120 +1248,118 @@ const ClinicVisit = (props) => {
             </div>
 
             <br />
-            {formFilter && formFilter.motherArt === false && (
-              <>
-                <Label
-                  as="a"
-                  color="teal"
-                  style={{ width: "106%", height: "35px" }}
-                  ribbon
-                >
-                  <h4 style={{ color: "#fff" }}> Mother's ART </h4>
-                </Label>
-                <br />
-                <br />
-                <div className="row">
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>
-                        Timing of mother's ART Initiation{" "}
-                      </FormLabelName>
-                      <Input
-                        type="select"
-                        name="motherArtInitiationTime"
-                        id="motherArtInitiationTime"
-                        value={infantMotherArtDto.motherArtInitiationTime}
-                        onChange={handleInputChangeInfantMotherArtDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        {timeMotherArt.map((value, index) => (
-                          <option key={index} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.motherArtInitiationTime !== "" ? (
-                        <span className={classes.error}>
-                          {errors.motherArtInitiationTime}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Original Regimen Line </FormLabelName>
-                      <Input
-                        type="select"
-                        name="regimenTypeId"
-                        id="regimenTypeId"
-                        value={infantMotherArtDto.regimenTypeId}
-                        onChange={handleSelecteRegimen}
-                        required
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value=""> Select</option>
-
-                        {adultRegimenLine.map((value) => (
-                          <option key={value.id} value={value.id}>
-                            {value.description}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.regimenTypeId !== "" ? (
-                        <span className={classes.error}>
-                          {errors.regimenTypeId}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Original Regimen </FormLabelName>
-                      <Input
-                        type="select"
-                        name="regimenId"
-                        id="regimenId"
-                        value={infantMotherArtDto.regimenId}
-                        onChange={handleInputChangeInfantMotherArtDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value=""> Select</option>
-                        {regimenType.map((value) => (
-                          <option key={value.id} value={value.id}>
-                            {value.description}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.regimenId !== "" ? (
-                        <span className={classes.error}>
-                          {errors.regimenId}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
+            {/* {formFilter && formFilter.motherArt === false && ( */}
+            <>
+              <Label
+                as="a"
+                color="teal"
+                style={{ width: "106%", height: "35px" }}
+                ribbon
+              >
+                <h4 style={{ color: "#fff" }}> Mother's ART </h4>
+              </Label>
+              <br />
+              <br />
+              <div className="row">
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>
+                      Timing of mother's ART Initiation{" "}
+                    </FormLabelName>
+                    <Input
+                      type="select"
+                      name="motherArtInitiationTime"
+                      id="motherArtInitiationTime"
+                      value={infantMotherArtDto.motherArtInitiationTime}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="select">Select </option>
+                      {timeMotherArt.map((value, index) => (
+                        <option key={index} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                    {errors.motherArtInitiationTime !== "" ? (
+                      <span className={classes.error}>
+                        {errors.motherArtInitiationTime}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
                 </div>
-              </>
-            )}
+
+                <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Original Regimen Line </FormLabelName>
+                    <Input
+                      type="select"
+                      name="regimenTypeId"
+                      id="regimenTypeId"
+                      value={infantMotherArtDto.regimenTypeId}
+                      onChange={handleSelecteRegimen}
+                      required
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value=""> Select</option>
+
+                      {adultRegimenLine.map((value) => (
+                        <option key={value.id} value={value.id}>
+                          {value.description}
+                        </option>
+                      ))}
+                    </Input>
+                    {errors.regimenTypeId !== "" ? (
+                      <span className={classes.error}>
+                        {errors.regimenTypeId}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+                <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Original Regimen </FormLabelName>
+                    <Input
+                      type="select"
+                      name="regimenId"
+                      id="regimenId"
+                      value={infantMotherArtDto.regimenId}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value=""> Select</option>
+                      {regimenType.map((value) => (
+                        <option key={value.id} value={value.id}>
+                          {value.description}
+                        </option>
+                      ))}
+                    </Input>
+                    {errors.regimenId !== "" ? (
+                      <span className={classes.error}>{errors.regimenId}</span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+              </div>
+            </>
+            {/* )} */}
             <br />
             {/* {formFilter && formFilter.infantArv === false && ( */}
             <>
@@ -1919,6 +1930,8 @@ const ClinicVisit = (props) => {
               </>
             )}
             <br />
+
+
             {infantVisitRequestDto &&
             infantVisitRequestDto.infantHospitalNumber ? (
               <>

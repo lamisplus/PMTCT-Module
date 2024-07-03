@@ -1132,7 +1132,7 @@ const UserRegistration = (props) => {
                        <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
-                            Previously Known Hiv Status{" "}
+                            Previously Known HIV Status{" "}
                             <span style={{ color: "red" }}> *</span>
                           </Label>
                           <InputGroup>

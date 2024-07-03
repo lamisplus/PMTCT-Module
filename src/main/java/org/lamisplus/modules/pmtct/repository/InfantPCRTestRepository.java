@@ -8,8 +8,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRTest, Long>
+public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRTest, Long>
 {
+
     List<InfantPCRTest> findByAncNumber (String ancNo);
     List<InfantPCRTest> findByInfantHospitalNumber  (String hospitalNumber);
     InfantPCRTest getTopByUuid (String uuid);

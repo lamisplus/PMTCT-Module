@@ -904,7 +904,7 @@ delivery.childStatus !== "" &&
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    HBV exposed infant given Hep B within 24 hrs of birth{" "}
+                    HBV exposed infant given Hep B Ig within 24 hrs of birth{" "}
                     <span style={{ color: "red" }}> *</span>
                   </Label>
                   <InputGroup>

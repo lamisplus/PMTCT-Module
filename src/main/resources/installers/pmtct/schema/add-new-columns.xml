@@ -564,6 +564,25 @@
         <sql>ALTER TABLE pmtct_infant_visit ADD unique_uuid character varying;</sql>
     </changeSet>
 
+    <changeSet failOnError="false" author="ganiyat" id="20240628-054">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="anc_number" />
 
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD anc_number character varying;</sql>
+    </changeSet>
+    <changeSet failOnError="false" author="ganiyat" id="320240786628-057">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="result" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="unique_uuid" />
 
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD result character varying;</sql>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD unique_uuid character varying;</sql>
+
+    </changeSet>
 </databaseChangeLog>

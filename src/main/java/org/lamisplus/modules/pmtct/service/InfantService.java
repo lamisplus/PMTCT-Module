@@ -87,24 +87,24 @@ public class InfantService {
     }
 
     private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
-        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
+//        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
             infantArvDto.setUuid(infant.getMotherPersonUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
-        }
+//        }
         return infantVisitService.save(infantArvDto);
     }
 
     private InfantPCRTest saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infant) {
-        if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
+//        if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
             infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
-        }
+//        }
         return infantVisitService.save(infantPCRTestDto);
     }
 

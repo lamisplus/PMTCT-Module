@@ -683,7 +683,7 @@ const RecentHistory = (props) => {
                                       <strong className="text-warning">
                                         Gender
                                         <br />
-                                        {obj.sex}
+                                        {obj.sex === "SEX_FEMALE"? "Female" : "Male"}
                                       </strong>
                                     </span>
                                   </li>

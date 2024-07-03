@@ -444,7 +444,7 @@ const LabourinfantInfo = (props) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // setSaving(true);
+      setSaving(true);
       infantInfo.infantArvDto = infantArvDto;
       infantInfo.infantPCRTestDto = infantPCRTestDto;
       if (props.activeContent && props.activeContent.actionType === "update") {
