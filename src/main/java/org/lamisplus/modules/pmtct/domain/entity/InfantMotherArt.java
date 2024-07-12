@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.domain.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
@@ -25,6 +26,9 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     private Long regimenTypeId;
     private Long regimenId;
     private String  uuid;
+    @Column(name = "unique_uuid")
+    private String  uniqueUuid;
+
 
     @Override
     public boolean isNew() {

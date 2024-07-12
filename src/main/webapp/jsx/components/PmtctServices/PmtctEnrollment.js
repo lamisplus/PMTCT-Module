@@ -95,7 +95,6 @@ const AncPnc = (props) => {
 
   const location = useLocation();
   const locationState = location && location.state ? location.state : null;
-  console.log(locationState);
   const [regimenType, setRegimenType] = useState([]);
   const classes = useStyles();
   const [disabledField, setSisabledField] = useState(false);
@@ -111,6 +110,8 @@ const AncPnc = (props) => {
   const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
   const [adultRegimenLine, setAdultRegimenLine] = useState([]);
   const [urinalysisList, setUrinalysisList] = useState([]);
+  const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
+  const [timeHivInitiation, setTimeHivInitiation] = useState([]);
 
   const [enroll, setEnrollDto] = useState({
     hepatitisB: patientObj.hepatitisB ? patientObj.hepatitisB : "",
@@ -123,6 +124,7 @@ const AncPnc = (props) => {
     artStartDate: "",
     artStartTime: patientObj.artStartTime ? patientObj.artStartTime : "",
     id: "",
+    timeOfHivDiagnosis: "",
     tbStatus: "",
     hivStatus: patientObj.hivStatus
       ? patientObj.hivStatus
@@ -162,6 +164,19 @@ const AncPnc = (props) => {
       });
   };
 
+  const getTimeHivInitiation = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        //console.log(response.data); TIMING_MOTHERS_ART_INITIATION
+        setTimeHivInitiation(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   const handleInputChangeInfantMotherArtDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
@@ -180,14 +195,26 @@ const AncPnc = (props) => {
     RegimenType(regimenID);
     //setErrors({...temp, [e.target.name]:""})
   };
-  console.log(props.allEntryPoint);
+  //console.log(props.allEntryPoint);
+  // const TIMING_MOTHERS_ART_INITIATION = () => {
+  //   axios
+  //     .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     })
+  //     .then((response) => {
+  //       setTimeMotherArt(response.data);
+  //     })
+  //     .catch((error) => {
+  //       //console.log(error);
+  //     });
+  // };
   const TIMING_MOTHERS_ART_INITIATION = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
+      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setTimeMotherArt(response.data);
+        setTimeHivDiagnosis(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -251,6 +278,7 @@ const AncPnc = (props) => {
     }
   };
   useEffect(() => {
+    getTimeHivInitiation();
     GET_URINALYSIS();
     AdultRegimenLine();
     TIMING_MOTHERS_ART_INITIATION();
@@ -465,6 +493,9 @@ const AncPnc = (props) => {
     //temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
     //temp.ga = enroll.ga ? "" : "This field is required"
     // temp.gravida = enroll.gravida ? "" : "This field is required"
+    temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis
+      ? ""
+      : "This field is required";
     temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
       ? ""
       : "This field is required";
@@ -593,8 +624,7 @@ const AncPnc = (props) => {
                 {entryValueDisplay.display}
               </h3>
 
-              {console.log()}
-              {props?.ancEntryType && (
+              {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
                     <Label>
@@ -819,6 +849,40 @@ const AncPnc = (props) => {
                   )}
                 </FormGroup>
               </div>
+
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Time Of HIV Diagnosis{" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="timeOfHivDiagnosis"
+                      id="timeOfHivDiagnosis"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.timeOfHivDiagnosis}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      {timeHivDiagnosis.map((value, index) => (
+                        <option key={index} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+                  {errors.timeHivDiagnosis !== "" ? (
+                    <span className={classes.error}>
+                      {errors.timeHivDiagnosis}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
               {/* <div className=" mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName>
@@ -1032,6 +1096,11 @@ const AncPnc = (props) => {
                     <span className={classes.error}>{errors.hivStatus}</span>
                   ) : (
                     ""
+                  )}
+                  {enroll.hivStatus == "Positive" && (
+                    <div className="mt-3 ">
+                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                    </div>
                   )}
                 </FormGroup>
               </div>

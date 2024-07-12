@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 public interface PatientInfo {
     String getFullName();
     String getSex();
-    int getAge();
+    Integer getAge();
     String getUuid();
-    long getId();
+    Long getId();
     String getFirstName();
     String getSurname();
     String getOtherName();
@@ -18,12 +18,12 @@ public interface PatientInfo {
     String getContactPoint();
     String getNinNumber();
     String getEmrId();
-    long getFacilityId();
-    boolean getIsDateOfBirthEstimated();
+    Long getFacilityId();
+    Boolean getIsDateOfBirthEstimated();
     String getContact();
     LocalDate getDateOfRegistration();
-    boolean getDeceased();
-    boolean getActive();
+    Boolean getDeceased();
+    Boolean getActive();
     LocalDateTime getDeceasedDateTime();
     String getOrganization();
     String getGender();

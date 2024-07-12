@@ -444,7 +444,7 @@ const LabourinfantInfo = (props) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // setSaving(true);
+      setSaving(true);
       infantInfo.infantArvDto = infantArvDto;
       infantInfo.infantPCRTestDto = infantPCRTestDto;
       if (props.activeContent && props.activeContent.actionType === "update") {
@@ -797,7 +797,9 @@ const LabourinfantInfo = (props) => {
 
                   <div className=" mb-3 col-md-4 ">
                     <FormGroup>
-                      <FormLabelName>Date of CTX Initiation </FormLabelName>
+                      <FormLabelName>
+                        Age at CTX Initiation(months){" "}
+                      </FormLabelName>
                       <Input
                         type="select"
                         name="ageAtCtx"
@@ -864,9 +866,9 @@ const LabourinfantInfo = (props) => {
                       <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
                       <Input
                         type="select"
-                        name="arvDeliveryPoint"
-                        id="arvDeliveryPoint"
-                        value={infantArvDto.arvDeliveryPoint}
+                        name="infantArvTime"
+                        id="infantArvTime"
+                        value={infantArvDto.infantArvTime}
                         onChange={handleInputChangeInfantArvDto}
                         style={{
                           border: "1px solid #014D88",
@@ -878,9 +880,9 @@ const LabourinfantInfo = (props) => {
                         <option value="Within 72 hour">Within 72 hour </option>
                         <option value="After 72 hour ">After 72 hour </option>
                       </Input>
-                      {errors.arvDeliveryPoint !== "" ? (
+                      {errors.infantArvTime !== "" ? (
                         <span className={classes.error}>
-                          {errors.arvDeliveryPoint}
+                          {errors.infantArvTime}
                         </span>
                       ) : (
                         ""
@@ -892,9 +894,9 @@ const LabourinfantInfo = (props) => {
                       <FormLabelName> Place of Delivery </FormLabelName>
                       <Input
                         type="select"
-                        name="infantArvTime"
-                        id="infantArvTime"
-                        value={infantArvDto.infantArvTime}
+                        name="arvDeliveryPoint"
+                        id="arvDeliveryPoint"
+                        value={infantArvDto.arvDeliveryPoint}
                         onChange={handleInputChangeInfantArvDto}
                         style={{
                           border: "1px solid #014D88",
@@ -910,9 +912,9 @@ const LabourinfantInfo = (props) => {
                           Delivered outside facility{" "}
                         </option>
                       </Input>
-                      {errors.infantArvTime !== "" ? (
+                      {errors.arvDeliveryPoint !== "" ? (
                         <span className={classes.error}>
-                          {errors.infantArvTime}
+                          {errors.arvDeliveryPoint}
                         </span>
                       ) : (
                         ""
@@ -1015,13 +1017,7 @@ const LabourinfantInfo = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        min={
-                          props.patientObj &&
-                          props.patientObj.pmtctEnrollmentRespondDto
-                            ? props.patientObj.pmtctEnrollmentRespondDto
-                                .pmtctEnrollmentDate
-                            : ""
-                        }
+                        min={infantInfo.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField}
                       />
@@ -1034,6 +1030,34 @@ const LabourinfantInfo = (props) => {
                       )}
                     </FormGroup>
                   </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Date Sample Sent</FormLabelName>
+                      <Input
+                        type="date"
+                        name="dateSampleSent"
+                        id="dateSampleSent"
+                        value={infantPCRTestDto.dateSampleSent}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantPCRTestDto.dateSampleCollected}
+                        max={infantPCRTestDto.dateResultReceivedAtFacility}
+                        // max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateSampleSent !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateSampleSent}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
                       <FormLabelName>Date Result Received</FormLabelName>
@@ -1075,39 +1099,13 @@ const LabourinfantInfo = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        min={infantPCRTestDto.dateSampleCollected}
+                        min={infantPCRTestDto.dateResultReceivedAtFacility}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField}
                       />
                       {errors.dateResultReceivedByCaregiver !== "" ? (
                         <span className={classes.error}>
                           {errors.dateResultReceivedByCaregiver}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className=" mb-3 col-md-6">
-                    <FormGroup>
-                      <FormLabelName>Date Sample Sent</FormLabelName>
-                      <Input
-                        type="date"
-                        name="dateSampleSent"
-                        id="dateSampleSent"
-                        value={infantPCRTestDto.dateSampleSent}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        min={infantPCRTestDto.dateSampleCollected}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateSampleSent !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateSampleSent}
                         </span>
                       ) : (
                         ""

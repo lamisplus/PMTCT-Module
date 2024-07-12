@@ -28,6 +28,8 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private LocalDate dateResultReceivedByCaregiver;
     private String results;
     private String uuid;
+    @Column(name = "unique_uuid")
+    private String  uniqueUuid;
 
     @Override
     public boolean isNew() {

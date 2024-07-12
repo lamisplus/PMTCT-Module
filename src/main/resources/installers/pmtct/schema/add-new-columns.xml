@@ -441,4 +441,148 @@
             ALTER TABLE pmtct_infant_pcr ALTER COLUMN age_at_test TYPE character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
+
+    <changeSet failOnError="true" author="20240613-003" id="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_anc')
+                AND attname = 'previously_known_hiv_status';
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS pmtct_anc ADD COLUMN previously_known_hiv_status character varying;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" author="20240613-005" id="israel-ace3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_enrollment')
+                AND attname = 'time_of_hiv_diagnosis';
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS pmtct_enrollment ADD COLUMN time_of_hiv_diagnosis character varying;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" author="ganiyat-247" id="20240623">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_delivery')
+                AND attname = 'non_hbv_exposed_infant_given_hb_within_24hrs';
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS pmtct_delivery ADD COLUMN non_hbv_exposed_infant_given_hb_within_24hrs character varying;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" author="Ganiyat" id="20240625-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="non_hbv_exposed_infant_given_hb_within_24hrs" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_delivery ADD non_hbv_exposed_infant_given_hb_within_24hrs VARCHAR(255);</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="pmtct-23062401">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_infant_information')
+                AND attname = 'body_weight'
+                AND atttypid != (SELECT oid FROM pg_type WHERE typname = 'float8');
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information ALTER COLUMN body_weight TYPE double precision;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="pmtct-23062402">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*)
+                FROM pg_attribute
+                WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_infant_visit')
+                AND attname = 'body_weight'
+                AND atttypid != (SELECT oid FROM pg_type WHERE typname = 'float8');
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit ALTER COLUMN body_weight TYPE double precision;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_arv ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_mother_art ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_pcr ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="israel" id="20240626-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_visit ADD unique_uuid character varying;</sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="ganiyat" id="20240628-054">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="anc_number" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD anc_number character varying;</sql>
+    </changeSet>
+    <changeSet failOnError="false" author="ganiyat" id="320240786628-057">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="result" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="unique_uuid" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD result character varying;</sql>
+        <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD unique_uuid character varying;</sql>
+
+    </changeSet>
 </databaseChangeLog>

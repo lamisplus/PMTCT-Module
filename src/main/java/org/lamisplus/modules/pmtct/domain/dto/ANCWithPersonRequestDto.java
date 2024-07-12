@@ -34,4 +34,5 @@ public class ANCWithPersonRequestDto implements Serializable
     private PmtctHtsInfo pmtctHtsInfo;
     private PartnerNotification partnerNotification;
     private PersonDto personDto;
+    private String previouslyKnownHivStatus;
 }

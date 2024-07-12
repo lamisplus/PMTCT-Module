@@ -31,4 +31,5 @@ public class ANCEnrollementRequestDto{
     private PartnerNotification partnerNotification;
    // private String sourceOfReferral;
     private final String person_uuid;
+    private String previouslyKnownHivStatus;
 }

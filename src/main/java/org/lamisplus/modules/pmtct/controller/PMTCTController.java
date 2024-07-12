@@ -5,6 +5,7 @@ import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -351,10 +352,12 @@ public class PMTCTController {
         return ResponseEntity.ok (infantVisitService.getSingleInfantMotherArt(id));
     }
 
+//    , @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto
+
     @PostMapping(value = "infant-visit-consolidated")
-    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto ) {
+    public  ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         if(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null) this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());
-        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantRapidAntiBodyTestDto ));
+        return ResponseEntity.ok (infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto() ));
     }
 
     @GetMapping(value = "get-form-filter/{hospitalNumber}")

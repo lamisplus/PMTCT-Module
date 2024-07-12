@@ -22,5 +22,6 @@ public class InfantArvDto implements Serializable
     private String ageAtCtx;
     private String timingOfAvrAfter72Hours;
     private String timingOfAvrWithin72Hours;
+    private String  uniqueUuid;
 
 }

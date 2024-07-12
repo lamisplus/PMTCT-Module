@@ -16,7 +16,7 @@ public class InfantVisitationConsolidated implements Serializable
     private InfantMotherArtDto infantMotherArtDto;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
-    @Embedded
+//    @Embedded
     private InfantRapidAntiBodyTest infantRapidAntiBodyTest;
 
 }
