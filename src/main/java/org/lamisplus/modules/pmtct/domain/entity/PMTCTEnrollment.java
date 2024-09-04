@@ -42,7 +42,12 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String urinalysis;
     private String timeOfHivDiagnosis;
 
-
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source = "Web";
 
 
     @Override

@@ -37,6 +37,13 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private Integer numberOfInfantsDead;
     private String personUuid;
     private String placeOfDelivery;
+
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source = "Web";
     @Override
     public boolean isNew() {
         return false;

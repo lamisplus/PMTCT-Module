@@ -377,12 +377,24 @@
                 <columnExists tableName="pmtct_anc" columnName="latitude" />
                 <columnExists tableName="pmtct_anc" columnName="longitude" />
                 <columnExists tableName="pmtct_anc" columnName="source" />
+                <columnExists tableName="pmtct_enrollment" columnName="latitude" />
+                <columnExists tableName="pmtct_enrollment" columnName="longitude" />
+                <columnExists tableName="pmtct_enrollment" columnName="source" />
+                <columnExists tableName="pmtct_delivery" columnName="latitude" />
+                <columnExists tableName="pmtct_delivery" columnName="longitude" />
+                <columnExists tableName="pmtct_delivery" columnName="source" />
             </not>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_anc ADD COLUMN latitude varchar(255);
             ALTER TABLE pmtct_anc ADD COLUMN longitude varchar(255);
             ALTER TABLE pmtct_anc ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_enrollment ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_enrollment ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_enrollment ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_delivery ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_delivery ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_delivery ADD COLUMN source varchar(25);
         </sql>
     </changeSet>
 
