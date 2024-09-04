@@ -383,6 +383,9 @@
                 <columnExists tableName="pmtct_delivery" columnName="latitude" />
                 <columnExists tableName="pmtct_delivery" columnName="longitude" />
                 <columnExists tableName="pmtct_delivery" columnName="source" />
+                <columnExists tableName="pmtct_infant_information" columnName="latitude" />
+                <columnExists tableName="pmtct_infant_information" columnName="longitude" />
+                <columnExists tableName="pmtct_infant_information" columnName="source" />
             </not>
         </preConditions>
         <sql>
@@ -395,6 +398,9 @@
             ALTER TABLE pmtct_delivery ADD COLUMN latitude varchar(255);
             ALTER TABLE pmtct_delivery ADD COLUMN longitude varchar(255);
             ALTER TABLE pmtct_delivery ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_infant_information ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_infant_information ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_infant_information ADD COLUMN source varchar(25);
         </sql>
     </changeSet>
 

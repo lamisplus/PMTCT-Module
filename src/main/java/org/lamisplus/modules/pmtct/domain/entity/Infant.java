@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Persistable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.io.Serializable;
@@ -27,4 +28,11 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private String motherPersonUuid;
     private Double bodyWeight;
     private String ctxStatus;
+
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source = "Web";
    }
