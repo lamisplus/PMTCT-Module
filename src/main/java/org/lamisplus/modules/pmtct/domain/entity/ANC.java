@@ -44,6 +44,13 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")
     private JsonNode partnerInformation;
+
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source = "Web";
     @Override
     public boolean isNew() {
         return false;

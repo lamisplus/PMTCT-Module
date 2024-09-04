@@ -371,4 +371,19 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="false" author="Joshua Gabriel" id="pmtctQuery-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="latitude" />
+                <columnExists tableName="pmtct_anc" columnName="longitude" />
+                <columnExists tableName="pmtct_anc" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_anc ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_anc ADD COLUMN source varchar(25);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
