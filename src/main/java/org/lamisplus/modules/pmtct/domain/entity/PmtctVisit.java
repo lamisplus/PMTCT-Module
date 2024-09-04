@@ -42,6 +42,13 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String transferTo;
     private LocalDate nextAppointmentDate;
 
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source = "Web";
+
 
 
     @Override
