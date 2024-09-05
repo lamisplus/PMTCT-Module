@@ -17,4 +17,8 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String  uniqueUuid;
     @JsonIgnore
     private String uuid;
+
+    private String latitude;
+    private String longitude;
+    private String source;
 }

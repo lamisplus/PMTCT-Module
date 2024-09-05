@@ -35,4 +35,8 @@ public class DeliveryResponseDto implements Serializable {
     private String referalSource;
     private String personUuid;
     private String placeOfDelivery;
+
+    private String latitude;
+    private String longitude;
+    private String source;
 }

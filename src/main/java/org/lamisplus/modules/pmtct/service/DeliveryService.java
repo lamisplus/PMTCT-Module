@@ -73,6 +73,9 @@ public class DeliveryService
         delivery.setLastModifiedBy(user.getUserName());
         delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
         delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+        delivery.setLatitude(deliveryRequestDto.getLatitude());
+        delivery.setLongitude(deliveryRequestDto.getLongitude());
+        delivery.setSource((deliveryRequestDto.getSource() != null && !deliveryRequestDto.getSource().trim().isEmpty()) ? deliveryRequestDto.getSource()  : "Web" );
         PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
 
@@ -115,6 +118,10 @@ public class DeliveryService
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
         deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
         deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
+        deliveryResponseDto.setLatitude(delivery.getLatitude());
+        deliveryResponseDto.setLongitude(delivery.getLongitude());
+        deliveryResponseDto.setSource(delivery.getSource());
+
 
         return deliveryResponseDto;
     }

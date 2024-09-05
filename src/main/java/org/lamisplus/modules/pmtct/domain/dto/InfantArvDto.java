@@ -24,4 +24,8 @@ public class InfantArvDto implements Serializable
     private String timingOfAvrWithin72Hours;
     private String  uniqueUuid;
 
+    private String latitude;
+    private String longitude;
+    private String source;
+
 }

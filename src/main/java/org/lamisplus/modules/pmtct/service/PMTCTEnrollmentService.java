@@ -104,6 +104,10 @@ public class PMTCTEnrollmentService {
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
         pmtctEnrollment.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
         pmtctEnrollment.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
+        pmtctEnrollment.setSource((pmtctEnrollmentRequestDto.getSource()!= null && !pmtctEnrollmentRequestDto.getSource().trim().isEmpty()) ? pmtctEnrollmentRequestDto.getSource()  : "Web" );
+        pmtctEnrollment.setLatitude(pmtctEnrollmentRequestDto.getLatitude());
+        pmtctEnrollment.setLongitude(pmtctEnrollmentRequestDto.getLongitude());
+
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         return (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);

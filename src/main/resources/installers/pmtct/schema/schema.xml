@@ -392,6 +392,18 @@
                 <columnExists tableName="pmtct_mother_visitation" columnName="latitude" />
                 <columnExists tableName="pmtct_mother_visitation" columnName="longitude" />
                 <columnExists tableName="pmtct_mother_visitation" columnName="source" />
+                <columnExists tableName="pmtct_infant_arv" columnName="latitude" />
+                <columnExists tableName="pmtct_infant_arv" columnName="longitude" />
+                <columnExists tableName="pmtct_infant_arv" columnName="source" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="latitude" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="longitude" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="source" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="latitude" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="longitude" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="source" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="latitude" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="longitude" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="source" />
             </not>
         </preConditions>
         <sql>
@@ -413,6 +425,18 @@
             ALTER TABLE pmtct_mother_visitation ADD COLUMN latitude varchar(255);
             ALTER TABLE pmtct_mother_visitation ADD COLUMN longitude varchar(255);
             ALTER TABLE pmtct_mother_visitation ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_infant_arv ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_infant_arv ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_infant_arv ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN source varchar(25);
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN latitude varchar(255);
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN longitude varchar(255);
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN source varchar(25);
         </sql>
     </changeSet>
 

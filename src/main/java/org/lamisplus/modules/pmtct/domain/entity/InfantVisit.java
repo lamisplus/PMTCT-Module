@@ -35,7 +35,7 @@ public class InfantVisit implements Serializable, Persistable<Long> {
     @Column(name = "longitude")
     private String longitude;
     @Column(name = "source")
-    private String source = "Web";
+    private String source;
 
 
     @Override

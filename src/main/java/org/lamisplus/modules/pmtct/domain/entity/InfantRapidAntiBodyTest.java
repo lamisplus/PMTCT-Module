@@ -28,4 +28,11 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String  uniqueUuid;
     @Column(name = "uuid")
     private String uuid;
+
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source;
 }

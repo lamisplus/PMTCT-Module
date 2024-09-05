@@ -36,5 +36,9 @@
      private String hepatitisB;
      private String urinalysis;
      private String timeOfHivDiagnosis;
+
+     private String latitude;
+     private String longitude;
+     private String source;
  }
 

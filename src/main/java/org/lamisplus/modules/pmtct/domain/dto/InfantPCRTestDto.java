@@ -32,4 +32,8 @@ public class InfantPCRTestDto implements Serializable
     private String uuid;
     private String  uniqueUuid;
 
+    private String latitude;
+    private String longitude;
+    private String source;
+
 }

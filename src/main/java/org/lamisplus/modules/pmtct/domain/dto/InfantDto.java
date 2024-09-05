@@ -25,4 +25,7 @@ public class InfantDto implements Serializable
     private String ctxStatus;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
+    private String latitude;
+    private String longitude;
+    private String source;
 }

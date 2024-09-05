@@ -47,7 +47,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     @Column(name = "longitude")
     private String longitude;
     @Column(name = "source")
-    private String source = "Web";
+    private String source;
 
 
     @Override

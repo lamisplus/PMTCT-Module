@@ -29,6 +29,9 @@ public class ANCRequestDto implements Serializable
     private String sourceOfReferral;
     private String previouslyKnownHivStatus;
 
+    private String latitude;
+    private String longitude;
+    private String source;
 
 
 }

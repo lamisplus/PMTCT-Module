@@ -71,6 +71,10 @@ public class InfantService {
         infant.setDefaultDays(0);
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
+        infant.setSource((infantDto.getSource() != null && !infantDto.getSource().trim().isEmpty()) ? infantDto.getSource()  : "Web" );
+        infant.setLatitude(infantDto.getLatitude());
+        infant.setLongitude(infantDto.getLongitude());
+
         Infant result = infantRepository.save(infant);
 
         //save InfantArv
@@ -151,6 +155,9 @@ public class InfantService {
                 .ctxStatus(infant.getCtxStatus())
                 .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
                 .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
+                .latitude(infant.getLatitude())
+                .longitude(infant.getLongitude())
+                .source(infant.getSource())
                 .build();
     }
 

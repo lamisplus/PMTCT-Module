@@ -72,6 +72,10 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        pmtctVisit.setLatitude(pmtctVisitRequestDto.getLatitude());
+        pmtctVisit.setLongitude(pmtctVisitRequestDto.getLongitude());
+        pmtctVisit.setSource((pmtctVisitRequestDto.getSource() != null && !pmtctVisitRequestDto.getSource().trim().isEmpty()) ? pmtctVisitRequestDto.getSource()  : "Web" );
+
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -210,6 +214,7 @@ public class PmtctVisitService {
                 pmtctVisitResponseDto.setAge(this.calculateAge(pmtctVisit.getPersonUuid()));
                 pmtctVisitResponseDto.setDateOfBirth(person.getDateOfBirth());
                 pmtctVisitResponseDto.setPersonUuid(person.getUuid());
+
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -34,4 +34,7 @@ public class PmtctVisitResponseDto implements Serializable {
     private String transferTo;
     private LocalDate nextAppointmentDate;
     private String personUuid;
+    private String latitude;
+    private String longitude;
+    private String source;
 }

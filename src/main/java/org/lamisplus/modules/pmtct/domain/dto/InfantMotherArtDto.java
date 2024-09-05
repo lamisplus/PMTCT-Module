@@ -18,6 +18,9 @@ public class InfantMotherArtDto implements Serializable
     private Long regimenId;
     private String  uuid;
     private String  uniqueUuid;
+    private String latitude;
+    private String longitude;
+    private String source;
 
 
 

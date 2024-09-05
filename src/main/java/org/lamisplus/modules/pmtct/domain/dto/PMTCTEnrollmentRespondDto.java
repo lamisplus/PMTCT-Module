@@ -1,5 +1,6 @@
  package org.lamisplus.modules.pmtct.domain.dto;
 
+ import com.fasterxml.jackson.annotation.JsonIgnore;
  import lombok.Data;
  import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
 
@@ -31,5 +32,12 @@
      private String hepatitisB;
      private String urinalysis;
      private String timeOfHivDiagnosis;
+
+     @JsonIgnore
+     private String latitude;
+     @JsonIgnore
+     private String longitude;
+     @JsonIgnore
+     private String source;
 
  }

@@ -29,6 +29,13 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
 
+    @Column(name = "latitude")
+    private String latitude;
+    @Column(name = "longitude")
+    private String longitude;
+    @Column(name = "source")
+    private String source;
+
 
     @Override
     public boolean isNew() {

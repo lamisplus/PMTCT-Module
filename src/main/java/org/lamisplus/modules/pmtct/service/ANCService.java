@@ -117,6 +117,10 @@ public class ANCService {
                 JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
                 anc.setPartnerNotification(partnerNotificationInfoJsonNode);
             }
+            anc.setLatitude(ancRequestDto.getLatitude());
+            anc.setLongitude(ancRequestDto.getLongitude());
+            anc.setSource((ancRequestDto.getSource() != null && !ancRequestDto.getSource().trim().isEmpty()) ? ancRequestDto.getSource()  : "Web" );
+
             ancRepository.save(anc);
 
         } else {
@@ -798,6 +802,9 @@ public class ANCService {
                 anc.setPartnerNotification(partnerNotificationInfoJsonNode);
             }
         }
+        anc.setLongitude(ancEnrollementRequestDto.getLongitude());
+        anc.setLatitude(ancEnrollementRequestDto.getLatitude());
+        anc.setSource((ancEnrollementRequestDto.getSource() != null && !ancEnrollementRequestDto.getSource().trim().isEmpty()) ? ancEnrollementRequestDto.getSource() : "Web" );
         return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
     }
 
@@ -832,6 +839,9 @@ public class ANCService {
         ancRespondDto.setPerson_uuid(persons.getUuid());
         ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
+        ancRespondDto.setLatitude(anc.getLatitude());
+        ancRespondDto.setLongitude(anc.getLongitude());
+        ancRespondDto.setSource(anc.getSource());
         return ancRespondDto;
     }
 
@@ -883,6 +893,9 @@ public class ANCService {
             anc.setTreatedSyphilis(ancWithPersonRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancWithPersonRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancWithPersonRequestDto.getReferredSyphilisTreatment());
+            anc.setLongitude(ancWithPersonRequestDto.getLongitude());
+            anc.setLatitude(ancWithPersonRequestDto.getLatitude());
+            anc.setSource((ancWithPersonRequestDto.getSource() != null && !ancWithPersonRequestDto.getSource().trim().isEmpty()) ? ancWithPersonRequestDto.getSource() : "Web" );
 
             PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
@@ -989,6 +1002,9 @@ public class ANCService {
             ancRespondDto.setHivStatus(anc.getStaticHivStatus());
             ancRespondDto.setArtStartDate(person.getArtStartDate());
             ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
+            ancRespondDto.setLatitude(anc.getLatitude());
+            ancRespondDto.setLongitude(anc.getLongitude());
+            ancRespondDto.setSource(anc.getSource());
 
             String hivStatus = "Unknown";
             try {
@@ -1148,6 +1164,7 @@ public class ANCService {
             JsonNode partnerInformation2JsonNode = mapper.valueToTree(partnerInformation2);
             anc.setPartnerInformation(partnerInformation2JsonNode);
         }
+
         ancRepository.save(anc);
         return partnerInformation;
     }

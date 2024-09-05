@@ -25,4 +25,8 @@ public class InfantVisitResponseDto implements Serializable
     private String ageAtCtx;
     private String infantOutcomeAt18Months;
     private String uniqueUuid;
+
+    private String latitude;
+    private String longitude;
+    private String source;
 }

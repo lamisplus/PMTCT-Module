@@ -50,4 +50,8 @@ public class ANCRespondDto implements Serializable {
     private LocalDate artStartDate;
     private String previouslyKnownHivStatus;
 
+    private String latitude;
+    private String longitude;
+    private String source;
+
 }

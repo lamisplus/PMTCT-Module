@@ -284,7 +284,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisitationConsolidatedDto.getInfantVisitRequestDto().setUniqueUuid(UUID.randomUUID().toString());
 
         InfantVisitResponseDto infantVisitResponseDto =  this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
-        System.out.println("test case" + " " + infantVisitResponseDto.getUniqueUuid());
+//        System.out.println("test case" + " " + infantVisitResponseDto.getUniqueUuid());
 
 
         if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
@@ -292,6 +292,11 @@ private final InfantRapidTestRepository infantRapidTestRepository;
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setLatitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLatitude());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setLongitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLongitude());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setSource((infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() != null && ! infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource().trim().isEmpty()) ? infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource()  : "Web" );
+
+
 
             this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         }
@@ -301,7 +306,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
             infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
-
+            infantVisitationConsolidatedDto.getInfantArvDto().setSource((infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() != null && !infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource().trim().isEmpty()) ? infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() : "Web" );
+            infantVisitationConsolidatedDto.getInfantArvDto().setLatitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLatitude());
+            infantVisitationConsolidatedDto.getInfantArvDto().setLongitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLongitude());
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
 
@@ -310,6 +317,10 @@ private final InfantRapidTestRepository infantRapidTestRepository;
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setSource((infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() != null && !infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource().trim().isEmpty()) ? infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() : "Web" );
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setLatitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLatitude());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setLongitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLongitude());
+
 
             this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
         }
@@ -318,6 +329,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 //            InfantRapidAntiBodyTest infantRapidAntiBodyTest = convertDtoToEntity(infantRapidAntiBodyTestDto);
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setAncNumber(infantVisitResponseDto.getAncNumber());
+            infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setSource((infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() != null && !infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource().trim().isEmpty()) ? infantVisitationConsolidatedDto.getInfantVisitRequestDto().getSource() : "Web" );
+            infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setLatitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLatitude());
+            infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setLongitude(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getLongitude());
 //            infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantRapidAntiBodyTestDto);
 
             this.save(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto());
@@ -403,6 +417,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
+        infantMotherArt.setLatitude(infantMotherArtDto.getLatitude());
+        infantMotherArt.setLongitude(infantMotherArtDto.getLongitude());
+        infantMotherArt.setSource(infantMotherArtDto.getSource());
         return infantMotherArt;
     }
 
@@ -534,6 +551,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArvDto.setTimingOfAvrAfter72Hours(infantArv.getTimingOfAvrAfter72Hours());
         infantArvDto.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
         infantArvDto.setUniqueUuid(infantArv.getUniqueUuid());
+        infantArvDto.setLongitude(infantArv.getLongitude());
+        infantArvDto.setLatitude(infantArv.getLatitude());
+        infantArvDto.setSource(infantArv.getSource());
         return infantArvDto;
     }
 
@@ -554,6 +574,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setDateSampleCollected(infantPCRTestDto.getDateSampleCollected());
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
+        infantPCRTest.setLongitude(infantPCRTestDto.getLongitude());
+        infantPCRTest.setLatitude(infantPCRTestDto.getLatitude());
+        infantPCRTest.setSource(infantPCRTestDto.getSource());
         return infantPCRTest;
     }
 
@@ -566,6 +589,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantDTO.setDateOfTest(infantRapidAntiBodyTest.getDateOfTest());
         infantDTO.setResult(infantRapidAntiBodyTest.getResult());
         infantDTO.setUniqueUuid(infantRapidAntiBodyTest.getUniqueUuid());
+        infantDTO.setLongitude(infantRapidAntiBodyTest.getLongitude());
+        infantDTO.setLatitude(infantRapidAntiBodyTest.getLatitude());
+        infantDTO.setSource(infantRapidAntiBodyTest.getSource());
         return infantDTO;
     }
 

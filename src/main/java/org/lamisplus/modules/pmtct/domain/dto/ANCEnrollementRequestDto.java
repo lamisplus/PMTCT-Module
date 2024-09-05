@@ -32,4 +32,8 @@ public class ANCEnrollementRequestDto{
    // private String sourceOfReferral;
     private final String person_uuid;
     private String previouslyKnownHivStatus;
+
+    private String latitude;
+    private String longitude;
+    private String source;
 }

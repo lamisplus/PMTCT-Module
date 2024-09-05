@@ -31,4 +31,8 @@ public class DeliveryRequestDto implements Serializable {
     private Integer numberOfInfantsDead;
     private String personUuid;
     private String placeOfDelivery;
+
+    private String latitude;
+    private String longitude;
+    private String source;
 }

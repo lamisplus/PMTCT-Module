@@ -26,5 +26,9 @@ public class InfantVisitRequestDto implements Serializable
     private String personUuid;
     private String uniqueUuid;
 
+    private String latitude;
+    private String longitude;
+    private String source;
+
 
 }
