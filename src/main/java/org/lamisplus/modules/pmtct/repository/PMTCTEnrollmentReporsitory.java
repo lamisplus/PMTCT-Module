@@ -67,4 +67,12 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
   List<PMTCTEnrollment> getAllByPersonUuid(String personUuid);
+
+  @Query(nativeQuery = true, value = "select h.hiv_test_result from patient_person p\n" +
+          "left join hts_client h on h.person_uuid = p.uuid\n" +
+          "where hiv_test_result is not null \n" +
+          "and h.person_uuid is not null \n" +
+          "and p.hospital_number = ?1 \n" +
+          "and p.uuid = ?2")
+  String getHtsClientHivStatus(String hospitalNumber, String personUuid);
 }

@@ -407,4 +407,13 @@ public class PMTCTEnrollmentService {
         this.pmtctEnrollmentReporsitory.delete(existingPMTCTEnrollment);
     }
 
+
+    public String getHIVStatus(String hospitalNumber, String personUuid) {
+        if (!hospitalNumber.isEmpty()) {
+            return pmtctEnrollmentReporsitory.getHtsClientHivStatus(hospitalNumber, personUuid);
+        } else {
+            return "";
+        }
+    }
+
 }

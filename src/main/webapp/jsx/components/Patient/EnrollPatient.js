@@ -185,10 +185,7 @@ const UserRegistration = (props) => {
     getSex();
     PregnancyStatus();
     if (patientObj) {
-      objValues.staticHivStatus =
-        patientObj && patientObj.dynamicHivStatus === "Positive"
-          ? "Positive"
-          : "";
+      
       const identifiers = patientObj.identifier;
       const hospitalNumber = identifiers.identifier.find(
         (obj) => obj.type === "HospitalNumber"
@@ -217,7 +214,10 @@ const UserRegistration = (props) => {
     if (basicInfo.dateOfRegistration < basicInfo.dob) {
       alert("Date of registration can not be earlier than date of birth");
     }
+     getHIVStatus(patientObj?.identifier?.identifier[0]?.value, patientObj.uuid);
     SOURCE_REFERRAL_PMTCT();
+
+
   }, [patientObj, patientId, basicInfo.dateOfRegistration]);
   //Get list of Source of Referral
   const SOURCE_REFERRAL_PMTCT = () => {
@@ -246,6 +246,29 @@ const UserRegistration = (props) => {
         //console.log(error);
       });
   };
+  const getHIVStatus = (hospitalNumber, uuid) => {
+    axios
+  .get(`${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log("response",response)
+
+        if(response.data){
+          setObjValues({...objValues, staticHivStatus: response.data})
+
+        }else{
+          objValues.staticHivStatus =
+        patientObj && patientObj.dynamicHivStatus === "Positive"
+          ? "Positive"
+          : "";
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
   const getSex = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/SEX`, {

@@ -101,6 +101,7 @@ const AncPnc = (props) => {
   const [entryPoint, setentryPoint] = useState([]);
   const [entryPointValue, setentryPointValue] = useState("");
   const [timeMotherArt, setTimeMotherArt] = useState([]);
+  const [disableHIVStatus, setDisableHIVStatus] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -289,6 +290,7 @@ const AncPnc = (props) => {
 
     if (props?.patientObj.id) {
       getARTStartDate();
+      getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
     }
     if (
       props.activeContent.id &&
@@ -482,7 +484,23 @@ const AncPnc = (props) => {
       getGa();
     }
   };
+  const getHIVStatus = (hospitalNumber, uuid) => {
+    axios
+  .get(`${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log("response",response)
 
+        if(response.data){
+          setEnrollDto({...enroll, hivStatus: response.data})
+          setDisableHIVStatus(true)
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   console.log(props.patientObj);
   //FORM VALIDATION
   const validate = () => {
@@ -1082,7 +1100,9 @@ const AncPnc = (props) => {
                       type="select"
                       name="hivStatus"
                       id="hivStatus"
-                      disabled={patientObj.ancNo ? true : false}
+                      // disableHIVStatus
+                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
+
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.hivStatus}
                     >
