@@ -428,7 +428,7 @@ const Labourpartner = (props) => {
                       </Label>
 
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateConfirmedHivTest"
                         id="dateConfirmedHivTest"
                         value={partner.dateConfirmedHivTest}

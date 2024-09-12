@@ -170,6 +170,7 @@ const UserRegistration = (props) => {
   console.log("location", location.state);
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
   //set ro show the facility name field if is transfer in
+  const [disableHIVStatus, setDisableHIVStatus] = React.useState(false);
 
   const [open, setOpen] = React.useState(false);
   const toggle = () => setOpen(!open);
@@ -252,11 +253,10 @@ const UserRegistration = (props) => {
       headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("response",response)
 
         if(response.data){
-          setObjValues({...objValues, staticHivStatus: response.data})
-
+          setObjValues({...objValues, staticHivStatus: response.data, previouslyKnownHivStatus: "Yes"})
+          setDisableHIVStatus(true)
         }else{
           objValues.staticHivStatus =
         patientObj && patientObj.dynamicHivStatus === "Positive"
@@ -860,7 +860,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <InputGroup>
                             <Input
-                              type="date"
+                              type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                               name="firstAncDate"
                               id="firstAncDate"
                               onChange={handleInputChange}
@@ -949,7 +949,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <InputGroup>
                             <Input
-                              type="date"
+                              type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                               name="lmp"
                               id="lmp"
                               onChange={handleInputChange}
@@ -1164,6 +1164,10 @@ const UserRegistration = (props) => {
                               name="previouslyKnownHivStatus"
                               id="previouslyKnownHivStatus"
                               onChange={handleInputChange}
+                              disabled={
+                                disableHIVStatus
+                                  ? true: false
+                              }
                               value={objValues.previouslyKnownHivStatus}
                             >
                               <option value="">Select</option>
@@ -1193,10 +1197,10 @@ const UserRegistration = (props) => {
                               onChange={handleInputChange}
                               value={objValues.staticHivStatus}
                               disabled={
-                                patientObj.dynamicHivStatus === "Positive"
-                                  ? true
-                                  : false
+                                disableHIVStatus
+                                  ? true: patientObj.dynamicHivStatus === "Positive"? true : false
                               }
+                           
                             >
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>

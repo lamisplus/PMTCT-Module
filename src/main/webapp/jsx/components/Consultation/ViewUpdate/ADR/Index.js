@@ -113,7 +113,7 @@ const ADR = (props) => {
               <FormGroup>
                 <Label> Onset Date</Label>
                 <Input
-                  type="date"
+                  type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                   name="adrOnsetDate"
                   id="adrOnsetDate"
                   value={props.adrObj.adrOnsetDate}

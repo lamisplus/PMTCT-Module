@@ -236,7 +236,7 @@ input[type="checkbox"] {
   box-sizing: border-box;
   padding: 0; }
 
-input[type="date"],
+input[type="date"                       onKeyPress={(e)=>{e.preventDefault()}}],
 input[type="time"],
 input[type="datetime-local"],
 input[type="month"] {

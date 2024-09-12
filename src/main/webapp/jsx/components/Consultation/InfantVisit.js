@@ -895,7 +895,7 @@ const ClinicVisit = (props) => {
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="visitDate"
                     id="visitDate"
                     value={infantVisitRequestDto.visitDate}
@@ -931,7 +931,7 @@ const ClinicVisit = (props) => {
                     Date of Birth <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfBirth"
                     id="dateOfBirth"
                     value={choosenInfant.dateOfDelivery}
@@ -1634,7 +1634,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName>Date sample collected</FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateSampleCollected"
                     id="dateSampleCollected"
                     value={infantPCRTestDto.dateSampleCollected}
@@ -1664,7 +1664,7 @@ const ClinicVisit = (props) => {
                       <FormGroup>
                         <FormLabelName>Date Sample Sent</FormLabelName>
                         <Input
-                          type="date"
+                          type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateSampleSent"
                           id="dateSampleSent"
                           value={infantPCRTestDto.dateSampleSent}
@@ -1693,7 +1693,7 @@ const ClinicVisit = (props) => {
                           Date Result Received at Facility
                         </FormLabelName>
                         <Input
-                          type="date"
+                          type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateResultReceivedAtFacility"
                           id="dateResultReceivedAtFacility"
                           value={infantPCRTestDto.dateResultReceivedAtFacility}
@@ -1721,7 +1721,7 @@ const ClinicVisit = (props) => {
                           Date Caregiver Given Result
                         </FormLabelName>
                         <Input
-                          type="date"
+                          type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateResultReceivedByCaregiver"
                           id="dateResultReceivedByCaregiver"
                           value={infantPCRTestDto.dateResultReceivedByCaregiver}
@@ -1867,7 +1867,7 @@ const ClinicVisit = (props) => {
                     <FormGroup>
                       <FormLabelName>Date OF Test</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateOfTest"
                         id="dateOfTest"
                         value={infantRapidTestDTO.dateOfTest}

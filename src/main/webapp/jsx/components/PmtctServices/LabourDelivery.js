@@ -507,7 +507,7 @@ delivery.childStatus !== "" &&
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChangeDeliveryDto}

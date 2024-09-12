@@ -595,7 +595,7 @@ const LabourinfantInfo = (props) => {
                     </FormLabelName>
                     <InputGroup>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         // disabled={true}
                         name="dateOfDelivery"
                         id="dateOfDelivery"
@@ -1008,7 +1008,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date sample collected</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleCollected"
                         id="dateSampleCollected"
                         value={infantPCRTestDto.dateSampleCollected}
@@ -1034,7 +1034,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date Sample Sent</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleSent"
                         id="dateSampleSent"
                         value={infantPCRTestDto.dateSampleSent}
@@ -1062,7 +1062,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date Result Received</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedAtFacility"
                         id="dateResultReceivedAtFacility"
                         value={infantPCRTestDto.dateResultReceivedAtFacility}
@@ -1090,7 +1090,7 @@ const LabourinfantInfo = (props) => {
                         Date Result Received By Caregiver
                       </FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedByCaregiver"
                         id="dateResultReceivedByCaregiver"
                         value={infantPCRTestDto.dateResultReceivedByCaregiver}

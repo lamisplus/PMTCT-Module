@@ -746,7 +746,7 @@ const UserRegistration = (props) => {
                         </Label>
                         <InputGroup>
                           <Input
-                            type="date"
+                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                             name="firstAncDate"
                             id="firstAncDate"
                             onChange={handleInputChange}
@@ -833,7 +833,7 @@ const UserRegistration = (props) => {
                         </Label>
                         <InputGroup>
                           <Input
-                            type="date"
+                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                             name="lmp"
                             id="lmp"
                             onChange={handleInputChange}

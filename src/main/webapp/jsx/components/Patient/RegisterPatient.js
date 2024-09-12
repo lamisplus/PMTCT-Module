@@ -1164,7 +1164,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <Input
                             className="form-control"
-                            type="date"
+                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                             name="dateOfRegistration"
                             id="dateOfRegistration"
                             min="1983-12-31"
@@ -1414,7 +1414,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <input
                             className="form-control"
-                            type="date"
+                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                             name="dob"
                             min="1940-01-01"
                             id="dob"
@@ -2224,7 +2224,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <InputGroup>
                             <Input
-                              type="date"
+                              type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                               name="firstAncDate"
                               id="firstAncDate"
                               onChange={handleInputChange}
@@ -2313,7 +2313,7 @@ const UserRegistration = (props) => {
                           </Label>
                           <InputGroup>
                             <Input
-                              type="date"
+                              type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                               name="lmp"
                               id="lmp"
                               onChange={handleInputChange}

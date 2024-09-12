@@ -143,7 +143,7 @@ const AddVitals = (props) => {
                                         <Label >Date Of Vital Signs</Label>
                                         <InputGroup> 
                                             <Input 
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="encounterDate"
                                                 id="encounterDate"
                                                 onChange={handleInputChangeVitalSignDto}

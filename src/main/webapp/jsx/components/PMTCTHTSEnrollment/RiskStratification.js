@@ -452,7 +452,7 @@ const RiskStratification = (props) => {
                                 <FormGroup>
                                 <Label for="">Visit Date * </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="visitDate"
                                     id="visitDate"
                                     value={objValues.visitDate}

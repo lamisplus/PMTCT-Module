@@ -435,7 +435,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName >Date of Visit </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="encounterDate"
                     id="encounterDate"
                     value={vital.encounterDate}
@@ -685,7 +685,7 @@ const ClinicVisit = (props) => {
             <br /><br />
             {/* TB Screening Form */}
             <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="nextAppointment"
                     id="nextAppointment"
                     value={vital.nextAppointment}

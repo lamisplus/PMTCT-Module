@@ -674,7 +674,7 @@ const AncPnc = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="pmtctEnrollmentDate"
                       id="pmtctEnrollmentDate"
                       onChange={handleInputChangeEnrollmentDto}
@@ -706,7 +706,7 @@ const AncPnc = (props) => {
                         </Label>
                         <InputGroup>
                           <Input
-                            type="date"
+                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                             name="lmp"
                             id="lmp"
                             onChange={handleInputChangeEnrollmentDto}
@@ -821,7 +821,7 @@ const AncPnc = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="artStartDate"
                       id="artStartDate"
                       onChange={handleInputChangeEnrollmentDto}

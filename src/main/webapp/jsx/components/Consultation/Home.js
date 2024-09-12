@@ -445,7 +445,7 @@ const ClinicVisit = (props) => {
                   </FormLabelName>
                   {console.log("visiting patient", props.patientObj)}
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfVisit"
                     id="dateOfVisit"
                     value={objValues.dateOfVisit}
@@ -570,7 +570,7 @@ const ClinicVisit = (props) => {
                     </FormLabelName>
 
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChange}
@@ -608,7 +608,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName>Viral Load Collection Date </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfViralLoad"
                     id="dateOfViralLoad"
                     value={objValues.dateOfViralLoad}
@@ -804,7 +804,7 @@ const ClinicVisit = (props) => {
                     Date of Outcome <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfmeternalOutcome"
                     id="dateOfmeternalOutcome"
                     value={objValues.dateOfmeternalOutcome}

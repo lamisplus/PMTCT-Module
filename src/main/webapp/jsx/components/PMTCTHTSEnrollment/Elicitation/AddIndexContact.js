@@ -407,7 +407,7 @@ const AddIndexContact = (props) => {
                                     <Label>Date</Label>
                                     <input
                                         className="form-control"
-                                        type="date"
+                                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                         name="dob"
                                         id="dob"
                                         max= {moment(new Date()).format("YYYY-MM-DD") }
@@ -676,7 +676,7 @@ const AddIndexContact = (props) => {
                                 <FormGroup>
                                 <Label for="">If contract by which date will partner come for testing?</Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="datePartnerCameForTesting"
                                     id="datePartnerCameForTesting"
                                     value={objValues.datePartnerCameForTesting}
