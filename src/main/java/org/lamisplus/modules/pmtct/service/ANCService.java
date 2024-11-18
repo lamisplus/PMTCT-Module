@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.audit4j.core.util.Log;
-import org.hsqldb.lib.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.ApplicationCodeSet;
@@ -28,30 +28,33 @@ import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.util.ObjectUtils;
-import reactor.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
+
+
+@RequiredArgsConstructor
+
 public class ANCService {
-    private final ANCRepository ancRepository;
+    @Autowired
+    private  ANCRepository ancRepository;
     private final PersonRepository personRepository;
 
     private final InfantRepository infantRepository;
@@ -61,7 +64,11 @@ public class ANCService {
     private final ApplicationCodesetRepository applicationCodesetRepository;
     private final OrganisationUnitRepository organisationUnitRepository;
     private final EncounterRepository encounterRepository;
-    private final PMTCTEnrollmentService pmtctEnrollmentService;
+    private final VisitService visitService;
+
+    @Autowired
+    private  PMTCTEnrollmentService pmtctEnrollmentService;
+
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
 //    private Logger logger;
 
@@ -252,6 +259,19 @@ public class ANCService {
         return entityToDto(anc);
     }
 
+    public void  updateGAFromPMTCT(String personUuid, Integer GaAge)
+    {
+
+
+        Optional <ANC> ancRecord = this.ancRepository.findANCByPersonUuid(personUuid);
+        if(ancRecord.isPresent())
+        {
+            ANC AncResult = ancRecord.get();
+            AncResult.setGAWeeks(GaAge);
+
+            this.ancRepository.save(AncResult);
+        }
+    }
 
 
     public ANCRequestDto updateAnc(Long id, ANCRequestDto ancRequestDto) {
@@ -271,6 +291,16 @@ public class ANCService {
         anc.setPersonUuid(exist.getPersonUuid());
         anc.setAncSetting(ancRequestDto.getAncSetting());
         anc.setPreviouslyKnownHivStatus(ancRequestDto.getPreviouslyKnownHivStatus());
+        anc.setDateOfHepatitisB(ancRequestDto.getDateOfHepatitisB());
+        anc.setHepatitisB(ancRequestDto.getHepatitisB());
+        anc.setTestedHepatitisB(ancRequestDto.getTestedHepatitisB());
+        anc.setTreatedHepatitisB(ancRequestDto.getTreatedHepatitisB());
+        anc.setReferredHepatitisB(ancRequestDto.getReferredHepatitisB());
+        anc.setDateOfHepatitisC(ancRequestDto.getDateOfHepatitisC());
+        anc.setHepatitisC(ancRequestDto.getHepatitisC());
+        anc.setTestedHepatitisC(ancRequestDto.getTestedHepatitisC());
+        anc.setTreatedHepatitisC(ancRequestDto.getTreatedHepatitisC());
+        anc.setReferredHepatitisC(ancRequestDto.getReferredHepatitisC());
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -456,7 +486,6 @@ public class ANCService {
         Page<PatientPerson> persons = null;
         if ((searchValue == null) || (searchValue.equals("*"))) {
             persons = pmtctEnrollmentReporsitory.getActiveOnPMTCT(0, currentOrganisationUnitId, paging);
-
         } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
@@ -748,6 +777,7 @@ public class ANCService {
         ANC anc = new ANC();
         if (persons.isPresent()) {
             person = persons.get();
+            System.out.println("person found " + person);
             anc.setAncNo(ancEnrollementRequestDto.getAncNo());
             anc.setFirstAncDate(ancEnrollementRequestDto.getFirstAncDate());
             anc.setGravida(ancEnrollementRequestDto.getGravida());
@@ -766,6 +796,16 @@ public class ANCService {
             anc.setStatus("NV");
             anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
             anc.setPreviouslyKnownHivStatus(ancEnrollementRequestDto.getPreviouslyKnownHivStatus());
+            anc.setDateOfHepatitisB(ancEnrollementRequestDto.getDateOfHepatitisB());
+            anc.setHepatitisB(ancEnrollementRequestDto.getHepatitisB());
+            anc.setTestedHepatitisB(ancEnrollementRequestDto.getTestedHepatitisB());
+            anc.setTreatedHepatitisB(ancEnrollementRequestDto.getTreatedHepatitisB());
+            anc.setReferredHepatitisB(ancEnrollementRequestDto.getReferredHepatitisB());
+            anc.setDateOfHepatitisC(ancEnrollementRequestDto.getDateOfHepatitisC());
+            anc.setHepatitisC(ancEnrollementRequestDto.getHepatitisC());
+            anc.setTestedHepatitisC(ancEnrollementRequestDto.getTestedHepatitisC());
+            anc.setTreatedHepatitisC(ancEnrollementRequestDto.getTreatedHepatitisC());
+            anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
 
@@ -841,9 +881,13 @@ public class ANCService {
         String personUuid = createPerson(ancWithPersonRequestDto.getPersonDto());
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0);
         Person person = new Person();
+        System.out.println("created person " + persons.get());
+
         ANC anc = new ANC();
         if (persons.isPresent()) {
             person = persons.get();
+            System.out.println("new person " + person);
+
             anc.setAncNo(ancWithPersonRequestDto.getAncNo());
             anc.setFirstAncDate(ancWithPersonRequestDto.getFirstAncDate());
             anc.setGravida(ancWithPersonRequestDto.getGravida());
@@ -863,6 +907,16 @@ public class ANCService {
             anc.setAncSetting(ancWithPersonRequestDto.getAncSetting());
             anc.setStatus("NV");
             anc.setPreviouslyKnownHivStatus(ancWithPersonRequestDto.getPreviouslyKnownHivStatus());
+            anc.setDateOfHepatitisB(ancWithPersonRequestDto.getDateOfHepatitisB());
+            anc.setHepatitisB(ancWithPersonRequestDto.getHepatitisB());
+            anc.setTestedHepatitisB(ancWithPersonRequestDto.getTestedHepatitisB());
+            anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
+            anc.setReferredHepatitisB(ancWithPersonRequestDto.getReferredHepatitisB());
+            anc.setDateOfHepatitisC(ancWithPersonRequestDto.getDateOfHepatitisC());
+            anc.setHepatitisC(ancWithPersonRequestDto.getHepatitisC());
+            anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
+            anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
+            anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
 

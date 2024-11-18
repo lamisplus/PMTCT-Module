@@ -87,6 +87,8 @@ public class InfantService {
     }
 
     private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
+
+//        System.out.println("infantArvDto " + infantArvDto);
 //        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
@@ -286,8 +288,8 @@ public class InfantService {
         //delete InfantARV
         infantVisitService.deleteInfantArv(id);
 
-        //delete InfantARV
-        infantVisitService.deleteInfantArv(id);
+        //delete InfantPCR
+        infantVisitService.deleteInfantPCRTestDt(id);
     }
 
 

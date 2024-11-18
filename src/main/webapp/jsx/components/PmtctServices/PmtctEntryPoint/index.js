@@ -19,7 +19,6 @@ const PmtctEntryPoint = (props) => {
       })
       .then((response) => {
         setentryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -28,7 +27,6 @@ const PmtctEntryPoint = (props) => {
 
   useEffect(() => {
     setKey("home");
-    console.log(props);
     POINT_ENTRY_PMTCT();
   }, []);
 

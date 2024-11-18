@@ -41,6 +41,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String hepatitisB;
     private String urinalysis;
     private String timeOfHivDiagnosis;
+    private String dateOfDelivery;
 
 
 

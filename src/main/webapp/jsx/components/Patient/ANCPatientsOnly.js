@@ -101,7 +101,6 @@ const Patients = (props) => {
               )
               .then((response) => response)
               .then((result) => {
-                console.log(result);
                 resolve({
                   data: result.data.records.map((row) => ({
                     name: (

@@ -16,6 +16,8 @@ public class ANCRespondDto implements Serializable {
     private String hospitalNumber;
     private String ancNo;
     private String ancSetting;
+    private String communitySetting;
+
     private String fullname;
     private String ancUuid;
     private Integer age;
@@ -49,5 +51,17 @@ public class ANCRespondDto implements Serializable {
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
     private LocalDate artStartDate;
     private String previouslyKnownHivStatus;
+    private LocalDate  dateOfHepatitisB;
+    private String  hepatitisB;
+    private String testedHepatitisB;
+    private String treatedHepatitisB;
+    private String referredHepatitisB;
+
+    private LocalDate  dateOfHepatitisC;
+    private String  hepatitisC;
+    private String testedHepatitisC;
+    private String treatedHepatitisC;
+    private String referredHepatitisC;
+
 
 }

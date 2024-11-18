@@ -68,11 +68,15 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   List<PMTCTEnrollment> getAllByPersonUuid(String personUuid);
 
-  @Query(nativeQuery = true, value = "select h.hiv_test_result from patient_person p\n" +
-          "left join hts_client h on h.person_uuid = p.uuid\n" +
-          "where hiv_test_result is not null \n" +
-          "and h.person_uuid is not null \n" +
-          "and p.hospital_number = ?1 \n" +
-          "and p.uuid = ?2")
+  @Query(nativeQuery = true, value = "SELECT h.hiv_test_result FROM patient_person p\n" +
+          "LEFT JOIN hts_client h on h.person_uuid = p.uuid\n" +
+          "WHERE hiv_test_result IS NOT NULL \n" +
+          "AND h.person_uuid IS NOT NULL \n" +
+          "AND p.hospital_number = ?1 \n" +
+          "AND p.uuid = ?2 ORDER BY h.date_created DESC LIMIT 1 ")
   String getHtsClientHivStatus(String hospitalNumber, String personUuid);
+
+  @Query(value = "select date_of_delivery from pmtct_enrollment where person_uuid =?1", nativeQuery = true)
+  String getDateOfDelivery(String personUuid);
+
 }

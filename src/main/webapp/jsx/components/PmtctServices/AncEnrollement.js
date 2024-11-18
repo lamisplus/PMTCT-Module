@@ -266,7 +266,8 @@ const AncEnrollement = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"                      
+                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
@@ -301,6 +302,7 @@ const AncEnrollement = (props) => {
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
                       value={vital.encounterDate}
+                      disabled
                     />
                   </InputGroup>
                 </FormGroup>

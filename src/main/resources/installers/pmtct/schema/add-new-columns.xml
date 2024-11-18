@@ -412,6 +412,18 @@
             ALTER TABLE pmtct_infant_arv ADD COLUMN timing_of_avr_after_72hours character varying(255) COLLATE pg_catalog."default"
         </sql>
     </changeSet>
+
+
+    <changeSet failOnError="true"  id="2024-10-22" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="date_of_ctx" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv ADD COLUMN date_of_ctx DATE;
+        </sql>
+    </changeSet>
     <changeSet failOnError="true"  id="20240522-108" author="sam">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -583,6 +595,61 @@
         </preConditions>
         <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD result character varying;</sql>
         <sql>ALTER TABLE pmtct_infant_rapid_antibody ADD unique_uuid character varying;</sql>
+
+    </changeSet>
+
+    <changeSet failOnError="false" author="ganiyat" id="26-09-2024-0893">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="date_of_hepatitisB" />
+                <columnExists tableName="pmtct_anc" columnName="hepatitisB" />
+                <columnExists tableName="pmtct_anc" columnName="tested_HepatitisB" />
+                <columnExists tableName="pmtct_anc" columnName="treated_HepatitisB" />
+                <columnExists tableName="pmtct_anc" columnName="referred_HepatitisB" />
+                <columnExists tableName="pmtct_anc" columnName="community_setting" />
+                <columnExists tableName="pmtct_anc" columnName="date_of_hepatitisC" />
+                <columnExists tableName="pmtct_anc" columnName="hepatitisC" />
+                <columnExists tableName="pmtct_anc" columnName="tested_HepatitisC" />
+                <columnExists tableName="pmtct_anc" columnName="treated_HepatitisC" />
+                <columnExists tableName="pmtct_anc" columnName="referred_HepatitisC" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN date_of_hepatitisB DATE;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN hepatitisB character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN tested_HepatitisB character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN treated_HepatitisB character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN referred_HepatitisB character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN community_setting character varying;</sql>
+
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN date_of_hepatitisC DATE;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN hepatitisC character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN tested_HepatitisC character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN treated_HepatitisC character varying;</sql>
+        <sql>ALTER TABLE pmtct_anc ADD COLUMN referred_HepatitisC character varying;</sql>
+
+    </changeSet>
+
+
+    <changeSet failOnError="true"  id="2024-10-23" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="date_of_arv" />
+                <columnExists tableName="pmtct_infant_arv" columnName="infant_id" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_infant_arv ADD COLUMN date_of_arv DATE;</sql>
+        <sql> ALTER TABLE pmtct_infant_arv ADD COLUMN infant_id bigint;</sql>
+    </changeSet>
+    <changeSet failOnError="false" author="ganiyat" id="10-02-2024-057">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="date_of_delivery" />
+
+            </not>
+        </preConditions>
+        <sql>ALTER TABLE pmtct_enrollment ADD date_of_delivery character varying;</sql>
 
     </changeSet>
 </databaseChangeLog>

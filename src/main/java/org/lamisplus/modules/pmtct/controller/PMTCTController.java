@@ -191,6 +191,12 @@ public class PMTCTController {
     }
 
 
+    @GetMapping(value = "get-delivery-date/{personUuid}")
+    public ResponseEntity<String> getDeliveryDate(@PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(personUuid));
+    }
+
+
     @PutMapping(value = "update-anc/{id}")
     public ResponseEntity<ANCRequestDto> updateANC(@PathVariable("id") Long id, @RequestBody ANCRequestDto ancRequestDto) {
         return ResponseEntity.ok(ancService.updateAnc(id, ancRequestDto));
@@ -297,7 +303,6 @@ public class PMTCTController {
 
     @PostMapping(value = "infant-visitations")
     public ResponseEntity<InfantVisitResponseDto> InfantVisitation(@RequestBody InfantVisitRequestDto infantVisitRequestDto) {
-        System.out.println("Doc I got here nau");
         return ResponseEntity.ok(infantVisitService.save(infantVisitRequestDto));
     }
 

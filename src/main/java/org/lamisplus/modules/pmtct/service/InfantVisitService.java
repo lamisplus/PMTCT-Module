@@ -79,8 +79,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setTimingOfAvrAfter72Hours(infantArvDto.getTimingOfAvrAfter72Hours());
         infantArv.setTimingOfAvrWithin72Hours(infantArvDto.getTimingOfAvrWithin72Hours());
         infantArv.setUniqueUuid(infantArvDto.getUniqueUuid());
-
-
+        infantArv.setDateOfCtx(infantArvDto.getDateOfCtx());
+        infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
+        infantArv.setDateOfArv(infantArvDto.getDateOfArv());
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
@@ -109,7 +110,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisit.setAncNumber(infantVisitRequestDto.getAncNumber());
         infantVisit.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         infantVisit.setVisitStatus(infantVisitRequestDto.getVisitStatus());
-        //infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+        infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
         try{
@@ -204,7 +205,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisitResponseDto.setAncNumber(infantVisit.getAncNumber());
         infantVisitResponseDto.setBodyWeight(infantVisit.getBodyWeight());
         infantVisitResponseDto.setBreastFeeding(infantVisit.getBreastFeeding());
-        //infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
+        infantVisitResponseDto.setCtxStatus(infantVisit.getCtxStatus());
         infantVisitResponseDto.setId(infantVisit.getId());
         infantVisitResponseDto.setInfantHospitalNumber(infantVisit.getInfantHospitalNumber());
         infantVisitResponseDto.setUuid(infantVisit.getUuid());
@@ -534,6 +535,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArvDto.setTimingOfAvrAfter72Hours(infantArv.getTimingOfAvrAfter72Hours());
         infantArvDto.setTimingOfAvrWithin72Hours(infantArv.getTimingOfAvrWithin72Hours());
         infantArvDto.setUniqueUuid(infantArv.getUniqueUuid());
+        infantArvDto.setDateOfCtx(infantArv.getDateOfCtx());
+        infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
+        infantArvDto.setDateOfArv(infantArv.getDateOfArv());
         return infantArvDto;
     }
 
@@ -631,7 +635,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setVisitStatus(infantVisitRequestDto.getVisitStatus());
         exist.setUuid(infantVisitRequestDto.getUuid());
         exist.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
-        // exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
+         exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
 //        System.out.println("=================EXIST==========================");
 
@@ -664,6 +668,8 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setTimingOfAvrWithin72Hours(infantArvDto.getTimingOfAvrWithin72Hours());
 //        exist.setUuid(infant.getMotherPersonUuid());
         exist.setUniqueUuid(infantArvDto.getUniqueUuid());
+        exist.setDateOfCtx(infantArvDto.getDateOfCtx());
+        exist.setDateOfArv(infantArvDto.getDateOfArv());
        return  this.infantArvRepository.save(exist);
     }
 

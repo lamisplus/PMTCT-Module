@@ -21,6 +21,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import { Message } from "semantic-ui-react";
+import { calculateGestationalAge } from "../../utils";
 import moment from "moment";
 
 const useStyles = makeStyles((theme) => ({
@@ -119,8 +120,9 @@ const AncPnc = (props) => {
     urinalysis: patientObj.urinalysis ? patientObj.urinalysis : "",
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
+    dateOfDelivery: "" ,
     entryPoint: entryValueDisplay?.id,
-    ga: props.patientObj.gaweeks,
+    ga: "",          //props.patientObj.gaweeks
     gravida: props.patientObj.gravida,
     artStartDate: "",
     artStartTime: patientObj.artStartTime ? patientObj.artStartTime : "",
@@ -132,8 +134,9 @@ const AncPnc = (props) => {
       : patientObj.staticHivStatus
       ? patientObj.staticHivStatus
       : "",
+
     lmp: props?.patientObj?.lmp ? props?.patientObj?.lmp : "",
-    gaweeks: props?.patientObj?.gaweeks ? props?.patientObj?.gaweeks : "",
+    gaweeks: "",
 
     // personUuid:
     //   locationState && locationState.patientObj
@@ -256,7 +259,7 @@ const AncPnc = (props) => {
       })
       .then((response) => {
         setAllNewEntryPoint(response.data);
-        console.log(response.data);
+    
       })
       .catch((error) => {
         //console.log(error);
@@ -368,6 +371,7 @@ const AncPnc = (props) => {
       .then((response) => {
         console.log("testing", response.data);
         setEnrollDto({ ...enroll, ...response.data });
+        
         setInfantMotherArtDto({
           ...infantMotherArtDto,
           regimenTypeId: response.data.regimenTypeId,
@@ -381,6 +385,31 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
+
+//   public int calculateGaFromPmtct(String personUuid, LocalDate visitDate) {
+//     LocalDate lmp = getLMPFromPMTCT(personUuid);
+//     int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
+//     if (ga < 0) ga = 0;
+//     return ga;
+// }
+
+
+const calculateGaFromPmtct=(deliveryDate)=>{
+// substract lmp - delivery date
+let LastPeriod = enroll.lmp
+
+let lmp = moment(enroll.lmp)
+
+console.log("lmp", lmp)
+if(LastPeriod){
+  let dateOfDelivery =moment(deliveryDate)
+return dateOfDelivery.diff(lmp, 'weeks')
+}else{
+
+  return 0
+}
+
+}
   const getARTStartDate = (id) => {
     axios
       .get(
@@ -449,39 +478,75 @@ const AncPnc = (props) => {
       });
   };
   const handleInputChangeEnrollmentDto = (e) => {
+    setErrors({ ...errors, [e.target.name]: "" });
+
     setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
     console.log("payload", enroll);
     // artStartTime
     if (e.target.name === "artStartTime" && e.target.value !== "") {
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+
       setInfantMotherArtDto({
         ...infantMotherArtDto,
         motherArtInitiationTime: e.target.value,
       });
-    }
+    }else
     if (e.target.name === "lmp" && e.target.value !== "") {
       console.log("calculate ", e.target.name, e.target.value);
 
-      async function getGa() {
-        const ga = e.target.value;
-        const response = await axios.get(
-          `${baseUrl}pmtct/anc/calculate-ga/${ga}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "text/plain",
-            },
-          }
-        );
-        if (response.data > 0) {
-          enroll.gaweeks = response.data;
-          setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+      // async function getGa() {
+      //   const ga = e.target.value;
+      //   const response = await axios.get(
+      //     `${baseUrl}pmtct/anc/calculate-ga/${ga}`,
+      //     {
+      //       headers: {
+      //         Authorization: `Bearer ${token}`,
+      //         "Content-Type": "text/plain",
+      //       },
+      //     }
+      //   );
+      let response =   calculateGestationalAge(enroll.pmtctEnrollmentDate, e.target.value)
+
+        if (response > 0) {
+          enroll.gaweeks = response;
+          setEnrollDto({ ...enroll, [e.target.name]: e.target.value,dateOfDelivery: ""  });
         } else {
-          enroll.gaweeks = response.data;
+          // enroll.gaweeks = response;
           toast.error("Please select a validate date");
-          setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+           setEnrollDto({ ...enroll, [e.target.name]: "",dateOfDelivery: ""  });
         }
-      }
-      getGa();
+      // }
+      // getGa();
+    }else
+    if (e.target.name === "pmtctEnrollmentDate" && e.target.value !== "" && enroll.lmp !== "" ) {
+
+    let response =   calculateGestationalAge( e.target.value,  enroll.lmp )
+
+        if (response > 0) {
+          enroll.gaweeks = response;
+          setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
+        } else {
+          // enroll.gaweeks = response;
+          toast.error("Please select a validate date");
+          // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
+        }
+    }else
+    if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
+      console.log("calculate ", e.target.name, e.target.value);
+     let Ga =  calculateGaFromPmtct(e.target.value)
+
+console.log("ga", Ga)
+     if (Ga > 0) {
+      enroll.gaweeks = Ga;
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+    } else {
+      enroll.gaweeks = Ga;
+      toast.error("Please select a validate date");
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value , gaweeks: ""});
+    }
+    }else{
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+
     }
   };
   const getHIVStatus = (hospitalNumber, uuid) => {
@@ -490,7 +555,6 @@ const AncPnc = (props) => {
       headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("response",response)
 
         if(response.data){
           setEnrollDto({...enroll, hivStatus: response.data})
@@ -501,7 +565,6 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
-  console.log(props.patientObj);
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };
@@ -512,6 +575,9 @@ const AncPnc = (props) => {
     //temp.ga = enroll.ga ? "" : "This field is required"
     // temp.gravida = enroll.gravida ? "" : "This field is required"
     temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis
+      ? ""
+      : "This field is required";
+      temp.gaweeks = enroll.gaweeks
       ? ""
       : "This field is required";
     temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
@@ -532,6 +598,7 @@ const AncPnc = (props) => {
     enroll.motherArtInitiationTime = infantMotherArtDto.motherArtInitiationTime;
     enroll.regimenTypeId = infantMotherArtDto.regimenTypeId;
     enroll.regimenId = infantMotherArtDto.regimenId;
+    enroll.ga = enroll.gaweeks;
 
     if (validate()) {
       setSaving(true);
@@ -679,7 +746,7 @@ const AncPnc = (props) => {
                       id="pmtctEnrollmentDate"
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.pmtctEnrollmentDate}
-                      min={props.patientObj.firstAncDate}
+                      min={patientObj.ancNo? props.patientObj.firstAncDate: props?.newRegDate? props?.newRegDate: ""}
                       max={moment(new Date()).format("YYYY-MM-DD")}
                       disabled={disabledField}
                     />
@@ -694,10 +761,8 @@ const AncPnc = (props) => {
                 </FormGroup>
               </div>
 
-              {
-                // !props?.ancEntryType &&
-                true && (
-                  <>
+           
+                  
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
@@ -706,16 +771,15 @@ const AncPnc = (props) => {
                         </Label>
                         <InputGroup>
                           <Input
-                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                            type="date"    
+                                onKeyPress={(e)=>{e.preventDefault()}}
                             name="lmp"
                             id="lmp"
                             onChange={handleInputChangeEnrollmentDto}
                             value={
-                              props?.ancEntryType
-                                ? props?.patientObj?.lmp
-                                : enroll.lmp
+                              enroll.lmp
                             }
-                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            max={enroll.pmtctEnrollmentDate? enroll.pmtctEnrollmentDate: moment(new Date()).format("YYYY-MM-DD")}
                             disabled={props?.ancEntryType}
                           />
                         </InputGroup>
@@ -744,9 +808,7 @@ const AncPnc = (props) => {
                             id="gaweeks"
                             onChange={handleInputChangeEnrollmentDto}
                             value={
-                              props?.ancEntryType
-                                ? props?.patientObj?.gaweeks
-                                : enroll.gaweeks
+                               enroll.gaweeks
                             }
                             disabled
                           />
@@ -760,9 +822,8 @@ const AncPnc = (props) => {
                         )}
                       </FormGroup>
                     </div>
-                  </>
-                )
-              }
+                  
+               
 
               {/* <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -1122,6 +1183,42 @@ const AncPnc = (props) => {
                       <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
                     </div>
                   )}
+                </FormGroup>
+              </div>
+
+
+
+
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                  Date of Delivery
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="date"            
+                      onKeyPress={(e)=>{e.preventDefault()}}
+                      name="dateOfDelivery"
+                      id="dateOfDelivery"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.dateOfDelivery}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      min={props?.ancEntryType
+                        ? props?.patientObj?.lmp
+                        : enroll.lmp}
+                      disabled={disabledField}
+                    />
+                  </InputGroup>
+                  {errors.artStartDate !== "" ? (
+                    <span className={classes.error}>{errors.artStartDate}</span>
+                  ) : (
+                    ""
+                  )}
+                  {enroll.gaweeks === 0  && enroll.lmp  === "" ? (
+                          <span className={classes.error}>Last menstrual period date is empty </span>
+                        ) : (
+                          ""
+                        )}
                 </FormGroup>
               </div>
             </div>

@@ -18,6 +18,7 @@ public class InfantArv implements Serializable, Persistable<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
@@ -33,6 +34,9 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private String timingOfAvrWithin72Hours;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
+    private LocalDate dateOfCtx;
+    private LocalDate dateOfArv;
+    private Long infantId;
 
 
 

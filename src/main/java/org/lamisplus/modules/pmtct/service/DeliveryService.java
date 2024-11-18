@@ -8,7 +8,8 @@ import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
-import org.lamisplus.modules.pmtct.domain.dto.*;
+import org.lamisplus.modules.pmtct.domain.dto.DeliveryRequestDto;
+import org.lamisplus.modules.pmtct.domain.dto.DeliveryResponseDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
@@ -16,7 +17,9 @@ import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
@@ -33,8 +36,14 @@ public class DeliveryService
     private final PersonRepository personRepository;
     private final PmtctVisitRepository pmtctVisitRepository;
     private final DeliveryRepository deliveryRepository;
+    @Autowired
+    private  PMTCTEnrollmentService pmtctEnrollmentService;
     private final UserService userService;
-    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+    @Autowired
+    private  PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+    @Autowired
+    private ANCService ancService;
+
     ObjectMapper mapper = new ObjectMapper();
 
     public DeliveryResponseDto save(DeliveryRequestDto deliveryRequestDto) {
@@ -190,7 +199,7 @@ public class DeliveryService
         //Optional<Delivery> delivery =id this.deliveryRepository.findById(id);
        // return delivery.get();
     }
-    //PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto
+    // pmtctEnrollmentRequestDto
 //    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {
 //        // PmtctVisit existVisit = getExistVisit(id);
 //        Delivery delivery = this.converRequestDtotoEntity(deliveryRequestDto);
@@ -199,6 +208,25 @@ public class DeliveryService
 //        deliveryRepository.save(delivery);
 //        return deliveryRequestDto;
 //    }
+
+
+    public void  updateDateOfDeliveryFromPMTCT(String personUuid, String deliveryDate, Integer ga)
+    {
+
+
+        Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(personUuid);
+        if(deliverys.isPresent())
+        {
+            Delivery delivery = deliverys.get();
+            delivery.setDateOfDelivery(LocalDate.parse(deliveryDate));
+            delivery.setGAWeeks(ga);
+            this.deliveryRepository.save(delivery);
+        }
+    }
+
+
+
+
     public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto)
     {
         Optional <Delivery> deliverys = this.deliveryRepository.findById(id);
@@ -228,6 +256,8 @@ public class DeliveryService
             delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
 
 
+
+            pmtctEnrollmentService.updateDateOfDeliveryFromDelivery(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getDateOfDelivery().toString(), deliveryRequestDto.getGAWeeks());
             this.deliveryRepository.save(delivery);
         }
         return deliveryRequestDto;

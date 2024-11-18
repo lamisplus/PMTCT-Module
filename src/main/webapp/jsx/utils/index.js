@@ -1,3 +1,7 @@
+import moment from "moment";
+import { ToastContainer, toast } from "react-toastify";
+
+
 export const calculate_age = (dob) => {
   if (dob !== null && dob != "") {
     //Check if the DOB is not null or empty
@@ -42,3 +46,43 @@ export const calculate_age = (dob) => {
     }
   }
 };
+
+
+
+
+
+export const calculateGestationalAge = (enrollmentDate, lmp) => {
+
+  if(enrollmentDate === ""){
+
+    toast.error("Date of enrolllment is empty");
+    return 0;
+
+  }else if(lmp ===  "" ){
+
+    toast.error("Last menstrual Period is empty");
+    return 0;
+
+  }else if(enrollmentDate < lmp){
+
+    toast.error("Last menstrual Period is earlier than enrollment date");
+    return 0;
+
+  }else{
+
+      let theEnrollmentDate = moment(enrollmentDate);
+      let theLmp = moment(lmp);
+      console.log("calcuateGestationalAge 2", theEnrollmentDate.diff(theLmp, 'week') )
+
+      if(theEnrollmentDate.diff(theLmp, 'week') >= 1 ){
+          return theEnrollmentDate.diff(theLmp, 'week')
+      }else{
+        return 0;
+      }
+  }
+
+
+
+
+
+}
