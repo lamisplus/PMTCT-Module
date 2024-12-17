@@ -37,6 +37,7 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private LocalDate dateOfCtx;
     private LocalDate dateOfArv;
     private Long infantId;
+    private String otherProphylaxisType;
 
 
 

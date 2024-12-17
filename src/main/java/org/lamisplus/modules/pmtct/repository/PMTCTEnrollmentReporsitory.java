@@ -12,6 +12,7 @@ import org.lamisplus.modules.pmtct.domain.dto.PatientInfo;
 import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
 import org.lamisplus.modules.pmtct.domain.dto.SingleResultProjectionDTO;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,5 +79,8 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   @Query(value = "select date_of_delivery from pmtct_enrollment where person_uuid =?1", nativeQuery = true)
   String getDateOfDelivery(String personUuid);
+
+
+
 
 }

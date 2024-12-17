@@ -157,7 +157,6 @@ const ClinicVisit = (props) => {
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
     POINT_ENTRY_PMTCT();
-    console.log(props.activeContent.activeTab);
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -464,7 +463,6 @@ const ClinicVisit = (props) => {
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
-                  {console.log("visiting patient", props.patientObj)}
                   <Input
                     type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfVisit"
@@ -488,7 +486,6 @@ const ClinicVisit = (props) => {
                 </FormGroup>
               </div>
 
-              {console.log("entry point list ", entryPoint)}
 
               <div className=" mb-3 col-md-3">
                 <FormGroup>

@@ -18,6 +18,7 @@ public class InfantArvDto implements Serializable
     private String infantHospitalNumber;
     private String ancNumber;
     private String infantArvType;
+    private String otherProphylaxisType;
     private String infantArvTime;
     private String arvDeliveryPoint;
     private String uuid;

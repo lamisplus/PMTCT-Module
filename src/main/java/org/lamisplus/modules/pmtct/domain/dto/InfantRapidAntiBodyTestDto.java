@@ -2,10 +2,12 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 
+@NoArgsConstructor
 @Data
 public class InfantRapidAntiBodyTestDto implements Serializable  {
     private Long id ;

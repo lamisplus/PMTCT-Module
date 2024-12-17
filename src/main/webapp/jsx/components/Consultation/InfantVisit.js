@@ -15,7 +15,9 @@ import SaveIcon from "@material-ui/icons/Save";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
-
+import Box from '@mui/material/Box';
+import Modal from '@mui/material/Modal';
+import Button from '@mui/material/Button';
 const useStyles = makeStyles((theme) => ({
   card: {
     margin: theme.spacing(20),
@@ -59,8 +61,39 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  bgcolor: 'background.paper',
+  border: 'none',
+  borderRadius: "5px",
+  boxShadow: 24,
+  pt: "40px",
+  px: 4,
+  pb: 3,
+};
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const cancelClose = () => {
+    setInfantPCRTestDto({
+      ...infantPCRTestDto,
+      testType: "",
+    });
+    setOpen(false);
+
+  };
   //console.log(patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate)
   const [errors, setErrors] = useState({});
   const [infantHospitalNumber, setInfantHospitalNumber] = useState();
@@ -75,6 +108,7 @@ const ClinicVisit = (props) => {
   });
   const [visitDateStatus, setVisitDateStatus] = useState(false);
   const [showRapidTest, setshowRapidTest] = useState(false);
+  const [disableRapidField, setDisableRapidField] = useState(false);
 
   const [ageAtTestList, setAtTestList] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -95,9 +129,17 @@ const ClinicVisit = (props) => {
     // infantMotherArtDto: "",
     // infantPCRTestDto: "",
   });
+  const [rapidResultMessage, setRapidResultMessage] = useState("Kindly fill ART form");
+
   const [timingProphylaxisList, setTimingProphylaxisList] = useState([]);
   const [weeksValues, setWeeksValue] = useState(0);
   const [referToART, setReferToART] = useState(false);
+  const [placeOfDelivery, setPlaceOfDelivery] = useState([]);
+  const [pcrType, setPcrType] = useState([]);
+  const [latestPCR, setLatestPCR] = useState({});
+  const [latestRapidTest, setLatestRapidTest] = useState({});
+
+  const [PCRValidity, setPCRValidilty] = useState({nextPCR: "", childAge: ""});
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     // ageAtCtx: "",
@@ -128,6 +170,7 @@ const ClinicVisit = (props) => {
     infantHospitalNumber: "",
     timingOfAvrWithin72Hours: "",
     timingOfAvrAfter72Hours: "",
+    otherProphylaxisType: "",
     id: "",
     uuid: "",
     uniqueUuid: "",
@@ -173,6 +216,10 @@ const ClinicVisit = (props) => {
   const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
     bodyWeight: "",
   });
+
+  const [expectedPCR, setExpectedPCR] = useState("");
+  const [pcrMessage, setPcrMessage] = useState("");
+
   const [infantRapidTestList, setInfantRapidTestList] = useState([]);
   // caluculate the PCR
   const calculateAgeInWeek = (dateOfBirth) => {
@@ -271,7 +318,8 @@ const ClinicVisit = (props) => {
         let weeks = calculateAgeInWeek(resultInfo[0].dateOfDelivery);
 
         calculateAgeAtTestMonth(weeks);
-
+        getLatestPCR(resultInfo[0].hospitalNumber)
+        getLatestRapidTest(resultInfo[0].hospitalNumber, resultInfo[0].personUuid)
         setChoosenInfant(resultInfo[0]);
       })
 
@@ -280,15 +328,80 @@ const ClinicVisit = (props) => {
       });
   };
 
+  const validateChildPCRAge =(inputedPCR)=>{
 
+      let deliveryDate = moment(choosenInfant.dateOfDelivery);
+      let vistDate  = moment(infantVisitRequestDto.visitDate);
+
+    // if(inputedPCR === PCRValidity.nextPCR.code){
+    //     console.log(inputedPCR, PCRValidity.nextPCR)
+    // }else{
+    //   handleOpen()
+    // }
+
+    if(inputedPCR ===  "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
+        // child age should less than 72 hours 
+          if(vistDate.diff(deliveryDate, 'days') > 72){
+            setPcrMessage("Child’s age exceeds recommended range for 1st PCR. Confirm documentation?")
+            handleOpen()
+          }
+    }else if(inputedPCR ===  "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED"){
+      if(vistDate.diff(deliveryDate, 'weeks') > 6 ){
+        setPcrMessage("Child’s age exceeds recommended range for 2nd PCR. Confirm documentation?")
+        handleOpen()
+      }else if(vistDate.diff(deliveryDate, 'weeks') < 4){
+        setPcrMessage("Child’s age is below recommended range for 2nd PCR. Confirm documentation?")
+        handleOpen()
+      }
+    }
+    else if(inputedPCR ===   "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE"){
+      if(vistDate.diff(deliveryDate, 'months') > 9){
+        setPcrMessage("Child’s age exceeds recommended range for 3rd PCR. Confirm documentation?")
+        handleOpen()
+      }
+    }
+    else if(inputedPCR ===  "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)"){
+        if(vistDate.diff(deliveryDate, 'weeks') > 52){
+          setPcrMessage("Child’s age is below recommended range for 4th PCR. Confirm documentation?")
+          handleOpen()
+        }else if(vistDate.diff(deliveryDate, 'weeks') > 46){
+
+        }
+
+    }
+    else if(inputedPCR ===  "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
+
+
+      if(latestPCR?.results !== "INFANT_PCR_RESULT_POSITIVE"){
+        let pcrRes= latestPCR.results.includes("POSITIVE")? "Positive": latestPCR.results.includes("NEGATIVE")? "Negtive": "Indeterminate"
+        setPcrMessage(`Last PCR test result is ${pcrRes}, reconfirm input`)
+        handleOpen()
+      }
+
+    }
+
+  }
+  const validateChildRapidTest =(visitDate)=>{
+    let deliveryDate = moment(choosenInfant.dateOfDelivery);
+    let vistDate  = moment(visitDate);
+
+    //child is 9 month, rapid test = +ve
+    if(vistDate.diff(deliveryDate, 'months') === 9 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_POSITIVE"  && !latestPCR?.results){
+      setRapidResultMessage("Kindly undergo PCR for confirmation ")
+      
+    }
+
+  }
   const calculateAgeAtCTX  =(dateaOfCTX)=>{
     let deliveryDate = moment(choosenInfant.dateOfDelivery);
     let lastCTX  = moment(dateaOfCTX);
-    console.log(months, lastCTX.diff(deliveryDate, 'months') )
         if(lastCTX.diff(deliveryDate, 'months')  < 2){
           return "AGE_CTX_INITIATION_<_2__MONTHS";        
         }else{
-          return "AGE_CTX_INITIATION_≥_2__MONTHS";                }
+
+          return "AGE_CTX_INITIATION_≥_2__MONTHS";           
+        
+        }
 
   }
 
@@ -316,15 +429,87 @@ const ClinicVisit = (props) => {
 
   }}
 
+  const checkPCRValidity  =(dateOfVisit)=>{
+    let deliveryDate = moment(choosenInfant.dateOfDelivery);
+    let vistDate  = moment(dateOfVisit);
+
+    let childAge = vistDate.diff(deliveryDate, 'months')
+
+
+    let nextPCR ;
+    let orderOfPCR= ["1ST_PCR", "2ND_PCR","IF_PREVIOUS_TEST_POSITIVE","4TH_PCR" ] 
+    // check if the child has PCR
+    if(choosenInfant?.infantPCRTestDto?.id){
+
+      let lastPCR = latestPCR?.testType
+   
+      // check next expected PCR 
+
+      //checking for confirmatory
+    if(latestPCR?.results === "INFANT_PCR_RESULT_POSITIVE"){
+ 
+              pcrType.map((each, index )=>{
+
+                if(each.code ===  "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
+                  nextPCR =each  
+                  setExpectedPCR(each.code)
+                }
+
+              })
+                  
+        }else{
+      
+        orderOfPCR.map((each, index)=>{
+
+          if(lastPCR && lastPCR.includes(each)){
+              let theindex = index + 1
+            //get the index and next pcr
+                if(theindex < orderOfPCR.length  ){
+                  pcrType.map((each, index )=>{
+
+                    if(each.code.includes( orderOfPCR[theindex])){
+                      nextPCR =each  
+                      setExpectedPCR(each.code)
+                    }
+
+                  })
+
+                }else{
+                  //when  the pcr is the 4th
+                }
+          }else{
+            // when it is out of the box  // 4th pcr
+          }
+        })
+      }
+
+
+    }else{
+        pcrType.map((each, index )=>{
+          if(each.display.includes("1ST_PCR")){
+            nextPCR =each  
+            setExpectedPCR(each.code)
+          }
+
+    })
+
+    }
+
+      setPCRValidilty({nextPCR: nextPCR, childAge: childAge})
+        }
 
 
 
   const calculateArvProphylaxis  =(dateaOfCTX)=>{
+   
     const deliveryDate = moment(choosenInfant.dateOfDelivery)
     const lastCTX  = moment(dateaOfCTX)
         if(lastCTX.diff(deliveryDate, 'hours')  < 72){
-            return "Within 72 hour";        
+
+            return "Within 72 hour";   
+                 
         }else{
+
           return "After 72 hour";        }
   }
 
@@ -340,6 +525,12 @@ const ClinicVisit = (props) => {
     INFANT_ARV_PROPHYLAXIS_TYPE();
     INFANT_PCR_RESULT();
     INFANT_OUTCOME_AT_18_MONTHS();
+    PLACE_OF_DELIVERY();
+    GET_PCR_SAMPLE_TYPE();
+    getTimingARVType();
+
+
+
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -359,7 +550,7 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        getTypeOfTimingOfARV(response.data.infantArvDto.arvDeliveryPoint);
+        // getTypeOfTimingOfARV(response.data.infantArvDto.arvDeliveryPoint);
         filterOutTheChosenChildForView(
           response.data.infantVisitRequestDto.infantHospitalNumber
         );
@@ -371,7 +562,7 @@ const ClinicVisit = (props) => {
         setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
         RegimenType(response.data.infantMotherArtDto.regimenTypeId);
-        getTimingARVType(response.data.infantArvDto.arvDeliveryPoint);
+        // getTimingARVType(response.data.infantArvDto.arvDeliveryPoint);
 
         if (
           response.data.infantPCRTestDto.results ===
@@ -424,7 +615,6 @@ const ClinicVisit = (props) => {
 
       .then((response) => {
         //setLoading(false)
-        console.log("setInfants",response)
 
         setInfants(response.data);
       })
@@ -434,6 +624,41 @@ const ClinicVisit = (props) => {
       });
     // }
   };
+
+    const getLatestPCR=(infantHospitalNo)=>{
+              axios
+              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .then((response) => {
+            setLatestPCR(response.data)
+              })
+              .catch((error) => {
+              console.log(error)
+              });
+    }
+
+    const getLatestRapidTest=(infantHospitalNo, motherUuid)=>{
+          axios
+          .get(`${baseUrl}pmtct/anc/get-latest-rapid-test?infantHospitalNumber=${infantHospitalNo}&motherUuid=${motherUuid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setLatestRapidTest(response.data)
+            if(response.data){
+
+              setInfantRapidTestDTO({...response.data})
+              setDisableRapidField(true)
+            }
+          })
+          .catch((error) => {
+          console.log(error)
+
+          });
+        }
+
+
+
   const TIME_ART_INITIATION_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`, {
@@ -441,6 +666,34 @@ const ClinicVisit = (props) => {
       })
       .then((response) => {
         setTimingOfArtInitiation(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+  
+  const GET_PCR_SAMPLE_TYPE = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/INFANT_TESTING_PCR`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setPcrType(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+  const PLACE_OF_DELIVERY = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/PLACE_OF_DELIVERY`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setPlaceOfDelivery(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -606,15 +859,18 @@ const ClinicVisit = (props) => {
       getGa();
       checkForVisitDate();
       checkRapidTestValidity(e.target.value)
+      checkPCRValidity(e.target.value)
+      validateChildRapidTest(e.target.value)
+    
 // onchange of date of visit, rapid test should be cleared incase they pick a date that the child is ineligible  for  rapid test
-      setInfantRapidTestDTO({
-         rapidTestType: "",
-        ageAtTest: "",
-        dateOfTest: "",
-        result: "",
-        ancNumber: props.patientObj.ancNo,
-        uniqueUuid: "",
-        uuid: "",})
+      // setInfantRapidTestDTO({
+      //    rapidTestType: "",
+      //   ageAtTest: "",
+      //   dateOfTest: "",
+      //   result: "",
+      //   ancNumber: props.patientObj.ancNo,
+      //   uniqueUuid: "",
+      //   uuid: "",})
 
 
  //end of rapid test eligiblity
@@ -642,7 +898,7 @@ const ClinicVisit = (props) => {
   };
 
   const getTimingARVType = (value) => {
-    if (value === "Within 72 hour") {
+  
       axios
         .get(
           `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_WITHIN_72HRS`,
@@ -657,24 +913,7 @@ const ClinicVisit = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-    } else if (value === "After 72 hour") {
-      axios
-        .get(
-          `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_After_72HRS`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setTimingProphylaxisList(response.data);
-        })
-
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else if (e.target.value === "") {
-      // set the rr to empty string
-    }
+    
   };
   const handleInputChangeInfantArvDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
@@ -689,11 +928,11 @@ const ClinicVisit = (props) => {
 
       let result =calculateArvProphylaxis(e.target.value)
 
-      setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , infantArvTime:  result })
+      setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , arvDeliveryPoint:  result })
   
     }else if(e.target.name ===  "infantArvType"){
 
-      setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+      setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value, dateOfArv: "" , arvDeliveryPoint: ""});
 
       setErrors({ ...errors, [e.target.name]: "", dateOfArv: "" });
 
@@ -702,9 +941,7 @@ const ClinicVisit = (props) => {
 
     }
 
-    if (e.target.name === "arvDeliveryPoint") {
-      getTimingARVType(e.target.value);
-    }
+
   };
 
   const handleInputChangeInfantMotherArtDto = (e) => {
@@ -726,6 +963,11 @@ const ClinicVisit = (props) => {
   };
   const handleInputChangeInfantPCRTestDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
+
+    if(e.target.name ===  "testType" &&  e.target.value){
+
+      validateChildPCRAge(e.target.value)
+    }
     //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
     setInfantPCRTestDto({
       ...infantPCRTestDto,
@@ -753,7 +995,6 @@ const ClinicVisit = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(validate())
     if (validate()) {
       setSaving(true);
       objValues.infantArvDto = infantArvDto;
@@ -768,7 +1009,6 @@ const ClinicVisit = (props) => {
       objValues.infantRapidAntiBodyTestDto = infantRapidTestDTO;
       objValues.infantVisitRequestDto = infantVisitRequestDto;
 
-      console.log(objValues);
       if (props.activeContent && props.activeContent.actionType) {
         //Perform operation for updation action
         //`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`,
@@ -896,9 +1136,9 @@ const ClinicVisit = (props) => {
   };
   function GetInfantDetail(obj) {
 
-    console.log("obj", obj)
     setChoosenInfant(obj);
-
+    getLatestPCR(obj.hospitalNumber)
+    getLatestRapidTest(obj.hospitalNumber, obj.personUuid)
     setInfantArvDto({...infantArvDto,ageAtCtx: obj.infantArvDto.ageAtCtx , dateOfCtx: obj.infantArvDto.dateOfCtx})
     // setInfantVisitRequestDto({...infantVisitRequestDto, ctxStatus: obj.ctxStatus})
     let weeks = calculateAgeInWeek(obj.dateOfDelivery);
@@ -965,7 +1205,6 @@ const ClinicVisit = (props) => {
                 </span>
               </List.Item>
             </List>
-
             {infants &&
               infants.map((row) => (
                 <List celled>
@@ -1589,7 +1828,7 @@ const ClinicVisit = (props) => {
                 </div>
                 <div className=" mb-3 col-md-4">
                   <FormGroup>
-                    <FormLabelName>Infant ARV Prophylaxhis Type </FormLabelName>
+                    <FormLabelName>Infant ARV Prophylaxis Type </FormLabelName>
                     <Input
                       type="select"
                       name="infantArvType"
@@ -1602,7 +1841,7 @@ const ClinicVisit = (props) => {
                       }}
                       disabled={disabledField}
                     >
-                      <option value="select">Select </option>
+                      <option value="">Select </option>
                       {infantArv.map((value) => (
                         <option key={value.id} value={value.code}>
                           {value.display}
@@ -1618,6 +1857,26 @@ const ClinicVisit = (props) => {
                     )}
                   </FormGroup>
                 </div>
+
+                {infantArvDto.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)"&& ( <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <FormLabelName>
+                    Other Infant ARV Prophylaxis Type
+                  </FormLabelName>
+                  <Input
+                    type="text"
+                    name="otherProphylaxisType"
+                    id="otherProphylaxisType"
+                    value={infantArvDto.otherProphylaxisType}
+                    style={{
+                      border: "1px solid #014D88",
+                      borderRadius: "0.25rem",
+                    }}
+                    onChange={handleInputChangeInfantArvDto}
+                    
+                  />
+                </FormGroup>
+              </div>)}
                 { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  &&<div className=" mb-3 col-md-4">
                     <FormGroup>
                       <FormLabelName>Date of ARV Prophylaxis</FormLabelName>
@@ -1679,8 +1938,8 @@ const ClinicVisit = (props) => {
                       <FormLabelName>
                         {" "}
                         {infantArvDto.arvDeliveryPoint === "Within 72 hour"
-                          ? "Timing Of ARV Prophylaxhis Withn 72 hrs"
-                          : "Timing Of ARV Prophylaxhis After 72 hrs"}
+                          ? "Timing Of ARV Prophylaxis Withn 72 hrs"
+                          : "Timing Of ARV Prophylaxis After 72 hrs"}
                       </FormLabelName>
                       <Input
                         type="select"
@@ -1706,7 +1965,7 @@ const ClinicVisit = (props) => {
                         }}
                         disabled={disabledField}
                       >
-                        <option value="select">Select </option>
+                        <option value="">Select </option>
 
                         {timingProphylaxisList.map((value) => (
                           <option key={value.id} value={value.code}>
@@ -1741,13 +2000,11 @@ const ClinicVisit = (props) => {
                       }}
                       disabled={disabledField}
                     >
-                      <option value="select">Select </option>
-                      <option value="Facility Delivery">
-                        Facility Delivery
-                      </option>
-                      <option value="Delivered outside facility">
-                        Delivered outside facility{" "}
-                      </option>
+                      <option value="">Select </option>
+                      {placeOfDelivery.length > 0 && placeOfDelivery.map((each, index)=>{
+                        return  <option value={each.code}>{each.display}</option>
+
+                      })}
                     </Input>
                     {errors.infantArvTime !== "" ? (
                       <span className={classes.error}>
@@ -1770,7 +2027,8 @@ const ClinicVisit = (props) => {
             >
               <h4 style={{ color: "#fff" }}>
                 {" "}
-                Infant PCR/HIV test {infantPCRTestDto.testType}{" "}
+                Infant PCR/HIV test 
+                {/* {infantPCRTestDto.testType}{" "} */}
               </h4>
             </Label>
             <br />
@@ -1793,15 +2051,10 @@ const ClinicVisit = (props) => {
                     disabled={disabledField}
                   >
                     <option value="">Select </option>
-                    <option value="First PCR">First PCR</option>
-                    <option value="Second PCR">Second PCR</option>
-                    <option value="Confirmatory PCR">Confirmatory PCR</option>
-                    {/* <option value="First Rapid Antibody">
-                      First Rapid Antibody{" "}
-                    </option>
-                    <option value="Second Rapid Antibody ">
-                      Second Rapid Antibody{" "}
-                    </option> */}
+                    {pcrType.length > 0 && pcrType.map((each, index)=>{
+                        return  <option value={each.code}>{each.display}</option>
+
+                      })}
                   </Input>
                   {errors.testType !== "" ? (
                     <span className={classes.error}>{errors.testType}</span>
@@ -1997,6 +2250,7 @@ const ClinicVisit = (props) => {
             <br />
             <br />
             <br />
+         
             {showRapidTest && (
               <>
                 <Label
@@ -2024,7 +2278,7 @@ const ClinicVisit = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        disabled={disabledField}
+                        disabled={disabledField? disabledField: disableRapidField}
                       >
                         <option value="">Select </option>
                        { infantRapidTestList && infantRapidTestList.map((each, index)=>{
@@ -2055,7 +2309,7 @@ const ClinicVisit = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        disabled={disabledField}
+                        disabled={disabledField? disabledField: disableRapidField}
                       >
                         <option value="select">Select </option>
                         {ageAtTestList.length > 0 &&
@@ -2089,7 +2343,7 @@ const ClinicVisit = (props) => {
                         }}
                         min={choosenInfant.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
+                        disabled={disabledField? disabledField: disableRapidField}
                       />
                       {errors.dateSampleCollected !== "" ? (
                         <span className={classes.error}>
@@ -2113,7 +2367,7 @@ const ClinicVisit = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        disabled={disabledField}
+                        disabled={disabledField? disabledField: disableRapidField}
                       >
                         <option value="select">Select </option>
                         {pcrResult.map((value) => (
@@ -2133,7 +2387,7 @@ const ClinicVisit = (props) => {
                   {/* Display notification when maternal outcome is IIT and transfer out */}
                   {infantRapidTestDTO.result !== "" &&
                   infantRapidTestDTO.result === "INFANT_PCR_RESULT_POSITIVE" ? (
-                    <h2 style={{ color: "red" }}>Kindly fill ART form</h2>
+                    <h2 style={{ color: "red" }}>{rapidResultMessage}</h2>
                   ) : (
                     ""
                   )}
@@ -2201,6 +2455,24 @@ const ClinicVisit = (props) => {
           </Segment>
         </Grid.Column>
       </Grid>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="child-modal-title"
+        aria-describedby="child-modal-description"
+      >
+        <Box sx={{ ...style, width: "30%" }}>
+          <p  style={{fontSize: "17px"}}>{pcrMessage}</p>
+            <div style={{display: "flex", justifyContent: "space-between"}}>        
+                <button onClick={handleClose} style={{fontSize: "12px",fontWeight: "500", background: "#014d88", color: "white", textTransform: "capitalize", color: "white", padding: "8px 17px", margin: "8px 0px", border: "none", borderRadius: "2px"}}>Confirm </button>
+                <button onClick={cancelClose} style={{fontSize: "12px", fontWeight: "500", color: "white", textTransform: "capitalize", color: " #014d88", padding: "8px 17px", margin: "8px 0px", border: "1px solid #014d88", borderRadius: "3px"}}>Cancel </button>
+
+
+            </div>
+
+        </Box>
+      </Modal>
       {/* <AddVitals toggle={AddVitalToggle} showModal={addVitalModal} /> */}
     </div>
   );

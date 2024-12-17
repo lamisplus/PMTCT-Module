@@ -463,4 +463,20 @@ public class PMTCTController {
     public ResponseEntity<String> getClientHivStatus(@RequestParam String hospitalNumber, @RequestParam String personUuid) {
         return ResponseEntity.ok(pmtctEnrollmentService.getHIVStatus(hospitalNumber, personUuid));
     }
+
+    @GetMapping(value = "get-latest-pcr")
+    public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber) {
+        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber));
+    }
+
+    @GetMapping(value = "get-latest-rapid-test")
+    public ResponseEntity<InfantRapidAntiBodyTestDto> getLastRapidTest(@RequestParam String infantHospitalNumber, @RequestParam String motherUuid) {
+        return ResponseEntity.ok(infantService.getLatestRapidTest(infantHospitalNumber, motherUuid));
+    }
+
+//
+//    @GetMapping(value = "get-all-pcr")
+//    public ResponseEntity<InfantPCRTestDto> getAllPCR(@RequestParam String infantHospitalNumber) {
+//        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber));
+//    }
 }

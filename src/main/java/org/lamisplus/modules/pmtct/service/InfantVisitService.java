@@ -56,7 +56,8 @@ private final InfantRapidTestRepository infantRapidTestRepository;
     public InfantRapidAntiBodyTest converRequestDtotoEntity(InfantRapidAntiBodyTestDto infantRapidDto) {
         InfantRapidAntiBodyTest infantRapid  = new InfantRapidAntiBodyTest();
         infantRapid.setRapidTestType(infantRapidDto.getRapidTestType());
-        infantRapid.setAncNumber(infantRapidDto.getAgeAtTest());
+        infantRapid.setAncNumber(infantRapidDto.getAncNumber());
+        infantRapid.setAgeAtTest(infantRapidDto.getAgeAtTest());
         infantRapid.setDateOfTest(infantRapidDto.getDateOfTest());
         infantRapid.setResult(infantRapidDto.getResult());
         infantRapid.setUuid(UUID.randomUUID().toString());
@@ -82,6 +83,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setDateOfCtx(infantArvDto.getDateOfCtx());
         infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
         infantArv.setDateOfArv(infantArvDto.getDateOfArv());
+        infantArv.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
@@ -113,6 +115,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
+
         try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
             if(infants.isPresent()){
@@ -538,6 +541,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArvDto.setDateOfCtx(infantArv.getDateOfCtx());
         infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
         infantArvDto.setDateOfArv(infantArv.getDateOfArv());
+        infantArvDto.setOtherProphylaxisType(infantArv.getOtherProphylaxisType());
         return infantArvDto;
     }
 
@@ -670,6 +674,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setUniqueUuid(infantArvDto.getUniqueUuid());
         exist.setDateOfCtx(infantArvDto.getDateOfCtx());
         exist.setDateOfArv(infantArvDto.getDateOfArv());
+        exist.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
        return  this.infantArvRepository.save(exist);
     }
 

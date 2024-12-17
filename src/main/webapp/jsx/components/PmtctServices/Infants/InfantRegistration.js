@@ -102,6 +102,7 @@ const LabourinfantInfo = (props) => {
   const [infantHospitalNumber, setInfantHospitalNumber] = useState("");
   const [agectx, setAgeCTX] = useState([]);
   const [ageAtTestList, setAtTestList] = useState([]);
+  const [PCRList, setPCRList] = useState([]);
 
   const [infantArv, setInfantArv] = useState([]);
   //Vital signs clinical decision support
@@ -292,6 +293,7 @@ const LabourinfantInfo = (props) => {
     SEX();
     AGE_CTX_INITIATION();
     INFANT_ARV_PROPHYLAXIS_TYPE();
+    PCR_SAMPLE_TYPE()
     // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
@@ -357,6 +359,31 @@ const LabourinfantInfo = (props) => {
       .then((response) => {
         //console.log(response.data);
         setGenders(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+  const PCR_SAMPLE_TYPE = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/INFANT_TESTING_PCR`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        let newInfantPcrList =[]
+        //console.log(response.data);
+         
+            response?.data.map((each, index)=>{
+              if(each.code === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
+                newInfantPcrList.push(each)
+              }
+
+            })
+          
+
+        setPCRList(newInfantPcrList);
       })
       .catch((error) => {
         //console.log(error);
@@ -1103,17 +1130,12 @@ const LabourinfantInfo = (props) => {
                         // disabled
                       >
                         <option value="">Select </option>
-                        <option value="First PCR">First PCR</option>
-                        <option value="Second PCR">Second PCR</option>
-                        <option value="Confirmatory PCR">
-                          Confirmatory PCR
-                        </option>
-                        <option value="First Rapid Antibody">
-                          First Rapid Antibody{" "}
-                        </option>
-                        <option value="Second Rapid Antibody ">
-                          Second Rapid Antibody{" "}
-                        </option>
+
+                        {PCRList.length > 0 && PCRList.map((each, index)=>{
+
+                          return <option value={each.code}>{each.display}</option>
+                        })}
+                       
                       </Input>
                       {errors.testType !== "" ? (
                         <span className={classes.error}>{errors.testType}</span>
