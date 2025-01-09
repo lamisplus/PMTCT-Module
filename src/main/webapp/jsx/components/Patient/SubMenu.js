@@ -3,6 +3,7 @@ import axios from "axios";
 import { Dropdown, Menu } from "semantic-ui-react";
 import { makeStyles } from "@material-ui/core/styles";
 import { url as baseUrl, token } from "../../../api";
+import { usePermissions } from "../../../hooks/usePermissions";
 
 const useStyles = makeStyles((theme) => ({
   navItemText: {
@@ -11,6 +12,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function SubMenu(props) {
+  const { hasPermission } = usePermissions();
+
   const classes = useStyles();
   let gender = "";
   const patientObjs = props.patientObj ? props.patientObj : {};
@@ -18,9 +21,22 @@ function SubMenu(props) {
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
   const [deliveryStatus, setDeliveryStatus] = useState(false);
-
+  const [patientStatus, setPatientStatus] = useState(patientObj.dynamicHivStatus ? patientObj.dynamicHivStatus: patientObj.staticHivStatus ? patientObj.staticHivStatus :  patientObj?.hivStatus?  patientObj?.hivStatus: patientObj?.isEnrolled ? patientObj?.isEnrolled: "");
+  const [isOnPMTCT, setIsOnPMTCT] = useState(patientObj?.pmtctRegStatus? patientObj?.pmtctRegStatus: patientObj?.isOnPmtct)
   let mentalStatus = false;
   let initialEvaluationStatus = false;
+
+
+  const permissions = useMemo(
+    () => ({
+      canSeePMTCT: hasPermission("maternal_cohort_register" ),
+      canSeeDelivery: hasPermission("delivery_register"),
+
+    }),
+    [hasPermission]
+  );
+
+
   useEffect(() => {
     props.deliveryInfo.filter((each) => {
       if (each.activityName === "Labour and Delivery") {
@@ -32,6 +48,8 @@ function SubMenu(props) {
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
+
+
   }, [props.patientObj]);
 
   useEffect(() => {
@@ -79,6 +97,7 @@ function SubMenu(props) {
   const onClickConsultation = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "consultation" });
   };
+  
   const onClickHome = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "recent-history" });
   };
@@ -91,6 +110,13 @@ function SubMenu(props) {
   const onClickPartner = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "partners" });
   };
+  const onClickPatientVisit = (row) => {
+    props.setActiveContent({ ...props.activeContent, route: "patient-visit" });
+  };
+
+
+
+
   const loadPatientHistory = () => {
     props.setActiveContent({
       ...props.activeContent,
@@ -104,15 +130,13 @@ function SubMenu(props) {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-        {(patientObj.dynamicHivStatus === "Positive" ||
-          patientObj.staticHivStatus === "Positive" ||
-          patientObj?.hivStatus === "Positive") && (
+        {(patientStatus === "Positive") && (
           <>
-            {patientObj.pmtctRegStatus !== true ? (
+            {isOnPMTCT !== true ? (
               <>
-                <Menu.Item onClick={() => loadAncPnc()}>
+                {permissions.canSeePMTCT &&<Menu.Item onClick={() => loadAncPnc()}>
                   PMTCT Enrollment
-                </Menu.Item>
+                </Menu.Item>}
               </>
             ) : (
               <>
@@ -120,7 +144,7 @@ function SubMenu(props) {
                   Follow Up Visit
                 </Menu.Item>
 
-                {patientObj.deliveryStatus !== true &&
+                {permissions.canSeeDelivery && patientObj.deliveryStatus !== true &&
                   deliveryStatus !== true && (
                     <Menu.Item onClick={() => loadLabourDelivery()}>
                       Labour and Delivery
@@ -136,6 +160,10 @@ function SubMenu(props) {
                 <Menu.Item onClick={() => onClickInfant()}>
                   {" "}
                   Infant Information
+                </Menu.Item>
+                <Menu.Item onClick={() => onClickPatientVisit()}>
+                  {" "}
+                  Checked-In History
                 </Menu.Item>
               </>
             )}

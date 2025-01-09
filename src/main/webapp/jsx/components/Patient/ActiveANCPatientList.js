@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useMemo } from "react";
 import MaterialTable, { MTableToolbar } from "material-table";
 import axios from "axios";
 import { token as token, url as baseUrl } from "./../../../api";
@@ -28,6 +28,7 @@ import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
+import {usePermissions } from "../../../hooks/usePermissions";
 
 //Dtate Picker package
 Moment.locale("en");
@@ -58,6 +59,14 @@ const tableIcons = {
 };
 
 const ANCPatients = (props) => {
+    const { hasPermission } = usePermissions();
+   
+    const permissions = useMemo(
+      () => ({
+        canSeeEnrollButton: hasPermission("general_anc_register"),
+      }),
+      [hasPermission]
+    );
   const [showPPI, setShowPPI] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
@@ -120,7 +129,8 @@ const ANCPatients = (props) => {
                     gender: row && row.sex ? row.sex : "Female",
                     age: row.age,
                     actions: (
-                      <div>
+                   <>
+                  {permissions.canSeeEnrollButton &&  <div>
                         <Link
                           to={{
                             pathname: "/patient-history",
@@ -165,7 +175,7 @@ const ANCPatients = (props) => {
                             </Button>
                           </ButtonGroup>
                         </Link>
-                      </div>
+                      </div>}</>
                     ),
                   })),
                   page: query.page,

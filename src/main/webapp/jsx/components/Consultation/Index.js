@@ -4,6 +4,8 @@ import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
 import ConsultationPage from "./Home";
 import InfantVisit from "./InfantVisit";
 import { url as baseUrl, token as token } from "./../../../api";
+import { usePermissions } from "../../../hooks/usePermissions";
+
 
 const divStyle = {
   borderRadius: "2px",
@@ -11,9 +13,23 @@ const divStyle = {
 };
 
 const ClinicVisitPage = (props) => {
+    const { hasPermission } = usePermissions();
+  
   const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
   const [aliveChild, setAliveChild] = useState(0);
+
+  const permissions = useMemo(
+    () => ({
+      canSeeChildFollowUp: hasPermission("child_follow_up_register" ),
+
+    }),
+    [hasPermission]
+  );
+
+
+
+
 
   const DeliveryInfo = () => {
     if (props.patientObj.ancNo) {
@@ -90,7 +106,7 @@ const ClinicVisitPage = (props) => {
                   {console.log(aliveChild)}
 
                   {console.log(aliveChild !== 0 && aliveChild > 0)}
-                  {aliveChild !== 0 && aliveChild > 0 && (
+                  {aliveChild !== 0 && aliveChild > 0 && permissions.canSeeChildFollowUp &&(
                     <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
                       <InfantVisit
                         patientObj={patientObj}

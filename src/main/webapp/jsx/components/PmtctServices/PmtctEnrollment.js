@@ -635,12 +635,9 @@ console.log("ga", Ga)
             ? locationState.entrypointValue
             : props.entrypointValue,
           personUuid:
-            locationState && locationState.patientObj
-              ? locationState.patientObj.uuid
-              : props.patientObj.uuid,
-          personUuid: props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : locationState.patientObj.uuid,
+          props.patientObj.personUuid?  props.patientObj.personUuid: props.patientObj.person_uuid? props.patientObj.person_uuid:  locationState?.patientObj.uuid                 
+
+
         };
 
         axios

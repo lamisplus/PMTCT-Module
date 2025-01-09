@@ -15,5 +15,19 @@ webModules:
     name: PMTCTModule
     path: pmtct
     position: 99
-
-
+permissions:
+  - name: general_anc_register
+    description: General ANC Register
+    moduleName: PMTCTModule
+  - name: pmtct_hts
+    description: PMTCT HTS
+    moduleName: PMTCTModule
+  - name: maternal_cohort_register
+    description: Maternal Cohort Register
+    moduleName: PMTCTModule
+  - name: delivery_register
+    description: Delivery Register
+    moduleName: PMTCTModule
+  - name: child_follow_up_register
+    description: Child Follow-up Register
+    moduleName: PMTCTModule

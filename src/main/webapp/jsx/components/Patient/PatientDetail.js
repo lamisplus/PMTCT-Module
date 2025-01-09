@@ -22,6 +22,7 @@ import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
+import PatientVisits from "./CheckedInVisit";
 
 const styles = (theme) => ({
   root: {
@@ -77,6 +78,9 @@ function PatientCard(props) {
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
+
+
+
 
   const RecentActivities = () => {
     // if patient has ANC No
@@ -142,7 +146,6 @@ function PatientCard(props) {
 
     POINT_ENTRY_PMTCT();
   }, []);
-  console.log(patientObj);
 
   return (
     <div className={classes.root}>
@@ -271,6 +274,15 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
+
+      {activeContent.route === "patient-visit" && (
+                  <PatientVisits
+                    patientObj={patientObj}
+                    setActiveContent={setActiveContent}
+                    activeContent={activeContent}
+                  />
+                )}
           {/* History Pages */}
         </CardContent>
       </Card>
