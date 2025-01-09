@@ -125,6 +125,15 @@ const UserRegistration = (props) => {
 
 
   });
+  const classes = useStyles();
+  const history = useHistory();
+  const location = useLocation();
+  const locationState = location.state;
+  let patientId = null;
+  let patientObj = {};
+  patientId = locationState ? locationState.patientId : null;
+  patientObj = locationState ? locationState.patientObj : {};
+
   const [saving, setSaving] = useState(false);
   const [disabledAgeBaseOnAge, setDisabledAgeBaseOnAge] = useState(false);
   const [ageDisabled, setAgeDisabled] = useState(true);
@@ -141,9 +150,7 @@ const UserRegistration = (props) => {
 
   const userDetail =
     props.location && props.location.state ? props.location.state.user : null;
-  const classes = useStyles();
-  const history = useHistory();
-  const location = useLocation();
+
   const [ANCSetting, setANCSetting] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
 
@@ -170,7 +177,7 @@ const UserRegistration = (props) => {
     syphilisInfo: {},
     partnerNotification: {},
     // sourceOfReferral: "",
-    staticHivStatus: "",
+    staticHivStatus: patientObj?.dynamicHivStatus? patientObj?.dynamicHivStatus: "",
     previouslyKnownHivStatus: "",
 
     // add this to the back end 
@@ -197,11 +204,7 @@ const UserRegistration = (props) => {
 
   const [open, setOpen] = React.useState(false);
   const toggle = () => setOpen(!open);
-  const locationState = location.state;
-  let patientId = null;
-  let patientObj = {};
-  patientId = locationState ? locationState.patientId : null;
-  patientObj = locationState ? locationState.patientObj : {};
+
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
   useEffect(() => {
     getANCSetting();
@@ -239,7 +242,11 @@ const UserRegistration = (props) => {
     if (basicInfo.dateOfRegistration < basicInfo.dob) {
       alert("Date of registration can not be earlier than date of birth");
     }
-     getHIVStatus(patientObj?.identifier?.identifier[0]?.value, patientObj.uuid);
+
+    if(patientObj?.dynamicHivStatus){
+      getHIVStatus(patientObj?.identifier?.identifier[0]?.value, patientObj.uuid);
+
+    }
     SOURCE_REFERRAL_PMTCT();
 
 
@@ -870,6 +877,8 @@ const UserRegistration = (props) => {
                     <h5 className="card-title" style={{ color: "#fff" }}>
                       ANC Enrollment
                     </h5>
+                    {  console.log("patientObj",  patientObj) }
+
                   </div>
                   <div className="card-body">
                     <div className="row">
