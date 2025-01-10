@@ -171,7 +171,6 @@ function SubMenu(props) {
         )}
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
-      {console.log(patientObj)}
     </div>
   );
 }

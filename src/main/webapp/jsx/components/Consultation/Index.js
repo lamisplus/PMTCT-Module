@@ -103,7 +103,6 @@ const ClinicVisitPage = (props) => {
                       activeContent={props.activeContent}
                     />
                   </Tab>
-                  {console.log(aliveChild)}
 
                   {console.log(aliveChild !== 0 && aliveChild > 0)}
                   {aliveChild !== 0 && aliveChild > 0 && permissions.canSeeChildFollowUp &&(

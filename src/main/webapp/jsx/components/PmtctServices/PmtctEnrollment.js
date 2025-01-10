@@ -153,7 +153,6 @@ const AncPnc = (props) => {
       : "",
     regimenId: props?.patientObj?.regimenId ? props?.patientObj?.regimenId : "",
   });
-  console.log("props", props?.patientObj);
   const RegimenType = (id) => {
     axios
       .get(`${baseUrl}hiv/regimen/types/${id}`, {
@@ -309,11 +308,7 @@ const AncPnc = (props) => {
       props?.patientObj?.person_uuid ||
       locationState?.patientObj?.person_uuid
     ) {
-      console.log("props.patientObj.person_uuid", props.patientObj.person_uuid);
-      console.log(
-        "locationState.patientObj.person_uuid",
-        locationState.patientObj.person_uuidd
-      );
+ 
 
       setEnrollDto({
         ...enroll,

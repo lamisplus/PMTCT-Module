@@ -35,7 +35,6 @@ const RecentHistory = (props) => {
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
 
-  console.log(props);
   useEffect(() => {
     if (props?.allEntryPoint) {
       // getPatientEntryType();

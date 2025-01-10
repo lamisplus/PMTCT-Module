@@ -236,7 +236,6 @@ const UserRegistration = (props) => {
 
   const toggle = () => setOpen(!open);
   const locationState = location.state;
-  console.log("state recieved from location", locationState);
   let patientId = null;
   patientId = locationState ? locationState.patientId : null;
 

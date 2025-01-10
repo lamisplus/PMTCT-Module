@@ -72,7 +72,6 @@ export const calculateGestationalAge = (enrollmentDate, lmp) => {
 
       let theEnrollmentDate = moment(enrollmentDate);
       let theLmp = moment(lmp);
-      console.log("calcuateGestationalAge 2", theEnrollmentDate.diff(theLmp, 'week') )
 
       if(theEnrollmentDate.diff(theLmp, 'week') >= 1 ){
           return theEnrollmentDate.diff(theLmp, 'week')
