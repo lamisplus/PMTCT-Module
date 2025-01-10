@@ -129,7 +129,6 @@ const CheckedInPatients = (props) => {
   };
 
 
-
   const handleCheckBox = (e) => {
     setShowPPI(!e.target.checked);
   };
@@ -333,7 +332,10 @@ const CheckedInPatients = (props) => {
   const getData = async (query) => {
     try {
       const data = await fetchPatients(query);
+      console.log("data", data)
+      
       const reversedData = [...(data || [])].reverse();
+
 
       return {
         data: reversedData,

@@ -9,7 +9,6 @@ export const usePermissions = () => {
     const loadPermissions = async () => {
       try {
         const perms = await getPermissions();
-        console.log("getPermissions", perms)
         setPermissionSet(new Set(Array.isArray(perms) ? perms : []));
       } catch (error) {
         console.error("Error loading permissions:", error);
