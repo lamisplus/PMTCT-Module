@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
 import ConsultationPage from "./Home";
@@ -104,7 +104,6 @@ const ClinicVisitPage = (props) => {
                     />
                   </Tab>
 
-                  {console.log(aliveChild !== 0 && aliveChild > 0)}
                   {aliveChild !== 0 && aliveChild > 0 && permissions.canSeeChildFollowUp &&(
                     <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
                       <InfantVisit

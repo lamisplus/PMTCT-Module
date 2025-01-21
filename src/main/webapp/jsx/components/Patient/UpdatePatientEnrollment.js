@@ -155,7 +155,6 @@ const UserRegistration = (props) => {
   const [open, setOpen] = React.useState(false);
   const toggle = () => setOpen(!open);
   const locationState = location.state;
-  console.log(locationState);
   let patientId = null;
   let actionType = null;
   let recordId = null;
@@ -176,7 +175,6 @@ const UserRegistration = (props) => {
       })
       .then((response) => {
         setAllNewEntryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -187,7 +185,6 @@ const UserRegistration = (props) => {
     allNewEntryPoint.map((each, i) => {
       if (each.code === locationState.entrypointValue) {
         setEntryValueDisplay(each);
-        console.log("location choosennn", each);
       }
     });
   };
@@ -202,7 +199,6 @@ const UserRegistration = (props) => {
     if (patientObj) {
       setDisabledField(actionType === "view" ? true : false);
       setObjValues({ ...patientObj });
-      console.log(patientObj);
       basicInfo.fullname = patientObj.fullname;
       basicInfo.age = patientObj.age;
       basicInfo.hospitalNumber = patientObj.hospitalNumber;
@@ -238,7 +234,6 @@ const UserRegistration = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
         setObjValues({ ...response.data });
       })
       .catch((error) => {
@@ -252,7 +247,6 @@ const UserRegistration = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response);
         setANCSetting(response.data);
       })
       .catch((error) => {
@@ -266,7 +260,6 @@ const UserRegistration = (props) => {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
-            console.log(response);
             setCommunitySetting(response.data);
           })
           .catch((error) => {
@@ -582,7 +575,6 @@ const UserRegistration = (props) => {
       }
     }
   };
-  console.log(errors);
   return (
     <>
       <div
@@ -672,7 +664,6 @@ const UserRegistration = (props) => {
                           )}
                         </FormGroup>
                       </div>
-                      {console.log(location.state.patientObj)}
 
                       <div className="form-group mb-3 col-md-3">
                         <FormGroup>

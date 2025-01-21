@@ -84,7 +84,7 @@ const ANCPatients = (props) => {
     () => [
       {
         title: "Patient Name",
-        field: "fullName",
+        field: "fullname",
         hidden: showPPI,
       },
       {
@@ -236,7 +236,6 @@ const ANCPatients = (props) => {
         //   totalCount: result.data.totalRecords,
         // });
     
-        console.log(response)
         
         return {
         data: response.data.records,

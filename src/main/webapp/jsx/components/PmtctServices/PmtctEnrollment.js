@@ -345,17 +345,12 @@ const AncPnc = (props) => {
     // }
   }, [allNewEntryPoint]);
 
-  console.log(entryValueDisplay);
   useEffect(() => {
     if (props.getPMTCTInfo) {
       props.getPMTCTInfo(enroll);
     }
   }, [enroll]);
-  console.log(
-    "uuid",
-    props?.patientObj,
-    locationState?.patientObj?.person_uuid
-  );
+
 
   const GetPatientPMTCT = (id) => {
     axios
@@ -364,7 +359,6 @@ const AncPnc = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        console.log("testing", response.data);
         setEnrollDto({ ...enroll, ...response.data });
         
         setInfantMotherArtDto({
@@ -395,7 +389,6 @@ let LastPeriod = enroll.lmp
 
 let lmp = moment(enroll.lmp)
 
-console.log("lmp", lmp)
 if(LastPeriod){
   let dateOfDelivery =moment(deliveryDate)
 return dateOfDelivery.diff(lmp, 'weeks')
@@ -435,7 +428,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
   };
 
   const POINT_ENTRY_PMTCT = () => {
-    console.log("former", enroll);
 
     axios
       .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`, {
@@ -443,7 +435,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
       })
       .then((response) => {
         setentryPoint(response.data);
-        console.log(response.data);
         // console.log("deducted", ans);
       })
       .catch((error) => {
@@ -476,7 +467,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
     setErrors({ ...errors, [e.target.name]: "" });
 
     setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-    console.log("payload", enroll);
     // artStartTime
     if (e.target.name === "artStartTime" && e.target.value !== "") {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
@@ -487,7 +477,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
       });
     }else
     if (e.target.name === "lmp" && e.target.value !== "") {
-      console.log("calculate ", e.target.name, e.target.value);
 
       // async function getGa() {
       //   const ga = e.target.value;
@@ -527,10 +516,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
         }
     }else
     if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
-      console.log("calculate ", e.target.name, e.target.value);
      let Ga =  calculateGaFromPmtct(e.target.value)
 
-console.log("ga", Ga)
      if (Ga > 0) {
       enroll.gaweeks = Ga;
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
@@ -641,6 +628,7 @@ console.log("ga", Ga)
           })
           .then((response) => {
             setSaving(false);
+            props.setEnrollPMTCT(true)
             props.patientObj.pmtctRegStatus = true;
             toast.success("Enrollment save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -655,7 +643,6 @@ console.log("ga", Ga)
             }
           })
           .catch((error) => {
-            console.log(error);
             setSaving(false);
             toast.error("Something went wrong", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -1201,11 +1188,11 @@ console.log("ga", Ga)
                       disabled={disabledField}
                     />
                   </InputGroup>
-                  {errors.artStartDate !== "" ? (
+                  {/* {errors.artStartDate !== "" ? (
                     <span className={classes.error}>{errors.artStartDate}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                   {enroll.gaweeks === 0  && enroll.lmp  === "" ? (
                           <span className={classes.error}>Last menstrual period date is empty </span>
                         ) : (

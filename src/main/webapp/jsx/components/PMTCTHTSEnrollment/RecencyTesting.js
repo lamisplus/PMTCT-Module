@@ -165,7 +165,7 @@ const Recency = (props) => {
             setRecency ({...recency,  ['rencencyInterpretation']: ''});
         }
     },[recency.longTermLine,recency.verififcationLine, recency.controlLine, props.patientObj]);
-    console.log(props.patientObj)
+    // console.log(props.patientObj)
     const handleInputChangeRecency = e => { 
         setErrors({...temp, [e.target.name]:""})        
         if(e.target.name ==='viralLoadResultClassification'){
@@ -215,7 +215,6 @@ const Recency = (props) => {
             objValues.htsClientId= clientId
             objValues.recency= recency
             objValues.personId= patientID
-            console.log(recency)
             axios.put(`${baseUrl}hts/${clientId}/recency`,objValues,
             { headers: {"Authorization" : `Bearer ${token}`}},
             

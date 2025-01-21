@@ -363,7 +363,6 @@ const UserRegistration = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response);
         setANCSetting(response.data);
       })
       .catch((error) => {
@@ -378,11 +377,10 @@ const UserRegistration = (props) => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
-          console.log(response);
           setCommunitySetting(response.data);
         })
         .catch((error) => {
-          //console.log(error);
+          console.error(error);
         });
     };
   //Date of Birth and Age handle
@@ -692,7 +690,6 @@ else{
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(errors);
 
     if (validate()) {
       if (basicInfo.age > 4) {
@@ -784,7 +781,7 @@ else{
             patientForm.id = patientId;
             objValues.personDto = patientForm;
             //patientDTO.personDto=objValues;
-            console.log(objValues);
+            // console.log(objValues);
 
             //
             const response = await axios.post(
@@ -796,7 +793,7 @@ else{
               position: toast.POSITION.BOTTOM_CENTER,
             });
             //
-            console.log(response.data);
+            // console.log(response.data);
             history.push({
               pathname: "/patient-history",
               state: {
@@ -842,7 +839,6 @@ else{
           }
         } else {
           // NOT ANC ENTRY POINT
-          console.log("here");
           try {
             const patientForm = {
               active: true,
@@ -911,7 +907,6 @@ else{
               personDto: patientForm,
               entryPoint: locationState.entrypointValue,
             };
-            console.log("payload", payload);
             const response = await axios.post(
               `${baseUrl}pmtct/anc/pmtct-enrollment`,
               payload,
@@ -1095,7 +1090,6 @@ else{
       }
      }else if (e.target.name === "lmp" && e.target.value !== "") { 
    let response =   calculateGestationalAge(objValues.firstAncDate, e.target.value)
-console.log("calcuateGestationalAge", response , typeof(response))
 
         if (response > 0) {
           objValues.gaweeks = response;
@@ -1116,7 +1110,6 @@ console.log("calcuateGestationalAge", response , typeof(response))
     setRelatives({ ...relatives, [inputName]: e.slice(0, limit) });
   };
   const checkPhoneNumberBasic = (e, inputName) => {
-    console.log(e, inputName);
     if (inputName === "phoneNumber") {
       if (e) {
         setErrors({ ...errors, phoneNumber: "" });

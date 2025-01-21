@@ -237,7 +237,6 @@ const PmtctPatients = (props) => {
         //   totalCount: result.data.totalRecords,
         // });
     
-        console.log(response)
         
         return {
         data: response.data.records,

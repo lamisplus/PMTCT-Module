@@ -82,5 +82,9 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
 
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
+  boolean checkPatientOnPMTCT(String personUuid);
+
+
 
 }

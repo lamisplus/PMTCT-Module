@@ -106,7 +106,7 @@ const RecentHistory = (props) => {
         }
       )
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         setRecentActivities(response.data);
       })
       .catch((error) => {
@@ -702,10 +702,7 @@ const RecentHistory = (props) => {
         ) : (
           ""
         )}
-        {console.log(
-          props.patientObj.dynamicHivStatus === "Unknown",
-          props.patientObj.hivStatus === "Unknown"
-        )}
+    
         {/* props.patientObj.dynamicHivStatus === "Unknown" || */}
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">

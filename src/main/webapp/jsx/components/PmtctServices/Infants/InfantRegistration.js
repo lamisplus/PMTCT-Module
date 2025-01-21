@@ -395,7 +395,6 @@ const LabourinfantInfo = (props) => {
     const deliveryDate = moment(infantInfo.dateOfDelivery ? infantInfo.dateOfDelivery : newDateOfDelivery)
 
     const lastCTX  = moment(dateaOfCTX)
-    console.log("months", lastCTX.diff(deliveryDate, 'months') )
 
         if(lastCTX.diff(deliveryDate, 'months')  <  2){
             return "AGE_CTX_INITIATION_<_2__MONTHS";        

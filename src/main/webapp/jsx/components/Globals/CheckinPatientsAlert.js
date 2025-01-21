@@ -58,7 +58,7 @@ const CheckedInPatientsAlert = () => {
   };
 
   const onConnected = () => {
-    console.log("Connected to the server");
+    // console.log("Connected to the server");
   };
 
   const onMessageReceived = (msg) => {
@@ -68,7 +68,7 @@ const CheckedInPatientsAlert = () => {
   };
 
   const onDisconnected = () => {
-    console.log("Disconnected from the server");
+    // console.log("Disconnected from the server");
   };
 
   return (

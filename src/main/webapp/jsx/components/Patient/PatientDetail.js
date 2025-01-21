@@ -65,6 +65,7 @@ function PatientCard(props) {
   const [PersonInfo, setPersonInfo] = useState({});
   const [deliveryInfo, setDeliveryInfo] = useState([]);
   const [allEntryPoint, setAllEntryPoint] = useState([]);
+  const [enrollPMTCT, setEnrollPMTCT] = useState(false);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -107,11 +108,10 @@ function PatientCard(props) {
         }
       )
       .then((response) => {
-        console.log(response.data);
         setDeliveryInfo(response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error(error);
       });
     // }
   };
@@ -123,7 +123,6 @@ function PatientCard(props) {
       })
       .then((response) => {
         setAllEntryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -137,7 +136,6 @@ function PatientCard(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
         setPersonInfo(response.data);
       })
       .catch((error) => {
@@ -176,6 +174,7 @@ function PatientCard(props) {
             art={art}
             setActiveContent={setActiveContent}
             deliveryInfo={deliveryInfo}
+            enrollPMTCT={enrollPMTCT}
           />
           <br />
           {/* Patient dashboard menu route */}
@@ -203,7 +202,7 @@ function PatientCard(props) {
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
             newRegDate={""}
-
+            setEnrollPMTCT={setEnrollPMTCT}
               allEntryPoint={allEntryPoint}
               entrypointValue={patientObj.entryPoint}
               ancEntryType={patientObj.ancNo ? true : false}

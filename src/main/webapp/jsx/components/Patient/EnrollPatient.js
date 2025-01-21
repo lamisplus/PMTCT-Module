@@ -212,7 +212,6 @@ const UserRegistration = (props) => {
     loadGenders();
     getSex();
     PregnancyStatus();
-    console.log("patientObj", patientObj)
     if (patientObj) {
       
       // const identifiers = patientObj?.identifier;
@@ -749,8 +748,7 @@ const UserRegistration = (props) => {
             </Button>
           </Link>
           <br />
-          {    console.log("obj", objValues)
-          }
+       
           <br />
           <div className="col-xl-12 col-lg-12">
             <Form>
@@ -881,7 +879,6 @@ const UserRegistration = (props) => {
                     <h5 className="card-title" style={{ color: "#fff" }}>
                       ANC Enrollment
                     </h5>
-                    {  console.log("patientObj",  patientObj) }
 
                   </div>
                   <div className="card-body">

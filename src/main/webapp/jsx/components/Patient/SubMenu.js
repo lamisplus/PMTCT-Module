@@ -21,8 +21,8 @@ function SubMenu(props) {
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
   const [deliveryStatus, setDeliveryStatus] = useState(false);
-  const [patientStatus, setPatientStatus] = useState(patientObj.dynamicHivStatus ? patientObj.dynamicHivStatus: patientObj.staticHivStatus ? patientObj.staticHivStatus :  patientObj?.hivStatus?  patientObj?.hivStatus: patientObj?.isEnrolled ? patientObj?.isEnrolled: "");
-  const [isOnPMTCT, setIsOnPMTCT] = useState(patientObj?.pmtctRegStatus? patientObj?.pmtctRegStatus: patientObj?.isOnPmtct)
+  const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+  const [isOnPMTCT, setIsOnPMTCT] = useState(props?.patientObj?.pmtctRegStatus? props?.patientObj?.pmtctRegStatus: props?.patientObj?.isOnPmtct)
   let mentalStatus = false;
   let initialEvaluationStatus = false;
 
@@ -38,6 +38,7 @@ function SubMenu(props) {
 
 
   useEffect(() => {
+    
     props.deliveryInfo.filter((each) => {
       if (each.activityName === "Labour and Delivery") {
         setDeliveryStatus(true);
@@ -62,6 +63,12 @@ function SubMenu(props) {
     });
     // console.log(props.deliveryInfo);
   }, [props.deliveryInfo]);
+
+useEffect(()=>{
+  getPMTCTStatus()
+}, [props.enrollPMTCT])
+
+
   //Get list of RegimenLine
   const Observation = () => {
     axios
@@ -84,6 +91,29 @@ function SubMenu(props) {
       .catch((error) => {
         //console.log(error);
       });
+  };
+
+
+  const getPMTCTStatus = () => {
+  
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/is-on-pmtct?personUuid=${
+          patientObj.person_uuid
+            ? patientObj.person_uuid
+            : patientObj.personUuid
+        }`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setIsOnPMTCT(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    
   };
   const loadAncPnc = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });

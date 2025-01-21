@@ -332,7 +332,6 @@ const CheckedInPatients = (props) => {
   const getData = async (query) => {
     try {
       const data = await fetchPatients(query);
-      console.log("data", data)
       
       const reversedData = [...(data || [])].reverse();
 

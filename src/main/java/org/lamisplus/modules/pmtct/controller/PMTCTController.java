@@ -479,4 +479,13 @@ public class PMTCTController {
 //    public ResponseEntity<InfantPCRTestDto> getAllPCR(@RequestParam String infantHospitalNumber) {
 //        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber));
 //    }
+
+
+
+
+    @GetMapping(value = "is-on-pmtct")
+    public boolean getPatientOnPMTCT(@RequestParam String personUuid) {
+      return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid);
+
+    }
 }
