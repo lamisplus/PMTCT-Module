@@ -472,7 +472,10 @@ private DeliveryRepository deliveryRepository;
         }
     }
 
+    public boolean checkPatientOnPMTCT(String personUuid) {
+        return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
 
+    }
 
 
 }

@@ -138,6 +138,7 @@ const ClinicVisit = (props) => {
   const [pcrType, setPcrType] = useState([]);
   const [latestPCR, setLatestPCR] = useState({});
   const [latestRapidTest, setLatestRapidTest] = useState({});
+  const [showInfantVist, setShowInfantVist] = useState(true);
 
   const [PCRValidity, setPCRValidilty] = useState({nextPCR: "", childAge: ""});
 
@@ -632,6 +633,28 @@ const ClinicVisit = (props) => {
               })
               .then((response) => {
             setLatestPCR(response.data)
+          // check if the last PCR is Confirmatory and positive  
+
+          if(response?.data && response?.data?.results.includes("POSITIVE") && response?.data?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
+          //Deactive the whole form and display the child's HIV positive status on child's dashboard
+
+          setShowInfantVist(false)
+        }else{
+          setShowInfantVist(true)
+
+        }
+
+            //check if the last PCR is positive then set the PCRType to confirmatory 
+            if(response?.data && response?.data?.results.includes("POSITIVE")){
+              let newPCRList = []
+              pcrType.map((each, index)=>{
+                  if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
+                    newPCRList.push(each)
+                  }
+                })
+                setPcrType(newPCRList)
+
+            }
               })
               .catch((error) => {
               console.log(error)
@@ -1241,6 +1264,14 @@ const ClinicVisit = (props) => {
             </Label>
             <br />
             <br />
+            {!showInfantVist && <div style={{ marginBottom: "30px" }}>
+              <p style={{ fontSize: "16px" }}>Child's HIV Status: <span style={{ color: "red" }}>Positive</span></p>
+
+              <div style={{ color: "red" , display: 'flex', alignItems: 'center', fontSize: '25px'}}><div style={{  display: "flex", justifyContent: "center",alignItems: "center",width: "50px", height: "50px" , borderRadius: "50%", textAlign: "center", fontSize: "30px", padding: '10px', marginRight: '10px', backgroundColor: "pink"}}>!</div>Kindly fill ART form</div>
+            </div>
+          }
+
+          { showInfantVist &&  <>
             <div className="row">
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
@@ -2452,6 +2483,9 @@ const ClinicVisit = (props) => {
             ) : (
               ""
             )}
+
+
+        </>}
           </Segment>
         </Grid.Column>
       </Grid>

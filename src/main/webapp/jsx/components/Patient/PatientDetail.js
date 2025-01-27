@@ -64,6 +64,7 @@ function PatientCard(props) {
   const [PersonInfo, setPersonInfo] = useState({});
   const [deliveryInfo, setDeliveryInfo] = useState([]);
   const [allEntryPoint, setAllEntryPoint] = useState([]);
+  const [enrollPMTCT, setEnrollPMTCT] = useState(false);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -173,6 +174,8 @@ function PatientCard(props) {
             art={art}
             setActiveContent={setActiveContent}
             deliveryInfo={deliveryInfo}
+            enrollPMTCT={enrollPMTCT}
+
           />
           <br />
           {/* Patient dashboard menu route */}

@@ -18,7 +18,7 @@ function SubMenu(props) {
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
   const [deliveryStatus, setDeliveryStatus] = useState(false);
-
+  const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
@@ -104,9 +104,7 @@ function SubMenu(props) {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-        {(patientObj.dynamicHivStatus === "Positive" ||
-          patientObj.staticHivStatus === "Positive" ||
-          patientObj?.hivStatus === "Positive") && (
+        {(patientStatus === "Positive" ) && (
           <>
             {patientObj.pmtctRegStatus !== true ? (
               <>

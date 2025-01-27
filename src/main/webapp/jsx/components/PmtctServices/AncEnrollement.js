@@ -150,6 +150,7 @@ const AncEnrollement = (props) => {
       .then((response) => {
         setSaving(false);
         props.patientObj.commenced = true;
+
         toast.success("Vital signs save successful");
         props.setActiveContent({
           ...props.activeContent,
