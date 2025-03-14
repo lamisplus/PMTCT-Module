@@ -1212,7 +1212,8 @@ else{
                           </Label>
                           <Input
                             className="form-control"
-                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                            type="date"              
+                            onKeyPress={(e)=>{e.preventDefault()}}
                             name="dateOfRegistration"
                             id="dateOfRegistration"
                             min="1983-12-31"
@@ -2951,6 +2952,7 @@ else{
                   activeContent={activeContent}
                   hideUpdateButton={false}
                   ancEntryType={false}
+
                 />
               )}
               {saving ? <Spinner /> : ""}

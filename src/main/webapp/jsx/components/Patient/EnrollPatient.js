@@ -368,7 +368,6 @@ const UserRegistration = (props) => {
   };
 
   //   handle routing
-
   const handleRoute = (data) => {
     history.push({
       pathname: "/patient-history",
@@ -1602,6 +1601,7 @@ const UserRegistration = (props) => {
                   entrypointValue={locationState.entrypointValue}
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
+                  
                 />
               )}
               {/* END OF HIV ENROLLEMENT FORM */}

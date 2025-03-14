@@ -93,7 +93,6 @@ const useStyles = makeStyles((theme) => ({
 const AncPnc = (props) => {
   const patientObj = props.patientObj;
   let history = useHistory();
-
   const location = useLocation();
   const locationState = location && location.state ? location.state : null;
   const [regimenType, setRegimenType] = useState([]);
@@ -628,7 +627,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
           })
           .then((response) => {
             setSaving(false);
-            props.setEnrollPMTCT(true)
+            console.log("enrolled")
+            // props.setEnrollPMTCT(true)
             props.patientObj.pmtctRegStatus = true;
             toast.success("Enrollment save successful", {
               position: toast.POSITION.BOTTOM_CENTER,

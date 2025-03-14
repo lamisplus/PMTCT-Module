@@ -210,6 +210,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               hideUpdateButton={true}
+
             />
           )}
           {activeContent.route === "anc-enrollment" && (
