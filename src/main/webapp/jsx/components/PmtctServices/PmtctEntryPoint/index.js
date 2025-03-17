@@ -4,13 +4,29 @@ import { Link, useHistory } from "react-router-dom";
 import { url as baseUrl, token } from "../../../../api";
 import axios from "axios";
 
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect ,useMemo} from "react";
+import { usePermissions } from "../../../../hooks/usePermissions";
+
+
 const PmtctEntryPoint = (props) => {
   const [key, setKey] = useState("home");
   const [postPartumValue, setPostPartumValue] = useState("");
   const [entryPoint, setentryPoint] = useState([]);
-
   const history = useHistory();
+
+
+
+  const { hasPermission } = usePermissions();
+ 
+  const permissions = useMemo(
+    () => ({
+      hasPmtct: hasPermission("maternal_cohort_register"  ),
+      hasANC: hasPermission("general_anc_register"),
+
+    }),
+    [hasPermission]
+  );
+
 
   const POINT_ENTRY_PMTCT = () => {
     axios
@@ -19,7 +35,6 @@ const PmtctEntryPoint = (props) => {
       })
       .then((response) => {
         setentryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -28,7 +43,6 @@ const PmtctEntryPoint = (props) => {
 
   useEffect(() => {
     setKey("home");
-    console.log(props);
     POINT_ENTRY_PMTCT();
   }, []);
 
@@ -57,7 +71,7 @@ const PmtctEntryPoint = (props) => {
             }}
           >
             {entryPoint.map((each, i) => {
-              if (each.display === "ANC") {
+              if (each.display === "ANC" && permissions.hasANC) {
                 return (
                   <Link
                     to={{
@@ -92,7 +106,7 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "L&D") {
+              } else if (each.display === "L&D"  && permissions.hasPmtct) {
                 return (
                   <Link
                     to={{
@@ -127,7 +141,7 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "Post-Partum") {
+              } else if (each.display === "Post-Partum"  && permissions.hasPmtct) {
                 return (
                   <select
                     style={{

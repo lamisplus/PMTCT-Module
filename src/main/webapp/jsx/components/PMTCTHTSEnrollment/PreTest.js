@@ -331,7 +331,6 @@ const BasicInfo = (props) => {
             });
             
     }
-    console.log(riskAssessmentPartner)
 
     return (
         <>

@@ -22,6 +22,7 @@ import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
+import PatientVisits from "./CheckedInVisit";
 
 const styles = (theme) => ({
   root: {
@@ -64,6 +65,7 @@ function PatientCard(props) {
   const [PersonInfo, setPersonInfo] = useState({});
   const [deliveryInfo, setDeliveryInfo] = useState([]);
   const [allEntryPoint, setAllEntryPoint] = useState([]);
+  const [enrollPMTCT, setEnrollPMTCT] = useState(false);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -77,6 +79,9 @@ function PatientCard(props) {
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
+
+
+
 
   const RecentActivities = () => {
     // if patient has ANC No
@@ -103,11 +108,10 @@ function PatientCard(props) {
         }
       )
       .then((response) => {
-        console.log(response.data);
         setDeliveryInfo(response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error(error);
       });
     // }
   };
@@ -119,7 +123,6 @@ function PatientCard(props) {
       })
       .then((response) => {
         setAllEntryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -133,7 +136,6 @@ function PatientCard(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
         setPersonInfo(response.data);
       })
       .catch((error) => {
@@ -142,7 +144,6 @@ function PatientCard(props) {
 
     POINT_ENTRY_PMTCT();
   }, []);
-  console.log(patientObj);
 
   return (
     <div className={classes.root}>
@@ -173,6 +174,7 @@ function PatientCard(props) {
             art={art}
             setActiveContent={setActiveContent}
             deliveryInfo={deliveryInfo}
+            enrollPMTCT={enrollPMTCT}
           />
           <br />
           {/* Patient dashboard menu route */}
@@ -199,6 +201,8 @@ function PatientCard(props) {
           )}
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
+            newRegDate={""}
+            setEnrollPMTCT={setEnrollPMTCT}
               allEntryPoint={allEntryPoint}
               entrypointValue={patientObj.entryPoint}
               ancEntryType={patientObj.ancNo ? true : false}
@@ -206,6 +210,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               hideUpdateButton={true}
+
             />
           )}
           {activeContent.route === "anc-enrollment" && (
@@ -269,6 +274,15 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
+
+      {activeContent.route === "patient-visit" && (
+                  <PatientVisits
+                    patientObj={patientObj}
+                    setActiveContent={setActiveContent}
+                    activeContent={activeContent}
+                  />
+                )}
           {/* History Pages */}
         </CardContent>
       </Card>

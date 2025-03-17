@@ -10,6 +10,8 @@ public class ANCRequestDto implements Serializable
     private Long id;
     private String ancNo;
     private String ancSetting;
+    private String communitySetting;
+
     private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;
@@ -28,6 +30,17 @@ public class ANCRequestDto implements Serializable
     private String staticHivStatus;
     private String sourceOfReferral;
     private String previouslyKnownHivStatus;
+    private LocalDate  dateOfHepatitisB;
+    private String  hepatitisB;
+    private String testedHepatitisB;
+    private String treatedHepatitisB;
+    private String referredHepatitisB;
+
+    private LocalDate  dateOfHepatitisC;
+    private String  hepatitisC;
+    private String testedHepatitisC;
+    private String treatedHepatitisC;
+    private String referredHepatitisC;
 
 
 

@@ -61,7 +61,7 @@ const ADR = (props) => {
               <FormGroup>
               <Label >Onset Date </Label>
               <Input
-                  type="date"
+                  type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                   name="ondateInfection"
                   id="ondateInfection"
                   value={props.infection.ondateInfection}

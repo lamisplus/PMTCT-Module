@@ -76,6 +76,8 @@ const ClinicVisit = (props) => {
   const [visitStatus, setVisitStatus] = useState([]);
   const [maternalCome, setMaternalCome] = useState([]);
   const [fp, setFp] = useState([]);
+  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false)
+
   const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support
   const entrypointRef = useRef(null);
@@ -107,8 +109,27 @@ const ClinicVisit = (props) => {
     timeOfViralLoad: "",
   });
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
+  const getDateOfDelivery = () => {
+    axios
+      .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
+        ? props.patientObj.person_uuid
+        : props.patientObj.personUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if(response.data){
+          setDisableDeliveryDate(true)
+          setObjValues({...objValues, dateOfDelivery: response.data});
+  
+        }
 
-  console.log(objValues.enteryPoint);
+        setDisableDeliveryDate(false)
+        setObjValues({...objValues, dateOfDelivery: response.data});
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
   const POINT_ENTRY_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
@@ -116,7 +137,6 @@ const ClinicVisit = (props) => {
       })
       .then((response) => {
         setEntryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -132,11 +152,11 @@ const ClinicVisit = (props) => {
 
   useEffect(() => {
     ///VitalSigns();
+    getDateOfDelivery()
     VISIT_STATUS_PMTCT();
     MATERNAL_OUTCOME();
     FAMILY_PLANNING_METHOD();
     POINT_ENTRY_PMTCT();
-    console.log(props.activeContent.activeTab);
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -443,9 +463,8 @@ const ClinicVisit = (props) => {
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
-                  {console.log("visiting patient", props.patientObj)}
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfVisit"
                     id="dateOfVisit"
                     value={objValues.dateOfVisit}
@@ -467,7 +486,6 @@ const ClinicVisit = (props) => {
                 </FormGroup>
               </div>
 
-              {console.log("entry point list ", entryPoint)}
 
               <div className=" mb-3 col-md-3">
                 <FormGroup>
@@ -570,14 +588,14 @@ const ClinicVisit = (props) => {
                     </FormLabelName>
 
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChange}
                       value={objValues.dateOfDelivery}
                       min={props.patientObj.firstAncDate}
                       max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disabledField}
+                      disabled={disableDeliveryDate? disableDeliveryDate:disabledField}
                     />
 
                     {errors.dateOfDelivery !== "" ? (
@@ -608,7 +626,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName>Viral Load Collection Date </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfViralLoad"
                     id="dateOfViralLoad"
                     value={objValues.dateOfViralLoad}
@@ -804,7 +822,7 @@ const ClinicVisit = (props) => {
                     Date of Outcome <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="dateOfmeternalOutcome"
                     id="dateOfmeternalOutcome"
                     value={objValues.dateOfmeternalOutcome}

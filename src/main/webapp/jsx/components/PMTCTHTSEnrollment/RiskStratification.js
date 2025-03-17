@@ -95,7 +95,6 @@ const useStyles = makeStyles((theme) => ({
 const RiskStratification = (props) => {
     const classes = useStyles();
     const history = useHistory();
-    console.log(props)
     const [enrollSetting, setEnrollSetting] = useState([]);
     let riskCountQuestion=[]
     const [kP, setKP] = useState([]);
@@ -452,7 +451,7 @@ const RiskStratification = (props) => {
                                 <FormGroup>
                                 <Label for="">Visit Date * </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="visitDate"
                                     id="visitDate"
                                     value={objValues.visitDate}

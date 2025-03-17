@@ -94,12 +94,16 @@ const LabourDelivery = (props) => {
   const [placeOfDelivery, setPlaceOfDelivery] = useState([]);
   const [feedingDecision, setfeedingDecision] = useState([]);
   const [maternalOutCome, setmaternalOutCome] = useState([]);
+  const [newGa, setNewGa] = useState("");
+  const [parentDeliveryDate, setParentDeliveryDate] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [disabledField, setSisabledField] = useState(false);
   const [errors, setErrors] = useState({});
   const [childStatus, setChildStatus] = useState([]);
   const [bookingStatus, setBookingStatus] = useState([]);
   const [romdelivery, setRomdelivery] = useState([]);
+  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false)
   const [timehiv, setTimehiv] = useState([]);
   const [delivery, setDelivery] = useState({
     placeOfDelivery: "",
@@ -133,6 +137,8 @@ const LabourDelivery = (props) => {
       : props.patientObj.uuid,
   });
   useEffect(() => {
+
+    getDateOfDelivery();
     MODE_DELIVERY();
     FEEDING_DECISION();
     MATERNAL_OUTCOME();
@@ -141,6 +147,7 @@ const LabourDelivery = (props) => {
     ROM_DELIVERY_INTERVAL();
     TIME_HIV_DIAGNOSIS();
     getPlaceOfDelivery();
+
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -151,6 +158,7 @@ const LabourDelivery = (props) => {
         props.activeContent.actionType === "view" ? true : false
       );
     }
+
   }, [props.patientObj.id, props.activeContent]);
 
   const GetPatientLabourDTO = (id) => {
@@ -159,7 +167,9 @@ const LabourDelivery = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        //console.log(response.data.find((x)=> x.id===id));
+        getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery")
+
+        //  setDisableDeliveryDate(false)
         setDelivery(response.data);
       })
       .catch((error) => {
@@ -189,6 +199,25 @@ const LabourDelivery = (props) => {
       .then((response) => {
         //console.log(response.data);
         setPlaceOfDelivery(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+  const getDateOfDelivery = () => {
+    axios
+      .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
+        ? props.patientObj.person_uuid
+        : props.patientObj.personUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+       if(response.data){
+        setDisableDeliveryDate(true)
+        delivery.dateOfDelivery =response.data
+        // setDelivery({...delivery, dateOfDelivery: response.data});
+        getGestationalAge(response.data, "dateOfDelivery")
+       }
       })
       .catch((error) => {
         //console.log(error);
@@ -272,36 +301,72 @@ const LabourDelivery = (props) => {
         //console.log(error);
       });
   };
+
+
+
+ const getGestationalAge = async (value, name)=> {
+    const ga = value;
+    const response = await axios.get(
+      `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
+        props.patientObj.person_uuid
+          ? props.patientObj.person_uuid
+          : props.patientObj.personUuid
+          ? props.patientObj.personUuid
+          : props.patientObj.uuid
+      }&visitDate=${ga}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "text/plain",
+        },
+      }
+    );
+    if (response.data > 0) {
+      // console.log(response.data)
+      // setDelivery({...delivery,gaweeks:  response.data, dateOfDelivery: value })
+
+
+      delivery.gaweeks = response.data;
+      delivery.dateOfDelivery =value
+      setNewGa(response.data)
+      // setDelivery({ ...delivery, [name]: value, gaweeks: response.data });
+    } else {
+      toast.error("Please select a validate date");
+      delivery.dateOfDelivery =value
+
+      // setDelivery({ ...delivery, [name]: value });
+    }
+  }
+
   const handleInputChangeDeliveryDto = (e) => {
-    console.log(e.target.value)
     setErrors({ ...errors, [e.target.name]: "" });
     if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
-      async function getGa() {
-        const ga = e.target.value;
-        const response = await axios.get(
-          `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-              ? props.patientObj.personUuid
-              : props.patientObj.uuid
-          }&visitDate=${ga}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "text/plain",
-            },
-          }
-        );
-        if (response.data > 0) {
-          delivery.gaweeks = response.data;
-          setDelivery({ ...delivery, [e.target.name]: e.target.value });
-        } else {
-          toast.error("Please select a validate date");
-          setDelivery({ ...delivery, [e.target.name]: e.target.value });
-        }
-      }
-      getGa();
+      // async function getGa() {
+      //   const ga = e.target.value;
+      //   const response = await axios.get(
+      //     `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
+      //       props.patientObj.person_uuid
+      //         ? props.patientObj.person_uuid
+      //         : props.patientObj.personUuid
+      //         ? props.patientObj.personUuid
+      //         : props.patientObj.uuid
+      //     }&visitDate=${ga}`,
+      //     {
+      //       headers: {
+      //         Authorization: `Bearer ${token}`,
+      //         "Content-Type": "text/plain",
+      //       },
+      //     }
+      //   );
+      //   if (response.data > 0) {
+      //     delivery.gaweeks = response.data;
+      //     setDelivery({ ...delivery, [e.target.name]: e.target.value });
+      //   } else {
+      //     toast.error("Please select a validate date");
+      //     setDelivery({ ...delivery, [e.target.name]: e.target.value });
+      //   }
+      // }
+      getGestationalAge(e.target.value, e.target.name);
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
 
     }else if (e.target.name === "childStatus") {
@@ -317,7 +382,11 @@ const LabourDelivery = (props) => {
          numberOfInfantsDead: "",
          numberOfInfantsAlive: "",
        });
-    } else {
+    } else if(e.target.name === "gaweeks"){
+      setNewGa(e.target.value)
+      setDelivery({ ...delivery, [e.target.name]: e.target.value });
+
+    }else {
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     }
   };
@@ -332,6 +401,8 @@ const LabourDelivery = (props) => {
     // temp.romDeliveryInterval = delivery.romDeliveryInterval
     //   ? ""
     //   : "This field is required";
+    temp.placeOfDelivery = delivery.placeOfDelivery ? "" : "This field is required";
+
     temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required";
     temp.onArt = delivery.onArt ? "" : "This field is required";
     temp.modeOfDelivery = delivery.modeOfDelivery
@@ -346,7 +417,7 @@ const LabourDelivery = (props) => {
         : "This field is required";
     temp.hcstatus = delivery.hcstatus ? "" : "This field is required";
     temp.hbstatus = delivery.hbstatus ? "" : "This field is required";
-    temp.gaweeks = delivery.gaweeks ? "" : "This field is required";
+    temp.gaweeks = newGa ? "" : "This field is required";
     temp.feedingDecision = delivery.feedingDecision
       ? ""
       : "This field is required";
@@ -442,7 +513,6 @@ delivery.childStatus !== "" &&
     <div>
       <Card className={classes.root}>
         <CardBody>
-          {console.log(patientObj)}
           <form>
             <div className="row">
               <h2>Labour and Delivery</h2>
@@ -507,14 +577,15 @@ delivery.childStatus !== "" &&
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       
+                      onKeyPress={(e)=>{e.preventDefault()}}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChangeDeliveryDto}
                       value={delivery.dateOfDelivery}
                       min={props.patientObj.firstAncDate}
                       max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disabledField}
+                      disabled={disableDeliveryDate? disableDeliveryDate : disabledField}
                     />
                   </InputGroup>
                   {errors.dateOfDelivery !== "" ? (
@@ -538,7 +609,7 @@ delivery.childStatus !== "" &&
                       name="gaweeks"
                       id="gaweeks"
                       onChange={handleInputChangeDeliveryDto}
-                      value={delivery.gaweeks}
+                      value={newGa}
                       disabled
                       min="0"
                     />
@@ -603,9 +674,9 @@ delivery.childStatus !== "" &&
                       ))}
                     </Input>
                   </InputGroup>
-                  {errors.bookingStatus !== "" ? (
+                  {errors.placeOfDelivery !== "" ? (
                     <span className={classes.error}>
-                      {errors.bookingStatus}
+                      {errors.placeOfDelivery}
                     </span>
                   ) : (
                     ""

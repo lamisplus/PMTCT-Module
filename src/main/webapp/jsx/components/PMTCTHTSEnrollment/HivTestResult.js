@@ -90,7 +90,6 @@ const HivTestResult = (props) => {
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
     let temp = { ...errors }
-    console.log(props.patientObj)
     const patientID= props.patientObj && props.patientObj.personResponseDto ? props.patientObj.personResponseDto.id : "";
     const clientId = props.patientObj && props.patientObj ? props.patientObj.id : "";
     const [hivTestDate, setHivTestDate] = useState("");
@@ -430,7 +429,7 @@ const HivTestResult = (props) => {
                                 <FormGroup>
                                 <Label for=""> Date  </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="date"
                                     id="date"
                                     value={initialTest1.date}
@@ -477,7 +476,7 @@ const HivTestResult = (props) => {
                                 <FormGroup>
                                 <Label for=""> Date  </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="date"
                                     id="date"
                                     value={confirmatoryTest.date}
@@ -524,7 +523,7 @@ const HivTestResult = (props) => {
                                 <FormGroup>
                                 <Label for=""> Date  </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="date"
                                     id="date"
                                     value={tieBreakerTest.date}
@@ -588,7 +587,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={initialTest12.date2}
@@ -635,7 +634,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date  </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={confirmatoryTest2.date2}
@@ -678,7 +677,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date  </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={tieBreakerTest2.date2}
@@ -736,7 +735,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date  </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={initialTest12.date2}
@@ -781,7 +780,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date  </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={confirmatoryTest2.date2}
@@ -824,7 +823,7 @@ const HivTestResult = (props) => {
                                             <FormGroup>
                                             <Label for=""> Date  </Label>
                                             <Input
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="date2"
                                                 id="date2"
                                                 value={tieBreakerTest2.date2}

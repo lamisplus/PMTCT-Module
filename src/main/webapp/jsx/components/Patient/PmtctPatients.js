@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useMemo } from "react";
 import MaterialTable, { MTableToolbar } from "material-table";
 import axios from "axios";
 import { token as token, url as baseUrl } from "./../../../api";
@@ -28,6 +28,7 @@ import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
+import {usePermissions } from "../../../hooks/usePermissions";
 
 //Dtate Picker package
 Moment.locale("en");
@@ -58,6 +59,17 @@ const tableIcons = {
 };
 
 const PmtctPatients = (props) => {
+  const { hasPermission } = usePermissions();
+ 
+  const permissions = useMemo(
+    () => ({
+      canSeeEnrollButton: hasPermission("maternal_cohort_register"  ),
+    }),
+    [hasPermission]
+  );
+
+
+
   const [showPPI, setShowPPI] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
@@ -67,110 +79,186 @@ const PmtctPatients = (props) => {
     }
   };
 
+
+  const columns = useMemo(
+    () => [
+           // { title: " ID", field: "Id" },
+           {
+            title: "Patient Name",
+            field: "fullName",
+            hidden: showPPI,
+          },
+          {
+            title: "Hospital Number",
+            field: "hospitalNumber",
+            filtering: false,
+          },
+          { title: "Sex", field: "sex", filtering: false },
+          { title: "Age", field: "age", filtering: false },
+          //{ title: "Enrollment Status", field: "v_status", filtering: false },
+          //{ title: "ART Number", field: "v_status", filtering: false },
+          // { title: "ART Status", field: "status", filtering: false },
+
+      {
+        title: "Actions",
+        field: "actions",
+        render: (rowData) => {
+          const isEnrolled = rowData .isEnrolled;
+        
+          return (
+            <div>
+
+              {permissions.canSeeEnrollButton&& <div>
+                                      <Link
+                                        to={{
+                                          pathname: "/patient-history",
+                                          state: { patientObj: rowData  },
+                                        }}
+                                      >
+                                        <ButtonGroup
+                                          variant="contained"
+                                          aria-label="split button"
+                                          style={{
+                                            backgroundColor: "rgb(153, 46, 98)",
+                                            height: "30px",
+                                            width: "215px",
+                                          }}
+                                          size="large"
+                                        >
+                                          <Button
+                                            color="primary"
+                                            size="small"
+                                            aria-label="select merge strategy"
+                                            aria-haspopup="menu"
+                                            style={{ backgroundColor: "rgb(153, 46, 98)" }}
+                                          >
+                                            <MdDashboard />
+                                          </Button>
+                                          <Button
+                                            style={{ backgroundColor: "rgb(153, 46, 98)" }}
+                                          >
+                                    
+                                            <span
+                                              style={{
+                                                fontSize: "12px",
+                                                color: "#fff",
+                                                fontWeight: "bolder",
+                                              }}
+                                            >
+                                              Patient Dashboard
+                                            </span>
+                                          </Button>
+                                        </ButtonGroup>
+                                      </Link>
+                                    </div>}
+
+
+
+      </div>
+          );
+        },
+      },
+    ],
+    [showPPI, permissions.canSeeEnrollButton]
+  );
+  const getData = async (query) => {
+    try {
+     const response = await  axios
+      .get(
+        `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+ 
+      
+        // resolve({
+        //   data: result.data.records.map((row) => ({
+        //     name: (
+        //       <Link
+        //         to={{
+        //           pathname: "/patient-history",
+        //           state: { patientObj: row },
+        //         }}
+        //         title={"Click to view patient dashboard"}
+        //       >
+        //         {" "}
+        //         {row.surname ? row.surname : row.fullName}
+        //       </Link>
+        //     ),
+
+        //     hospital_number: row.hospitalNumber,
+        //     gender: row && row.sex ? row.sex : "Female",
+        //     age: row.age,
+        //     // actions: (
+        //     //  <>{permissions.canSeeEnrollButton&& <div>
+        //     //     <Link
+        //     //       to={{
+        //     //         pathname: "/patient-history",
+        //     //         state: { patientObj: row },
+        //     //       }}
+        //     //     >
+        //     //       <ButtonGroup
+        //     //         variant="contained"
+        //     //         aria-label="split button"
+        //     //         style={{
+        //     //           backgroundColor: "rgb(153, 46, 98)",
+        //     //           height: "30px",
+        //     //           width: "215px",
+        //     //         }}
+        //     //         size="large"
+        //     //       >
+        //     //         <Button
+        //     //           color="primary"
+        //     //           size="small"
+        //     //           aria-label="select merge strategy"
+        //     //           aria-haspopup="menu"
+        //     //           style={{ backgroundColor: "rgb(153, 46, 98)" }}
+        //     //         >
+        //     //           <MdDashboard />
+        //     //         </Button>
+        //     //         <Button
+        //     //           style={{ backgroundColor: "rgb(153, 46, 98)" }}
+        //     //         >
+        //     //           <span
+        //     //             style={{
+        //     //               fontSize: "12px",
+        //     //               color: "#fff",
+        //     //               fontWeight: "bolder",
+        //     //             }}
+        //     //           >
+        //     //             Patient Dashboard
+        //     //           </span>
+        //     //         </Button>
+        //     //       </ButtonGroup>
+        //     //     </Link>
+        //     //   </div>}</>
+        //     // ),
+        //   })),
+        //   page: query.page,
+        //   totalCount: result.data.totalRecords,
+        // });
+    
+        
+        return {
+        data: response.data.records,
+        page: query?.page || 0,
+        totalCount: response.data.records.length || 0,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        page: 0,
+        totalCount: 0,
+      };
+    }
+  };
   return (
     <div>
       <MaterialTable
         icons={tableIcons}
         title="Find Patient "
-        columns={[
-          // { title: " ID", field: "Id" },
-          {
-            title: "Patient Name",
-            field: "name",
-            hidden: showPPI,
-          },
-          {
-            title: "Hospital Number",
-            field: "hospital_number",
-            filtering: false,
-          },
-          { title: "Sex", field: "gender", filtering: false },
-          { title: "Age", field: "age", filtering: false },
-          //{ title: "Enrollment Status", field: "v_status", filtering: false },
-          //{ title: "ART Number", field: "v_status", filtering: false },
-          // { title: "ART Status", field: "status", filtering: false },
-          { title: "Actions", field: "actions", filtering: false },
-        ]}
         //isLoading={loading}
-        data={(query) =>
-          new Promise((resolve, reject) =>
-            axios
-              .get(
-                `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-              )
-              .then((response) => response)
-              .then((result) => {
-                console.log("general PMTCT PATIENT", result);
-                resolve({
-                  data: result.data.records.map((row) => ({
-                    name: (
-                      <Link
-                        to={{
-                          pathname: "/patient-history",
-                          state: { patientObj: row },
-                        }}
-                        title={"Click to view patient dashboard"}
-                      >
-                        {" "}
-                        {row.surname ? row.surname : row.fullName}
-                      </Link>
-                    ),
-
-                    hospital_number: row.hospitalNumber,
-                    gender: row && row.sex ? row.sex : "Female",
-                    age: row.age,
-                    actions: (
-                      <div>
-                        <Link
-                          to={{
-                            pathname: "/patient-history",
-                            state: { patientObj: row },
-                          }}
-                        >
-                          <ButtonGroup
-                            variant="contained"
-                            aria-label="split button"
-                            style={{
-                              backgroundColor: "rgb(153, 46, 98)",
-                              height: "30px",
-                              width: "215px",
-                            }}
-                            size="large"
-                          >
-                            <Button
-                              color="primary"
-                              size="small"
-                              aria-label="select merge strategy"
-                              aria-haspopup="menu"
-                              style={{ backgroundColor: "rgb(153, 46, 98)" }}
-                            >
-                              <MdDashboard />
-                            </Button>
-                            <Button
-                              style={{ backgroundColor: "rgb(153, 46, 98)" }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#fff",
-                                  fontWeight: "bolder",
-                                }}
-                              >
-                                Patient Dashboard
-                              </span>
-                            </Button>
-                          </ButtonGroup>
-                        </Link>
-                      </div>
-                    ),
-                  })),
-                  page: query.page,
-                  totalCount: result.data.totalRecords,
-                });
-              })
-          )
-        }
+        columns={columns}
+        data={getData}
         options={{
           headerStyle: {
             backgroundColor: "#014d88",

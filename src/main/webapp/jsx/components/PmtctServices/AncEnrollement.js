@@ -87,7 +87,6 @@ const useStyles = makeStyles((theme) => ({
 
 const AncEnrollement = (props) => {
   const patientObj = props.patientObj;
-  console.log(patientObj);
   let history = useHistory();
   const classes = useStyles();
   //const [values, setValues] = useState([]);
@@ -131,7 +130,6 @@ const AncEnrollement = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response);
         setANCSetting(response.data);
       })
       .catch((error) => {
@@ -219,7 +217,7 @@ const AncEnrollement = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
@@ -266,7 +264,8 @@ const AncEnrollement = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                      
+                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
@@ -281,7 +280,7 @@ const AncEnrollement = (props) => {
                   <Label>Expected Date Of Delivery </Label>
                   <InputGroup>
                     <Input
-                      type="Date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
@@ -301,6 +300,7 @@ const AncEnrollement = (props) => {
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
                       value={vital.encounterDate}
+                      disabled
                     />
                   </InputGroup>
                 </FormGroup>
@@ -356,7 +356,7 @@ const AncEnrollement = (props) => {
                   <Label>Test Result</Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}
@@ -415,7 +415,7 @@ const AncEnrollement = (props) => {
                   <Label>Date tested HIV positive</Label>
                   <InputGroup>
                     <Input
-                      type="date"
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                       name="encounterDate"
                       id="encounterDate"
                       onChange={handleInputChangeVitalSignDto}

@@ -40,7 +40,21 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private LocalDate nextAppointmentDate;
     private Integer defaultDays;
     private String ancSetting;
+    private String communitySetting;
+
     private String previouslyKnownHivStatus;
+    private LocalDate  dateOfHepatitisB;
+    private String  hepatitisB;
+    private String testedHepatitisB;
+    private String treatedHepatitisB;
+    private String referredHepatitisB;
+
+    private LocalDate  dateOfHepatitisC;
+    private String  hepatitisC;
+    private String testedHepatitisC;
+    private String treatedHepatitisC;
+    private String referredHepatitisC;
+
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")
     private JsonNode partnerInformation;

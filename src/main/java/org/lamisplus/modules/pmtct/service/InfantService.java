@@ -14,7 +14,10 @@ import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.lamisplus.modules.pmtct.domain.entity.InfantArv;
 import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
+import org.lamisplus.modules.pmtct.domain.entity.InfantRapidAntiBodyTest;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.InfantPCRTestRepository;
+import org.lamisplus.modules.pmtct.repository.InfantRapidTestRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,11 +43,14 @@ public class InfantService {
     private final ANCRepository ancRepository;
     private final PersonRepository personRepository;
     private final InfantRepository infantRepository;
+    private final InfantPCRTestRepository infantPCRTestRepository;
     private final UserService userService;
     private final PersonService personService;
     private final InfantVisitService infantVisitService;
     private ObjectMapper mapper = new ObjectMapper();
     private final ApplicationCodesetRepository applicationCodesetRepository;
+private final   InfantRapidTestRepository rapidTestRepository;
+
 
     public InfantDtoResponse save(InfantDto infantDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -87,6 +93,8 @@ public class InfantService {
     }
 
     private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
+
+//        System.out.println("infantArvDto " + infantArvDto);
 //        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
             infantArvDto.setVisitDate(LocalDate.now());
@@ -286,8 +294,8 @@ public class InfantService {
         //delete InfantARV
         infantVisitService.deleteInfantArv(id);
 
-        //delete InfantARV
-        infantVisitService.deleteInfantArv(id);
+        //delete InfantPCR
+        infantVisitService.deleteInfantPCRTestDt(id);
     }
 
 
@@ -306,4 +314,66 @@ public class InfantService {
     public List<Infant> getInfantWithMotherPersonUuid(String personUuid) {
         return infantRepository.findInfantByMotherPersonUuid(personUuid);
     }
+
+
+    public InfantPCRTestDto convertInfanTPCREntityToDTO(InfantPCRTest infantPCREntity) {
+        InfantPCRTestDto infantPCRTestDto = new InfantPCRTestDto();
+        infantPCRTestDto.setId(infantPCREntity.getId());
+        infantPCRTestDto.setVisitDate(infantPCREntity.getVisitDate());
+        infantPCRTestDto.setInfantHospitalNumber(infantPCREntity.getInfantHospitalNumber());
+        infantPCRTestDto.setAncNumber(infantPCREntity.getAncNumber());
+        infantPCRTestDto.setAgeAtTest(infantPCREntity.getAgeAtTest());
+        infantPCRTestDto.setTestType(infantPCREntity.getTestType());
+        infantPCRTestDto.setDateSampleCollected(infantPCREntity.getDateSampleCollected());
+        infantPCRTestDto.setDateSampleSent(infantPCREntity.getDateSampleSent());
+        infantPCRTestDto.setDateResultReceivedAtFacility(infantPCREntity.getDateResultReceivedAtFacility());
+        infantPCRTestDto.setDateResultReceivedByCaregiver(infantPCREntity.getDateResultReceivedByCaregiver());
+        infantPCRTestDto.setResults(infantPCREntity.getResults());
+        infantPCRTestDto.setUuid(infantPCREntity.getUuid());
+        infantPCRTestDto.setUniqueUuid(infantPCREntity.getUniqueUuid());
+        return infantPCRTestDto;
+
+    }
+    public InfantPCRTestDto getLatestPCR(String infantHospitalNumber) {
+        if (!infantHospitalNumber.isEmpty()) {
+            return convertInfanTPCREntityToDTO( infantPCRTestRepository.getLastPCR(infantHospitalNumber));
+        } else {
+            return new InfantPCRTestDto();
+
+        }
+    }
+
+    public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid) {
+
+        String lastVisitId = String.valueOf(rapidTestRepository.getLastInfantVisit(infantHospitalNumber, motherUuid));
+
+        if(!lastVisitId.isEmpty()){
+        InfantRapidAntiBodyTest result= rapidTestRepository.getLastInfantRapid(lastVisitId);
+
+                InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto = new InfantRapidAntiBodyTestDto();
+                infantRapidAntiBodyTestDto.setId(result.getId());
+                infantRapidAntiBodyTestDto.setRapidTestType(result.getRapidTestType());
+            infantRapidAntiBodyTestDto.setAncNumber(result.getAncNumber());
+            infantRapidAntiBodyTestDto.setAgeAtTest(result.getAgeAtTest());
+
+    infantRapidAntiBodyTestDto.setDateOfTest(result.getDateOfTest());
+            infantRapidAntiBodyTestDto.setResult(result.getResult());
+            infantRapidAntiBodyTestDto.setUniqueUuid(result.getUniqueUuid());
+            infantRapidAntiBodyTestDto.setUuid(result.getUuid());
+            return infantRapidAntiBodyTestDto;
+        }else{
+            return new InfantRapidAntiBodyTestDto();
+
+        }
+    }
+
+
+//    public InfantPCRTestDto getAllPCR(String infantHospitalNumber) {
+//        if (!infantHospitalNumber.isEmpty()) {
+//            return convertInfanTPCREntityToDTO( infantPCRTestRepository.getLastPCR(infantHospitalNumber));
+//        } else {
+//            return new InfantPCRTestDto();
+//
+//        }
+//    }
 }

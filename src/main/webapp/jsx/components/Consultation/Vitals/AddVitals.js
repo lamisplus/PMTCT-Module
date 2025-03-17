@@ -58,7 +58,6 @@ const useStyles = makeStyles(theme => ({
 
 const AddVitals = (props) => {
     const patientObj = props.patientObj;
-    console.log(patientObj)
     let history = useHistory();
     const classes = useStyles()
     //const [values, setValues] = useState([]);
@@ -143,7 +142,7 @@ const AddVitals = (props) => {
                                         <Label >Date Of Vital Signs</Label>
                                         <InputGroup> 
                                             <Input 
-                                                type="date"
+                                                type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                                 name="encounterDate"
                                                 id="encounterDate"
                                                 onChange={handleInputChangeVitalSignDto}

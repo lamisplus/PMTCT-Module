@@ -165,7 +165,7 @@ const Recency = (props) => {
             setRecency ({...recency,  ['rencencyInterpretation']: ''});
         }
     },[recency.longTermLine,recency.verififcationLine, recency.controlLine, props.patientObj]);
-    console.log(props.patientObj)
+    // console.log(props.patientObj)
     const handleInputChangeRecency = e => { 
         setErrors({...temp, [e.target.name]:""})        
         if(e.target.name ==='viralLoadResultClassification'){
@@ -215,7 +215,6 @@ const Recency = (props) => {
             objValues.htsClientId= clientId
             objValues.recency= recency
             objValues.personId= patientID
-            console.log(recency)
             axios.put(`${baseUrl}hts/${clientId}/recency`,objValues,
             { headers: {"Authorization" : `Bearer ${token}`}},
             
@@ -299,7 +298,7 @@ const Recency = (props) => {
                                 <FormGroup>
                                     <Label>Test Date *</Label>
                                     <Input
-                                        type="date"
+                                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                         name="optOutRTRITestDate"
                                         id="optOutRTRITestDate"
                                         value={recency.optOutRTRITestDate}
@@ -435,7 +434,7 @@ const Recency = (props) => {
                                             className="form-control"
                                             name="sampleCollectedDate"
                                             id="sampleCollectedDate"
-                                            type="date"
+                                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                             value={recency.sampleCollectedDate}
                                             min={recency.optOutRTRITestDate}
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
@@ -490,7 +489,7 @@ const Recency = (props) => {
                                             className="form-control"
                                             name="dateSampleSentToPCRLab"
                                             id="dateSampleSentToPCRLab"
-                                            type="date"
+                                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                             min={recency.optOutRTRITestDate}
                                             value={recency.dateSampleSentToPCRLab}
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
@@ -509,7 +508,7 @@ const Recency = (props) => {
                                             className="form-control"
                                             name="sampleTestDate"
                                             id="sampleTestDate"
-                                            type="date"
+                                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                             min={recency.optOutRTRITestDate}
                                             max= {moment(new Date()).format("YYYY-MM-DD") }
                                             value={recency.sampleTestDate}

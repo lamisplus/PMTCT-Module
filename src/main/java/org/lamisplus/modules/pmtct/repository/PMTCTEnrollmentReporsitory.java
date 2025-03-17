@@ -12,6 +12,7 @@ import org.lamisplus.modules.pmtct.domain.dto.PatientInfo;
 import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
 import org.lamisplus.modules.pmtct.domain.dto.SingleResultProjectionDTO;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,4 +68,23 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
   List<PMTCTEnrollment> getAllByPersonUuid(String personUuid);
+
+  @Query(nativeQuery = true, value = "SELECT h.hiv_test_result FROM patient_person p\n" +
+          "LEFT JOIN hts_client h on h.person_uuid = p.uuid\n" +
+          "WHERE hiv_test_result IS NOT NULL \n" +
+          "AND h.person_uuid IS NOT NULL \n" +
+          "AND p.hospital_number = ?1 \n" +
+          "AND p.uuid = ?2 ORDER BY h.date_created DESC LIMIT 1 ")
+  String getHtsClientHivStatus(String hospitalNumber, String personUuid);
+
+  @Query(value = "select date_of_delivery from pmtct_enrollment where person_uuid =?1", nativeQuery = true)
+  String getDateOfDelivery(String personUuid);
+
+
+
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
+  boolean checkPatientOnPMTCT(String personUuid);
+
+
+
 }

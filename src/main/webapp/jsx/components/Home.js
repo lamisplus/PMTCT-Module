@@ -9,7 +9,8 @@ import { FaUserPlus } from "react-icons/fa";
 import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
 import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
-
+import CheckedInPatient from "./Patient/CheckedInPatient";
+import { fetchAndStoreAccountData } from "../../utils/localstorage";
 //import PageTitle from "./../layouts/PageTitle";
 const divStyle = {
   borderRadius: "2px",
@@ -17,10 +18,13 @@ const divStyle = {
 };
 
 const Home = (props) => {
-  const [key, setKey] = useState("home");
+  const [key, setKey] = useState("checkedIn");
   const [modalShow, setModalShow] = useState(false);
+  const [showNewButton, setShowNewButton] = useState(false);
+
   useEffect(() => {
-    setKey("home");
+    setKey("checkedIn");
+
   }, []);
 
   return (
@@ -36,7 +40,7 @@ const Home = (props) => {
         </ol>
       </div>
       {/* <Link to={"register-patient"}> */}
-      <Button
+      {/* {showNewButton && <Button
         variant="contained"
         color="primary"
         className=" float-end mb-10"
@@ -48,7 +52,7 @@ const Home = (props) => {
         }}
       >
         <span style={{ textTransform: "capitalize" }}>New Patient</span>
-      </Button>
+      </Button>} */}
       {/* </Link> */}
       <br />
       <br />
@@ -65,19 +69,22 @@ const Home = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-                  <Tab eventKey="home" title="Find Patients">
+                  {/* <Tab eventKey="home" title="Find Patients">
                     <NotEnrollPatients />
-                  </Tab>
-                  <Tab eventKey="anc" title="ANC Patients">
+                  </Tab> */}
+                  <Tab eventKey="checkedIn" title="Checked In Patients">                   
+                    <CheckedInPatient
+                    
+                    />
+                  </Tab>    
+                  {<Tab eventKey="anc" title="ANC Patients">
                     <ANCPatients />
-                  </Tab>
+                  </Tab>}
 
                   <Tab eventKey="pmtct" title="General PMTCT Patients">
                     <PmtctPatients />
                   </Tab>
-                  {/* <Tab eventKey="visualization" title="Data Visualisation">                   
-                    <VisualisationHome />
-                  </Tab>                     */}
+                        
                 </Tabs>
               </div>
             </Card.Body>

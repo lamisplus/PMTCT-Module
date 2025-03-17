@@ -18,6 +18,8 @@ public class ANCWithPersonRequestDto implements Serializable
     private Long id;
     private String ancNo;
     private String ancSetting;
+    private String communitySetting;
+
     private LocalDate firstAncDate;
     private Integer gravida;
     private Integer parity;
@@ -35,4 +37,17 @@ public class ANCWithPersonRequestDto implements Serializable
     private PartnerNotification partnerNotification;
     private PersonDto personDto;
     private String previouslyKnownHivStatus;
+
+    private LocalDate  dateOfHepatitisB;
+    private String  hepatitisB;
+    private String testedHepatitisB;
+    private String treatedHepatitisB;
+    private String referredHepatitisB;
+
+    private LocalDate  dateOfHepatitisC;
+    private String  hepatitisC;
+    private String testedHepatitisC;
+    private String treatedHepatitisC;
+    private String referredHepatitisC;
+
 }

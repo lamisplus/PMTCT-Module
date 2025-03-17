@@ -31,5 +31,5 @@
      private String hepatitisB;
      private String urinalysis;
      private String timeOfHivDiagnosis;
-
+     private String dateOfDelivery;
  }

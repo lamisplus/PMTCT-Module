@@ -1,10 +1,4 @@
 package org.lamisplus.modules.pmtct.service;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,26 +18,47 @@ import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.*;
-import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
+import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.Delivery;
+import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
-import org.springframework.context.annotation.Lazy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.lamisplus.modules.pmtct.service.CurrentUserOrganizationService;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.*;
+
 
 @Service
 @RequiredArgsConstructor
 public class PMTCTEnrollmentService {
-  private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
-  private final ANCRepository ancRepository;
+    private static final Logger log = LoggerFactory.getLogger(PMTCTEnrollmentService.class);
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+ @Autowired
+  private  ANCRepository ancRepository;
   private final PersonRepository personRepository;
   private final UserService userService;
+
   private final PersonService personService;
   private final OrganisationUnitRepository organisationUnitRepository;
   private final ApplicationCodesetRepository applicationCodesetRepository;
   private final InfantVisitService infantVisitService;
   private final CurrentUserOrganizationService currentUserOrganizationService;
+
+  @Autowired
+  private  DeliveryService   deliveryService;
+
+@Autowired
+private ANCService ancService;
+
+@Autowired
+private DeliveryRepository deliveryRepository;
 
     public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
       //System.out.println(pmtctEnrollmentRequestDto);
@@ -80,6 +95,8 @@ public class PMTCTEnrollmentService {
         pmtctEnrollment.setLmp(pmtctEnrollmentRequestDto.getLmp());
         pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
         pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
+        pmtctEnrollment.setDateOfDelivery(pmtctEnrollmentRequestDto.getDateOfDelivery());
+
 
         if (pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
             pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
@@ -93,12 +110,14 @@ public class PMTCTEnrollmentService {
         pmtctEnrollment.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
         ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
         if (anc != null) {
-            pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
+//            pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
             pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
             pmtctEnrollment.setFacilityId(anc.getFacilityId());
             pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
             pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
         }
+
+
         pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
         pmtctEnrollment.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
@@ -280,6 +299,8 @@ public class PMTCTEnrollmentService {
            pmtctEnrollmentRespondDto.setHepatitisB(pmtctEnrollment.getHepatitisB());
            pmtctEnrollmentRespondDto.setUrinalysis(pmtctEnrollment.getUrinalysis());
            pmtctEnrollmentRespondDto.setTimeOfHivDiagnosis(pmtctEnrollment.getTimeOfHivDiagnosis());
+           pmtctEnrollmentRespondDto.setDateOfDelivery(pmtctEnrollment.getDateOfDelivery());
+
            PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
            if(pmtct != null) {
                pmtctEnrollmentRespondDto.setHospitalNumber(pmtct.getHospitalNumber());
@@ -372,6 +393,19 @@ public class PMTCTEnrollmentService {
 //        return pmtctEnrollmentRequestDto;
 //    }
 
+    public void  updateDateOfDeliveryFromDelivery(String personUuid, String deliveryDate, Integer ga)
+    {
+        Optional <PMTCTEnrollment> pmtctEnrollment = Optional.ofNullable(this.pmtctEnrollmentReporsitory.findPMTCTEnrollmentByPersonUuid(personUuid));
+        if(pmtctEnrollment.isPresent())
+        {
+            PMTCTEnrollment pmtctEnrollment1 = pmtctEnrollment.get();
+            pmtctEnrollment1.setDateOfDelivery(deliveryDate);
+            pmtctEnrollment1.setGAWeeks(ga);
+
+            this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
+        }
+    }
+
     public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto)
     {
         Optional <PMTCTEnrollment> pmtctEnrollment = this.pmtctEnrollmentReporsitory.findById(id);
@@ -390,9 +424,22 @@ public class PMTCTEnrollmentService {
             pmtctEnrollment1.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
             pmtctEnrollment1.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
             pmtctEnrollment1.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
+            pmtctEnrollment1.setDateOfDelivery(pmtctEnrollmentRequestDto.getDateOfDelivery());
             pmtctEnrollment1.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
+
+
+
+
+//            check if the patient has LD record and update the GA
+            Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(pmtctEnrollmentRequestDto.getPersonUuid());
+
+            if(deliverys.isPresent()){
+
+                deliveryService.updateDateOfDeliveryFromPMTCT(pmtctEnrollmentRequestDto.getPersonUuid(), pmtctEnrollmentRequestDto.getDateOfDelivery(), pmtctEnrollmentRequestDto.getGAWeeks());
+
+            }
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
         }
         return pmtctEnrollmentRequestDto;
@@ -406,5 +453,29 @@ public class PMTCTEnrollmentService {
         PMTCTEnrollment existingPMTCTEnrollment = this.getSinglePmtctEnrollment(id);
         this.pmtctEnrollmentReporsitory.delete(existingPMTCTEnrollment);
     }
+    public String getDeliveryDate(String personUuid) {
+      String deliveryDate =  pmtctEnrollmentReporsitory.getDateOfDelivery(personUuid);
 
+        if(deliveryDate != ""){
+         return deliveryDate;
+        }else{
+            return "";
+        }
+
+    }
+
+    public String getHIVStatus(String hospitalNumber, String personUuid) {
+        if (!hospitalNumber.isEmpty()) {
+            return pmtctEnrollmentReporsitory.getHtsClientHivStatus(hospitalNumber, personUuid);
+        } else {
+            return "";
+        }
+    }
+
+
+
+    public boolean checkPatientOnPMTCT(String personUuid) {
+       return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
+
+    }
 }

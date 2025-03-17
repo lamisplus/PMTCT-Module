@@ -75,7 +75,6 @@ function PatientCard(props) {
   useEffect(() => {
     PatientCurrentStatus();
     CheckBiometric();
-    console.log("patient", patientObj);
   }, [props.patientObj]);
 
   //Get list of KP
@@ -95,7 +94,7 @@ function PatientCard(props) {
               setDevices(response.data);
             })
             .catch((error) => {
-              console.log(error);
+              console.error(error);
             });
         }
       })
@@ -128,8 +127,7 @@ function PatientCard(props) {
   const getAddress = (identifier) => {
     const identifiers = identifier;
     const address = identifiers?.address.find((obj) => obj.city);
-    const houseAddress =
-      address && address.line[0] !== null ? address.line[0] : "";
+    const houseAddress = address && address?.line[0] !== null ? address?.line[0] : "";
     const landMark =
       address && address.city && address.city !== null ? address.city : "";
     return address ? houseAddress + " " + landMark : "";
@@ -257,14 +255,8 @@ function PatientCard(props) {
                           >
                             HIV Status
                             <Label.Detail>
-                              {props.patientObj.dynamicHivStatus !== "Unknown"
-                                ? props.patientObj.dynamicHivStatus
-                                  ? props.patientObj.dynamicHivStatus
-                                  : props.patientObj.staticHivStatus
-                                : ""}
-                              {props.patientObj.hivStatus !== "Unknown"
-                                ? props.patientObj.hivStatus
-                                : props.patientObj.hivStatus}
+                                {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+                      
                             </Label.Detail>
                           </Label>
                         </Typography>

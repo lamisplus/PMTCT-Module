@@ -98,7 +98,6 @@ const useStyles = makeStyles((theme) => ({
 
 
 const BasicInfo = (props) => {
-    console.log(props)
     const classes = useStyles();
     const history = useHistory();
     const [errors, setErrors] = useState({});
@@ -462,7 +461,7 @@ const BasicInfo = (props) => {
                                 <FormGroup>
                                 <Label for="">Visit Date  </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="dateVisit"
                                     id="dateVisit"
                                     value={objValues.dateVisit}

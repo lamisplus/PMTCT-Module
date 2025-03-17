@@ -11,12 +11,14 @@ import PatientDetail from "./main/webapp/jsx/components/Patient/PatientDetail";
 import RegisterPatientPage from "./main/webapp/jsx/components/Patient/RegisterPatient";
 import EnrollPatientPage from "./main/webapp/jsx/components/Patient/EnrollPatient";
 import UpdatePatientEnrollment from "./main/webapp/jsx/components/Patient/UpdatePatientEnrollment";
-
+import CheckedInPatientsAlert from "./main/webapp/jsx/components/Globals/CheckinPatientsAlert";
 export default function App() {
   return (
     <Router>
       <div>
         <ToastContainer />
+
+        <CheckedInPatientsAlert />
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>

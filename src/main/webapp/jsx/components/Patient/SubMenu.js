@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Dropdown, Menu } from "semantic-ui-react";
 import { makeStyles } from "@material-ui/core/styles";
 import { url as baseUrl, token } from "../../../api";
+import { usePermissions } from "../../../hooks/usePermissions";
 
 const useStyles = makeStyles((theme) => ({
   navItemText: {
@@ -11,6 +12,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function SubMenu(props) {
+  const { hasPermission } = usePermissions();
+
   const classes = useStyles();
   let gender = "";
   const patientObjs = props.patientObj ? props.patientObj : {};
@@ -18,10 +21,24 @@ function SubMenu(props) {
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
   const [deliveryStatus, setDeliveryStatus] = useState(false);
-
+  const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+  const [isOnPMTCT, setIsOnPMTCT] = useState(props?.patientObj?.pmtctRegStatus? props?.patientObj?.pmtctRegStatus: props?.patientObj?.isOnPmtct)
   let mentalStatus = false;
   let initialEvaluationStatus = false;
+
+
+  const permissions = useMemo(
+    () => ({
+      canSeePMTCT: hasPermission("maternal_cohort_register" ),
+      canSeeDelivery: hasPermission("delivery_register"),
+
+    }),
+    [hasPermission]
+  );
+
+
   useEffect(() => {
+    
     props.deliveryInfo.filter((each) => {
       if (each.activityName === "Labour and Delivery") {
         setDeliveryStatus(true);
@@ -32,6 +49,8 @@ function SubMenu(props) {
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
+
+
   }, [props.patientObj]);
 
   useEffect(() => {
@@ -44,6 +63,12 @@ function SubMenu(props) {
     });
     // console.log(props.deliveryInfo);
   }, [props.deliveryInfo]);
+
+useEffect(()=>{
+  getPMTCTStatus()
+}, [props.enrollPMTCT])
+
+
   //Get list of RegimenLine
   const Observation = () => {
     axios
@@ -67,6 +92,29 @@ function SubMenu(props) {
         //console.log(error);
       });
   };
+
+
+  const getPMTCTStatus = () => {
+  
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/is-on-pmtct?personUuid=${
+          patientObj.person_uuid
+            ? patientObj.person_uuid
+            : patientObj.personUuid
+        }`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setIsOnPMTCT(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    
+  };
   const loadAncPnc = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });
   };
@@ -79,6 +127,7 @@ function SubMenu(props) {
   const onClickConsultation = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "consultation" });
   };
+  
   const onClickHome = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "recent-history" });
   };
@@ -91,6 +140,13 @@ function SubMenu(props) {
   const onClickPartner = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "partners" });
   };
+  const onClickPatientVisit = (row) => {
+    props.setActiveContent({ ...props.activeContent, route: "patient-visit" });
+  };
+
+
+
+
   const loadPatientHistory = () => {
     props.setActiveContent({
       ...props.activeContent,
@@ -104,15 +160,13 @@ function SubMenu(props) {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-        {(patientObj.dynamicHivStatus === "Positive" ||
-          patientObj.staticHivStatus === "Positive" ||
-          patientObj?.hivStatus === "Positive") && (
+        {(patientStatus === "Positive") && (
           <>
-            {patientObj.pmtctRegStatus !== true ? (
+            {isOnPMTCT !== true ? (
               <>
-                <Menu.Item onClick={() => loadAncPnc()}>
+                {permissions.canSeePMTCT &&<Menu.Item onClick={() => loadAncPnc()}>
                   PMTCT Enrollment
-                </Menu.Item>
+                </Menu.Item>}
               </>
             ) : (
               <>
@@ -120,7 +174,7 @@ function SubMenu(props) {
                   Follow Up Visit
                 </Menu.Item>
 
-                {patientObj.deliveryStatus !== true &&
+                {permissions.canSeeDelivery && patientObj.deliveryStatus !== true &&
                   deliveryStatus !== true && (
                     <Menu.Item onClick={() => loadLabourDelivery()}>
                       Labour and Delivery
@@ -137,13 +191,16 @@ function SubMenu(props) {
                   {" "}
                   Infant Information
                 </Menu.Item>
+                <Menu.Item onClick={() => onClickPatientVisit()}>
+                  {" "}
+                  Checked-In History
+                </Menu.Item>
               </>
             )}
           </>
         )}
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
-      {console.log(patientObj)}
     </div>
   );
 }

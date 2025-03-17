@@ -277,11 +277,7 @@ const Labourpartner = (props) => {
                       value={partnerHivStatus}
                       disabled
                     />
-                    {/* {console.log(
-                      props.patientObj.dynamicHivStatus,
-                      props?.patientObj?.staticHivStatus,
-                      props?.patientObj?.hivStatus
-                    )} */}
+                 
                   </InputGroup>
                   {errors.ancNo !== "" ? (
                     <span className={classes.error}>{errors.ancNo}</span>
@@ -428,7 +424,7 @@ const Labourpartner = (props) => {
                       </Label>
 
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateConfirmedHivTest"
                         id="dateConfirmedHivTest"
                         value={partner.dateConfirmedHivTest}

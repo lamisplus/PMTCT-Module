@@ -102,6 +102,7 @@ const LabourinfantInfo = (props) => {
   const [infantHospitalNumber, setInfantHospitalNumber] = useState("");
   const [agectx, setAgeCTX] = useState([]);
   const [ageAtTestList, setAtTestList] = useState([]);
+  const [PCRList, setPCRList] = useState([]);
 
   const [infantArv, setInfantArv] = useState([]);
   //Vital signs clinical decision support
@@ -141,6 +142,7 @@ const LabourinfantInfo = (props) => {
     infantHospitalNumber: infantHospitalNumber,
     results: "",
     testType: "",
+
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "",
@@ -149,6 +151,8 @@ const LabourinfantInfo = (props) => {
     infantArvTime: "",
     infantArvType: "",
     infantHospitalNumber: infantHospitalNumber ? infantHospitalNumber : "",
+    dateOfCtx: "",
+    dateOfArv: "",
   });
   const INFANT_PCR_RESULT = () => {
     axios
@@ -233,7 +237,28 @@ const LabourinfantInfo = (props) => {
   const handleInputChangeInfantArvDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
-    setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+    if(e.target.name === "dateOfCtx"){
+
+      let result =calculateAgeAtCTX(e.target.value)
+
+      setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , ageAtCtx:  result })
+  
+    }else if(e.target.name === "dateOfArv"){
+
+      let result =calculateArvProphylaxis(e.target.value)
+
+      setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , infantArvTime:  result })
+  
+    }else if(e.target.name ===  "infantArvType"){
+
+      setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+
+      setErrors({ ...errors, [e.target.name]: "", dateOfArv: "" });
+
+    }else{
+      setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+
+    }
   };
 
   //This is to get infant hospital numbet when viewing or updating infant
@@ -268,10 +293,12 @@ const LabourinfantInfo = (props) => {
     SEX();
     AGE_CTX_INITIATION();
     INFANT_ARV_PROPHYLAXIS_TYPE();
+    PCR_SAMPLE_TYPE()
     // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
       let weeks = calculateAgeInWeek(infantInfo.dateOfDelivery);
+    //  weeks < 7
       if (weeks < 7) {
         setInfantPCRTestDto({
           ...infantPCRTestDto,
@@ -288,6 +315,7 @@ const LabourinfantInfo = (props) => {
             //console.log(error);
           });
       }
+
       if (weeks > 11) {
         setInfantPCRTestDto({
           ...infantPCRTestDto,
@@ -336,6 +364,63 @@ const LabourinfantInfo = (props) => {
         //console.log(error);
       });
   };
+
+
+  const PCR_SAMPLE_TYPE = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/INFANT_TESTING_PCR`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        let newInfantPcrList =[]
+        //console.log(response.data);
+         
+            response?.data.map((each, index)=>{
+              if(each.code === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
+                newInfantPcrList.push(each)
+              }
+
+            })
+          
+
+        setPCRList(newInfantPcrList);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+  const calculateAgeAtCTX  =(dateaOfCTX)=>{
+    const deliveryDate = moment(infantInfo.dateOfDelivery ? infantInfo.dateOfDelivery : newDateOfDelivery)
+
+    const lastCTX  = moment(dateaOfCTX)
+
+        if(lastCTX.diff(deliveryDate, 'months')  <  2){
+            return "AGE_CTX_INITIATION_<_2__MONTHS";        
+
+        }else{
+
+          return "AGE_CTX_INITIATION_≥_2__MONTHS";     
+           }
+
+  }
+
+  
+
+  const calculateArvProphylaxis  =(dateaOfCTX)=>{
+    const deliveryDate = moment(infantInfo.dateOfDelivery ? infantInfo.dateOfDelivery : newDateOfDelivery)
+    const lastCTX  = moment(dateaOfCTX)
+        if(lastCTX.diff(deliveryDate, 'hours')  < 72){
+            return "Within 72 hour";        
+        }else{
+          return "After 72 hour";        }
+  }
+
+
+
+
+
   const handleInputChangeinfantInfoDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     if (e.target.name === "hospitalNumber" && e.target.value !== "") {
@@ -361,8 +446,10 @@ const LabourinfantInfo = (props) => {
         }
       }
       getHosiptalNumber();
-    }
-    if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
+
+      setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
+
+    }else  if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
       let weeks = calculateAgeInWeek(e.target.value);
 
       if (weeks < 7) {
@@ -391,24 +478,20 @@ const LabourinfantInfo = (props) => {
             //console.log(error);
           });
       }
-      // if (obj?.infantPCRTestDto?.results === "INFANT_PCR_RESULT_POSITIVE") {
-      //   setInfantPCRTestDto({
-      //     ...infantPCRTestDto,
-      //     testType: "Confirmatory PCR",
-      //   });
-      //   axios
-      //     .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     })
-      //     .then((response) => {
-      //       setAtTestList(response.data);
-      //     })
-      //     .catch((error) => {
-      //       //console.log(error);
-      //     });
-      // }
+      setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
+
+    }else if(e.target.name === "ctxStatus"){
+      setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value});
+      setInfantArvDto({...infantArvDto, dateOfCtx: "" })
+      
+      
+      setErrors({ ...errors, [e.target.name]: "", dateOfCtx: "" });
+
+    }else{
+      setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
+
     }
-    setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
+
   };
 
   const AGE_CTX_INITIATION = () => {
@@ -434,6 +517,9 @@ const LabourinfantInfo = (props) => {
     // temp.ageAtTest = infantPCRTestDto.ageAtTest ? "" : "This field is required";
     //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
     temp.sex = infantInfo.sex ? "" : "This field is required";
+    infantInfo.ctxStatus === "YES" && ( temp.dateOfCtx =infantArvDto.dateOfCtx? "" : "This field is required");
+    infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+
     //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
     setErrors({
       ...temp,
@@ -443,10 +529,12 @@ const LabourinfantInfo = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (validate()) {
       setSaving(true);
       infantInfo.infantArvDto = infantArvDto;
       infantInfo.infantPCRTestDto = infantPCRTestDto;
+
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
           .put(
@@ -472,7 +560,6 @@ const LabourinfantInfo = (props) => {
             });
           });
       } else {
-        console.log(infantInfo);
         axios
           .post(`${baseUrl}pmtct/anc/add-infants`, infantInfo, {
             headers: { Authorization: `Bearer ${token}` },
@@ -595,7 +682,8 @@ const LabourinfantInfo = (props) => {
                     </FormLabelName>
                     <InputGroup>
                       <Input
-                        type="date"
+                        type="date"             
+                        onKeyPress={(e)=>{e.preventDefault()}}
                         // disabled={true}
                         name="dateOfDelivery"
                         id="dateOfDelivery"
@@ -607,6 +695,7 @@ const LabourinfantInfo = (props) => {
                             ? infantInfo.dateOfDelivery
                             : newDateOfDelivery
                         }
+                        disabled={true}
                         // disabled={infantInfo.dateOfDelivery ? true : false}
                       />
                     </InputGroup>
@@ -794,6 +883,33 @@ const LabourinfantInfo = (props) => {
                       )}
                     </FormGroup>
                   </div>
+               { infantInfo.ctxStatus === "YES" &&<div className=" mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName>Date of CTX initiation</FormLabelName>
+                      <Input
+                        type="date"                  
+                         onKeyPress={(e)=>{e.preventDefault()}}
+                        name="dateOfCtx"
+                        id="dateOfCtx"
+                        value={infantArvDto.dateOfCtx}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantInfo.dateOfDelivery}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateOfCtx !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateOfCtx}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>}
 
                   <div className=" mb-3 col-md-4 ">
                     <FormGroup>
@@ -843,9 +959,8 @@ const LabourinfantInfo = (props) => {
                         }}
                         disabled={disabledField}
                       >
-                        {console.log(infantArvDto.infantArvType)}
 
-                        <option value="select">Select </option>
+                        <option value="">Select </option>
                         {infantArv.map((value) => (
                           <option key={value.id} value={value.code}>
                             {value.display}
@@ -861,6 +976,35 @@ const LabourinfantInfo = (props) => {
                       )}
                     </FormGroup>
                   </div>
+
+                  { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  &&<div className=" mb-3 col-md-4">
+                    <FormGroup>
+                      <FormLabelName>Date of ARV Prophylaxis</FormLabelName>
+                      <Input
+                        type="date"                  
+                         onKeyPress={(e)=>{e.preventDefault()}}
+                        name="dateOfArv"
+                        id="dateOfArv"
+                        value={infantArvDto.dateOfArv}
+                        onChange={handleInputChangeInfantArvDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        min={infantInfo.dateOfDelivery}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                      {errors.dateOfArv !== "" ? (
+                        <span className={classes.error}>
+                          {errors.dateOfArv}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>}
+
                   <div className=" mb-3 col-md-4">
                     <FormGroup>
                       <FormLabelName> Timing of ARV Prophylaxis </FormLabelName>
@@ -878,7 +1022,7 @@ const LabourinfantInfo = (props) => {
                       >
                         <option value="select">Select </option>
                         <option value="Within 72 hour">Within 72 hour </option>
-                        <option value="After 72 hour ">After 72 hour </option>
+                        <option value="After 72 hour">After 72 hour </option>
                       </Input>
                       {errors.infantArvTime !== "" ? (
                         <span className={classes.error}>
@@ -985,17 +1129,12 @@ const LabourinfantInfo = (props) => {
                         // disabled
                       >
                         <option value="">Select </option>
-                        <option value="First PCR">First PCR</option>
-                        <option value="Second PCR">Second PCR</option>
-                        <option value="Confirmatory PCR">
-                          Confirmatory PCR
-                        </option>
-                        <option value="First Rapid Antibody">
-                          First Rapid Antibody{" "}
-                        </option>
-                        <option value="Second Rapid Antibody ">
-                          Second Rapid Antibody{" "}
-                        </option>
+
+                        {PCRList.length > 0 && PCRList.map((each, index)=>{
+
+                          return <option value={each.code}>{each.display}</option>
+                        })}
+                       
                       </Input>
                       {errors.testType !== "" ? (
                         <span className={classes.error}>{errors.testType}</span>
@@ -1008,7 +1147,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date sample collected</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleCollected"
                         id="dateSampleCollected"
                         value={infantPCRTestDto.dateSampleCollected}
@@ -1034,7 +1173,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date Sample Sent</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleSent"
                         id="dateSampleSent"
                         value={infantPCRTestDto.dateSampleSent}
@@ -1062,7 +1201,7 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date Result Received</FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedAtFacility"
                         id="dateResultReceivedAtFacility"
                         value={infantPCRTestDto.dateResultReceivedAtFacility}
@@ -1090,7 +1229,7 @@ const LabourinfantInfo = (props) => {
                         Date Result Received By Caregiver
                       </FormLabelName>
                       <Input
-                        type="date"
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedByCaregiver"
                         id="dateResultReceivedByCaregiver"
                         value={infantPCRTestDto.dateResultReceivedByCaregiver}

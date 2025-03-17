@@ -12,10 +12,13 @@ import java.io.Serializable;
 public class InfantArvDto implements Serializable
 {
     private Long id;
+    private Long infantId;
+
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
     private String infantArvType;
+    private String otherProphylaxisType;
     private String infantArvTime;
     private String arvDeliveryPoint;
     private String uuid;
@@ -23,5 +26,7 @@ public class InfantArvDto implements Serializable
     private String timingOfAvrAfter72Hours;
     private String timingOfAvrWithin72Hours;
     private String  uniqueUuid;
+    private LocalDate dateOfCtx;
+    private LocalDate dateOfArv;
 
 }

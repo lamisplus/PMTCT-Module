@@ -130,7 +130,7 @@ const BasicInfo = (props) => {
                                 <FormGroup>
                                 <Label for="">Date Of Birth </Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="dateOfLastViralLoad"
                                     id="dateOfLastViralLoad"
                                     // value={objValues.dateOfLastViralLoad}
@@ -363,7 +363,7 @@ const BasicInfo = (props) => {
                                 <FormGroup>
                                 <Label for="">If contract by which date will partner come for testing?</Label>
                                 <Input
-                                    type="date"
+                                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                                     name="dateOfEac1"
                                     id="dateOfEac1"
                                     // value={objValues.dateOfEac1}

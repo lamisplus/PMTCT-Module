@@ -162,7 +162,6 @@ const ClinicVisit = (props) => {
 
         const lastVitalSigns = response.data[response.data.length - 1]
         if (lastVitalSigns.encounterDate === moment(new Date()).format("YYYY-MM-DD") === true) {
-          console.log(lastVitalSigns)
           setcurrentVitalSigns(lastVitalSigns)
           setShowCurrentVitalSigns(true)
         }
@@ -275,7 +274,6 @@ const ClinicVisit = (props) => {
   const handleCheckBox = e => {
     if (e.target.checked) {
       //currentVitalSigns.personId === null ? props.patientObj.id : currentVitalSigns.personId
-      console.log(currentVitalSigns)
       setVitalSignDto({ ...currentVitalSigns })
     } else {
       setVitalSignDto({
@@ -338,7 +336,6 @@ const ClinicVisit = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(getPatientObj)
     if(validate()){
     setSaving(true)
     objValues.visitDate = vital.encounterDate
@@ -435,7 +432,7 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName >Date of Visit </FormLabelName>
                   <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="encounterDate"
                     id="encounterDate"
                     value={vital.encounterDate}
@@ -685,7 +682,7 @@ const ClinicVisit = (props) => {
             <br /><br />
             {/* TB Screening Form */}
             <Input
-                    type="date"
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="nextAppointment"
                     id="nextAppointment"
                     value={vital.nextAppointment}
