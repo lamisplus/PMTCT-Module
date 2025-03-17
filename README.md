@@ -72,3 +72,6 @@
 - Ganiyat Yakub   https://github.com/Ganiyatyakub
 - Victor Ajor   https://github.com/AJ-DataFI
 - Mathew Adegbite https://github.com/mathewade 
+
+### Special mentions.
+- Dr Karim Usman https://github.com/drkusman
