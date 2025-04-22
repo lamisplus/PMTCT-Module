@@ -111,7 +111,8 @@ const InfantInformation = (props) => {
       })
 
       .catch((error) => {
-        //console.log(error);
+        console.log("the errr", error);
+
       });
   };
   ///GET Delivery Object
@@ -119,7 +120,7 @@ const InfantInformation = (props) => {
     setLoading(true);
     if (props.patientObj.ancNo) {
       axios
-        .get(`${baseUrl}pmtct/anc/view-delivery2/${props.patientObj.ancNo}`, {
+        .get(`${baseUrl}pmtct/anc/view-delivery2?ancNo=${props.patientObj.ancNo}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -208,10 +209,14 @@ const InfantInformation = (props) => {
 
   return (
     <div>
+      {console.log("infants.length", infants.length )}
+      {console.log("aliveChild",   aliveChild )}
+
       {infants.length < aliveChild &&
         aliveChild > infants.length &&
-        props.patientObj.entryPoint !== "POINT_ENTRY_PMTCT_POSTNATAL_WARD" &&
-        props.patientObj.entryPoint !== "621" && (
+        // props.patientObj.entryPoint !== "POINT_ENTRY_PMTCT_POSTNATAL_WARD" &&
+        // props.patientObj.entryPoint !== "621"  &&
+        (
           <>
             <Button
               variant="contained"
@@ -225,7 +230,7 @@ const InfantInformation = (props) => {
             </Button>
           </>
         )}
-      {props.patientObj.entryPoint === "POINT_ENTRY_PMTCT_POSTNATAL_WARD" ||
+      {/* {props.patientObj.entryPoint === "POINT_ENTRY_PMTCT_POSTNATAL_WARD" ||
         (props.patientObj.entryPoint === "621" && (
           <>
             <Button
@@ -239,7 +244,7 @@ const InfantInformation = (props) => {
               <span style={{ textTransform: "capitalize" }}>New Infant</span>
             </Button>
           </>
-        ))}
+        ))} */}
       <br />
       <br />
       <br />

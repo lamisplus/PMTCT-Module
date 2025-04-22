@@ -662,4 +662,14 @@
             ALTER TABLE pmtct_infant_arv ADD COLUMN other_prophylaxis_type character varying;
         </sql>
     </changeSet>
+    <changeSet failOnError="true"  id="2025-04-03-111" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="expected_delivery_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN expected_delivery_date character varying;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

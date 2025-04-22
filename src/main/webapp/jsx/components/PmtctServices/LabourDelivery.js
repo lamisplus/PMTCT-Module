@@ -414,12 +414,12 @@ const LabourDelivery = (props) => {
     temp.maternalOutcome = delivery.maternalOutcome
       ? ""
       : "This field is required";
-    temp.hivExposedInfantGivenHbWithin24hrs =
-      delivery.hivExposedInfantGivenHbWithin24hrs
-        ? ""
-        : "This field is required";
-    temp.hcstatus = delivery.hcstatus ? "" : "This field is required";
-    temp.hbstatus = delivery.hbstatus ? "" : "This field is required";
+    // temp.hivExposedInfantGivenHbWithin24hrs =
+    //   delivery.hivExposedInfantGivenHbWithin24hrs
+    //     ? ""
+    //     : "This field is required";
+    // temp.hcstatus = delivery.hcstatus ? "" : "This field is required";
+    // temp.hbstatus = delivery.hbstatus ? "" : "This field is required";
     temp.gaweeks = newGa ? "" : "This field is required";
     temp.feedingDecision = delivery.feedingDecision
       ? ""
@@ -740,6 +740,8 @@ delivery.childStatus !== "" &&
                       <option value="">Select</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
+                      <option value="Unknown">Unknown</option>
+
                     </Input>
                   </InputGroup>
                   {errors.episiotomy !== "" ? (
@@ -766,6 +768,8 @@ delivery.childStatus !== "" &&
                       <option value="">Select</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
+                      <option value="Unknown">Unknown</option>
+
                     </Input>
                   </InputGroup>
                   {errors.vaginalTear !== "" ? (
@@ -866,7 +870,7 @@ delivery.childStatus !== "" &&
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Hepatitis B Status <span style={{ color: "red" }}> *</span>
+                    Hepatitis B Status 
                   </Label>
                   <InputGroup>
                     <Input
@@ -882,17 +886,17 @@ delivery.childStatus !== "" &&
                       <option value="Negative">Negative</option>
                     </Input>
                   </InputGroup>
-                  {errors.hbstatus !== "" ? (
+                  {/* {errors.hbstatus !== "" ? (
                     <span className={classes.error}>{errors.hbstatus}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Hepatitis C Status <span style={{ color: "red" }}> *</span>
+                    Hepatitis C Status
                   </Label>
                   <InputGroup>
                     <Input
@@ -908,11 +912,11 @@ delivery.childStatus !== "" &&
                       <option value="Negative">Negative</option>
                     </Input>
                   </InputGroup>
-                  {errors.hcstatus !== "" ? (
+                  {/* {errors.hcstatus !== "" ? (
                     <span className={classes.error}>{errors.hcstatus}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">
@@ -980,7 +984,7 @@ delivery.childStatus !== "" &&
                 <FormGroup>
                   <Label>
                     HBV exposed infant given Hep B Ig within 24 hrs of birth{" "}
-                    <span style={{ color: "red" }}> *</span>
+                    {/* <span style={{ color: "red" }}> *</span> */}
                   </Label>
                   <InputGroup>
                     <Input
@@ -996,13 +1000,13 @@ delivery.childStatus !== "" &&
                       <option value="No">No</option>
                     </Input>
                   </InputGroup>
-                  {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
+                  {/* {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
                     <span className={classes.error}>
                       {errors.hivExposedInfantGivenHbWithin24hrs}
                     </span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">

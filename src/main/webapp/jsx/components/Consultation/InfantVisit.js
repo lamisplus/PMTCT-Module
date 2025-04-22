@@ -908,7 +908,7 @@ const ClinicVisit = (props) => {
       });
 
       setInfantArvDto({...infantArvDto, dateOfCtx: ""})
-
+      setChoosenInfant({...choosenInfant,ctxStatus:  e.target.value})
       setErrors({ ...temp, [e.target.name]: "" , dateOfCtx: ""});
 
     }else{
@@ -946,6 +946,12 @@ const ClinicVisit = (props) => {
       let result =calculateAgeAtCTX(e.target.value)
 
       setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , ageAtCtx:  result })
+      setChoosenInfant({...choosenInfant, infantArvDto: {...choosenInfant.infantArvDto,dateOfCtx:  e.target.value }})
+
+    }else if(e.target.name === "ageAtCtx"){
+      setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+      setChoosenInfant({...choosenInfant, infantArvDto: {...choosenInfant.infantArvDto,ageAtCtx:  e.target.value }})
+
 
     }else if(e.target.name === "dateOfArv"){
 
@@ -1776,8 +1782,8 @@ const ClinicVisit = (props) => {
                           borderRadius: "0.25rem",
                         }}
                         onChange={handleInputChangeInfantVisitRequestDto}
-                        // disabled={disabledField}
-                        disabled={true}
+                         disabled={disabledField}
+                        // disabled={true}
 
                       >
                         <option value="">Select </option>
@@ -1811,8 +1817,8 @@ const ClinicVisit = (props) => {
                         }}
                         min={choosenInfant.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
-                        // disabled={disabledField}
-                        disabled={true}
+                        disabled={disabledField}
+                        // disabled={true}
 
                       />
                       {errors.dateOfCtx !== "" ? (
@@ -1839,8 +1845,8 @@ const ClinicVisit = (props) => {
                         border: "1px solid #014D88",
                         borderRadius: "0.25rem",
                       }}
-                      // disabled={disabledField}
-                      disabled={true}
+                     disabled={disabledField}
+                      // disabled={true}
 
                     >
                       <option value="select">Select </option>

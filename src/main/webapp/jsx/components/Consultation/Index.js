@@ -16,23 +16,23 @@ const ClinicVisitPage = (props) => {
   const [aliveChild, setAliveChild] = useState(0);
 
   const DeliveryInfo = () => {
-    if (props.patientObj.ancNo) {
-      axios
-        .get(`${baseUrl}pmtct/anc/view-delivery2/${props.patientObj.ancNo}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          // console.log(response.data);
-          setAliveChild(
-            response.data && response.data.numberOfInfantsAlive
-              ? response.data.numberOfInfantsAlive
-              : 0
-          );
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else {
+    // if (props.patientObj.ancNo) {
+    //   axios
+    //     .get(`${baseUrl}pmtct/anc/view-delivery2?ancNo= ${props.patientObj.ancNo}`, {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then((response) => {
+    //       // console.log(response.data);
+    //       setAliveChild(
+    //         response.data && response.data.numberOfInfantsAlive
+    //           ? response.data.numberOfInfantsAlive
+    //           : 0
+    //       );
+    //     })
+    //     .catch((error) => {
+    //       //console.log(error);
+    //     });
+    // } else {
       axios
         .get(
           `${baseUrl}pmtct/anc/view-delivery-with-uuid/${
@@ -57,7 +57,7 @@ const ClinicVisitPage = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-    }
+    // }
   };
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const ClinicVisitPage = (props) => {
                       activeContent={props.activeContent}
                     />
                   </Tab>
-                  {console.log(aliveChild)}
+                  {console.log("aliveChild", aliveChild)}
 
                   {console.log(aliveChild !== 0 && aliveChild > 0)}
                   {aliveChild !== 0 && aliveChild > 0 && (

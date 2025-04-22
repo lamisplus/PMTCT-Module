@@ -23,6 +23,7 @@ import { Spinner } from "reactstrap";
 import moment from "moment";
 import { NoStroller } from "@mui/icons-material";
 import { Grid, Segment, Label, List } from "semantic-ui-react";
+import { set } from "date-fns";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -233,6 +234,11 @@ const LabourinfantInfo = (props) => {
       ...infantPCRTestDto,
       [e.target.name]: e.target.value,
     });
+
+    if(e.target.name === "dateSampleCollected" && e.target.value !== ""){
+      calculateAgeAtTest(e.target.value, e.target.name)
+
+    }
   };
   const handleInputChangeInfantArvDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
@@ -260,6 +266,7 @@ const LabourinfantInfo = (props) => {
 
     }
   };
+
 
   //This is to get infant hospital numbet when viewing or updating infant
   const INFANT_ARV_PROPHYLAXIS_TYPE = () => {
@@ -597,6 +604,41 @@ const LabourinfantInfo = (props) => {
       actionType: "",
     });
   };
+
+  const calculateAgeAtTest= (mainSampleDate, nameInput)=>{
+    let deliveryDate =   moment( infantInfo.dateOfDelivery? infantInfo.dateOfDelivery : newDateOfDelivery )
+    let sampleDate = moment(mainSampleDate)
+//< 72 hrs
+//> 12 month
+// > 72 hrs < 2 month calculateAgeAtTest
+// 2-12 month
+
+
+
+let timeDiffinHrs =sampleDate.diff(deliveryDate, 'hours'); 
+let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months'); 
+
+
+    if(timeDiffinHrs < 72){
+
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_<_72_HRS", [nameInput]: mainSampleDate })
+
+    }else if(timeDiffinMonth > 12){
+
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_>12_MONTHS", [nameInput]: mainSampleDate })
+
+    } else if(timeDiffinHrs > 72 && timeDiffinMonth < 2){
+
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest:  "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS", [nameInput]: mainSampleDate })
+
+    }else if(timeDiffinMonth === 2 && timeDiffinMonth <= 12){
+
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_2-12_MONTHS", [nameInput]: mainSampleDate })
+
+    }
+
+    
+}
 
   return (
     <div>
@@ -1081,38 +1123,7 @@ const LabourinfantInfo = (props) => {
                 <br />
                 {/* LAB Screening Form */}
                 <div className="row mt-3">
-                  <div className=" mb-3 col-md-6">
-                    <FormGroup>
-                      <FormLabelName>Age at Test(months)</FormLabelName>
-                      <Input
-                        type="select"
-                        name="ageAtTest"
-                        id="ageAtTest"
-                        value={infantPCRTestDto.ageAtTest}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        {ageAtTestList.length > 0 &&
-                          ageAtTestList.map((value) => (
-                            <option key={value.id} value={value.code}>
-                              {value.display}
-                            </option>
-                          ))}
-                      </Input>
-                      {errors.ageAtTest !== "" ? (
-                        <span className={classes.error}>
-                          {errors.ageAtTest}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
+               
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
                       <FormLabelName> Sample Type</FormLabelName>
@@ -1148,7 +1159,8 @@ const LabourinfantInfo = (props) => {
                     <FormGroup>
                       <FormLabelName>Date sample collected</FormLabelName>
                       <Input
-                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                        type="date"                    
+                        onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleCollected"
                         id="dateSampleCollected"
                         value={infantPCRTestDto.dateSampleCollected}
@@ -1184,8 +1196,8 @@ const LabourinfantInfo = (props) => {
                           borderRadius: "0.25rem",
                         }}
                         min={infantPCRTestDto.dateSampleCollected}
-                        max={infantPCRTestDto.dateResultReceivedAtFacility}
-                        // max={moment(new Date()).format("YYYY-MM-DD")}
+                        // max={infantPCRTestDto.dateResultReceivedAtFacility}
+                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField}
                       />
                       {errors.dateSampleSent !== "" ? (
@@ -1211,7 +1223,7 @@ const LabourinfantInfo = (props) => {
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
                         }}
-                        min={infantPCRTestDto.dateSampleCollected}
+                        min={infantPCRTestDto.dateSampleSent}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField}
                       />
@@ -1252,6 +1264,43 @@ const LabourinfantInfo = (props) => {
                       )}
                     </FormGroup>
                   </div>
+
+
+
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Age at Test(months)</FormLabelName>
+                      <Input
+                        type="select"
+                        name="ageAtTest"
+                        id="ageAtTest"
+                        value={infantPCRTestDto.ageAtTest}
+                        onChange={handleInputChangeInfantPCRTestDto}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        // disabled={disabledField}
+                        // disabled={true}
+
+                      >
+                        <option value="select">Select </option>
+                        {ageAtTestList.length > 0 &&
+                          ageAtTestList.map((value) => (
+                            <option key={value.id} value={value.code}>
+                              {value.display}
+                            </option>
+                          ))}
+                      </Input>
+                      {errors.ageAtTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.ageAtTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
                       <FormLabelName>Result *</FormLabelName>
@@ -1281,6 +1330,7 @@ const LabourinfantInfo = (props) => {
                       )}
                     </FormGroup>
                   </div>
+         
                 </div>
               </>
               {/* Display notification when maternal outcome is IIT and transfer out */}

@@ -281,7 +281,7 @@ const UserRegistration = (props) => {
     //get Community setting
     const getCommunitySetting = (e) => {
       axios
-        .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        .get(`${baseUrl}application-codesets/v2/COMMUNITY_PMTCT`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -1525,7 +1525,7 @@ const UserRegistration = (props) => {
                        <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
-                            Previously Known HIV Status{" "}
+                          Previously known HIV +ve Status
                             <span style={{ color: "red" }}> *</span>
                           </Label>
                           <InputGroup>
@@ -1534,15 +1534,17 @@ const UserRegistration = (props) => {
                               name="previouslyKnownHivStatus"
                               id="previouslyKnownHivStatus"
                               onChange={handleInputChange}
-                              disabled={
-                                disableHIVStatus
-                                  ? true: false
-                              }
+                              // disabled={
+                              //   disableHIVStatus
+                              //     ? true: false
+                              // }
                               value={objValues.previouslyKnownHivStatus}
                             >
                               <option value="">Select</option>
                               <option value="Yes">Yes</option>
                               <option value="No">No</option>
+                              <option value="Unknown">Unknown</option>
+
                             </Input>
                           </InputGroup>
                           {errors.previouslyKnownHivStatus !== "" ? (
@@ -1601,6 +1603,7 @@ const UserRegistration = (props) => {
                   entrypointValue={locationState.entrypointValue}
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
+                  htsHivStatus={""}
                 />
               )}
               {/* END OF HIV ENROLLEMENT FORM */}
