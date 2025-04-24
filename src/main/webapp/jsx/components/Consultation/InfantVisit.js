@@ -2157,9 +2157,9 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-              {weeksValues < 7 &&
+              {/* {weeksValues < 7 &&
                 choosenInfant?.infantPCRTestDto?.results !==
-                  "INFANT_PCR_RESULT_POSITIVE" && (
+                  "INFANT_PCR_RESULT_POSITIVE" && ( */}
                   <>
                     <div className=" mb-3 col-md-6">
                       <FormGroup>
@@ -2194,7 +2194,8 @@ const ClinicVisit = (props) => {
                           Date Result Received at Facility
                         </FormLabelName>
                         <Input
-                          type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                          type="date"   
+                                              onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateResultReceivedAtFacility"
                           id="dateResultReceivedAtFacility"
                           value={infantPCRTestDto.dateResultReceivedAtFacility}
@@ -2222,7 +2223,8 @@ const ClinicVisit = (props) => {
                           Date Caregiver Given Result
                         </FormLabelName>
                         <Input
-                          type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                          type="date"       
+                                          onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateResultReceivedByCaregiver"
                           id="dateResultReceivedByCaregiver"
                           value={infantPCRTestDto.dateResultReceivedByCaregiver}
@@ -2245,7 +2247,7 @@ const ClinicVisit = (props) => {
                       </FormGroup>
                     </div>
                   </>
-                )}
+                 {/* )} */}
               <div className=" mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>Result</FormLabelName>

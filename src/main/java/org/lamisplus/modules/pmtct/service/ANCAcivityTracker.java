@@ -266,8 +266,8 @@ public class ANCAcivityTracker {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
         List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPersonUuid(personUuid);
         if(!(infantVisits.isEmpty()) ){
-            ActivityTracker activityTracker = new ActivityTracker();
             infantVisits.forEach(infantVisit -> {
+                ActivityTracker activityTracker = new ActivityTracker();
 
                 activityTracker.setActivityName("Infant Visit");
                 activityTracker.setPath("pmtct_infant_visit");
@@ -284,8 +284,10 @@ public class ANCAcivityTracker {
         List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPersonUuid(personUuid, deliveryDate);
         if (!(pmtctVisits1.isEmpty()))
         {
-            ActivityTracker activityTracker = new ActivityTracker();
             pmtctVisits1.forEach(pmtctVisit ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                System.out.println(pmtctVisit);
                 activityTracker.setActivityName("PMTCT Visit");
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
@@ -331,8 +333,9 @@ public class ANCAcivityTracker {
         List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPersonUuid(personUuid, deliveryDate);
         if (!(pmtctVisits.isEmpty()))
         {
-            ActivityTracker activityTracker = new ActivityTracker();
             pmtctVisits.forEach(pmtctVisit ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
                 activityTracker.setActivityName("PMTCT Visit");
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);

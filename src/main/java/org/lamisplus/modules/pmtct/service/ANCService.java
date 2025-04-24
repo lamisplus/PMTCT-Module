@@ -937,6 +937,7 @@ public class ANCService {
             anc.setTreatedSyphilis(ancWithPersonRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancWithPersonRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancWithPersonRequestDto.getReferredSyphilisTreatment());
+            anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
 
             PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
@@ -1120,6 +1121,7 @@ public class ANCService {
         existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
         existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
+        existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());
@@ -1155,6 +1157,7 @@ public class ANCService {
         existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
         existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
+        existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());

@@ -201,6 +201,8 @@ const UserRegistration = (props) => {
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
   //set ro show the facility name field if is transfer in
   const [disableHIVStatus, setDisableHIVStatus] = React.useState(false);
+  const [retrievedPatient, setRetrievedPatient] = useState({})
+  const [htsHivStatus, setHtsHivStatus] = useState("")
 
   const [open, setOpen] = React.useState(false);
   const toggle = () => setOpen(!open);
@@ -277,6 +279,107 @@ const UserRegistration = (props) => {
       });
   };
 
+  // const htsConfirmation=(clientCode)=>{
+  //   let userCode= clientCode
+  //   if(clientCode.includes("&")){
+  //     userCode= encodeURIComponent(userCode)
+  //   }
+  //   axios
+  //   .get(`${baseUrl}pmtct/anc/is-on-hts?clientCode=${userCode}`, {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   })
+  //   .then((response) => {
+  //     if(response.data.status){
+  //       setRetrievedPatient(response.data)
+  //       setHtsHivStatus(response.data.hivResult)
+  //       if(response.data.testingSetting !== ""){
+  //           if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
+  //             //if entry point is diff from ANC
+  //             if(!state.showANC ){
+  //               toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+  //             }else{
+  //               if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+  //                 setShowRegistrationAnc(true)
+  //                 setShowRegistrationButton(true)
+  //                 setShowRegistration(true)
+
+  //               }else{
+
+  //                 toast.error("User has negative HTS result, can't enroll user on PMTCT")
+
+
+  //               }
+             
+
+  //             }
+
+  //           }else if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" ){
+  //             // state.postValue 
+  //               if(state.postValue === "L&D"){
+  //                 if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+  //                   setShowRegistrationButton(true)
+  //                   setShowRegistration(true)
+  //                 }else{
+  
+  //                   toast.error("User has negative HTS result, can't enroll user on PMTCT")
+  
+  
+  //                 }
+           
+  //               }else{
+  //                 toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+    
+  //               }
+
+  //           }else if (response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING"){
+
+
+  //             if(state.postValue === "Post-Partum"){
+  //               if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+  //                 setShowRegistrationButton(true)
+  //                  setShowRegistration(true)
+
+  //               }else{
+
+  //                 toast.error("User has negative HTS result, can't enroll user on PMTCT")
+
+
+  //               }
+             
+  //             }else{
+  //               toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+
+  //             }
+
+
+  //           }else if(response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting !==  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_ANC"){
+  //             // setShowRegistrationButton(true)
+  //             // setShowRegistration(true)
+  //             // setShowRegistrationAnc(true)
+
+  //             toast.error("User has HTS record but it is not PMTCT setting !");
+
+  //           }
+
+
+  //           // if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
+  //           //   setShowRegistrationButton(true)
+  //           // }
+  //       }
+  //     }else{
+  //       let resp= response.data.message
+  //       toast.error(response.data.message);
+
+
+  //     }
+  //   })
+  //   .catch((error) => {
+     
+  //       toast.error("User does not have HTS record !");
+
+  //        });
+
+  // }
 
     //get Community setting
     const getCommunitySetting = (e) => {

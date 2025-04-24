@@ -43,7 +43,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String timeOfHivDiagnosis;
     private String dateOfDelivery;
     private String expectedDeliveryDate;
-
+    private String ancNo;
 
 
     @Override
