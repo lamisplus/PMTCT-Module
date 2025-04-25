@@ -644,8 +644,9 @@ const ClinicVisit = (props) => {
 
         }
 
+
             //check if the last PCR is positive then set the PCRType to confirmatory 
-            if(response?.data && response?.data?.results.includes("POSITIVE")){
+            if(response?.data && response?.data?.results.includes("POSITIVE") &&  !props?.activeContent?.id ){
               let newPCRList = []
               pcrType.map((each, index)=>{
                   if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
@@ -653,6 +654,8 @@ const ClinicVisit = (props) => {
                   }
                 })
                 setPcrType(newPCRList)
+
+            }else{
 
             }
               })
@@ -2073,6 +2076,7 @@ const ClinicVisit = (props) => {
             {/* LAB Screening Form */}
             <div className="row">
               <div className=" mb-3 col-md-6">
+            
                 <FormGroup>
                   <FormLabelName> PCR testing Type</FormLabelName>
                   <Input

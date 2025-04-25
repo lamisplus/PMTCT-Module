@@ -97,7 +97,7 @@ public class ANCService {
             anc.setTreatedSyphilis(ancRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancRequestDto.getReferredSyphilisTreatment());
-
+            anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
             anc.setHospitalNumber(hostpitalNumber);
@@ -806,6 +806,7 @@ public class ANCService {
             anc.setTestedHepatitisC(ancEnrollementRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisC(ancEnrollementRequestDto.getTreatedHepatitisC());
             anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
+            anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
 
@@ -866,6 +867,7 @@ public class ANCService {
         //ancRespondDto.setSourceOfReferral(anc.getSourceOfReferral());
         ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         ancRespondDto.setAncSetting(anc.getAncSetting());
+        ancRespondDto.setCommunitySetting(anc.getCommunitySetting());
 
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
@@ -917,6 +919,7 @@ public class ANCService {
             anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
+            anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
 
