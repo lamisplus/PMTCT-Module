@@ -488,7 +488,7 @@ public class PMTCTController {
     @GetMapping(value = "is-on-hts")
     public  ResponseEntity<RegisterPatientResponseDTO>  getPatientOnHTS(@RequestParam String clientCode) {
 //RegisterPatientResponseDTO
-              return ResponseEntity.ok(pmtctEnrollmentService.checkPatientOnHTS(clientCode));
+              return ResponseEntity.ok(pmtctEnrollmentService.checkPatientOnHTS(clientCode.trim()));
 
 
     }

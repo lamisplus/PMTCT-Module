@@ -13,10 +13,7 @@ import org.lamisplus.modules.pmtct.domain.dto.DeliveryResponseDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
-import org.lamisplus.modules.pmtct.repository.ANCRepository;
-import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
-import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
-import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
+import org.lamisplus.modules.pmtct.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +40,8 @@ public class DeliveryService
     private  PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     @Autowired
     private ANCService ancService;
-
+    @Autowired
+    private InfantRepository infantRepository;
     ObjectMapper mapper = new ObjectMapper();
 
     public DeliveryResponseDto save(DeliveryRequestDto deliveryRequestDto) {
@@ -254,10 +252,14 @@ public class DeliveryService
             delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
             delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+            //check if the chld has been created
+
+            boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());
+            if(hasChild){
+                infantRepository.updateDeliveryDate(deliveryRequestDto.getDateOfDelivery(), deliveryRequestDto.getPersonUuid());
+            }
 
 
-
-            pmtctEnrollmentService.updateDateOfDeliveryFromDelivery(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getDateOfDelivery().toString(), deliveryRequestDto.getGAWeeks());
             this.deliveryRepository.save(delivery);
         }
         return deliveryRequestDto;

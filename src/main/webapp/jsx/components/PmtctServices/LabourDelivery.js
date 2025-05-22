@@ -172,7 +172,34 @@ const LabourDelivery = (props) => {
         getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery")
 
         //  setDisableDeliveryDate(false)
-        setDelivery(response.data);
+        setDelivery({
+          placeOfDelivery: response.data.placeOfDelivery,
+          ancNo: response.data.ancNo,
+          artStartedLdWard: response.data.artStartedLdWard,
+          bookingStatus: response.data.bookingStatus,
+          childGivenArvWithin72: response.data.childGivenArvWithin72,
+          childStatus: response.data.childStatus,
+          dateOfDelivery: response.data.dateOfDelivery,
+          deliveryTime: response.data.deliveryTime,
+          episiotomy: response.data.episiotomy,
+          feedingDecision: response.data.feedingDecision,
+          gaweeks: response.data.gaweeks,
+          hbstatus: response.data.hbstatus,
+          hcstatus: response.data.hcstatus,
+          hivExposedInfantGivenHbWithin24hrs: response.data.hivExposedInfantGivenHbWithin24hrs,
+          nonHbvExposedInfantGivenHbWithin24hrs: response.data.nonHbvExposedInfantGivenHbWithin24hrs,
+          maternalOutcome: response.data.maternalOutcome,
+          maternalOutcomeChild: response.data.maternalOutcomeChild,
+          modeOfDelivery: response.data.modeOfDelivery,
+          onArt: response.data.onArt,
+          referalSource: response.data.referalSource,
+          romDeliveryInterval: response.data.romDeliveryInterval,
+          vaginalTear: response.data.vaginalTear,
+          numberOfInfantsAlive: response.data.numberOfInfantsAlive,
+          numberOfInfantsDead: response.data.numberOfInfantsDead,
+          personUuid:response.data.personUuid
+      
+        });
       })
       .catch((error) => {
         //console.log(error);
@@ -216,7 +243,7 @@ const LabourDelivery = (props) => {
       .then((response) => {
         console.log(response.data)
        if(response.data){
-        setDisableDeliveryDate(true)
+        // setDisableDeliveryDate(true)
         delivery.dateOfDelivery =response.data
         // setDelivery({...delivery, dateOfDelivery: response.data});
         getGestationalAge(response.data, "dateOfDelivery")
@@ -476,6 +503,7 @@ delivery.childStatus !== "" &&
             });
           })
           .catch((error) => {
+            console.log("error ",  error)
             setSaving(false);
             toast.error("Something went wrong", {
               position: toast.POSITION.BOTTOM_CENTER,

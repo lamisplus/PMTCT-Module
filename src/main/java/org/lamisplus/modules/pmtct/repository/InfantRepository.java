@@ -6,8 +6,11 @@ import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,5 +30,15 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
             nativeQuery = true
     )
     Page<Infant> getInfant(Long facilityId, Pageable pageable);
+
+    @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_infant_information WHERE mother_person_uuid = ?1 )", nativeQuery = true)
+    boolean checkInfant(String personUuid);
+
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE public.pmtct_infant_information SET date_of_delivery = ?1 WHERE mother_person_uuid = ?2 ", nativeQuery = true)
+    void updateDeliveryDate(LocalDate deliveryDate , String personUuid);
+
 
 }

@@ -599,17 +599,19 @@ const UserRegistration = (props) => {
               if(!state.showANC ){
                 toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
               }else{
-                if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                // if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
                   setShowRegistrationAnc(true)
                   setShowRegistrationButton(true)
                   setShowRegistration(true)
-
-                }else{
-
-                  toast.error("User has negative HTS result, can't enroll user on PMTCT")
+                  setObjValues({...objValues, staticHivStatus: response.data.hivResult})
 
 
-                }
+                // }else{
+
+                //   toast.error("User has negative HTS result, can't enroll user on PMTCT")
+
+
+                // }
              
 
               }

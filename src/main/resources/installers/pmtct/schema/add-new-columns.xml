@@ -672,4 +672,15 @@
             ALTER TABLE pmtct_enrollment ADD COLUMN expected_delivery_date character varying;
         </sql>
     </changeSet>
+
+    <changeSet failOnError="false" author="Ganiyat" id="remove-con-2025-05-2042">
+        <preConditions onFail="MARK_RAN">
+
+            <columnExists tableName="pmtct_enrollment" columnName="anc_no" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment DROP CONSTRAINT pmtct_enrollment_anc_no_key
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

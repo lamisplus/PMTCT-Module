@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 
 @Service
 //@AllArgsConstructor
@@ -65,6 +67,7 @@ public class ANCService {
     private final OrganisationUnitRepository organisationUnitRepository;
     private final EncounterRepository encounterRepository;
     private final VisitService visitService;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentRepository;
 
     @Autowired
     private  PMTCTEnrollmentService pmtctEnrollmentService;
@@ -301,6 +304,24 @@ public class ANCService {
         anc.setTestedHepatitisC(ancRequestDto.getTestedHepatitisC());
         anc.setTreatedHepatitisC(ancRequestDto.getTreatedHepatitisC());
         anc.setReferredHepatitisC(ancRequestDto.getReferredHepatitisC());
+        //check if the patient is on pmtct page
+
+        System.out.println(exist.getPersonUuid());
+
+        boolean  hasPmtctRecord = pmtctEnrollmentRepository.checkPatientOnPMTCT(exist.getPersonUuid());
+
+        if(hasPmtctRecord){
+            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPersonUuid());
+//            LocalDate PmtctEnrollmentDate = pmtctEnrollmentRepository.getPmtctEnrollmentDate(exist.getPersonUuid());
+//
+//            //calculate the GA
+//             Long gestationalAge =    ChronoUnit.WEEKS.between(ancRequestDto.getLMP(), PmtctEnrollmentDate);
+//            // update the gestational age on the pmtct table
+//            pmtctEnrollmentRepository.updateTheGA(gestationalAge, exist.getPersonUuid());
+
+
+
+        }
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 

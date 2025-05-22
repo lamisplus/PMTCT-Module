@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +12,10 @@ import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+
+import javax.transaction.Transactional;
 
 public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnrollment, Long> {
    PMTCTEnrollment findByAncNo(String ancNo);
@@ -109,7 +113,21 @@ String findPatientName(String personUuid);
   @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
   boolean checkPatientOnPMTCT(String personUuid);
 
+
   @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE person_uuid = ?1 )", nativeQuery = true)
   boolean checkPatientOnANC(String personUuid);
+
+  @Modifying
+  @Transactional
+  @Query(value = "UPDATE public.pmtct_enrollment SET lmp = CAST(?1 AS DATE ) WHERE person_uuid = ?2", nativeQuery = true)
+  void updateLmp(LocalDate lmp , String personUuid);
+
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1", nativeQuery = true)
+  LocalDate getPmtctEnrollmentDate(String personUuid);
+
+  @Modifying
+  @Transactional
+  @Query(value = "UPDATE public.pmtct_enrollment SET lmp = ?1 WHERE person_uuid = ?2", nativeQuery = true)
+  void updateTheGA(Long gaweeks , String personUuid);
 
 }

@@ -486,7 +486,6 @@ private DeliveryRepository deliveryRepository;
 
 //    RegisterPatientResponseDTO
     public  RegisterPatientResponseDTO checkPatientOnHTS(String clientCode) {
-
         String res_Uuid = pmtctEnrollmentReporsitory.checkPatientOnHts(clientCode);
        RegisterPatientResponseDTO htsClientResponse = new RegisterPatientResponseDTO();
         String res_status = pmtctEnrollmentReporsitory.checkresultOnHts(clientCode);

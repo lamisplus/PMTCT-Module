@@ -230,14 +230,33 @@ const LabourinfantInfo = (props) => {
   const handleInputChangeInfantPCRTestDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
-    setInfantPCRTestDto({
-      ...infantPCRTestDto,
-      [e.target.name]: e.target.value,
-    });
+
 
     if(e.target.name === "dateSampleCollected" && e.target.value !== ""){
       calculateAgeAtTest(e.target.value, e.target.name)
 
+    }else if(e.target.name === "dateSampleSent" && e.target.value !== ""){
+      setInfantPCRTestDto({
+        ...infantPCRTestDto,
+        [e.target.name]: e.target.value,
+        dateResultReceivedAtFacility: "",
+        dateResultReceivedByCaregiver: "",
+
+      });
+
+    }else if(e.target.name === "dateResultReceivedAtFacility" && e.target.value !== ""){
+      setInfantPCRTestDto({
+        ...infantPCRTestDto,
+        [e.target.name]: e.target.value,
+        dateResultReceivedByCaregiver: "",
+
+      });
+
+    }else{
+      setInfantPCRTestDto({
+        ...infantPCRTestDto,
+        [e.target.name]: e.target.value,
+      });
     }
   };
   const handleInputChangeInfantArvDto = (e) => {
@@ -618,22 +637,23 @@ const LabourinfantInfo = (props) => {
 let timeDiffinHrs =sampleDate.diff(deliveryDate, 'hours'); 
 let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months'); 
 
+// 
 
     if(timeDiffinHrs < 72){
 
-      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_<_72_HRS", [nameInput]: mainSampleDate })
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_<_72_HRS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
     }else if(timeDiffinMonth > 12){
 
-      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_>12_MONTHS", [nameInput]: mainSampleDate })
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_>12_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
     } else if(timeDiffinHrs > 72 && timeDiffinMonth < 2){
 
-      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest:  "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS", [nameInput]: mainSampleDate })
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest:  "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
     }else if(timeDiffinMonth === 2 && timeDiffinMonth <= 12){
 
-      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_2-12_MONTHS", [nameInput]: mainSampleDate })
+      setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_2-12_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
     }
 
@@ -1186,7 +1206,8 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                     <FormGroup>
                       <FormLabelName>Date Sample Sent</FormLabelName>
                       <Input
-                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                        type="date"                     
+                        onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateSampleSent"
                         id="dateSampleSent"
                         value={infantPCRTestDto.dateSampleSent}
@@ -1214,7 +1235,8 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                     <FormGroup>
                       <FormLabelName>Date Result Received</FormLabelName>
                       <Input
-                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                        type="date"                     
+                          onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedAtFacility"
                         id="dateResultReceivedAtFacility"
                         value={infantPCRTestDto.dateResultReceivedAtFacility}
@@ -1242,7 +1264,8 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                         Date Result Received By Caregiver
                       </FormLabelName>
                       <Input
-                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                        type="date"                  
+                         onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateResultReceivedByCaregiver"
                         id="dateResultReceivedByCaregiver"
                         value={infantPCRTestDto.dateResultReceivedByCaregiver}

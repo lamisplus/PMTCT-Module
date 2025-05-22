@@ -938,7 +938,8 @@ const UserRegistration = (props) => {
                             max={objValues.firstAncDate? objValues.firstAncDate : moment(new Date()).format("YYYY-MM-DD")}
 
                             // max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled
+                            disabled={disabledField}
+
                           />
                         </InputGroup>
                         {errors.lmp !== "" ? (
