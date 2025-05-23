@@ -3145,6 +3145,7 @@ else{
                               //     ? true
                               //     : false
                               // }
+                                disabled={true}
                             >
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>
