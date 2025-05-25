@@ -1671,11 +1671,11 @@ const UserRegistration = (props) => {
                               id="staticHivStatus"
                               onChange={handleInputChange}
                               value={objValues.staticHivStatus}
-                              disabled={
-                                disableHIVStatus
-                                  ? true: patientObj.dynamicHivStatus === "Positive"? true : false
-                              }
-                           
+                              // disabled={
+                              //   disableHIVStatus
+                              //     ? true: patientObj.dynamicHivStatus === "Positive"? true : false
+                              // }
+                           disabled={true}
                             >
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>
