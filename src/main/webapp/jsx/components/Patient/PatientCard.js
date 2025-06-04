@@ -75,7 +75,6 @@ function PatientCard(props) {
   useEffect(() => {
     PatientCurrentStatus();
     CheckBiometric();
-    console.log("patient", patientObj);
   }, [props.patientObj]);
 
   //Get list of KP
@@ -95,7 +94,7 @@ function PatientCard(props) {
               setDevices(response.data);
             })
             .catch((error) => {
-              console.log(error);
+              console.error(error);
             });
         }
       })
@@ -258,6 +257,7 @@ function PatientCard(props) {
                             <Label.Detail>
 
                             {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+
                       
                             </Label.Detail>
                           </Label>

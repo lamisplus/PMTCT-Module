@@ -377,7 +377,6 @@ const UserRegistration = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response);
         setANCSetting(response.data);
       })
       .catch((error) => {
@@ -392,11 +391,10 @@ const UserRegistration = (props) => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
-          console.log(response);
           setCommunitySetting(response.data);
         })
         .catch((error) => {
-          //console.log(error);
+          console.error(error);
         });
     };
   //Date of Birth and Age handle
@@ -943,6 +941,7 @@ else{
             // patientForm.id = patientId;
             // objValues.personDto = patientForm;
             // //patientDTO.personDto=objValues;
+
             // console.log(objValues);
 
             //
@@ -956,7 +955,8 @@ else{
             toast.success("Patient Register successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
-            //
+           
+
             history.push({
               pathname: "/patient-history",
               state: {
@@ -1003,7 +1003,6 @@ else{
         } else {
           // NOT ANC ENTRY POINT
 
-          console.log("here");
           try {
             // const patientForm = {
             //   active: true,
@@ -1068,12 +1067,7 @@ else{
             //patientDTO.personDto=objValues;
             //console.log(objValues)
 
-            // let payload = {
-            //   ...PMTCTObj,
-            //   personDto: patientForm,
-            //   entryPoint: locationState.entrypointValue,
-            // };
-
+       
 
             
           let payload = {
@@ -1084,6 +1078,7 @@ else{
             personUuid: retrievedPatient.personUuid,
 
           };
+
             const response = await axios.post(
               `${baseUrl}pmtct/anc/pmtct-enrollment`,
               payload,
@@ -1285,7 +1280,6 @@ else{
     setRelatives({ ...relatives, [inputName]: e.slice(0, limit) });
   };
   const checkPhoneNumberBasic = (e, inputName) => {
-    console.log(e, inputName);
     if (inputName === "phoneNumber") {
       if (e) {
         setErrors({ ...errors, phoneNumber: "" });
@@ -1519,7 +1513,8 @@ else{
                           </Label>
                           <Input
                             className="form-control"
-                            type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                            type="date"              
+                            onKeyPress={(e)=>{e.preventDefault()}}
                             name="dateOfRegistration"
                             id="dateOfRegistration"
                             min="1983-12-31"

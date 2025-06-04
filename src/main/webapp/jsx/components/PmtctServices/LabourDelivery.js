@@ -148,7 +148,6 @@ const LabourDelivery = (props) => {
     TIME_HIV_DIAGNOSIS();
     getPlaceOfDelivery();
 
-    console.log("on it ",delivery)
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -168,7 +167,6 @@ const LabourDelivery = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("on it ",response.data)
         getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery")
 
         //  setDisableDeliveryDate(false)
@@ -241,7 +239,6 @@ const LabourDelivery = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data)
        if(response.data){
         // setDisableDeliveryDate(true)
         delivery.dateOfDelivery =response.data
@@ -544,7 +541,6 @@ delivery.childStatus !== "" &&
     <div>
       <Card className={classes.root}>
         <CardBody>
-          {console.log(patientObj)}
           <form>
             <div className="row">
               <h2>Labour and Delivery</h2>

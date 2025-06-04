@@ -90,7 +90,6 @@ const PostTest = (props) => {
     const patientID= props.patientObj && props.patientObj.personResponseDto ? props.patientObj.personResponseDto.id : "";
     const clientId = props.patientObj && props.patientObj ? props.patientObj.id : "";
     const [saving, setSaving] = useState(false);
-    console.log(props.patientObj)
     ///const [errors, setErrors] = useState({});
     const [objValues, setObjValues]= useState(
         {
@@ -188,7 +187,6 @@ const PostTest = (props) => {
             
     }
 
-    console.log(postTest.hivTestResult)
     return (
         <>
             <Card className={classes.root}>

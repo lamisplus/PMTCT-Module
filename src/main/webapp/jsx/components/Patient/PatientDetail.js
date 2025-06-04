@@ -22,6 +22,7 @@ import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
+import PatientVisits from "./CheckedInVisit";
 
 const styles = (theme) => ({
   root: {
@@ -79,6 +80,9 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
+
+
+
   const RecentActivities = () => {
     // if patient has ANC No
     // if (props.patientObj.ancNo) {
@@ -104,11 +108,10 @@ function PatientCard(props) {
         }
       )
       .then((response) => {
-        console.log(response.data);
         setDeliveryInfo(response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error(error);
       });
     // }
   };
@@ -120,7 +123,6 @@ function PatientCard(props) {
       })
       .then((response) => {
         setAllEntryPoint(response.data);
-        console.log(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -134,7 +136,6 @@ function PatientCard(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
         setPersonInfo(response.data);
       })
       .catch((error) => {
@@ -143,7 +144,6 @@ function PatientCard(props) {
 
     POINT_ENTRY_PMTCT();
   }, []);
-  console.log(patientObj);
 
   return (
     <div className={classes.root}>
@@ -203,7 +203,7 @@ function PatientCard(props) {
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
             newRegDate={""}
-
+            setEnrollPMTCT={setEnrollPMTCT}
               allEntryPoint={allEntryPoint}
               entrypointValue={patientObj.entryPoint}
               ancEntryType={patientObj.ancNo ? true : false}
@@ -212,6 +212,7 @@ function PatientCard(props) {
               activeContent={activeContent}
               hideUpdateButton={true}
               htsHivStatus={""}
+
             />
           )}
           {activeContent.route === "anc-enrollment" && (
@@ -275,6 +276,15 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
+
+      {activeContent.route === "patient-visit" && (
+                  <PatientVisits
+                    patientObj={patientObj}
+                    setActiveContent={setActiveContent}
+                    activeContent={activeContent}
+                  />
+                )}
           {/* History Pages */}
         </CardContent>
       </Card>

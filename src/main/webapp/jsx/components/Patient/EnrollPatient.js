@@ -216,21 +216,22 @@ const UserRegistration = (props) => {
     PregnancyStatus();
     if (patientObj) {
       
-      const identifiers = patientObj.identifier;
-      const hospitalNumber = identifiers.identifier.find(
-        (obj) => obj.type === "HospitalNumber"
-      );
+      // const identifiers = patientObj?.identifier;
+      // const hospitalNumber = identifiers?.identifier.find(
+      //   (obj) => obj.type === "HospitalNumber"
+      // );
+
+      const hospitalNumber = patientObj.hospitalNumber;
       basicInfo.dob = patientObj.dateOfBirth;
       basicInfo.firstName = patientObj.firstName;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
       basicInfo.middleName = patientObj.otherName;
       basicInfo.lastName = patientObj.surname;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
-      basicInfo.hospitalNumber =
-        hospitalNumber && hospitalNumber ? hospitalNumber.value : "";
+      basicInfo.hospitalNumber =hospitalNumber
       setObjValues({
         ...objValues,
-        uniqueId: hospitalNumber ? hospitalNumber.value : "",
+        uniqueId: hospitalNumber ? hospitalNumber : "",
       });
       basicInfo.genderId =
         patientObj && patientObj.gender ? patientObj.gender.id : null;
@@ -470,7 +471,6 @@ const UserRegistration = (props) => {
   };
 
   //   handle routing
-
   const handleRoute = (data) => {
     history.push({
       pathname: "/patient-history",
@@ -705,7 +705,7 @@ const UserRegistration = (props) => {
         try {
           objValues.entryPoint = locationState.entrypointValue;
 
-          objValues.person_uuid = patientObj.uuid;
+          objValues.person_uuid = patientObj.personUuid;
           const response = await axios.post(
             `${baseUrl}pmtct/anc/anc-enrollement`,
             objValues,
@@ -758,7 +758,7 @@ const UserRegistration = (props) => {
       } else {
         // LD AND POSTPARTUM ENTRY POINT
         try {
-          objValues.person_uuid = patientObj.uuid;
+          objValues.person_uuid = patientObj.personUuid;
           const response = await axios.post(
             `${baseUrl}pmtct/anc/pmtct-enrollment`,
             objValues,
@@ -850,6 +850,7 @@ const UserRegistration = (props) => {
             </Button>
           </Link>
           <br />
+       
           <br />
           <div className="col-xl-12 col-lg-12">
             <Form>
@@ -980,7 +981,6 @@ const UserRegistration = (props) => {
                     <h5 className="card-title" style={{ color: "#fff" }}>
                       ANC Enrollment
                     </h5>
-                    {  console.log("patientObj",  patientObj) }
 
                   </div>
                   <div className="card-body">
@@ -1707,6 +1707,7 @@ const UserRegistration = (props) => {
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
                   htsHivStatus={""}
+
                 />
               )}
               {/* END OF HIV ENROLLEMENT FORM */}
