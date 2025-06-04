@@ -594,7 +594,30 @@ const UserRegistration = (props) => {
         setRetrievedPatient(response.data)
         setHtsHivStatus(response.data.hivResult)
         if(response.data.testingSetting !== ""){
-            if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
+        
+           if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"){
+              if(state.showANC){
+                  setShowRegistrationAnc(true)
+                  setShowRegistrationButton(true)
+                  setShowRegistration(true)
+                  setObjValues({...objValues, staticHivStatus: response.data.hivResult})
+
+
+              }else{
+                   if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                    setShowRegistrationButton(true)
+                    setShowRegistration(true)
+                  }else{
+  
+                    toast.error("User has negative HTS result, can't enroll user on PMTCT")
+  
+  
+                  } 
+              }
+
+            
+
+           }else if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
               //if entry point is diff from ANC
               if(!state.showANC ){
                 toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
@@ -655,7 +678,7 @@ const UserRegistration = (props) => {
               }
 
 
-            }else if(response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting !==  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_ANC"){
+            }else if(response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting !==  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_ANC" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"){
               // setShowRegistrationButton(true)
               // setShowRegistration(true)
               // setShowRegistrationAnc(true)
