@@ -573,7 +573,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
         motherArtInitiationTime: e.target.value,
       });
 
-      if(e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)" || e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D"){
+     if(e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)" || e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D"){
         updateMaxARTDate("pp")
       }else if(e.target.value ==="TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD" || e.target.value ===  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD"){
         updateMaxARTDate("ga")
@@ -583,7 +583,12 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
       }
       
-    }else
+    }else if(e.target.name === "hivStatus" ){
+          if(e.target.value !== "Positive" ){
+                  toast.error("Cannot enroll negative client on PMTCT");
+          }
+        
+      }else
     if (e.target.name === "lmp" && e.target.value !== "") {
 
       let response =   calculateGestationalAge(enroll.pmtctEnrollmentDate, e.target.value)
@@ -681,6 +686,12 @@ return dateOfDelivery.diff(lmp, 'weeks')
     temp.artStartDate = enroll.artStartDate ? "" : "This field is required";
     temp.artStartTime = enroll.artStartTime ? "" : "This field is required";
     temp.tbStatus = enroll.tbStatus ? "" : "This field is required";
+    temp.hivStatus = enroll.hivStatus? "" : "This field is required";
+
+    //  enroll.hivStatus === "Positive"
+
+      temp.hivStatus = enroll.hivStatus === "Positive"? "" : "Cannot enroll negative client on PMTCT";
+
     setErrors({
       ...temp,
     });
@@ -794,6 +805,44 @@ return dateOfDelivery.diff(lmp, 'weeks')
                
                 {entryValueDisplay.display}
               </h3>
+
+
+               <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    HIV Status <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hivStatus"
+                      id="hivStatus"
+                      // disableHIVStatus
+                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
+
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.hivStatus}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                      {/* <option value="Unknown">Unknown</option> */}
+                    </Input>
+                  </InputGroup>
+                  {errors.hivStatus !== "" ? (
+                    <span className={classes.error}>{errors.hivStatus}</span>
+                  ) : (
+                    ""
+                  )}
+                  {enroll.hivStatus == "Positive" && (
+                    <div className="mt-3 ">
+                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                    </div>
+                  )}
+                </FormGroup>
+              </div>
+
+6
               {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
@@ -1240,41 +1289,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   ) : (
                     ""
                   )} */}
-                </FormGroup>
-              </div>
-
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    HIV Status <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="hivStatus"
-                      id="hivStatus"
-                      // disableHIVStatus
-                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
-
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.hivStatus}
-                    >
-                      <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                      <option value="Unknown">Unknown</option>
-                    </Input>
-                  </InputGroup>
-                  {errors.hivStatus !== "" ? (
-                    <span className={classes.error}>{errors.hivStatus}</span>
-                  ) : (
-                    ""
-                  )}
-                  {enroll.hivStatus == "Positive" && (
-                    <div className="mt-3 ">
-                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
-                    </div>
-                  )}
                 </FormGroup>
               </div>
 

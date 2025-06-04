@@ -1379,7 +1379,7 @@ else{
                       <div className="form-group  col-md-4">
                         <FormGroup>
                           <Label>
-                          Does the client have a HTS Record <span style={{ color: "red" }}> *</span>
+                          Was Client tested at HTS ? <span style={{ color: "red" }}> *</span>
                           </Label>
                           <InputGroup>
                             <Input
@@ -2486,6 +2486,7 @@ else{
 
                   <div className="card-body">
                     <div className="row">
+          
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>ANC Setting</Label>
