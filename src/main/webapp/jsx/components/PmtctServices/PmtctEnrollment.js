@@ -102,6 +102,7 @@ const AncPnc = (props) => {
   const [entryPointValue, setentryPointValue] = useState("");
   const [timeMotherArt, setTimeMotherArt] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
+const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -113,6 +114,8 @@ const AncPnc = (props) => {
   const [urinalysisList, setUrinalysisList] = useState([]);
   const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
+  const [maxARTDate, setMaxARTDate]=useState(moment(new Date()).format("YYYY-MM-DD"));
+  const [minARTDate, setMinARTDate]=useState("");
 
   const [enroll, setEnrollDto] = useState({
     hepatitisB: patientObj.hepatitisB ? patientObj.hepatitisB : "",
@@ -120,6 +123,7 @@ const AncPnc = (props) => {
     ancNo: patientObj.ancNo ? patientObj.ancNo : "",
     pmtctEnrollmentDate: "",
     dateOfDelivery: "" ,
+    expectedDeliveryDate: "",
     entryPoint: entryValueDisplay?.id,
     ga: "",          //props.patientObj.gaweeks
     gravida: props.patientObj.gravida,
@@ -269,6 +273,8 @@ const AncPnc = (props) => {
         if (each.code === locationState.entrypointValue) {
           setEntryValueDisplay(each);
         }
+
+        
       });
     } else if (props.entrypointValue) {
       props.allEntryPoint.map((each, i) => {
@@ -278,8 +284,11 @@ const AncPnc = (props) => {
       });
     } else {
     }
+
   };
   useEffect(() => {
+   
+    checkTimingOfART(0)
     getTimeHivInitiation();
     GET_URINALYSIS();
     AdultRegimenLine();
@@ -302,6 +311,9 @@ const AncPnc = (props) => {
       setSisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
+    }
+    if(!props.activeContent.id && props.htsHivStatus){
+        setEnrollDto({...enroll, hivStatus: props.htsHivStatus})
     }
     if (
       props?.patientObj?.person_uuid ||
@@ -351,6 +363,15 @@ const AncPnc = (props) => {
   }, [enroll]);
 
 
+  const calculateExpectedDate=(lmp)=>{
+    let LastPeriod = moment(lmp)
+    let expectedDeliveryDate = LastPeriod.add(40, 'weeks')
+    // enroll.expectedDeliveryDate = expectedDeliveryDate.format('YYYY-MM-DD')
+  
+    // console.log("EED Calculation",LastPeriod, expectedDeliveryDate, expectedDeliveryDate.format('YYYY-MM-DD') )
+    return expectedDeliveryDate.format('YYYY-MM-DD')
+
+  }
   const GetPatientPMTCT = (id) => {
     axios
       .get(
@@ -358,8 +379,12 @@ const AncPnc = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
+
         setEnrollDto({ ...enroll, ...response.data });
-        
+        if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
+
+          calculateExpectedDate(response.data.lmp)    // this console should be autocalculated by adding 40wks to the "date of the Last Menstrual Period"
+        }
         setInfantMotherArtDto({
           ...infantMotherArtDto,
           regimenTypeId: response.data.regimenTypeId,
@@ -381,8 +406,73 @@ const AncPnc = (props) => {
 //     return ga;
 // }
 
+const updateMaxARTDate=(action)=>{
+console.log("the action", action)
+  if(action === "pp" || action === "ld" ){
+    let MAT = enroll.pmtctEnrollmentDate? enroll.pmtctEnrollmentDate: ""
+    setMinARTDate(MAT)
+    console.log("the min is ", enroll.pmtctEnrollmentDate)
+
+  }else if(action === "prior"){
+    let MAT = ""
+    setMinARTDate(MAT)
+    console.log("the min is ", "")
+
+  }else if(action === "ga"){
+    console.log("entered", action)
+
+    let MAT = enroll.lmp? enroll.lmp: ""
+    console.log("the min is ",enroll.lmp)
+
+    setMinARTDate(MAT)
+
+  }
+}
+const checkTimingOfART=(ga)=>{ 
+
+  setAutoPostPartumTiming(true)
+   let GA = parseInt(ga)
+
+   if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_POST-PARTUM" || props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"){
+    enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)";
+    updateMaxARTDate("pp")
+   }else if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_L&D" || props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"){
+    enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D";
+    updateMaxARTDate("pp")
+   }else{
+
+    if(GA < 36){
+      enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD";
+      updateMaxARTDate("ga")
+
+
+    }else if(GA >= 36){
+      updateMaxARTDate("ga")
+
+      enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD";
+
+    }else{
+      updateMaxARTDate("prior")
+
+    }
+
+   }
+
+    // if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_POST-PARTUM" || props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"){
+    //   setAutoPostPartumTiming(true)
+    // setEnrollDto({...enroll, artStartTime: "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)"})
+    // }
+
+   
+
+
+  }
+
+
 
 const calculateGaFromPmtct=(deliveryDate)=>{
+
+
 // substract lmp - delivery date
 let LastPeriod = enroll.lmp
 
@@ -446,10 +536,17 @@ return dateOfDelivery.diff(lmp, 'weeks')
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
+
         setartStartTime(response.data);
+
+    
+     
       })
       .catch((error) => {});
   };
+
+
+
   const TB_STATUS = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/TB_STATUS`, {
@@ -469,53 +566,74 @@ return dateOfDelivery.diff(lmp, 'weeks')
     // artStartTime
     if (e.target.name === "artStartTime" && e.target.value !== "") {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-
+   
       setInfantMotherArtDto({
         ...infantMotherArtDto,
         motherArtInitiationTime: e.target.value,
       });
-    }else
+
+     if(e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)" || e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D"){
+        updateMaxARTDate("pp")
+      }else if(e.target.value ==="TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD" || e.target.value ===  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD"){
+        updateMaxARTDate("ga")
+
+      }else{
+        updateMaxARTDate("prior")
+
+      }
+      
+    }else if(e.target.name === "hivStatus" ){
+          if(e.target.value !== "Positive" ){
+                  toast.error("Cannot enroll negative client on PMTCT");
+          }
+        
+      }else
     if (e.target.name === "lmp" && e.target.value !== "") {
 
-      // async function getGa() {
-      //   const ga = e.target.value;
-      //   const response = await axios.get(
-      //     `${baseUrl}pmtct/anc/calculate-ga/${ga}`,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //         "Content-Type": "text/plain",
-      //       },
-      //     }
-      //   );
+
       let response =   calculateGestationalAge(enroll.pmtctEnrollmentDate, e.target.value)
 
-        if (response > 0) {
-          enroll.gaweeks = response;
-          setEnrollDto({ ...enroll, [e.target.name]: e.target.value,dateOfDelivery: ""  });
-        } else {
-          // enroll.gaweeks = response;
-          toast.error("Please select a validate date");
-           setEnrollDto({ ...enroll, [e.target.name]: "",dateOfDelivery: ""  });
-        }
+      if (response > 0) {
+        enroll.gaweeks = response;
+        setEnrollDto({ ...enroll, [e.target.name]: e.target.value,dateOfDelivery: ""  });
+      } else {
+        // enroll.gaweeks = response;
+        toast.error("Please select a validate date");
+         setEnrollDto({ ...enroll, [e.target.name]: "",dateOfDelivery: ""  });
+      
+      }
+
       // }
       // getGa();
     }else
     if (e.target.name === "pmtctEnrollmentDate" && e.target.value !== "" && enroll.lmp !== "" ) {
 
     let response =   calculateGestationalAge( e.target.value,  enroll.lmp )
+      if (response > 0) {
+        checkTimingOfART(response)
 
-        if (response > 0) {
-          enroll.gaweeks = response;
-          setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
-        } else {
-          // enroll.gaweeks = response;
-          toast.error("Please select a validate date");
-          // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
-        }
+        enroll.gaweeks = response;
+      } else {
+        // enroll.gaweeks = response;
+        toast.error("Please select a validate date");
+        // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
+      }
+      if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
+       let EDD = calculateExpectedDate(enroll.lmp) 
+        setEnrollDto({ ...enroll, [e.target.name]: e.target.value, expectedDeliveryDate:  EDD });
+
+      }else{
+        setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
+
+
+      }
+        
+    
     }else
     if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
-     let Ga =  calculateGaFromPmtct(e.target.value)
+ 
+        let Ga =  calculateGaFromPmtct(e.target.value)
+     
 
      if (Ga > 0) {
       enroll.gaweeks = Ga;
@@ -525,6 +643,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
       toast.error("Please select a validate date");
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value , gaweeks: ""});
     }
+      
+     
     }else{
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
 
@@ -567,6 +687,12 @@ return dateOfDelivery.diff(lmp, 'weeks')
     temp.artStartDate = enroll.artStartDate ? "" : "This field is required";
     temp.artStartTime = enroll.artStartTime ? "" : "This field is required";
     temp.tbStatus = enroll.tbStatus ? "" : "This field is required";
+    temp.hivStatus = enroll.hivStatus? "" : "This field is required";
+
+    //  enroll.hivStatus === "Positive"
+
+      temp.hivStatus = enroll.hivStatus === "Positive"? "" : "Cannot enroll negative client on PMTCT";
+
     setErrors({
       ...temp,
     });
@@ -675,19 +801,47 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
               <h3 className="mb-3">
                 <span>Point of Entry: </span>
-                {/* 
-                {locationState.postValue}
-                <span>
-                  {` ${
-                    locationState?.subPostValue
-                      ? locationState?.subPostValue
-                      : ""
-                  }`}
-                </span> */}
-
+               
                 {entryValueDisplay.display}
               </h3>
 
+
+               <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    HIV Status <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hivStatus"
+                      id="hivStatus"
+                      // disableHIVStatus
+                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
+
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.hivStatus}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                      {/* <option value="Unknown">Unknown</option> */}
+                    </Input>
+                  </InputGroup>
+                  {errors.hivStatus !== "" ? (
+                    <span className={classes.error}>{errors.hivStatus}</span>
+                  ) : (
+                    ""
+                  )}
+                  {enroll.hivStatus == "Positive" && (
+                    <div className="mt-3 ">
+                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                    </div>
+                  )}
+                </FormGroup>
+              </div>
+
+6
               {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
@@ -720,7 +874,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"                  
+                      onKeyPress={(e)=>{e.preventDefault()}}
                       name="pmtctEnrollmentDate"
                       id="pmtctEnrollmentDate"
                       onChange={handleInputChangeEnrollmentDto}
@@ -854,30 +1009,9 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   )}
                 </FormGroup>
               </div>
+      
               <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Art Start Date <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
-                      name="artStartDate"
-                      id="artStartDate"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.artStartDate}
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disabledField}
-                    />
-                  </InputGroup>
-                  {errors.artStartDate !== "" ? (
-                    <span className={classes.error}>{errors.artStartDate}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
+                {/* Post-Partum */}
                 <FormGroup>
                   <Label>
                     Timing of ART Initiation{" "}
@@ -891,6 +1025,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.artStartTime}
                       disabled={disabledField}
+
+                      // disabled={disabledField? disabledField : autoPostPartumTiming}
                     >
                       <option value="">Select</option>
                       {artStartTime.map((value, index) => (
@@ -907,7 +1043,32 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   )}
                 </FormGroup>
               </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Art Start Date <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  {console.log("artStartDate min", minARTDate)}
+                  <InputGroup>
+                    <Input
+                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                      name="artStartDate"
+                      id="artStartDate"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.artStartDate}
+                      max={maxARTDate}
+                      min={minARTDate}
 
+                      disabled={disabledField}
+                    />
+                  </InputGroup>
+                  {errors.artStartDate !== "" ? (
+                    <span className={classes.error}>{errors.artStartDate}</span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
@@ -1130,48 +1291,37 @@ return dateOfDelivery.diff(lmp, 'weeks')
                 </FormGroup>
               </div>
 
-              <div className="form-group mb-3 col-md-4">
+
+
+              { entryValueDisplay.code  === "PMTCT_ENTRY_POINT_ANC" &&      <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
-                    HIV Status <span style={{ color: "red" }}> *</span>
+                  Expected date of delivery
+                  
                   </Label>
                   <InputGroup>
                     <Input
-                      type="select"
-                      name="hivStatus"
-                      id="hivStatus"
-                      // disableHIVStatus
-                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
-
+                      type="date"            
+                      onKeyPress={(e)=>{e.preventDefault()}}
+                      name="expectedDeliveryDate"
+                      id="expectedDeliveryDate"
                       onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.hivStatus}
-                    >
-                      <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                      <option value="Unknown">Unknown</option>
-                    </Input>
+                      value={enroll.expectedDeliveryDate}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      min={props?.ancEntryType
+                        ? props?.patientObj?.lmp
+                        : enroll.lmp}
+                      disabled={true}
+                    />
                   </InputGroup>
-                  {errors.hivStatus !== "" ? (
-                    <span className={classes.error}>{errors.hivStatus}</span>
-                  ) : (
-                    ""
-                  )}
-                  {enroll.hivStatus == "Positive" && (
-                    <div className="mt-3 ">
-                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
-                    </div>
-                  )}
+                
                 </FormGroup>
-              </div>
-
-
-
-
-              <div className="form-group mb-3 col-md-4">
+              </div>}
+              { entryValueDisplay.code !== "PMTCT_ENTRY_POINT_ANC" &&    <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
                   Date of Delivery
+                  
                   </Label>
                   <InputGroup>
                     <Input
@@ -1199,7 +1349,9 @@ return dateOfDelivery.diff(lmp, 'weeks')
                           ""
                         )}
                 </FormGroup>
-              </div>
+              </div>}
+
+            
             </div>
             <div>
               {" "}

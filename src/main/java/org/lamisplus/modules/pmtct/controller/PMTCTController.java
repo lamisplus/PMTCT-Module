@@ -227,8 +227,8 @@ public class PMTCTController {
         return ResponseEntity.ok(deliveryService.getSingleDelivery(id));
     }
 
-    @GetMapping(value = "view-delivery2/{ancNo}")
-    public ResponseEntity<Delivery> viewDelivery2(@PathVariable("ancNo") String ancNo) {
+    @GetMapping(value = "view-delivery2")
+    public ResponseEntity<Delivery> viewDelivery2(@RequestParam String ancNo) {
         return ResponseEntity.ok(deliveryService.getSingleDelivery2(ancNo));
     }
 
@@ -480,12 +480,17 @@ public class PMTCTController {
 //        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber));
 //    }
 
-
-
-
     @GetMapping(value = "is-on-pmtct")
     public boolean getPatientOnPMTCT(@RequestParam String personUuid) {
-      return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid);
+        return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid);
+    }
+
+    @GetMapping(value = "is-on-hts")
+    public  ResponseEntity<RegisterPatientResponseDTO>  getPatientOnHTS(@RequestParam String clientCode) {
+//RegisterPatientResponseDTO
+              return ResponseEntity.ok(pmtctEnrollmentService.checkPatientOnHTS(clientCode.trim()));
+
+
 
     }
 }

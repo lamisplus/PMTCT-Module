@@ -37,6 +37,7 @@
      private String urinalysis;
      private String timeOfHivDiagnosis;
      private String dateOfDelivery;
+     private String expectedDeliveryDate;
 
  }
 

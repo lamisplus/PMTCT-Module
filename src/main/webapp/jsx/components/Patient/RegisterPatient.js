@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import MatButton from "@material-ui/core/Button";
 import Button from "@material-ui/core/Button";
-import { FormGroup, Label, Spinner, Input, Form, InputGroup } from "reactstrap";
+import {Alert,  FormGroup, Label, Spinner, Input, Form, InputGroup } from "reactstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -169,6 +169,9 @@ const UserRegistration = (props) => {
     actionType: "",
     obj: {},
   });
+  const [retrievedPatient, setRetrievedPatient] = useState({
+    status: false
+  });
 
   const userDetail =
     props.location && props.location.state ? props.location.state.user : null;
@@ -233,8 +236,19 @@ const UserRegistration = (props) => {
   const [PMTCTObj, setPMTCTObj] = useState({});
   const [ANCSetting, setANCSetting] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
+  const [confirmHTSRecord, setConfirmHTSRecord] = useState({
+    clientOnHTS: "",
+    clientCode: ""
+  });
+  const [modalConfirmation, setModalConfirmation] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [showRegistrationAnc, setShowRegistrationAnc] = useState(false);
+  const [showRegistrationButton, setShowRegistrationButton] = useState(false);
+  const [htsHivStatus, setHtsHivStatus] = useState("");
 
-  const toggle = () => setOpen(!open);
+  const toggleConfirmation = () => setModalConfirmation(!modalConfirmation);
+
+  const toggle = () => setModal(!modal);
   const locationState = location.state;
   let patientId = null;
   patientId = locationState ? locationState.patientId : null;
@@ -373,7 +387,7 @@ const UserRegistration = (props) => {
      //get Community setting
      const getCommunitySetting = (e) => {
       axios
-        .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+        .get(`${baseUrl}application-codesets/v2/COMMUNITY_PMTCT`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -532,20 +546,165 @@ const UserRegistration = (props) => {
   };
 
   //Function to add relatives
-  const handleSaveRelationship = (e) => {
-    if (validateRelatives()) {
-      setContacts([...contacts, relatives]);
-      setRelatives({
-        address: "",
-        phone: "",
-        firstName: "",
-        email: "",
-        relationshipId: "",
-        lastName: "",
-        middleName: "",
-      });
+  // const handleSaveRelationship = (e) => {
+  //   if (validateRelatives()) {
+  //     setContacts([...contacts, relatives]);
+  //     setRelatives({
+  //       address: "",
+  //       phone: "",
+  //       firstName: "",
+  //       email: "",
+  //       relationshipId: "",
+  //       lastName: "",
+  //       middleName: "",
+  //     });
+  //   }
+  // };
+  const handleConfirmation = (e) => {
+      if(e.target.name === "clientOnHTS" ){
+        setConfirmHTSRecord({...confirmHTSRecord, clientOnHTS: e.target.value})
+
+        if(e.target.value === "no"){
+          toggleConfirmation()
+        }
+      }
+
+      if(e.target.name === "clientCode" ){
+        setConfirmHTSRecord({...confirmHTSRecord, clientCode: e.target.value})
+        //check if the client is on HTS
+      }
+
+
+  }
+  const handleSubmitConfirmation=(e)=>{
+    let userCode= confirmHTSRecord.clientCode
+    e.preventDefault()
+    if(confirmHTSRecord.clientCode.includes("&")){
+      // userCode = userCode.replace(/&/g, "%26");
+      userCode= encodeURIComponent(userCode)
     }
-  };
+    axios
+    .get(`${baseUrl}pmtct/anc/is-on-hts?clientCode=${userCode}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((response) => {
+      if(response.data.status){
+        setRetrievedPatient(response.data)
+        setHtsHivStatus(response.data.hivResult)
+        if(response.data.testingSetting !== ""){
+        
+           if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX" || response.data.testingSetting === "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"){
+              if(state.showANC){
+                  setShowRegistrationAnc(true)
+                  setShowRegistrationButton(true)
+                  setShowRegistration(true)
+                  setObjValues({...objValues, staticHivStatus: response.data.hivResult})
+
+
+              }else{
+                   if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                    setShowRegistrationButton(true)
+                    setShowRegistration(true)
+                  }else{
+  
+                    toast.error("User has negative HTS result, can't enroll user on PMTCT")
+  
+  
+                  } 
+              }
+
+            
+
+           }else if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
+              //if entry point is diff from ANC
+              if(!state.showANC ){
+                toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+              }else{
+                // if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                  setShowRegistrationAnc(true)
+                  setShowRegistrationButton(true)
+                  setShowRegistration(true)
+                  setObjValues({...objValues, staticHivStatus: response.data.hivResult})
+
+
+                // }else{
+
+                //   toast.error("User has negative HTS result, can't enroll user on PMTCT")
+
+
+                // }
+             
+
+              }
+
+            }else if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" ){
+              // state.postValue 
+                if(state.postValue === "L&D"){
+                  if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                    setShowRegistrationButton(true)
+                    setShowRegistration(true)
+                  }else{
+  
+                    toast.error("User has negative HTS result, can't enroll user on PMTCT")
+  
+  
+                  }
+           
+                }else{
+                  toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+    
+                }
+
+            }else if (response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING"){
+
+
+              if(state.postValue === "Post-Partum"){
+                if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
+                  setShowRegistrationButton(true)
+                   setShowRegistration(true)
+
+                }else{
+
+                  toast.error("User has negative HTS result, can't enroll user on PMTCT")
+
+
+                }
+             
+              }else{
+                toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
+
+              }
+
+
+            }else if(response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting !==  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_ANC" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX" || response.data.testingSetting !== "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"){
+              // setShowRegistrationButton(true)
+              // setShowRegistration(true)
+              // setShowRegistrationAnc(true)
+
+              toast.error("User has HTS record but it is not PMTCT setting !");
+
+            }
+
+
+            // if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
+            //   setShowRegistrationButton(true)
+            // }
+        }
+      }else{
+        let resp= response.data.message
+        toast.error(response.data.message);
+
+
+      }
+    })
+    .catch((error) => {
+     
+        toast.error("User does not have HTS record !");
+
+         });
+
+  }
+
   const handleDeleteRelative = (index) => {
     contacts.splice(index, 1);
     setContacts([...contacts]);
@@ -624,75 +783,76 @@ else{
 
   };
   /*****  Validation  */
-  const validate = () => {
-    temp.firstName = basicInfo.firstName ? "" : "First Name is required";
-    temp.hospitalNumber = basicInfo.hospitalNumber
-      ? ""
-      : "Hospital Number  is required.";
+  // const validate = () => {
+    // temp.firstName = basicInfo.firstName ? "" : "First Name is required";
+    // temp.hospitalNumber = basicInfo.hospitalNumber
+    //   ? ""
+    //   : "Hospital Number  is required.";
     //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
     //temp.landmark = basicInfo.landmark ? "" : "This field is required."
-    temp.lastName = basicInfo.lastName ? "" : "Last Name  is required.";
-    temp.sexId = basicInfo.sexId ? "" : "Gender is required.";
-    temp.dateOfRegistration = basicInfo.dateOfRegistration
-      ? ""
-      : "Date of Registration is required.";
+    // temp.lastName = basicInfo.lastName ? "" : "Last Name  is required.";
+    // temp.sexId = basicInfo.sexId ? "" : "Gender is required.";
+    // temp.dateOfRegistration = basicInfo.dateOfRegistration
+    //   ? ""
+    //   : "Date of Registration is required.";
     // temp.age =
     //   basicInfo.age !== "" && basicInfo.age < 10
     //     ? "Minimum age for PMTCT enrolment is 10 years"
     //     : " ";
-    temp.educationId = basicInfo.educationId ? "" : "Education is required.";
-    temp.address = basicInfo.address ? "" : "Address is required.";
-    temp.phoneNumber = basicInfo.phoneNumber
-      ? ""
-      : "Phone Number  is required.";
-    temp.countryId = basicInfo.countryId ? "" : "Country is required.";
-    temp.stateId = basicInfo.stateId ? "" : "State is required.";
-    temp.district = basicInfo.district ? "" : "Province/LGA is required.";
-    temp.dob = basicInfo.dateOfRegistration ? "" : "Date is required";
+    // temp.educationId = basicInfo.educationId ? "" : "Education is required.";
+    // temp.address = basicInfo.address ? "" : "Address is required.";
+    // temp.phoneNumber = basicInfo.phoneNumber
+    //   ? ""
+    //   : "Phone Number  is required.";
+    // temp.countryId = basicInfo.countryId ? "" : "Country is required.";
+    // temp.stateId = basicInfo.stateId ? "" : "State is required.";
+    // temp.district = basicInfo.district ? "" : "Province/LGA is required.";
+    // temp.dob = basicInfo.dateOfRegistration ? "" : "Date is required";
 
     //ANC FORM VALIDATION
-    if (state.showANC) {
-      temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
-      temp.gravida = objValues.gravida ? "" : "This field is required";
-      objValues.testResultSyphilis === "Positive" &&
-        (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
-          ? ""
-          : "This field is required");
-      temp.lmp = objValues.lmp ? "" : "This field is required";
-      temp.parity = objValues.parity !== "" ? "" : "This field is required";
-      temp.testedSyphilis = objValues.testedSyphilis
-        ? ""
-        : "This field is required";
-      objValues.testResultSyphilis === "Positive" &&
-        (temp.treatedSyphilis = objValues.treatedSyphilis
-          ? ""
-          : "This field is required");
-      // temp.sourceOfReferral = objValues.sourceOfReferral
-      //   ? ""
-      //   : "This field is required";
-      objValues.testedSyphilis === "Yes" &&
-        (temp.testResultSyphilis = objValues.testResultSyphilis
-          ? ""
-          : "This field is required");
-      temp.staticHivStatus = objValues.staticHivStatus
-        ? ""
-        : "This field is required";
-      temp.ancNo = objValues.ancNo ? "" : "This field is required";
-      temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
-        ? ""
-        : "This field is required";
-    }
+    // if (state.showANC) {
+    //   temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
+    //   temp.gravida = objValues.gravida ? "" : "This field is required";
+    //   objValues.testResultSyphilis === "Positive" &&
+    //     (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
+    //       ? ""
+    //       : "This field is required");
+    //   temp.lmp = objValues.lmp ? "" : "This field is required";
+    //   temp.parity = objValues.parity !== "" ? "" : "This field is required";
+    //   temp.testedSyphilis = objValues.testedSyphilis
+    //     ? ""
+    //     : "This field is required";
+    //   objValues.testResultSyphilis === "Positive" &&
+    //     (temp.treatedSyphilis = objValues.treatedSyphilis
+    //       ? ""
+    //       : "This field is required");
+    //   // temp.sourceOfReferral = objValues.sourceOfReferral
+    //   //   ? ""
+    //   //   : "This field is required";
+    //   objValues.testedSyphilis === "Yes" &&
+    //     (temp.testResultSyphilis = objValues.testResultSyphilis
+    //       ? ""
+    //       : "This field is required");
+    //   temp.staticHivStatus = objValues.staticHivStatus
+    //     ? ""
+    //     : "This field is required";
+    //   temp.ancNo = objValues.ancNo ? "" : "This field is required";
+    //   temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
+    //     ? ""
+    //     : "This field is required";
+    // }
 
-    setErrors({ ...temp });
+  //   setErrors({ ...temp });
 
-    return Object.values(temp).every((x) => x == "");
-  };
+  //   return Object.values(temp).every((x) => x == "");
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      if (basicInfo.age > 4) {
+    // if (validate()) {
+      // basicInfo.age > 4
+      if (true) {
         setSaving(true);
         let newConatctsInfo = [];
         //Manipulate relatives contact  address:"",
@@ -721,79 +881,82 @@ else{
         // ANC ENTRY POINT
         if (state.showANC) {
           try {
-            const patientForm = {
-              active: true,
-              address: [
-                {
-                  city: basicInfo.address,
-                  countryId: basicInfo.countryId,
-                  district: basicInfo.district,
-                  line: [basicInfo.landmark],
-                  organisationUnitId: 0,
-                  postalCode: "",
-                  stateId: basicInfo.stateId,
-                },
-              ],
-              contact: newConatctsInfo,
-              contactPoint: [],
-              dateOfBirth: basicInfo.dob,
-              deceased: false,
-              deceasedDateTime: null,
-              firstName: basicInfo.firstName,
-              genderId: basicInfo.sexId,
-              sexId: basicInfo.sexId,
-              identifier: [
-                {
-                  assignerId: 1,
-                  type: "HospitalNumber",
-                  value: basicInfo.hospitalNumber,
-                },
-              ],
-              otherName: basicInfo.middleName,
-              maritalStatusId: basicInfo.maritalStatusId,
-              surname: basicInfo.lastName,
-              educationId: basicInfo.educationId,
-              employmentStatusId: basicInfo.employmentStatusId,
-              dateOfRegistration: basicInfo.dateOfRegistration,
-              isDateOfBirthEstimated:
-                basicInfo.dateOfBirth == "Actual" ? false : true,
-              ninNumber: basicInfo.ninNumber,
-            };
-            const phone = {
-              type: "phone",
-              value: basicInfo.phoneNumber,
-            };
-            if (basicInfo.email) {
-              const email = {
-                type: "email",
-                value: basicInfo.email,
-              };
-              patientForm.contactPoint.push(email);
-            }
-            if (basicInfo.altPhonenumber) {
-              const altPhonenumber = {
-                type: "altphone",
-                value: basicInfo.altPhonenumber,
-              };
-              patientForm.contactPoint.push(altPhonenumber);
-            }
-            patientForm.contactPoint.push(phone);
-            patientForm.id = patientId;
-            objValues.personDto = patientForm;
-            //patientDTO.personDto=objValues;
+            // const patientForm = {
+            //   active: true,
+            //   address: [
+            //     {
+            //       city: basicInfo.address,
+            //       countryId: basicInfo.countryId,
+            //       district: basicInfo.district,
+            //       line: [basicInfo.landmark],
+            //       organisationUnitId: 0,
+            //       postalCode: "",
+            //       stateId: basicInfo.stateId,
+            //     },
+            //   ],
+            //   contact: newConatctsInfo,
+            //   contactPoint: [],
+            //   dateOfBirth: basicInfo.dob,
+            //   deceased: false,
+            //   deceasedDateTime: null,
+            //   firstName: basicInfo.firstName,
+            //   genderId: basicInfo.sexId,
+            //   sexId: basicInfo.sexId,
+            //   identifier: [
+            //     {
+            //       assignerId: 1,
+            //       type: "HospitalNumber",
+            //       value: basicInfo.hospitalNumber,
+            //     },
+            //   ],
+            //   otherName: basicInfo.middleName,
+            //   maritalStatusId: basicInfo.maritalStatusId,
+            //   surname: basicInfo.lastName,
+            //   educationId: basicInfo.educationId,
+            //   employmentStatusId: basicInfo.employmentStatusId,
+            //   dateOfRegistration: basicInfo.dateOfRegistration,
+            //   isDateOfBirthEstimated:
+            //     basicInfo.dateOfBirth == "Actual" ? false : true,
+            //   ninNumber: basicInfo.ninNumber,
+            // };
+            // const phone = {
+            //   type: "phone",
+            //   value: basicInfo.phoneNumber,
+            // };
+            // if (basicInfo.email) {
+            //   const email = {
+            //     type: "email",
+            //     value: basicInfo.email,
+            //   };
+            //   patientForm.contactPoint.push(email);
+            // }
+            // if (basicInfo.altPhonenumber) {
+            //   const altPhonenumber = {
+            //     type: "altphone",
+            //     value: basicInfo.altPhonenumber,
+            //   };
+            //   patientForm.contactPoint.push(altPhonenumber);
+            // }
+            // patientForm.contactPoint.push(phone);
+            // patientForm.id = patientId;
+            // objValues.personDto = patientForm;
+            // //patientDTO.personDto=objValues;
+
             // console.log(objValues);
 
             //
+            objValues.person_uuid = retrievedPatient.personUuid;
+
             const response = await axios.post(
-              `${baseUrl}pmtct/anc/anc-new-registration`,
+              `${baseUrl}pmtct/anc/anc-enrollement`,
               objValues,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success("Patient Register successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
-            //
-            // console.log(response.data);
+           
+
             history.push({
               pathname: "/patient-history",
               state: {
@@ -839,74 +1002,83 @@ else{
           }
         } else {
           // NOT ANC ENTRY POINT
+
           try {
-            const patientForm = {
-              active: true,
-              address: [
-                {
-                  city: basicInfo.address,
-                  countryId: basicInfo.countryId,
-                  district: basicInfo.district,
-                  line: [basicInfo.landmark],
-                  organisationUnitId: 0,
-                  postalCode: "",
-                  stateId: basicInfo.stateId,
-                },
-              ],
-              contact: newConatctsInfo,
-              contactPoint: [],
-              dateOfBirth: basicInfo.dob,
-              deceased: false,
-              deceasedDateTime: null,
-              firstName: basicInfo.firstName,
-              genderId: basicInfo.sexId,
-              sexId: basicInfo.sexId,
-              identifier: [
-                {
-                  assignerId: 1,
-                  type: "HospitalNumber",
-                  value: basicInfo.hospitalNumber,
-                },
-              ],
-              otherName: basicInfo.middleName,
-              maritalStatusId: basicInfo.maritalStatusId,
-              surname: basicInfo.lastName,
-              educationId: basicInfo.educationId,
-              employmentStatusId: basicInfo.employmentStatusId,
-              dateOfRegistration: basicInfo.dateOfRegistration,
-              isDateOfBirthEstimated:
-                basicInfo.dateOfBirth == "Actual" ? false : true,
-              ninNumber: basicInfo.ninNumber,
-            };
-            const phone = {
-              type: "phone",
-              value: basicInfo.phoneNumber,
-            };
-            if (basicInfo.email) {
-              const email = {
-                type: "email",
-                value: basicInfo.email,
-              };
-              patientForm.contactPoint.push(email);
-            }
-            if (basicInfo.altPhonenumber) {
-              const altPhonenumber = {
-                type: "altphone",
-                value: basicInfo.altPhonenumber,
-              };
-              patientForm.contactPoint.push(altPhonenumber);
-            }
-            patientForm.contactPoint.push(phone);
-            patientForm.id = patientId;
-            enroll.personDto = patientForm;
+            // const patientForm = {
+            //   active: true,
+            //   address: [
+            //     {
+            //       city: basicInfo.address,
+            //       countryId: basicInfo.countryId,
+            //       district: basicInfo.district,
+            //       line: [basicInfo.landmark],
+            //       organisationUnitId: 0,
+            //       postalCode: "",
+            //       stateId: basicInfo.stateId,
+            //     },
+            //   ],
+            //   contact: newConatctsInfo,
+            //   contactPoint: [],
+            //   dateOfBirth: basicInfo.dob,
+            //   deceased: false,
+            //   deceasedDateTime: null,
+            //   firstName: basicInfo.firstName,
+            //   genderId: basicInfo.sexId,
+            //   sexId: basicInfo.sexId,
+            //   identifier: [
+            //     {
+            //       assignerId: 1,
+            //       type: "HospitalNumber",
+            //       value: basicInfo.hospitalNumber,
+            //     },
+            //   ],
+            //   otherName: basicInfo.middleName,
+            //   maritalStatusId: basicInfo.maritalStatusId,
+            //   surname: basicInfo.lastName,
+            //   educationId: basicInfo.educationId,
+            //   employmentStatusId: basicInfo.employmentStatusId,
+            //   dateOfRegistration: basicInfo.dateOfRegistration,
+            //   isDateOfBirthEstimated:
+            //     basicInfo.dateOfBirth == "Actual" ? false : true,
+            //   ninNumber: basicInfo.ninNumber,
+            // };
+            // const phone = {
+            //   type: "phone",
+            //   value: basicInfo.phoneNumber,
+            // };
+            // if (basicInfo.email) {
+            //   const email = {
+            //     type: "email",
+            //     value: basicInfo.email,
+            //   };
+            //   patientForm.contactPoint.push(email);
+            // }
+            // if (basicInfo.altPhonenumber) {
+            //   const altPhonenumber = {
+            //     type: "altphone",
+            //     value: basicInfo.altPhonenumber,
+            //   };
+            //   patientForm.contactPoint.push(altPhonenumber);
+            // }
+            // patientForm.contactPoint.push(phone);
+            // patientForm.id = patientId;
+            // enroll.personDto = patientForm;
             // enroll.entryPoint = locationState.entrypointValue;
             //patientDTO.personDto=objValues;
             //console.log(objValues)
-            let payload = {
-              ...PMTCTObj,
-              personDto: patientForm,
-              entryPoint: locationState.entrypointValue,
-            };
+
+       
+
+            
+          let payload = {
+            ...PMTCTObj,
+            entryPoint: locationState.entrypointValue
+              ? locationState.entrypointValue
+              : props.entrypointValue,
+            personUuid: retrievedPatient.personUuid,
+
+          };
+
             const response = await axios.post(
               `${baseUrl}pmtct/anc/pmtct-enrollment`,
               payload,
@@ -960,10 +1132,8 @@ else{
             }
           }
         }
-      } else {
-        window.scrollTo(0, 0);
       }
-    }
+    // }
   };
 
   // end of submit
@@ -1182,9 +1352,140 @@ else{
 
       <Card className={classes.root}>
         <CardContent>
-          <div className="col-xl-12 col-lg-12">
+          {/* form to confirm if the patient has HTS record  */}
+          {showRegistration === false && <div className="card">
+                <div
+                  className="card-header"
+                  style={{
+                    backgroundColor: "#014d88",
+                    color: "#fff",
+                    fontWeight: "bolder",
+                    borderRadius: "0.2rem",
+                  }}
+                >
+                  <h5 className="card-title" style={{ color: "#fff" }}>
+                    User Information
+                     
+                  </h5>
+                </div>
+          <div className="card-body">
+          <div className="row">
+                      <div className="form-group  col-md-4">
+                        <FormGroup>
+                          <Label>
+                          Was Client tested at HTS ? <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="clientOnHTS"
+                              id="clientOnHTS"
+                              onChange={handleConfirmation}
+                              value={confirmHTSRecord.clientOnHTS}
+                            >
+                              <option value="">Select</option>
+                              <option value="yes">Yes</option>
+                              <option value="no">No</option>
+                            </Input>
+                          </InputGroup>
+                         
+                        </FormGroup>
+                      </div>
+                     {confirmHTSRecord.clientOnHTS === "yes" && <div className="form-group  col-md-4">
+                        <FormGroup>
+                          <Label>
+                            HTS client code
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="clientCode"
+                              id="clientCode"
+                              onChange={handleConfirmation}
+                              value={confirmHTSRecord.clientCode}
+                            />
+                          </InputGroup>
+                       
+                        </FormGroup>
+                      </div>}
+                      {/* confirmHTSRecord.clientOnHTS === "no" */}
+   
+ 
+                </div>
+                {confirmHTSRecord.clientOnHTS === "yes" && <div style={{display: 'flex', justifyContent: 'right'}}>  <MatButton
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  startIcon={<SaveIcon />}
+                  onClick={handleSubmitConfirmation}
+                  disabled={saving}
+                  style={{ backgroundColor: "#014d88", fontWeight: "bolder" }}
+                >
+                  Confirm
+                </MatButton></div>}
+                </div>
+                </div>}
+            {/*Profile confirmation card  */}
+       
+           {showRegistration && <div className="card">
+                <div
+                  className="card-header"
+                  style={{
+                    backgroundColor: "#014d88",
+                    color: "#fff",
+                    fontWeight: "bolder",
+                    borderRadius: "0.2rem",
+                  }}
+                >
+                  <h5 className="card-title" style={{ color: "#fff" }}>
+                    User Information
+                     
+                  </h5>
+                </div>
+          <div className="card-body">
+                  <div className="basic-form"  style={{color: "#114d88"}}>
+                    <div className="row">
+                      <div className=" mb-3 col-md-4">
+                     <div>Name: <b>{retrievedPatient.fullname}</b></div> 
+                      </div>
+
+                      <div className=" mb-3 col-md-4">
+                     <div>Hospital Number <b>{retrievedPatient.hospitalNumber}</b></div> 
+                      </div>
+                      <div className=" mb-3 col-md-4">
+                     <div>Date of birth: <b>{retrievedPatient.dateOfBirth}</b></div> 
+                      </div>
+
+                   
+                    </div>
+
+                    <div className="row">
+                      <div className=" mb-3 col-md-4">
+                     <div>Hiv status: <b>{retrievedPatient.hivResult}</b></div> 
+                      </div>
+
+                      <div className=" mb-3 col-md-4">
+                     <div>Gender: <b>{retrievedPatient.gender}</b></div> 
+                      </div>
+                      <div className=" mb-3 col-md-4">
+                     <div>Pregnancy status: <b>Pregnant</b></div> 
+                      </div>
+
+                   
+                    </div>
+
+               
+                  </div>
+                </div>
+                </div>
+}
+              {/*end od Profile confirmation card  */}
             <Form>
-              <div className="card">
+
+
+{/* commenting the basic info */}
+              {/* <div className="card">
                 <div
                   className="card-header"
                   style={{
@@ -1267,9 +1568,7 @@ else{
                           ) : (
                             ""
                           )}
-                          {/* {hospitalNumStatus2===true ? (
-                                                        <span className={classes.success}>{"Hospital number is OK."}</span>
-                                                    ) :""} */}
+                         
                         </FormGroup>
                       </div>
                       <div className="form-group mb-3 col-md-4">
@@ -1292,23 +1591,7 @@ else{
                         </FormGroup>
                       </div>
 
-                      {/* <div className="form-group mb-3 col-md-4">
-                                                <FormGroup>
-                                                    <Label for="patientId">EMR Number </Label>
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        name="emrNumber"
-                                                        id="emrNumber"
-                                                        disabled='true'
-                                                        //value={1094328}
-                                                        //onChange={handleInputChangeBasic}
-                                                        style={{border: "1px solid #014D88",borderRadius:"0.2rem"}}
-                                                    />
-                                                   
-                                                </FormGroup>
-                                            
-                                            </div> */}
+                      
                     </div>
 
                     <div className="row">
@@ -1467,7 +1750,6 @@ else{
                             name="dob"
                             min="1940-01-01"
                             id="dob"
-                            // max={basicInfo.dateOfRegistration}
                             max={moment(new Date()).format("YYYY-MM-DD")}
                             value={basicInfo.dob}
                             onChange={handleDobChange}
@@ -1513,8 +1795,7 @@ else{
                     </div>
 
                     <div className={"row"}>
-                      {/*                                            {watchShowAge >=0 &&
-                                            <>*/}
+                 
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>Marital Status</Label>
@@ -1661,7 +1942,6 @@ else{
                           onChange={(e) => {
                             checkPhoneNumberBasic(e, "phoneNumber");
                           }}
-                          //onChange={(e)=>{handleInputChangeBasic(e,'phoneNumber')}}
                         />
 
                         {errors.phoneNumber !== "" ? (
@@ -1671,9 +1951,7 @@ else{
                         ) : (
                           ""
                         )}
-                        {/* {basicInfo.phoneNumber.length >13 ||  basicInfo.phoneNumber.length <13? (
-                                                <span className={classes.error}>{"The maximum and minimum required number is 13 digit"}</span>
-                                                ) : "" } */}
+                       
                       </FormGroup>
                     </div>
 
@@ -1694,9 +1972,7 @@ else{
                             checkPhoneNumberBasic(e, "altPhonenumber");
                           }}
                         />
-                        {/* {basicInfo.phoneNumber.length >13 ||  basicInfo.phoneNumber.length <13? (
-                                                <span className={classes.error}>{"The maximum and minimum required number is 13 digit"}</span>
-                                                ) : "" } */}
+                       
                       </FormGroup>
                     </div>
 
@@ -1737,7 +2013,6 @@ else{
                           }}
                           value={basicInfo.countryId}
                           disabled
-                          //onChange={getStates}
                         >
                           <option value={""}>Select</option>
                           {countries.map((value, index) => (
@@ -2034,7 +2309,6 @@ else{
                                     }}
                                     onChange={handleInputChangeRelatives}
                                   />
-                                  {/* {errors.cmiddleName && <p>{errors.cmiddleName.message}</p>} */}
                                 </FormGroup>
                               </div>
 
@@ -2121,7 +2395,6 @@ else{
                                     onChange={handleInputChangeRelatives}
                                     required
                                   />
-                                  {/* {errors.contactEmail && <p>{errors.contactEmail.message}</p>} */}
                                 </FormGroup>
                               </div>
 
@@ -2140,7 +2413,6 @@ else{
                                     }}
                                     onChange={handleInputChangeRelatives}
                                   />
-                                  {/* {errors.contactAddress && <p>{errors.contactAddress.message}</p>} */}
                                 </FormGroup>
                               </div>
                             </div>
@@ -2188,11 +2460,10 @@ else{
                   >
                     Add a Relative/Next Of Kin
                   </MatButton>
-                  {/* </div> */}
                 </div>
-              </div>
-              {/* Adding HIV ENROLLEMENT FORM HERE */}
-              {state.showANC && (
+              </div> */}
+               
+              {state.showANC &&  showRegistrationAnc && (
                 <div className="card">
                   <div
                     className="card-header"
@@ -2210,6 +2481,7 @@ else{
 
                   <div className="card-body">
                     <div className="row">
+          
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>ANC Setting</Label>
@@ -2848,7 +3120,7 @@ else{
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
-                            Previously Known HIV Status{" "}
+                          Previously known HIV +ve Status
                             <span style={{ color: "red" }}> *</span>
                           </Label>
                           <InputGroup>
@@ -2862,6 +3134,8 @@ else{
                               <option value="">Select</option>
                               <option value="Yes">Yes</option>
                               <option value="No">No</option>
+                              <option value="Unknown">Unknown</option>
+
                             </Input>
                           </InputGroup>
                           {errors.previouslyKnownHivStatus !== "" ? (
@@ -2890,6 +3164,7 @@ else{
                               //     ? true
                               //     : false
                               // }
+                                disabled={true}
                             >
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>
@@ -2938,10 +3213,9 @@ else{
                   </div>
                 </div>
               )}
-              {/* END OF HIV ENROLLEMENT FORM */}
 
               {/* PMTCT FORM FOR L&D AND POST PARTUM  */}
-              {!state.showANC && (
+              {!state.showANC && showRegistration && (
                 <PmtctEnrollment
                   // entryPoint={}
                   newRegDate={basicInfo.dateOfRegistration}
@@ -2952,7 +3226,7 @@ else{
                   activeContent={activeContent}
                   hideUpdateButton={false}
                   ancEntryType={false}
-
+                  htsHivStatus={htsHivStatus}
                 />
               )}
               {saving ? <Spinner /> : ""}
@@ -2982,7 +3256,7 @@ else{
                     )}
                   </MatButton>
                 )} */}
-              {
+            {showRegistrationButton &&  <> {
                 <MatButton
                   type="submit"
                   variant="contained"
@@ -3014,8 +3288,9 @@ else{
                   Cancel
                 </span>
               </MatButton>
+
+             </>}
             </Form>
-          </div>
         </CardContent>
       </Card>
       <Modal
@@ -3044,6 +3319,38 @@ else{
           </Button>
         </Modal.Footer>
       </Modal>
+
+
+      <Modal
+        show={modalConfirmation}
+        toggle={toggleConfirmation}
+        className="fade"
+        size="md"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header>
+          <Modal.Title id="contained-modal-title-vcenter">
+            Notification!
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h4>Patient has no HTS record. Please refer for testing...     </h4>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            onClick={toggleConfirmation}
+            style={{ backgroundColor: "#014d88", color: "#fff" }}
+          >
+            Ok
+          </Button>
+        </Modal.Footer>
+      </Modal>
+  
+
+
+
     </>
   );
 };

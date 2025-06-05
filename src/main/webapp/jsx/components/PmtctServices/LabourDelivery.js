@@ -170,7 +170,34 @@ const LabourDelivery = (props) => {
         getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery")
 
         //  setDisableDeliveryDate(false)
-        setDelivery(response.data);
+        setDelivery({
+          placeOfDelivery: response.data.placeOfDelivery,
+          ancNo: response.data.ancNo,
+          artStartedLdWard: response.data.artStartedLdWard,
+          bookingStatus: response.data.bookingStatus,
+          childGivenArvWithin72: response.data.childGivenArvWithin72,
+          childStatus: response.data.childStatus,
+          dateOfDelivery: response.data.dateOfDelivery,
+          deliveryTime: response.data.deliveryTime,
+          episiotomy: response.data.episiotomy,
+          feedingDecision: response.data.feedingDecision,
+          gaweeks: response.data.gaweeks,
+          hbstatus: response.data.hbstatus,
+          hcstatus: response.data.hcstatus,
+          hivExposedInfantGivenHbWithin24hrs: response.data.hivExposedInfantGivenHbWithin24hrs,
+          nonHbvExposedInfantGivenHbWithin24hrs: response.data.nonHbvExposedInfantGivenHbWithin24hrs,
+          maternalOutcome: response.data.maternalOutcome,
+          maternalOutcomeChild: response.data.maternalOutcomeChild,
+          modeOfDelivery: response.data.modeOfDelivery,
+          onArt: response.data.onArt,
+          referalSource: response.data.referalSource,
+          romDeliveryInterval: response.data.romDeliveryInterval,
+          vaginalTear: response.data.vaginalTear,
+          numberOfInfantsAlive: response.data.numberOfInfantsAlive,
+          numberOfInfantsDead: response.data.numberOfInfantsDead,
+          personUuid:response.data.personUuid
+      
+        });
       })
       .catch((error) => {
         //console.log(error);
@@ -213,7 +240,7 @@ const LabourDelivery = (props) => {
       })
       .then((response) => {
        if(response.data){
-        setDisableDeliveryDate(true)
+        // setDisableDeliveryDate(true)
         delivery.dateOfDelivery =response.data
         // setDelivery({...delivery, dateOfDelivery: response.data});
         getGestationalAge(response.data, "dateOfDelivery")
@@ -411,12 +438,12 @@ const LabourDelivery = (props) => {
     temp.maternalOutcome = delivery.maternalOutcome
       ? ""
       : "This field is required";
-    temp.hivExposedInfantGivenHbWithin24hrs =
-      delivery.hivExposedInfantGivenHbWithin24hrs
-        ? ""
-        : "This field is required";
-    temp.hcstatus = delivery.hcstatus ? "" : "This field is required";
-    temp.hbstatus = delivery.hbstatus ? "" : "This field is required";
+    // temp.hivExposedInfantGivenHbWithin24hrs =
+    //   delivery.hivExposedInfantGivenHbWithin24hrs
+    //     ? ""
+    //     : "This field is required";
+    // temp.hcstatus = delivery.hcstatus ? "" : "This field is required";
+    // temp.hbstatus = delivery.hbstatus ? "" : "This field is required";
     temp.gaweeks = newGa ? "" : "This field is required";
     temp.feedingDecision = delivery.feedingDecision
       ? ""
@@ -473,6 +500,7 @@ delivery.childStatus !== "" &&
             });
           })
           .catch((error) => {
+            console.log("error ",  error)
             setSaving(false);
             toast.error("Something went wrong", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -736,6 +764,8 @@ delivery.childStatus !== "" &&
                       <option value="">Select</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
+                      <option value="Unknown">Unknown</option>
+
                     </Input>
                   </InputGroup>
                   {errors.episiotomy !== "" ? (
@@ -762,6 +792,8 @@ delivery.childStatus !== "" &&
                       <option value="">Select</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
+                      <option value="Unknown">Unknown</option>
+
                     </Input>
                   </InputGroup>
                   {errors.vaginalTear !== "" ? (
@@ -862,7 +894,7 @@ delivery.childStatus !== "" &&
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Hepatitis B Status <span style={{ color: "red" }}> *</span>
+                    Hepatitis B Status 
                   </Label>
                   <InputGroup>
                     <Input
@@ -878,17 +910,17 @@ delivery.childStatus !== "" &&
                       <option value="Negative">Negative</option>
                     </Input>
                   </InputGroup>
-                  {errors.hbstatus !== "" ? (
+                  {/* {errors.hbstatus !== "" ? (
                     <span className={classes.error}>{errors.hbstatus}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <Label>
-                    Hepatitis C Status <span style={{ color: "red" }}> *</span>
+                    Hepatitis C Status
                   </Label>
                   <InputGroup>
                     <Input
@@ -904,11 +936,11 @@ delivery.childStatus !== "" &&
                       <option value="Negative">Negative</option>
                     </Input>
                   </InputGroup>
-                  {errors.hcstatus !== "" ? (
+                  {/* {errors.hcstatus !== "" ? (
                     <span className={classes.error}>{errors.hcstatus}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">
@@ -976,7 +1008,7 @@ delivery.childStatus !== "" &&
                 <FormGroup>
                   <Label>
                     HBV exposed infant given Hep B Ig within 24 hrs of birth{" "}
-                    <span style={{ color: "red" }}> *</span>
+                    {/* <span style={{ color: "red" }}> *</span> */}
                   </Label>
                   <InputGroup>
                     <Input
@@ -992,13 +1024,13 @@ delivery.childStatus !== "" &&
                       <option value="No">No</option>
                     </Input>
                   </InputGroup>
-                  {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
+                  {/* {errors.hivExposedInfantGivenHbWithin24hrs !== "" ? (
                     <span className={classes.error}>
                       {errors.hivExposedInfantGivenHbWithin24hrs}
                     </span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                 </FormGroup>
               </div>
               <div className="form-group mb-3 col-md-6">

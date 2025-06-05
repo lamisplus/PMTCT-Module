@@ -20,7 +20,7 @@ import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
-import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
+import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
@@ -96,7 +97,8 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setGravida(pmtctEnrollmentRequestDto.getGravida());
         pmtctEnrollment.setGAWeeks(pmtctEnrollmentRequestDto.getGAWeeks());
         pmtctEnrollment.setDateOfDelivery(pmtctEnrollmentRequestDto.getDateOfDelivery());
-
+        pmtctEnrollment.setExpectedDeliveryDate(pmtctEnrollmentRequestDto.getExpectedDeliveryDate());
+        pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
 
         if (pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
             pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
@@ -300,6 +302,10 @@ private DeliveryRepository deliveryRepository;
            pmtctEnrollmentRespondDto.setUrinalysis(pmtctEnrollment.getUrinalysis());
            pmtctEnrollmentRespondDto.setTimeOfHivDiagnosis(pmtctEnrollment.getTimeOfHivDiagnosis());
            pmtctEnrollmentRespondDto.setDateOfDelivery(pmtctEnrollment.getDateOfDelivery());
+           pmtctEnrollmentRespondDto.setExpectedDeliveryDate(pmtctEnrollment.getExpectedDeliveryDate());
+           pmtctEnrollmentRespondDto.setAncNo(pmtctEnrollment.getAncNo());
+
+
 
            PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
            if(pmtct != null) {
@@ -425,10 +431,11 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
             pmtctEnrollment1.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
             pmtctEnrollment1.setDateOfDelivery(pmtctEnrollmentRequestDto.getDateOfDelivery());
+            pmtctEnrollment1.setExpectedDeliveryDate(pmtctEnrollmentRequestDto.getExpectedDeliveryDate());
             pmtctEnrollment1.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
-
+            pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
 
 
 
@@ -472,6 +479,69 @@ private DeliveryRepository deliveryRepository;
         }
     }
 
+    public boolean checkPatientOnPMTCT(String personUuid) {
+        return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
+
+    }
+
+//    RegisterPatientResponseDTO
+    public  RegisterPatientResponseDTO checkPatientOnHTS(String clientCode) {
+        String res_Uuid = pmtctEnrollmentReporsitory.checkPatientOnHts(clientCode);
+       RegisterPatientResponseDTO htsClientResponse = new RegisterPatientResponseDTO();
+        String res_status = pmtctEnrollmentReporsitory.checkresultOnHts(clientCode);
+        String res_testing = pmtctEnrollmentReporsitory.checkSettingOnHts(clientCode);
+        System.out.println(res_Uuid);
+        System.out.println(clientCode);
+       boolean personOnPMTCT = pmtctEnrollmentReporsitory.checkPatientOnPMTCT(res_Uuid);
+        boolean personOnANC = pmtctEnrollmentReporsitory.checkPatientOnANC(res_Uuid);
+
+
+        if (!res_Uuid.isEmpty() & !personOnPMTCT & !personOnANC  ) {
+           String patientPersonOptional = pmtctEnrollmentReporsitory.findPatientName(res_Uuid);
+            String patientPersonHospital = pmtctEnrollmentReporsitory.findPatientHos(res_Uuid);
+            String patientPersonDob = pmtctEnrollmentReporsitory.findPatientDOB(res_Uuid);
+            if (!patientPersonOptional.isEmpty()) {
+                htsClientResponse.setFullname(patientPersonOptional);
+                htsClientResponse.setGender("Female");
+                htsClientResponse.setDateOfBirth(patientPersonDob);
+                htsClientResponse.setPersonUuid(res_Uuid);
+                htsClientResponse.setHivResult(res_status);
+                htsClientResponse.setTestingSetting(res_testing);
+                htsClientResponse.setHospitalNumber(patientPersonHospital);
+                htsClientResponse.setMessage("user found");
+                htsClientResponse.setStatus(true);
+                return     htsClientResponse;
+
+            }else {
+
+            htsClientResponse.setMessage("User not found on Patient record!");
+            htsClientResponse.setStatus(false);
+//
+            return htsClientResponse;
+        }
+            }
+
+        else {
+            if(personOnPMTCT){
+                htsClientResponse.setMessage("User already has PMTCT record");
+
+            }else if(personOnANC){
+                htsClientResponse.setMessage("User already has ANC record");
+
+
+            }else{
+                htsClientResponse.setMessage("User does not have HTS record !");
+
+            }
+            htsClientResponse.setStatus(false);
+
+            return htsClientResponse;
+    }
+
+
+
+
+}
 
 
     public boolean checkPatientOnPMTCT(String personUuid) {

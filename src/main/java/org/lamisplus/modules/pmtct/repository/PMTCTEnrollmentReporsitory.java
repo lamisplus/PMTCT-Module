@@ -2,21 +2,20 @@ package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.lamisplus.modules.patient.domain.entity.Person;
-import org.lamisplus.modules.pmtct.domain.dto.PatientArtData;
-import org.lamisplus.modules.pmtct.domain.dto.PatientInfo;
-import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
-import org.lamisplus.modules.pmtct.domain.dto.SingleResultProjectionDTO;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
+import org.lamisplus.modules.pmtct.domain.dto.*;
+import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+
+import javax.transaction.Transactional;
 
 public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnrollment, Long> {
    PMTCTEnrollment findByAncNo(String ancNo);
@@ -86,5 +85,53 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   boolean checkPatientOnPMTCT(String personUuid);
 
 
+
+  @Query(value = "SELECT  testing_setting  FROM public.hts_client WHERE client_code = ?1 ", nativeQuery = true)
+  String checkSettingOnHts(String client_code);
+
+  @Query(value = "SELECT hiv_test_result  FROM public.hts_client WHERE client_code = ?1 ", nativeQuery = true)
+  String checkresultOnHts(String client_code);
+
+  @Query(value = "SELECT person_uuid FROM public.hts_client WHERE client_code = ?1", nativeQuery = true)
+ String checkPatientOnHts(String clientCode);
+
+
+//
+//  @Query(value = "SELECT full_name  AS fullName, age, uuid, date_of_birth as dateOfBirth, hospital_number as hospitalNumber, gender   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
+//  Optional<PatientRec> findPatientInfo(String personUuid);
+
+
+
+  @Query(value = "SELECT full_name   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
+String findPatientName(String personUuid);
+
+  @Query(value = "SELECT hospital_number   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
+  String findPatientHos(String personUuid);
+
+  @Query(value = "SELECT date_of_birth   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
+  String findPatientDOB(String personUuid);
+
+//  @Query(value = "  SELECT EXISTS (SELECT 1 FROM pmtct_enrollment WHERE person_uuid = ?1)", nativeQuery = true)
+//  boolean findPMTCTPatient(String personUuid);
+
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
+  boolean checkPatientOnPMTCT(String personUuid);
+
+
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE person_uuid = ?1 )", nativeQuery = true)
+  boolean checkPatientOnANC(String personUuid);
+
+  @Modifying
+  @Transactional
+  @Query(value = "UPDATE public.pmtct_enrollment SET lmp = CAST(?1 AS DATE ) WHERE person_uuid = ?2", nativeQuery = true)
+  void updateLmp(LocalDate lmp , String personUuid);
+
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1", nativeQuery = true)
+  LocalDate getPmtctEnrollmentDate(String personUuid);
+
+  @Modifying
+  @Transactional
+  @Query(value = "UPDATE public.pmtct_enrollment SET lmp = ?1 WHERE person_uuid = ?2", nativeQuery = true)
+  void updateTheGA(Long gaweeks , String personUuid);
 
 }

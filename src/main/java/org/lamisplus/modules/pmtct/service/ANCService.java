@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 
 @Service
 //@AllArgsConstructor
@@ -65,6 +67,7 @@ public class ANCService {
     private final OrganisationUnitRepository organisationUnitRepository;
     private final EncounterRepository encounterRepository;
     private final VisitService visitService;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentRepository;
 
     @Autowired
     private  PMTCTEnrollmentService pmtctEnrollmentService;
@@ -97,7 +100,7 @@ public class ANCService {
             anc.setTreatedSyphilis(ancRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancRequestDto.getReferredSyphilisTreatment());
-
+            anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
             anc.setHospitalNumber(hostpitalNumber);
@@ -301,6 +304,24 @@ public class ANCService {
         anc.setTestedHepatitisC(ancRequestDto.getTestedHepatitisC());
         anc.setTreatedHepatitisC(ancRequestDto.getTreatedHepatitisC());
         anc.setReferredHepatitisC(ancRequestDto.getReferredHepatitisC());
+        //check if the patient is on pmtct page
+
+        System.out.println(exist.getPersonUuid());
+
+        boolean  hasPmtctRecord = pmtctEnrollmentRepository.checkPatientOnPMTCT(exist.getPersonUuid());
+
+        if(hasPmtctRecord){
+            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPersonUuid());
+//            LocalDate PmtctEnrollmentDate = pmtctEnrollmentRepository.getPmtctEnrollmentDate(exist.getPersonUuid());
+//
+//            //calculate the GA
+//             Long gestationalAge =    ChronoUnit.WEEKS.between(ancRequestDto.getLMP(), PmtctEnrollmentDate);
+//            // update the gestational age on the pmtct table
+//            pmtctEnrollmentRepository.updateTheGA(gestationalAge, exist.getPersonUuid());
+
+
+
+        }
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -806,6 +827,7 @@ public class ANCService {
             anc.setTestedHepatitisC(ancEnrollementRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisC(ancEnrollementRequestDto.getTreatedHepatitisC());
             anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
+            anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
 
@@ -866,6 +888,7 @@ public class ANCService {
         //ancRespondDto.setSourceOfReferral(anc.getSourceOfReferral());
         ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         ancRespondDto.setAncSetting(anc.getAncSetting());
+        ancRespondDto.setCommunitySetting(anc.getCommunitySetting());
 
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
@@ -917,6 +940,7 @@ public class ANCService {
             anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
+            anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
 
@@ -937,6 +961,7 @@ public class ANCService {
             anc.setTreatedSyphilis(ancWithPersonRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancWithPersonRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancWithPersonRequestDto.getReferredSyphilisTreatment());
+            anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
 
             PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
             if (pmtctHtsInfo != null) {
@@ -1120,6 +1145,7 @@ public class ANCService {
         existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
         existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
+        existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());
@@ -1155,6 +1181,7 @@ public class ANCService {
         existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
         existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
+        existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());

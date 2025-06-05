@@ -175,6 +175,7 @@ function PatientCard(props) {
             setActiveContent={setActiveContent}
             deliveryInfo={deliveryInfo}
             enrollPMTCT={enrollPMTCT}
+
           />
           <br />
           {/* Patient dashboard menu route */}
@@ -210,6 +211,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               hideUpdateButton={true}
+              htsHivStatus={""}
 
             />
           )}

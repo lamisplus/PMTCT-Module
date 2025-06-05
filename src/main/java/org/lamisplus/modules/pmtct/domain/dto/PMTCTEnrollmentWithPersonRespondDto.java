@@ -32,5 +32,6 @@ public class PMTCTEnrollmentWithPersonRespondDto implements Serializable {
     private String hivStatus;
     private boolean pmtctRegStatus;
     private String dateOfDelivery;
+    private String expectedDeliveryDate;
 
 }

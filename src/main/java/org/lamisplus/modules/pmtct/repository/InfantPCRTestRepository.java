@@ -21,8 +21,6 @@ public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCR
     Optional<InfantPCRTest> findByUniqueUuid(String uniqueUuid);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_pcr \n" +
-            "WHERE infant_hospital_number = ?1 and  visit_date =( \n" +
-            "SELECT  MAX(visit_date) FROM public.pmtct_infant_pcr  WHERE infant_hospital_number = ?1 \n" +
-            ")", nativeQuery = true)
+            "            WHERE infant_hospital_number = ?1 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantPCRTest getLastPCR (String infantHospitalNumber);
 }

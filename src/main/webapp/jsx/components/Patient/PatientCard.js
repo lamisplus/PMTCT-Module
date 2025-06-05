@@ -255,7 +255,9 @@ function PatientCard(props) {
                           >
                             HIV Status
                             <Label.Detail>
-                                {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+
+                            {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+
                       
                             </Label.Detail>
                           </Label>
