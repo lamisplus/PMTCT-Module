@@ -683,4 +683,29 @@
         </sql>
     </changeSet>
 
+
+    <changeSet failOnError="false" author="Ganiyat" id="con-2025-06-0505">
+        <preConditions onFail="MARK_RAN">
+
+            <columnExists tableName="pmtct_delivery" columnName="anc_no" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery DROP CONSTRAINT pmtct_delivery_anc_no_key
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true"  id="2025-06-30-001" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="facility_enrolled_in" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD COLUMN facility_enrolled_in character varying;
+        </sql>
+    </changeSet>
+
+
+
+
 </databaseChangeLog>

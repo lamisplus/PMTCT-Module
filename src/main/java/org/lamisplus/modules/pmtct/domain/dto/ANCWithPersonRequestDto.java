@@ -49,5 +49,7 @@ public class ANCWithPersonRequestDto implements Serializable
     private String testedHepatitisC;
     private String treatedHepatitisC;
     private String referredHepatitisC;
+     private String facilityEnrolledIn;
+
 
 }

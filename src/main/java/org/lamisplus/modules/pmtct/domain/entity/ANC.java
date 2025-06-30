@@ -54,6 +54,9 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String testedHepatitisC;
     private String treatedHepatitisC;
     private String referredHepatitisC;
+    private String facilityEnrolledIn;
+
+
 
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")

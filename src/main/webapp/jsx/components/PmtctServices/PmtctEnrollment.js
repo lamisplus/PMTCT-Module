@@ -842,7 +842,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
                 </FormGroup>
               </div>
 
-6
               {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>

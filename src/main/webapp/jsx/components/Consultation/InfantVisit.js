@@ -340,6 +340,7 @@ const ClinicVisit = (props) => {
     //   handleOpen()
     // }
 
+    console.log("inputedPCR", inputedPCR)
     if(inputedPCR ===  "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
         // child age should less than 72 hours 
           if(vistDate.diff(deliveryDate, 'days') > 72){

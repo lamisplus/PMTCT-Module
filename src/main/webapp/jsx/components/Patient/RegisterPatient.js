@@ -212,6 +212,8 @@ const UserRegistration = (props) => {
    hepatitisB: "",
    dateOfHepatitisC: "",
    hepatitisC: "",
+   facilityEnrolledIn: "",
+
   });
   const [enroll, setEnrollDto] = useState({
     // ancNo: patientObj.ancNo,
@@ -785,74 +787,55 @@ else{
 
   };
   /*****  Validation  */
-  // const validate = () => {
-    // temp.firstName = basicInfo.firstName ? "" : "First Name is required";
-    // temp.hospitalNumber = basicInfo.hospitalNumber
-    //   ? ""
-    //   : "Hospital Number  is required.";
-    //temp.middleName = basicInfo.middleName ? "" : "Middle is required."
-    //temp.landmark = basicInfo.landmark ? "" : "This field is required."
-    // temp.lastName = basicInfo.lastName ? "" : "Last Name  is required.";
-    // temp.sexId = basicInfo.sexId ? "" : "Gender is required.";
-    // temp.dateOfRegistration = basicInfo.dateOfRegistration
-    //   ? ""
-    //   : "Date of Registration is required.";
-    // temp.age =
-    //   basicInfo.age !== "" && basicInfo.age < 10
-    //     ? "Minimum age for PMTCT enrolment is 10 years"
-    //     : " ";
-    // temp.educationId = basicInfo.educationId ? "" : "Education is required.";
-    // temp.address = basicInfo.address ? "" : "Address is required.";
-    // temp.phoneNumber = basicInfo.phoneNumber
-    //   ? ""
-    //   : "Phone Number  is required.";
-    // temp.countryId = basicInfo.countryId ? "" : "Country is required.";
-    // temp.stateId = basicInfo.stateId ? "" : "State is required.";
-    // temp.district = basicInfo.district ? "" : "Province/LGA is required.";
-    // temp.dob = basicInfo.dateOfRegistration ? "" : "Date is required";
+  const validate = () => {
+   
 
-    //ANC FORM VALIDATION
-    // if (state.showANC) {
-    //   temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
-    //   temp.gravida = objValues.gravida ? "" : "This field is required";
-    //   objValues.testResultSyphilis === "Positive" &&
-    //     (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
-    //       ? ""
-    //       : "This field is required");
-    //   temp.lmp = objValues.lmp ? "" : "This field is required";
-    //   temp.parity = objValues.parity !== "" ? "" : "This field is required";
-    //   temp.testedSyphilis = objValues.testedSyphilis
-    //     ? ""
-    //     : "This field is required";
-    //   objValues.testResultSyphilis === "Positive" &&
-    //     (temp.treatedSyphilis = objValues.treatedSyphilis
-    //       ? ""
-    //       : "This field is required");
-    //   // temp.sourceOfReferral = objValues.sourceOfReferral
-    //   //   ? ""
-    //   //   : "This field is required";
-    //   objValues.testedSyphilis === "Yes" &&
-    //     (temp.testResultSyphilis = objValues.testResultSyphilis
-    //       ? ""
-    //       : "This field is required");
-    //   temp.staticHivStatus = objValues.staticHivStatus
-    //     ? ""
-    //     : "This field is required";
-    //   temp.ancNo = objValues.ancNo ? "" : "This field is required";
-    //   temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
-    //     ? ""
-    //     : "This field is required";
-    // }
+    // ANC FORM VALIDATION
+    if (state.showANC) {
+      temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
+      temp.gravida = objValues.gravida ? "" : "This field is required";
+      objValues.testResultSyphilis === "Positive" &&
+        (temp.referredSyphilisTreatment = objValues.referredSyphilisTreatment
+          ? ""
+          : "This field is required");
+      temp.lmp = objValues.lmp ? "" : "This field is required";
+      temp.parity = objValues.parity !== "" ? "" : "This field is required";
+      temp.testedSyphilis = objValues.testedSyphilis
+        ? ""
+        : "This field is required";
+      objValues.testResultSyphilis === "Positive" &&
+        (temp.treatedSyphilis = objValues.treatedSyphilis
+          ? ""
+          : "This field is required");
+      // temp.sourceOfReferral = objValues.sourceOfReferral
+      //   ? ""
+      //   : "This field is required";
+      objValues.testedSyphilis === "Yes" &&
+        (temp.testResultSyphilis = objValues.testResultSyphilis
+          ? ""
+          : "This field is required");
+      temp.staticHivStatus = objValues.staticHivStatus
+        ? ""
+        : "This field is required";
+      temp.ancNo = objValues.ancNo ? "" : "This field is required";
+      temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
+        ? ""
+        : "This field is required";
+         objValues.previouslyKnownHivStatus === "Yes" &&
+      (temp.facilityEnrolledIn = objValues.facilityEnrolledIn
+        ? ""
+        : "This field is required"); 
+    }
 
-  //   setErrors({ ...temp });
+    setErrors({ ...temp });
 
-  //   return Object.values(temp).every((x) => x == "");
-  // };
+    return Object.values(temp).every((x) => x == "");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // if (validate()) {
+    if (validate()) {
       // basicInfo.age > 4
       if (true) {
         setSaving(true);
@@ -1138,7 +1121,7 @@ else{
           }
         }
       }
-    // }
+    }
   };
 
   // end of submit
@@ -3152,6 +3135,31 @@ else{
                           )}
                         </FormGroup>
                       </div>
+                        { objValues.previouslyKnownHivStatus === "Yes" && <div className="form-group mb-3 col-md-6">
+                                          <FormGroup>
+                                                <Label>
+                                                 Facility Enrolled In <span style={{ color: "red" }}> *</span>
+                                                </Label>
+                                                <InputGroup>
+                                                  <Input
+                                                    type="text"
+                                                    name="facilityEnrolledIn"
+                                                    id="facilityEnrolledIn"
+                                                    onChange={handleInputChange}
+                                                    value={objValues.facilityEnrolledIn}
+                                                  />
+                                                </InputGroup>
+                                                   {errors.facilityEnrolledIn !== "" ? (
+                                                  <span className={classes.error}>
+                                                    {errors.facilityEnrolledIn}
+                                                  </span>
+                                                ) : (
+                                                  ""
+                                                )}
+                                              </FormGroup>
+                                              </div>
+                                              }
+                      
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>

@@ -194,6 +194,7 @@ const UserRegistration = (props) => {
     testedHepatitisC: "",
     treatedHepatitisC: "",
     referredHepatitisC: "", 
+    facilityEnrolledIn: "",
     // 
     
 
@@ -531,6 +532,13 @@ const UserRegistration = (props) => {
       ? ""
       : "This field is required";
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
+
+    objValues.previouslyKnownHivStatus === "Yes" &&
+      (temp.facilityEnrolledIn = objValues.facilityEnrolledIn
+        ? ""
+        : "This field is required");
+
+
     setErrors({ ...temp });
     return Object.values(temp).every((x) => x === "");
   };
@@ -1659,6 +1667,33 @@ const UserRegistration = (props) => {
                           )}
                         </FormGroup>
                       </div>
+
+               { objValues.previouslyKnownHivStatus === "Yes" && <div className="form-group mb-3 col-md-6">
+                        <FormGroup>
+                          <Label>
+                           Facility Enrolled In <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="facilityEnrolledIn"
+                              id="facilityEnrolledIn"
+                              onChange={handleInputChange}
+                              value={objValues.facilityEnrolledIn}
+                            />
+                          </InputGroup>
+                             {errors.facilityEnrolledIn !== "" ? (
+                            <span className={classes.error}>
+                              {errors.facilityEnrolledIn}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                        </div>
+                        }
+
+
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>

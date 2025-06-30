@@ -304,6 +304,8 @@ public class ANCService {
         anc.setTestedHepatitisC(ancRequestDto.getTestedHepatitisC());
         anc.setTreatedHepatitisC(ancRequestDto.getTreatedHepatitisC());
         anc.setReferredHepatitisC(ancRequestDto.getReferredHepatitisC());
+        anc.setFacilityEnrolledIn(ancRequestDto.getFaciltyEnrolledIn());
+
         //check if the patient is on pmtct page
 
         System.out.println(exist.getPersonUuid());
@@ -827,7 +829,9 @@ public class ANCService {
             anc.setTestedHepatitisC(ancEnrollementRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisC(ancEnrollementRequestDto.getTreatedHepatitisC());
             anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
+            anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFaciltyEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
+
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
 
@@ -940,6 +944,7 @@ public class ANCService {
             anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
             anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
+            anc.setFacilityEnrolledIn(ancWithPersonRequestDto.getFaciltyEnrolledIn());
             anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
