@@ -58,7 +58,6 @@ const useStyles = makeStyles(theme => ({
 
 const AddVitals = (props) => {
     const patientObj = props.patientObj;
-    console.log(patientObj)
     let history = useHistory();
     const classes = useStyles()
     //const [values, setValues] = useState([]);

@@ -87,7 +87,6 @@ const useStyles = makeStyles((theme) => ({
 
 const AncEnrollement = (props) => {
   const patientObj = props.patientObj;
-  console.log(patientObj);
   let history = useHistory();
   const classes = useStyles();
   //const [values, setValues] = useState([]);
@@ -131,7 +130,6 @@ const AncEnrollement = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response);
         setANCSetting(response.data);
       })
       .catch((error) => {

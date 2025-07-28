@@ -95,7 +95,6 @@ const useStyles = makeStyles((theme) => ({
 const RiskStratification = (props) => {
     const classes = useStyles();
     const history = useHistory();
-    console.log(props)
     const [enrollSetting, setEnrollSetting] = useState([]);
     let riskCountQuestion=[]
     const [kP, setKP] = useState([]);

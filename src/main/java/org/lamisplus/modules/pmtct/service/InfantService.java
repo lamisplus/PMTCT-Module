@@ -355,11 +355,11 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 infantRapidAntiBodyTestDto.setRapidTestType(result.getRapidTestType());
             infantRapidAntiBodyTestDto.setAncNumber(result.getAncNumber());
             infantRapidAntiBodyTestDto.setAgeAtTest(result.getAgeAtTest());
-            infantRapidAntiBodyTestDto.setDateOfTest(result.getDateOfTest());
+
+    infantRapidAntiBodyTestDto.setDateOfTest(result.getDateOfTest());
             infantRapidAntiBodyTestDto.setResult(result.getResult());
             infantRapidAntiBodyTestDto.setUniqueUuid(result.getUniqueUuid());
             infantRapidAntiBodyTestDto.setUuid(result.getUuid());
-
             return infantRapidAntiBodyTestDto;
         }else{
             return new InfantRapidAntiBodyTestDto();
