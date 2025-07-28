@@ -1218,11 +1218,8 @@ public class ANCService {
 
     public boolean isANCExisting(String ancNO) {
 
-        List<ANC> anc = ancRepository.getANCByAncNo(ancNO);
-        boolean reply = false;
-        if (anc.isEmpty()) reply = false;
-        else reply = true;
-        return reply;
+      return ancRepository.existsByAnc(ancNO);
+
     }
     //entityToDto
 

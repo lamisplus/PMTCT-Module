@@ -368,12 +368,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
     }
 
 
-//    public InfantPCRTestDto getAllPCR(String infantHospitalNumber) {
-//        if (!infantHospitalNumber.isEmpty()) {
-//            return convertInfanTPCREntityToDTO( infantPCRTestRepository.getLastPCR(infantHospitalNumber));
-//        } else {
-//            return new InfantPCRTestDto();
-//
-//        }
-//    }
+    public boolean firstPcrExist(String infantHospitalNumber) {
+      return  infantPCRTestRepository.checkPcrExist(infantHospitalNumber);
+    }
 }

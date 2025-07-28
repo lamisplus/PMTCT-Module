@@ -626,8 +626,25 @@ const ClinicVisit = (props) => {
       });
     // }
   };
+  const checkFirstPCRExist= async(infantHospitalNo)=>{
+  
+      await axios
+              .get(`${baseUrl}pmtct/anc/first-pcr-exist?infantHospitalNo=${infantHospitalNo}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .then((response) => {
+
+                return response.data
+              }).catch((e)=>{
+
+                  console.log(e)
+              })
+  }
 
     const getLatestPCR=(infantHospitalNo)=>{
+           let PCRList = [pcrType]
+           let newPCRList=PCRList[0]
+          let hasFirstPCR = checkFirstPCRExist(infantHospitalNo)
               axios
               .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -644,21 +661,31 @@ const ClinicVisit = (props) => {
           setShowInfantVist(true)
 
         }
+"-"
+        // Remove 1ST PCR if it has been done
+          if(response?.data?.testType === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT" || hasFirstPCR){
+           let newList =newPCRList.filter((each, index)=>{
 
+                  return each.code !== "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"
+                  
+
+                })
+
+          newPCRList=newList
+          }
 
             //check if the last PCR is positive then set the PCRType to confirmatory 
             if(response?.data && response?.data?.results.includes("POSITIVE") &&  !props?.activeContent?.id ){
-              let newPCRList = []
-              pcrType.map((each, index)=>{
+              newPCRList.map((each, index)=>{
+
                   if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
                     newPCRList.push(each)
                   }
                 })
-                setPcrType(newPCRList)
-
-            }else{
 
             }
+            setPcrType(newPCRList)
+
               })
               .catch((error) => {
               console.log(error)
@@ -2200,7 +2227,7 @@ const ClinicVisit = (props) => {
                         </FormLabelName>
                         <Input
                           type="date"   
-                                              onKeyPress={(e)=>{e.preventDefault()}}
+                          onKeyPress={(e)=>{e.preventDefault()}}
                           name="dateResultReceivedAtFacility"
                           id="dateResultReceivedAtFacility"
                           value={infantPCRTestDto.dateResultReceivedAtFacility}

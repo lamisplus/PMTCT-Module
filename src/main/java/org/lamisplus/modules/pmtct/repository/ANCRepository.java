@@ -34,6 +34,9 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 
     List<ANC> getANCByAncNo(String ancNo);
 
+        @Query(value = "SELECT COUNT(*) > 0 FROM pmtct_anc WHERE anc_no = ?1 AND archived = 0", nativeQuery = true)
+        boolean existsByAnc(String ancNo);
+
     ANC getANCById(Long id);
 
     @Query(value = "SELECT uuid FROM hiv_enrollment where person_uuid=?1", nativeQuery = true)

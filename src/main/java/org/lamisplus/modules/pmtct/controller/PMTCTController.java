@@ -492,4 +492,12 @@ public class PMTCTController {
 
 
     }
-}
+//    getAllPCR
+
+    @GetMapping(value = "first-pcr-exist")
+    public  ResponseEntity<Boolean>  checkFirstPcrExist(@RequestParam String infantHospitalNo) {
+//RegisterPatientResponseDTO
+        return ResponseEntity.ok(infantService.firstPcrExist(infantHospitalNo));
+
+    }
+    }

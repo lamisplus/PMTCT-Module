@@ -705,7 +705,15 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="false" author="Ganiyat" id="remove-unique-con-2025-07-3097">
+        <preConditions onFail="MARK_RAN">
 
+            <columnExists tableName="pmtct_anc" columnName="anc_no" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc DROP CONSTRAINT anc_no
+        </sql>
+    </changeSet>
 
 
 </databaseChangeLog>
