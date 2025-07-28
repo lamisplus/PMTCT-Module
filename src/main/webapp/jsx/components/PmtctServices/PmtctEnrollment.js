@@ -93,7 +93,6 @@ const useStyles = makeStyles((theme) => ({
 const AncPnc = (props) => {
   const patientObj = props.patientObj;
   let history = useHistory();
-
   const location = useLocation();
   const locationState = location && location.state ? location.state : null;
   const [regimenType, setRegimenType] = useState([]);
@@ -363,6 +362,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     }
   }, [enroll]);
 
+
   const calculateExpectedDate=(lmp)=>{
     let LastPeriod = moment(lmp)
     let expectedDeliveryDate = LastPeriod.add(40, 'weeks')
@@ -379,7 +379,6 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-      
 
         setEnrollDto({ ...enroll, ...response.data });
         if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
@@ -591,6 +590,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
       }else
     if (e.target.name === "lmp" && e.target.value !== "") {
 
+
       let response =   calculateGestationalAge(enroll.pmtctEnrollmentDate, e.target.value)
 
       if (response > 0) {
@@ -634,6 +634,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
  
         let Ga =  calculateGaFromPmtct(e.target.value)
      
+
      if (Ga > 0) {
       enroll.gaweeks = Ga;
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
@@ -741,12 +742,9 @@ return dateOfDelivery.diff(lmp, 'weeks')
             ? locationState.entrypointValue
             : props.entrypointValue,
           personUuid:
-            locationState && locationState.patientObj
-              ? locationState.patientObj.uuid
-              : props.patientObj.uuid,
-          personUuid: props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : locationState.patientObj.uuid,
+          props.patientObj.personUuid?  props.patientObj.personUuid: props.patientObj.person_uuid? props.patientObj.person_uuid:  locationState?.patientObj.uuid                 
+
+
         };
 
         axios
@@ -755,6 +753,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
           })
           .then((response) => {
             setSaving(false);
+            console.log("enrolled")
+            // props.setEnrollPMTCT(true)
             props.patientObj.pmtctRegStatus = true;
             toast.success("Enrollment save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -769,7 +769,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
             }
           })
           .catch((error) => {
-            console.log(error);
             setSaving(false);
             toast.error("Something went wrong", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -1338,11 +1337,11 @@ return dateOfDelivery.diff(lmp, 'weeks')
                       disabled={disabledField}
                     />
                   </InputGroup>
-                  {errors.artStartDate !== "" ? (
+                  {/* {errors.artStartDate !== "" ? (
                     <span className={classes.error}>{errors.artStartDate}</span>
                   ) : (
                     ""
-                  )}
+                  )} */}
                   {enroll.gaweeks === 0  && enroll.lmp  === "" ? (
                           <span className={classes.error}>Last menstrual period date is empty </span>
                         ) : (

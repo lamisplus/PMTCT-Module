@@ -375,7 +375,7 @@ const ClinicVisit = (props) => {
 
 
       if(latestPCR?.results !== "INFANT_PCR_RESULT_POSITIVE"){
-        let pcrRes= latestPCR.results.includes("POSITIVE")? "Positive": latestPCR.results.includes("NEGATIVE")? "Negtive": "Indeterminate"
+        let pcrRes= latestPCR.results.includes("POSITIVE")? "Positive": latestPCR?.results?.includes("NEGATIVE")? "Negative": "Indeterminate"
         setPcrMessage(`Last PCR test result is ${pcrRes}, reconfirm input`)
         handleOpen()
       }
@@ -688,7 +688,7 @@ const ClinicVisit = (props) => {
 
               })
               .catch((error) => {
-              console.log(error)
+              console.error(error)
               });
     }
 
@@ -706,7 +706,7 @@ const ClinicVisit = (props) => {
             }
           })
           .catch((error) => {
-          console.log(error)
+          console.error(error)
 
           });
         }
