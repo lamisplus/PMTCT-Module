@@ -30,6 +30,7 @@ public class ANCRequestDto implements Serializable
     private String staticHivStatus;
     private String sourceOfReferral;
     private String previouslyKnownHivStatus;
+    private String currentlyOnArt;
     private LocalDate  dateOfHepatitisB;
     private String  hepatitisB;
     private String testedHepatitisB;

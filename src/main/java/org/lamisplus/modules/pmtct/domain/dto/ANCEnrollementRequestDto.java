@@ -34,6 +34,7 @@ public class ANCEnrollementRequestDto{
    // private String sourceOfReferral;
     private final String person_uuid;
     private String previouslyKnownHivStatus;
+    private String currentlyOnArt;
     private LocalDate  dateOfHepatitisB;
     private String  hepatitisB;
     private String testedHepatitisB;

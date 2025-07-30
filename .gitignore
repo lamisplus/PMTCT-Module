@@ -7,7 +7,7 @@
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
-!**/src/main/**/resources/views/
+
 # Package Files #
 *.jar
 *.war
@@ -15,16 +15,21 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
 ### Sass template
 .sass-cache/
 *.css.map
 /yarn-error.log
 application-debug.log
 /node_modules
-/target
 /node
+
+# Target directories (but keep views)
+/target
+!**/src/main/**/resources/views/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
 ### Custom ignores
 target
 .idea
@@ -32,6 +37,7 @@ target
 db
 .DS_Store
 local-data
+build
 
 ### Custom ignores
 mvnw.cmd

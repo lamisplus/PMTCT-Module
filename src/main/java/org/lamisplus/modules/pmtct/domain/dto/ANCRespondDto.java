@@ -51,6 +51,7 @@ public class ANCRespondDto implements Serializable {
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
     private LocalDate artStartDate;
     private String previouslyKnownHivStatus;
+    private String currentlyOnArt;
     private LocalDate  dateOfHepatitisB;
     private String  hepatitisB;
     private String testedHepatitisB;
