@@ -488,10 +488,10 @@ private DeliveryRepository deliveryRepository;
         return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
     }
 
-    public boolean checkPatientOnPMTCT(String personUuid) {
-        return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
-
-    }
+//    public boolean checkPatientOnPMTCT(String personUuid) {
+//        return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
+//
+//    }
 
 //    RegisterPatientResponseDTO
     public  RegisterPatientResponseDTO checkPatientOnHTS(String clientCode) {

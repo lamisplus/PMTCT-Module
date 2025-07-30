@@ -99,9 +99,9 @@ const PmtctHtsForm = (props) => {
   const [regimenType, setRegimenType] = useState([]);
   const classes = useStyles();
   const [disabledField, setSisabledField] = useState(false);
-  const [entryPoint, setentryPoint] = useState([]);
-  const [entryPointValue, setentryPointValue] = useState("");
-  const [timeMotherArt, setTimeMotherArt] = useState([]);
+  const [entrySetting, setEntrySetting] = useState([]);
+  const [testEntryPoint, setTestEntryPoint] = useState([]);
+  const [communitySetting, setCommunitySetting] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
 const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
@@ -138,6 +138,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
 
   useEffect(() => {
+    POINT_ENTRY_PMTCT();
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
 
@@ -213,17 +214,63 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const POINT_ENTRY_PMTCT = () => {
 
     axios
-      .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`, {
+      .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setentryPoint(response.data);
+        setTestEntryPoint(response.data);
         // console.log("deducted", ans);
       })
       .catch((error) => {
         //console.log(error);
       });
   };
+
+
+    const HTS_ENTRY_POINT_FACILITY = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+   
+        setCommunitySetting(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+  const HTS_ENTRY_POINT_COMMUNITY = () => {
+    axios
+      .get(
+        `${baseUrl}application-codesets/v2/COMMUNITY_HTS_TEST_SETTING
+ `,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        //console.log(response.data);
+        setCommunitySetting(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+  const getSettingPoint=(testEntryPoint)=>{
+
+    if(testEntryPoint.includes('ENROLLMENT_SETTING_COMMUNITY') ){
+    HTS_ENTRY_POINT_COMMUNITY()
+
+    }else{
+      HTS_ENTRY_POINT_FACILITY()
+    } 
+
+  }
+
   const TIME_ART_INITIATION_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
@@ -255,8 +302,17 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
 
    setPayload({ ...payload, [e.target.name]: e.target.value  })
+     if (e.target.name === "testEntryPoint" && e.target.value !== "") {
+
+      getSettingPoint(e.target.value)
+
+     }
+
+
+
+
+
     // setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-    // if (e.target.name === "artStartTime" && e.target.value !== "") {
     //   setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
    
     //   setInfantMotherArtDto({
@@ -529,8 +585,11 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                     >
                       <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
+                    {testEntryPoint.map((value) => (
+                      <option key={value.id} value={value.code}>
+                        {value.display}
+                      </option>
+                    ))}
                     </Input>
                   </InputGroup>
 
@@ -559,8 +618,13 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                     >
                       <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
+                      {communitySetting.map((value) => (
+                      <option key={value.id} value={value.code}>
+                        {value.display}
+                      </option>
+                    ))}
+                      {/* <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option> */}
                     </Input>
                 
                     </InputGroup>

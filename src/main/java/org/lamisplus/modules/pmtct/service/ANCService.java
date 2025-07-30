@@ -1381,7 +1381,7 @@ public class ANCService {
         return ga;
     }
 
-    public boolean isInfantRisk(long ancID) {
+    public boolean isInfantRisk(String personUuid) {
 
         return true;
     }

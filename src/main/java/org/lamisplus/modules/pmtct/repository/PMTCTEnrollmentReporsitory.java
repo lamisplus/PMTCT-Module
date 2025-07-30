@@ -128,6 +128,8 @@ String findPatientName(String personUuid);
   @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1", nativeQuery = true)
   LocalDate getPmtctEnrollmentDate(String personUuid);
 
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
+  boolean checkPatientOnPMTCT(String personUuid);
   @Modifying
   @Transactional
   @Query(value = "UPDATE public.pmtct_enrollment SET lmp = ?1 WHERE person_uuid = ?2", nativeQuery = true)

@@ -54,9 +54,9 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "check-for-infant-high-risk")
-    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PersonUuid) {
+    public boolean checkForInfantRiskStatus(@PathVariable String PersonUuid) {
 
-        return ResponseEntity.ok(ancService.isInfantRisk(PersonUuid));
+        return ancService.isInfantRisk(PersonUuid);
     }
 
 //    @PutMapping
