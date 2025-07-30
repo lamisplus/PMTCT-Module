@@ -22,6 +22,7 @@ import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
+import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 
 const styles = (theme) => ({
   root: {
@@ -195,6 +196,14 @@ function PatientCard(props) {
 
           {activeContent.route === "consultation" && (
             <ClinicVisit
+              patientObj={patientObj}
+              setActiveContent={setActiveContent}
+              activeContent={activeContent}
+            />
+          )}
+          {/* PmtctHts */}
+           {activeContent.route === "pmtct-hts-form" && (
+            <PmtctHtsForm
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}

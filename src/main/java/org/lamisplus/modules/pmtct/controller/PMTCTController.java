@@ -33,6 +33,7 @@ public class PMTCTController {
 
     private final InfantVisitService infantVisitService;
 
+    private final PmtctHtsService pmtctHtsService;
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
         //System.out.println("Doc I got here nau");
@@ -500,4 +501,12 @@ public class PMTCTController {
         return ResponseEntity.ok(infantService.firstPcrExist(infantHospitalNo));
 
     }
+
+
+    @PostMapping(value = "/pmtct-hts-enrollment")
+    public PmtctHtsReponseDTO pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        return this.pmtctHtsService.save(pmtctHtsRequestDTO);
+    }
+
+
     }

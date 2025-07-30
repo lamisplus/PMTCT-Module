@@ -79,6 +79,11 @@ function SubMenu(props) {
   const onClickConsultation = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "consultation" });
   };
+
+    const onClickPmtctHts= (row) => {
+    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts-form" });
+  };
+  
   const onClickHome = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "recent-history" });
   };
@@ -106,6 +111,9 @@ function SubMenu(props) {
 
         {(patientStatus === "Positive" ) && (
           <>
+             <Menu.Item onClick={() => onClickPmtctHts()}>
+            PMTCT HTS                </Menu.Item>
+
             {patientObj.pmtctRegStatus !== true ? (
               <>
                 <Menu.Item onClick={() => loadAncPnc()}>
