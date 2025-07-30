@@ -1,12 +1,13 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
-
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
@@ -80,6 +81,14 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   String getDateOfDelivery(String personUuid);
 
 
+  @Query(value = "SELECT * FROM public.pmtct_enrollment WHERE hiv_status = :hivStatus OR entry_point = :entryPoint", nativeQuery = true)
+  List<PMTCTEnrollment> findByHivStatusOrEntryPoint(String hivStatus, String entryPoint);
+
+  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE Person_uuid = :personUuid", nativeQuery = true)
+  DeliveryResponseDto findDeliveryByPersonUuid(String personUuid);
+
+  @Query(value = "select * from pmtct_enrollment where Person_uuid = :personUuid", nativeQuery = true)
+  PMTCTEnrollment findBypersonuuid(String personUuid);
 
 
   @Query(value = "SELECT  testing_setting  FROM public.hts_client WHERE client_code = ?1 ", nativeQuery = true)
