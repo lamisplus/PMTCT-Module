@@ -1380,5 +1380,10 @@ public class ANCService {
         if (ga < 0) ga = 0;
         return ga;
     }
+
+    public boolean isInfantRisk(long ancID) {
+
+        return true;
+    }
 }
 

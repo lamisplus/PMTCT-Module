@@ -469,6 +469,8 @@ private DeliveryRepository deliveryRepository;
             return "";
         }
 
+
+
     }
 
     public String getHIVStatus(String hospitalNumber, String personUuid) {
@@ -477,6 +479,13 @@ private DeliveryRepository deliveryRepository;
         } else {
             return "";
         }
+
+
+    }
+
+
+    public boolean checkPatientOnPMTCT(String personUuid) {
+        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
     }
 
     public boolean checkPatientOnPMTCT(String personUuid) {

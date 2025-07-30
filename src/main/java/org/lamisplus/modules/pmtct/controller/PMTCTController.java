@@ -53,6 +53,11 @@ public class PMTCTController {
         return ResponseEntity.ok(ancService.newANCRegistration(ancWithPersonRequestDto));
     }
 
+    @GetMapping(value = "check-for-infant-high-risk")
+    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PersonUuid) {
+
+        return ResponseEntity.ok(ancService.isInfantRisk(PersonUuid));
+    }
 
 //    @PutMapping
 //    public ANCRequestDto updateANC(@RequestBody ANCRequestDto ancRequestDto) {
@@ -70,6 +75,13 @@ public class PMTCTController {
     public ResponseEntity<ANC> getSingleANC(@PathVariable Long id) {
         return ResponseEntity.ok(ancService.getSingleAnc(id));
     }
+
+//    @GetMapping(value = "check-for-infant-high-risk")
+//    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PersonUuid) {
+//        return ResponseEntity.ok(ancService.isAtRisk(PersonUuid));
+//    }
+
+
 
     @GetMapping(value = "/pmtct-from-person")
     public ResponseEntity<PersonMetaDataDto> getPMTCTFromPerson(
