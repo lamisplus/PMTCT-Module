@@ -33,6 +33,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
 
+
   @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex,first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
   Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
 

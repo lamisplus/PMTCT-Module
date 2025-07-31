@@ -80,6 +80,9 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
+
+  console.log("patientObj", history.location.state, history.location.state.patientObj) 
+
   const RecentActivities = () => {
     // if patient has ANC No
     // if (props.patientObj.ancNo) {
@@ -105,8 +108,12 @@ function PatientCard(props) {
         }
       )
       .then((response) => {
-        console.log(response.data);
-        setDeliveryInfo(response.data);
+        console.log("response", response);
+        if(response?.data){
+
+        }else{
+          setDeliveryInfo({})
+        }
       })
       .catch((error) => {
         //console.log(error);

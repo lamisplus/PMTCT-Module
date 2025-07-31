@@ -18,20 +18,23 @@ function SubMenu(props) {
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
   const [showRetesting, setShowRetesting]=useState(false)
-  const [retestingStatus, setRetestingStatus]=useState("")
+  const [retestingStatus, setRetestingStatus]=useState("pmtct-hts")
 
   const [deliveryStatus, setDeliveryStatus] = useState(false);
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
-    props.deliveryInfo.filter((each) => {
+    showRetestingMenu();
+
+    if(props?.deliveryInfo.length >0){
+          props?.deliveryInfo.filter((each) => {
       if (each.activityName === "Labour and Delivery") {
         setDeliveryStatus(true);
       }
     });
-
-    console.log("THE logic", props?.patientObj)
+    }
+    console.log("THE logic", props)
     Observation();
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
@@ -39,7 +42,7 @@ function SubMenu(props) {
   }, [props.patientObj]);
 
   useEffect(() => {
-    props.deliveryInfo.filter((each) => {
+    props?.deliveryInfo?.filter((each) => {
       // console.log(each);
 
       if (each.activityName === "Labour and Delivery") {
@@ -119,7 +122,7 @@ function SubMenu(props) {
 
         // check if the patient is anc  = props?.patientObj?.ancNo
           setShowRetesting(true)
-        setRetestingStatus('Retesting')
+          setRetestingStatus('retesting')
 
 
       }else{
@@ -138,7 +141,7 @@ function SubMenu(props) {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
         
-        <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>
+        {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
         {(patientStatus === "Positive" ) && (
           <>
            
@@ -176,7 +179,8 @@ function SubMenu(props) {
             )}
           </>
         )}
-          
+        {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>Retesting  </Menu.Item>}
+
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
       {console.log(patientObj)}

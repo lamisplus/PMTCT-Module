@@ -412,7 +412,7 @@ const RecentHistory = (props) => {
                   defaultActiveKey="0"
                 >
                   <>
-                    {recentActivities &&
+                    {recentActivities.length >0 &&
                       recentActivities.map((data, i) => (
                         <div className="accordion-item" key={i}>
                           <Accordion.Toggle
