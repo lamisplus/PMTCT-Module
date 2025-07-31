@@ -63,6 +63,9 @@ function PatientCard(props) {
   const [patientBiometricStatus, setPatientBiometricStatus] = useState(
     props?.patientObj?.biometricStatus
   );
+  
+  const [showHighRisKInfant, setShowHighRisKInfant] = useState(false);
+
   const [biometricStatus, setBiometricStatus] = useState(false);
   const [devices, setDevices] = useState([]);
   const [modal, setModal] = useState(false);
@@ -73,6 +76,7 @@ function PatientCard(props) {
   const [artModal, setArtModal] = useState(false);
   const Arttoggle = () => setArtModal(!artModal);
   useEffect(() => {
+    getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
     console.log("patient", patientObj);
@@ -97,6 +101,28 @@ function PatientCard(props) {
             .catch((error) => {
               console.log(error);
             });
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+
+   const getHighRiskInfantStatus = () => {
+    axios
+      .get(`${baseUrl}modules/check-for-infant-high-risk/${patientObj.person_uuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log("getHighRiskInfantStatus =>response", response)
+        if (response.data) {
+          setShowHighRisKInfant(true)
+      
+        }else{
+        setShowHighRisKInfant(false)
+
         }
       })
       .catch((error) => {
@@ -239,6 +265,7 @@ function PatientCard(props) {
                   ) : (
                     <></>
                   )}
+                  <div  style={{display: 'flex', gap: '2px'}}>
                   {props.patientObj.dynamicHivStatus !== null ||
                   props.patientObj.staticHivStatus !== null ? (
                     <>
@@ -267,6 +294,24 @@ function PatientCard(props) {
                   ) : (
                     <></>
                   )}
+                  <div>
+                        <Typography variant="caption">
+                          <Label
+                            color={ "red"}
+                            size={"mini"}
+                          >
+Infant high risk                  
+          {/* <Label.Detail>
+
+                            {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+                      
+                            </Label.Detail> */}
+                          </Label>
+                        </Typography>
+                      </div>
+                  
+                  
+                  </div>
                 </Col>
               </Row>
             </Col>
