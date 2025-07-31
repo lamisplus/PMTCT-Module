@@ -48,6 +48,7 @@ public class PmtctVisitService {
 
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         PmtctVisit pmtctVisit = new PmtctVisit();
+        pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
@@ -110,6 +111,7 @@ public class PmtctVisitService {
     public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setId(id);
+        pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
@@ -175,6 +177,7 @@ public class PmtctVisitService {
         PmtctVisitResponseDto pmtctVisitResponseDto = new PmtctVisitResponseDto();
         pmtctVisitResponseDto.setId(pmtctVisit.getId());
         pmtctVisitResponseDto.setAncNo(pmtctVisit.getAncNo());
+        pmtctVisitResponseDto.setDateOfInitialVisit(pmtctVisit.getDateOfInitialVisit());
         pmtctVisitResponseDto.setDateOfVisit(pmtctVisit.getDateOfVisit());
         pmtctVisitResponseDto.setDateOfDelivery(pmtctVisit.getDateOfDelivery());
         pmtctVisitResponseDto.setEnteryPoint(pmtctVisit.getEntryPoint());

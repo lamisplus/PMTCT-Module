@@ -176,11 +176,7 @@ const UserRegistration = (props) => {
     syphilisInfo: {},
     partnerNotification: {},
     // sourceOfReferral: "",
-    //    staticHivStatus: ""
-    //   ? patientObj?.dynamicHivStatus
-    //   : "",
-
-    staticHivStatus: "",
+    staticHivStatus: patientObj?.dynamicHivStatus || "",
     previouslyKnownHivStatus: "",
     currentlyOnArt: "",
 
@@ -709,8 +705,12 @@ const UserRegistration = (props) => {
       let newStaticHivStatus = "";
       if (e.target.value === "Yes") {
         newStaticHivStatus = "Positive";
-      } else if (e.target.value === "No" || e.target.value === "Not tested") {
-        newStaticHivStatus = "";
+      } else if (e.target.value === "No") {
+        // Auto-populate from patientObj?.dynamicHivStatus if available
+        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
+      } else if (e.target.value === "Not tested") {
+        // Auto-populate from patientObj?.dynamicHivStatus if available
+        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
       }
       setObjValues({
         ...objValues,
@@ -1789,9 +1789,6 @@ const UserRegistration = (props) => {
                               //     ? true: patientObj.dynamicHivStatus === "Positive"? true : false
                               // }
                               disabled={
-                                objValues.previouslyKnownHivStatus === "No" ||
-                                objValues.previouslyKnownHivStatus ===
-                                  "Not tested" ||
                                 objValues.previouslyKnownHivStatus === "Yes" ||
                                 disableHIVStatus
                                   ? true

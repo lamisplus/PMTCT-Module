@@ -726,5 +726,16 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true" id="2025-07-31-002" author="Basil-DataFI">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="date_of_initial_visit" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN date_of_initial_visit DATE;
+        </sql>
+    </changeSet>
+
 
 </databaseChangeLog>

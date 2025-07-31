@@ -21,6 +21,7 @@ public class PmtctVisitRequestDto implements Serializable {
     private Long id;
     private String ancNo;
     private String enteryPoint;
+    private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
     private LocalDate dateOfDelivery;
     private String fpCounseling;

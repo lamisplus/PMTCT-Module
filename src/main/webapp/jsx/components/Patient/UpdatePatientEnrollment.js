@@ -201,7 +201,10 @@ const UserRegistration = (props) => {
     //console.log(patientObj)
     if (patientObj) {
       setDisabledField(actionType === "view" ? true : false);
-      setObjValues({ ...patientObj });
+      setObjValues({ 
+        ...patientObj,
+        staticHivStatus: patientObj?.dynamicHivStatus || ""
+      });
       basicInfo.fullname = patientObj.fullname;
       basicInfo.age = patientObj.age;
       basicInfo.hospitalNumber = patientObj.hospitalNumber;
@@ -579,8 +582,12 @@ const UserRegistration = (props) => {
       let newStaticHivStatus = "";
       if (e.target.value === "Yes") {
         newStaticHivStatus = "Positive";
-      } else if (e.target.value === "No" || e.target.value === "Not tested") {
-        newStaticHivStatus = "";
+      } else if (e.target.value === "No") {
+        // Auto-populate from patientObj?.dynamicHivStatus if available
+        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
+      } else if (e.target.value === "Not tested") {
+        // Auto-populate from patientObj?.dynamicHivStatus if available
+        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
       }
       setObjValues({
         ...objValues,
@@ -1604,9 +1611,6 @@ const UserRegistration = (props) => {
                             onChange={handleInputChange}
                             value={objValues.staticHivStatus}
                             disabled={
-                              objValues.previouslyKnownHivStatus === "No" ||
-                              objValues.previouslyKnownHivStatus ===
-                                "Not tested" ||
                               objValues.previouslyKnownHivStatus === "Yes" ||
                               disableHIVStatus ||
                               disabledField
