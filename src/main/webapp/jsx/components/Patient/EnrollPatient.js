@@ -176,9 +176,11 @@ const UserRegistration = (props) => {
     syphilisInfo: {},
     partnerNotification: {},
     // sourceOfReferral: "",
-    staticHivStatus: patientObj?.dynamicHivStatus
-      ? patientObj?.dynamicHivStatus
-      : "",
+    //    staticHivStatus: ""
+    //   ? patientObj?.dynamicHivStatus
+    //   : "",
+
+    staticHivStatus: "",
     previouslyKnownHivStatus: "",
     currentlyOnArt: "",
 
@@ -241,12 +243,12 @@ const UserRegistration = (props) => {
       alert("Date of registration can not be earlier than date of birth");
     }
 
-    if (patientObj?.dynamicHivStatus) {
-      getHIVStatus(
-        patientObj?.identifier?.identifier[0]?.value,
-        patientObj.uuid
-      );
-    }
+    // if (patientObj?.dynamicHivStatus) {
+    //   getHIVStatus(
+    //     patientObj?.identifier?.identifier[0]?.value,
+    //     patientObj.uuid
+    //   );
+    // }
     SOURCE_REFERRAL_PMTCT();
   }, [patientObj, patientId, basicInfo.dateOfRegistration]);
   //Get list of Source of Referral
@@ -379,33 +381,33 @@ const UserRegistration = (props) => {
       })
       .catch((error) => {});
   };
-  const getHIVStatus = (hospitalNumber, uuid) => {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        if (response.data) {
-          setObjValues({
-            ...objValues,
-            staticHivStatus: response.data,
-          });
-          console.log("obj pat", objValues);
-          setDisableHIVStatus(true);
-        } else {
-          objValues.staticHivStatus =
-            patientObj && patientObj.dynamicHivStatus === "Positive"
-              ? "Positive"
-              : "";
-        }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+  // const getHIVStatus = (hospitalNumber, uuid) => {
+  //   axios
+  //     .get(
+  //       `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     )
+  //     .then((response) => {
+  //       if (response.data) {
+  //         setObjValues({
+  //           ...objValues,
+  //           staticHivStatus: response.data,
+  //         });
+  //         console.log("obj pat", objValues);
+  //         setDisableHIVStatus(true);
+  //       } else {
+  //         objValues.staticHivStatus =
+  //           patientObj && patientObj.dynamicHivStatus === "Positive"
+  //             ? "Positive"
+  //             : "";
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       //console.log(error);
+  //     });
+  // };
 
   const getSex = () => {
     axios
@@ -519,9 +521,9 @@ const UserRegistration = (props) => {
     temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
       ? ""
       : "This field is required";
-    temp.staticHivStatus = objValues.staticHivStatus
-      ? ""
-      : "This field is required";
+    // temp.staticHivStatus = objValues.staticHivStatus
+    //   ? ""
+    //   : "This field is required";
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
 
     objValues.previouslyKnownHivStatus === "Yes" &&
@@ -703,31 +705,18 @@ const UserRegistration = (props) => {
         treatedHepatitisC: "",
         referredHepatitisC: "",
       });
-    } else if (
-      e.target.name === "previouslyKnownHivStatus" &&
-      e.target.value !== "" &&
-      (e.target.value === "No" || e.target.value === "Not tested")
-    ) {
+    } else if (e.target.name === "previouslyKnownHivStatus") {
+      let newStaticHivStatus = "";
+      if (e.target.value === "Yes") {
+        newStaticHivStatus = "Positive";
+      } else if (e.target.value === "No" || e.target.value === "Not tested") {
+        newStaticHivStatus = "";
+      }
       setObjValues({
         ...objValues,
         [e.target.name]: e.target.value,
-        staticHivStatus: "",
+        staticHivStatus: newStaticHivStatus,
       });
-    } else if (
-      e.target.name === "previouslyKnownHivStatus" &&
-      e.target.value !== "" &&
-      e.target.value === "Yes"
-    ) {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        staticHivStatus: "Positive",
-      });
-    } else if (
-      e.target.name === "previouslyKnownHivStatus" &&
-      e.target.value !== ""
-    ) {
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
     } else {
       setObjValues({ ...objValues, [e.target.name]: e.target.value });
     }
@@ -1786,7 +1775,7 @@ const UserRegistration = (props) => {
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
-                            HIV Status <span style={{ color: "red" }}> *</span>
+                            HIV Status
                           </Label>
                           <InputGroup>
                             <Input

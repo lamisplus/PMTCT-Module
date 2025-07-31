@@ -8,4 +8,3 @@ export const token =
     : new URLSearchParams(window.location.search).get("jwt");
 
 
-   

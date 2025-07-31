@@ -852,9 +852,9 @@ const UserRegistration = (props) => {
         (temp.testResultSyphilis = objValues.testResultSyphilis
           ? ""
           : "This field is required");
-      temp.staticHivStatus = objValues.staticHivStatus
-        ? ""
-        : "This field is required";
+          // temp.staticHivStatus = objValues.staticHivStatus
+    //   ? ""
+    //   : "This field is required";
       temp.ancNo = objValues.ancNo ? "" : "This field is required";
       temp.previouslyKnownHivStatus = objValues.previouslyKnownHivStatus
         ? ""
@@ -1316,19 +1316,16 @@ const UserRegistration = (props) => {
         setObjValues({ ...objValues, [e.target.name]: "" });
       }
     } else if (e.target.name === "previouslyKnownHivStatus") {
-      // Reset related fields when HIV status changes
-      const newObjValues = { ...objValues, [e.target.name]: e.target.value };
-      if (e.target.value !== "Yes") {
-        newObjValues.currentlyOnArt = "";
-        newObjValues.facilityEnrolledIn = "";
-        newObjValues.staticHivStatus = "";
+      let newStaticHivStatus = "";
+      if (e.target.value === "Yes") {
+        newStaticHivStatus = "Positive";
+      } else if (e.target.value === "No" || e.target.value === "Not tested") {
+        newStaticHivStatus = "";
       }
-      setObjValues(newObjValues);
-      setErrors({
-        ...errors,
-        currentlyOnArt: "",
-        facilityEnrolledIn: "",
-        staticHivStatus: "",
+      setObjValues({
+        ...objValues,
+        [e.target.name]: e.target.value,
+        staticHivStatus: newStaticHivStatus,
       });
     } else if (e.target.name === "currentlyOnArt") {
       // Reset facility field when ART status changes
@@ -3323,12 +3320,18 @@ const UserRegistration = (props) => {
                             //     ? true
                             //     : false
                             // }
-                            disabled={true}
+                            disabled={
+                              objValues.previouslyKnownHivStatus === "No" ||
+                              objValues.previouslyKnownHivStatus ===
+                                "Not tested" ||
+                              objValues.previouslyKnownHivStatus === "Yes"
+                                ? true
+                                : false
+                            }
                           >
                             <option value="">Select</option>
                             <option value="Positive">Positive</option>
                             <option value="Negative">Negative</option>
-                            <option value="Unknown">Unknown</option>
                           </Input>
                         </InputGroup>
                         {errors.staticHivStatus !== "" ? (
@@ -3343,7 +3346,7 @@ const UserRegistration = (props) => {
                     {/* <div className="form-group mb-3 col-md-6">
                         <FormGroup>
                           <Label>
-                            HIV Status <span style={{ color: "red" }}> *</span>
+                            HIV Status
                           </Label>
                           <InputGroup>
                             <Input
