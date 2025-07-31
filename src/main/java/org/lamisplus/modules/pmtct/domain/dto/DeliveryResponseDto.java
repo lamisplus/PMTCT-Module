@@ -29,7 +29,7 @@ public class DeliveryResponseDto implements Serializable {
     private String nonHbvExposedInfantGivenHbWithin24hrs;
     private String deliveryTime;
     private String onArt;
-    private String artStartedLdWard;
+    public String artStartedLdWard;
     private String HBStatus;
     private String HCStatus;
     private String referalSource;

@@ -485,7 +485,24 @@ private DeliveryRepository deliveryRepository;
 
 
     public boolean checkPatientOnPMTCT(String personUuid) {
-        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
+         PMTCTEnrollment person= pmtctEnrollmentReporsitory.findBypersonuuid(personUuid);
+        if (person != null) {
+            if (person.hivStatus != null || person.hivStatus != null)
+            {
+                if (person.artStartDate != null);
+                {
+                   DeliveryResponseDto ddto= pmtctEnrollmentReporsitory.findDeliveryByPersonUuid(personUuid);
+                    if (ddto.artStartedLdWard == "Yes") {
+
+                    }
+                }
+            }
+
+        }
+        return false;
+//        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
+
+
     }
 
 //    public boolean checkPatientOnPMTCT(String personUuid) {

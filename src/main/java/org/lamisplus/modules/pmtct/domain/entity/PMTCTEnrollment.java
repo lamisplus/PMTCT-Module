@@ -25,14 +25,14 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private LocalDate pmtctEnrollmentDate;
     private Integer gravida;
     private Integer gAWeeks;
-    private String entryPoint;
-    private LocalDate artStartDate;
+    public String entryPoint;
+    public LocalDate artStartDate;
     private String artStartTime;
     private String tbStatus;
     private String pmtctType;
     private String personUuid;
     private Long archived;
-    private String hivStatus;
+    public String hivStatus;
     private String hospitalNumber;
     private LocalDate lmp;
     private String  motherArtInitiationTime;

@@ -13,15 +13,15 @@
      private LocalDate pmtctEnrollmentDate;
      private Integer gravida;
      private Integer gAWeeks;
-     private String entryPoint;
-     private LocalDate artStartDate;
+     public String entryPoint;
+     public LocalDate artStartDate;
      private String artStartTime;
      private String tbStatus;
      private String hospitalNumber;
      private String fullName;
      private int age;
      private String uuid;
-     private String hivStatus;
+     public String hivStatus;
      private LocalDate lmp;
      private boolean pmtctRegStatus;
      private String personUuid;
