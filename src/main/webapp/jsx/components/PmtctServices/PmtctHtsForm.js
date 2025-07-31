@@ -430,9 +430,16 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
       ? ""
       : "This field is required";
 
-    temp.confirmatoryHivTest = payload.confirmatoryHivTest ? "" : "This field is required";
 
-   temp.stageOfPregnancy = payload.stageOfPregnancy ? "" : "This field is required";
+
+    temp.confirmatoryHivTest = payload.confirmatoryHivTest ? "" : "This field is required";
+  
+  
+  
+    payload.testSetting  !== "" &&
+     payload.testSetting  === "PMTCT_ENTRY_POINT_ANC" &&
+      (temp.stageOfPregnancy = payload.stageOfPregnancy ? "" : "This field is required");
+   
 
     setErrors({
       ...temp,
@@ -502,10 +509,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
             // if (props.handleRoute) {
             //   props.handleRoute(response.data);
             // } else {
-            //   props.setActiveContent({
-            //     ...props.activeContent,
-            //     route: "recent-history",
-            //   });
+              props.setActiveContent({
+                ...props.activeContent,
+                route: "recent-history",
+              });
             // }
           })
           .catch((error) => {
@@ -639,8 +646,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
               </div>
 
            
-                  
-                    <div className="form-group mb-3 col-md-4">
+           {console.log(payload.testSetting )}
+                  {/* FACILITY_HTS_TEST_SETTING_ANC */}
+           { payload.testSetting.includes("_ANC") &&  
+            <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
                           Stage of Pregnancy 
@@ -657,8 +666,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                     >
                       <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
+                      <option value="first trimester">First trimester</option>
+                      <option value="secound trimester">Secound trimester</option>
+                      <option value="third trimester">Third trimester"</option>
+
                     </Input>                        
                         </InputGroup>
                         {errors.stageOfPregnancy !== "" ? (
@@ -668,7 +679,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
                         )}
                      
                       </FormGroup>
-                    </div>
+                    </div>}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
@@ -741,8 +752,8 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                             >
                               <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
+                              <option value="reactive">Reactive</option>
+                              <option value="non-reactive">Non reactive</option>
                             </Input> 
                   </InputGroup>
                   {/* {errors.confirmatoryHivTest !== "" ? (
@@ -767,8 +778,8 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                             >
                               <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
+                              <option value="reactive">Reactive</option>
+                              <option value="non-reactive">Non reactive</option>
                             </Input> 
                   </InputGroup>
                   {/* {errors.confirmatoryHivTest !== "" ? (
@@ -793,8 +804,8 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
                             >
                               <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
+                              <option value="reactive">Reactive</option>
+                              <option value="non-reactive">Non reactive</option>
                             </Input> 
                   </InputGroup>
                   {/* {errors.confirmatoryHivTest !== "" ? (

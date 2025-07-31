@@ -2,16 +2,14 @@ package org.lamisplus.modules.pmtct.service;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctHts;
-import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
+import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
-import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -160,5 +158,49 @@ public class PmtctHtsService {
 //        return this.pmtctVisitRepository.save(pmtctVisit);
 //    }
 //
+
+
+    public PmtctHtsRequestDTO updatePmtctHts(Long id, PmtctHtsRequestDTO pmtctHtsRequestDTO)
+    {
+        Optional <PmtctHts> pmtctHtsEnrollment = this.pmtctHtsRepository.findById(id);
+        if(pmtctHtsEnrollment.isPresent())
+        {
+            PmtctHts pmtctEnrollment1 = pmtctHtsEnrollment.get();
+            pmtctEnrollment1.setDateOfHivTest(pmtctHtsRequestDTO.getDateOfHivTest());
+            pmtctEnrollment1.setTestEntryPoint(pmtctHtsRequestDTO.getTestEntryPoint());
+            pmtctEnrollment1.setTestSetting(pmtctHtsRequestDTO.getTestSetting());
+            pmtctEnrollment1.setInitialHivTest(pmtctHtsRequestDTO.getInitialHivTest());
+            pmtctEnrollment1.setConfirmatoryHivTest(pmtctHtsRequestDTO.getConfirmatoryHivTest());
+            pmtctEnrollment1.setStageOfPregnancy(pmtctHtsRequestDTO.getStageOfPregnancy());
+            pmtctEnrollment1.setSyphilis(pmtctHtsRequestDTO.getSyphilis());
+            pmtctEnrollment1.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
+            pmtctEnrollment1.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
+//            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
+
+
+
+
+//            check if the patient has LD record and update the GA
+            Optional <PmtctHts> foundRec = this.pmtctHtsRepository.findRecordByPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
+
+
+            this.pmtctHtsRepository.save(pmtctEnrollment1);
+        }
+        return pmtctHtsRequestDTO;
+    }
+
+
+
+    public void deletePmtctHtsRecord(Long id) throws Exception {
+        PmtctHts existingRec = this.pmtctHtsRepository.findById(id)
+                .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
+        existingRec.setArchived(1L);
+        pmtctHtsRepository.save(existingRec);
+    }
+
+
+    public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(Long id) {
+        return convertEntitytoRespondDto(pmtctHtsRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(PmtctHts.class, "Id", id+ "") ));
+    }
 //
 }

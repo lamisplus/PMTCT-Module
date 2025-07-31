@@ -521,4 +521,17 @@ public class PMTCTController {
     }
 
 
+
+    @DeleteMapping(value = "/delete/pmtct-hts/{id}")
+    public ResponseEntity<String> deletePmtctHts(@PathVariable("id") Long id) throws Exception {
+        this.pmtctHtsService.deletePmtctHtsRecord(id);
+        return ResponseEntity.accepted().build();
+    }
+
+
+
+    @GetMapping(value = "view-pmtct-enrollment/{id}")
+    public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
+    }
     }
