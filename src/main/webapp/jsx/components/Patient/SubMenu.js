@@ -119,7 +119,7 @@ function SubMenu(props) {
 
         // check if the patient is anc  = props?.patientObj?.ancNo
           setShowRetesting(true)
-
+        setRetestingStatus('Retesting')
 
 
       }else{

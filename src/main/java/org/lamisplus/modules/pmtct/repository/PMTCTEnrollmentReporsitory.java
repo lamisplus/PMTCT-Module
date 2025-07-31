@@ -1,12 +1,13 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
-
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
@@ -18,7 +19,7 @@ import org.springframework.data.jpa.repository.Query;
 import javax.transaction.Transactional;
 
 public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnrollment, Long> {
-   PMTCTEnrollment findByAncNo(String ancNo);
+  PMTCTEnrollment findByAncNo(String ancNo);
 
   Optional  <PMTCTEnrollment> getByAncNo(String ancNo);
 
@@ -30,8 +31,10 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   PMTCTEnrollment findPMTCTEnrollmentByPersonUuid(String personUuid);
 
-    @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex,first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
-    Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
+
+
+  @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex,first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
+  Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
 
   @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE (first_name ilike ?1 OR surname ilike ?1 OR other_name ilike ?1 OR full_name ilike ?1 OR pp.hospital_number ilike ?1) AND pp.archived=?2 AND pp.facility_id=?3 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
   Page<PatientPerson> getActiveOnPMTCTBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
@@ -80,6 +83,14 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   String getDateOfDelivery(String personUuid);
 
 
+  @Query(value = "SELECT * FROM public.pmtct_enrollment WHERE hiv_status = :hivStatus OR entry_point = :entryPoint", nativeQuery = true)
+  List<PMTCTEnrollment> findByHivStatusOrEntryPoint(String hivStatus, String entryPoint);
+
+  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE Person_uuid = :personUuid", nativeQuery = true)
+  DeliveryResponseDto findDeliveryByPersonUuid(String personUuid);
+
+  @Query(value = "select * from pmtct_enrollment where Person_uuid = :personUuid", nativeQuery = true)
+  PMTCTEnrollment findBypersonuuid(String personUuid);
 
 
   @Query(value = "SELECT  testing_setting  FROM public.hts_client WHERE client_code = ?1 ", nativeQuery = true)
@@ -89,7 +100,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   String checkresultOnHts(String client_code);
 
   @Query(value = "SELECT person_uuid FROM public.hts_client WHERE client_code = ?1", nativeQuery = true)
- String checkPatientOnHts(String clientCode);
+  String checkPatientOnHts(String clientCode);
 
 
 //
@@ -99,7 +110,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
   @Query(value = "SELECT full_name   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
-String findPatientName(String personUuid);
+  String findPatientName(String personUuid);
 
   @Query(value = "SELECT hospital_number   FROM public.patient_person WHERE uuid = ?1 ", nativeQuery = true)
   String findPatientHos(String personUuid);
