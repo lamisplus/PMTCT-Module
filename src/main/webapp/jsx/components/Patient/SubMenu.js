@@ -17,6 +17,9 @@ function SubMenu(props) {
   //const patientCurrentStatus=props.patientObj && props.patientObj.currentStatus==="Died (Confirmed)" ? true : false ;
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
+  const [showRetesting, setShowRetesting]=useState(false)
+  const [retestingStatus, setRetestingStatus]=useState("")
+
   const [deliveryStatus, setDeliveryStatus] = useState(false);
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
   let mentalStatus = false;
@@ -28,6 +31,7 @@ function SubMenu(props) {
       }
     });
 
+    console.log("THE logic", props?.patientObj)
     Observation();
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
@@ -104,15 +108,40 @@ function SubMenu(props) {
   };
   //
 
+    const showRetestingMenu = () => {
+      if(props?.patientObj?.pmtctRegStatus){
+          setShowRetesting(false)
+      }else if(props?.patientObj?.hivStatus.toLowerCase() === "positive" || props?.patientObj?.dynamicHivStatus.toLowerCase() === "positive" || props?.patientObj?.dynamicHivStatus?.toLowerCase() === "positive"){
+
+          setShowRetesting(false)
+
+      }else if(props?.patientObj?.hivStatus.toLowerCase() === "negative" || props?.patientObj?.dynamicHivStatus.toLowerCase() === "negative" || props?.patientObj?.dynamicHivStatus?.toLowerCase() === "negative"){
+
+        // check if the patient is anc  = props?.patientObj?.ancNo
+          setShowRetesting(true)
+
+
+
+      }else{
+
+      // if the status is unknown 
+
+      }
+    props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });
+
+
+
+  };
+
   return (
     <div>
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
-
+        
+        <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>
         {(patientStatus === "Positive" ) && (
           <>
-             <Menu.Item onClick={() => onClickPmtctHts()}>
-            PMTCT HTS                </Menu.Item>
+           
 
             {patientObj.pmtctRegStatus !== true ? (
               <>
@@ -147,6 +176,7 @@ function SubMenu(props) {
             )}
           </>
         )}
+          
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
       {console.log(patientObj)}
