@@ -43,6 +43,7 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String communitySetting;
 
     private String previouslyKnownHivStatus;
+    private String currentlyOnArt;
     private LocalDate  dateOfHepatitisB;
     private String  hepatitisB;
     private String testedHepatitisB;

@@ -398,8 +398,7 @@ const LabourDelivery = (props) => {
       // }
       getGestationalAge(e.target.value, e.target.name);
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
-
-    }else if (e.target.name === "childStatus") {
+    } else if (e.target.name === "childStatus") {
       setDelivery({
         ...delivery,
         [e.target.name]: e.target.value,
@@ -407,16 +406,45 @@ const LabourDelivery = (props) => {
         numberOfInfantsDead: "",
       });
 
-       setErrors({
-         ...errors,
-         numberOfInfantsDead: "",
-         numberOfInfantsAlive: "",
-       });
-    } else if(e.target.name === "gaweeks"){
-      setNewGa(e.target.value)
+      setErrors({
+        ...errors,
+        numberOfInfantsDead: "",
+        numberOfInfantsAlive: "",
+      });
+    } else if (e.target.name === "gaweeks") {
+      setNewGa(e.target.value);
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
+    } else if (
+      e.target.name === "numberOfInfantsAlive" ||
+      e.target.name === "numberOfInfantsDead"
+    ) {
+      const newDelivery = { ...delivery, [e.target.name]: e.target.value };
 
-    }else {
+      // Real-time validation for Number of Child Alive vs Dead
+      if (
+        newDelivery.childStatus &&
+        newDelivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
+        newDelivery.numberOfInfantsAlive !== "" &&
+        newDelivery.numberOfInfantsDead !== ""
+      ) {
+        const aliveCount = parseInt(newDelivery.numberOfInfantsAlive);
+        const deadCount = parseInt(newDelivery.numberOfInfantsDead);
+        if (aliveCount <= deadCount) {
+          setErrors({
+            ...errors,
+            numberOfInfantsAlive:
+              "Number of Child Alive must be greater than Number of Child Dead",
+          });
+        } else {
+          setErrors({
+            ...errors,
+            numberOfInfantsAlive: "",
+          });
+        }
+      }
+
+      setDelivery(newDelivery);
+    } else {
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     }
   };
@@ -431,7 +459,9 @@ const LabourDelivery = (props) => {
     // temp.romDeliveryInterval = delivery.romDeliveryInterval
     //   ? ""
     //   : "This field is required";
-    temp.placeOfDelivery = delivery.placeOfDelivery ? "" : "This field is required";
+    temp.placeOfDelivery = delivery.placeOfDelivery
+      ? ""
+      : "This field is required";
 
     temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required";
     temp.onArt = delivery.onArt ? "" : "This field is required";
@@ -466,10 +496,26 @@ const LabourDelivery = (props) => {
       (temp.numberOfInfantsAlive = delivery.numberOfInfantsAlive
         ? ""
         : "This field is required");
-delivery.childStatus !== "" &&
-  delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
-  (temp.numberOfInfantsDead =
-    delivery.numberOfInfantsDead !== "" ? "" : "This field is required");
+    delivery.childStatus !== "" &&
+      delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
+      (temp.numberOfInfantsDead =
+        delivery.numberOfInfantsDead !== "" ? "" : "This field is required");
+
+    // Validate that Number of Child Alive > Number of Child Dead when Child Status is not Still Birth
+    if (
+      delivery.childStatus &&
+      delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
+      delivery.numberOfInfantsAlive !== "" &&
+      delivery.numberOfInfantsDead !== ""
+    ) {
+      const aliveCount = parseInt(delivery.numberOfInfantsAlive);
+      const deadCount = parseInt(delivery.numberOfInfantsDead);
+      if (aliveCount <= deadCount) {
+        temp.numberOfInfantsAlive =
+          "Number of Child Alive must be greater than Number of Child Dead";
+      }
+    }
+
     // temp.numberOfInfantsDead =
     //   delivery.numberOfInfantsDead === 0 ? "" : "This field is required";
 
@@ -483,6 +529,16 @@ delivery.childStatus !== "" &&
     e.preventDefault();
     if (validate()) {
       setSaving(true);
+
+      // Check if child status is "Alive" and set route accordingly
+      const isChildAlive =
+        delivery.childStatus &&
+        delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
+        parseInt(delivery.numberOfInfantsAlive) >
+          parseInt(delivery.numberOfInfantsDead);
+
+      const targetRoute = isChildAlive ? "infants" : "recent-history";
+
       if (props.activeContent && props.activeContent.actionType) {
         //Perform operation for updation action
         axios
@@ -499,11 +555,11 @@ delivery.childStatus !== "" &&
             });
             props.setActiveContent({
               ...props.activeContent,
-              route: "recent-history",
+              route: targetRoute,
             });
           })
           .catch((error) => {
-            console.log("error ",  error)
+            console.log("error ", error);
             setSaving(false);
             toast.error("Something went wrong", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -523,7 +579,7 @@ delivery.childStatus !== "" &&
             });
             props.setActiveContent({
               ...props.activeContent,
-              route: "recent-history",
+              route: targetRoute,
             });
           })
           .catch((error) => {

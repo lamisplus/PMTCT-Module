@@ -37,7 +37,7 @@ public class ANCWithPersonRequestDto implements Serializable
     private PartnerNotification partnerNotification;
     private PersonDto personDto;
     private String previouslyKnownHivStatus;
-
+    private String currentlyOnArt;
     private LocalDate  dateOfHepatitisB;
     private String  hepatitisB;
     private String testedHepatitisB;

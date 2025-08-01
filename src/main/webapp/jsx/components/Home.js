@@ -36,7 +36,7 @@ const Home = (props) => {
         </ol>
       </div>
       {/* <Link to={"register-patient"}> */}
-      <Button
+      {/* <Button
         variant="contained"
         color="primary"
         className=" float-end mb-10"
@@ -48,7 +48,7 @@ const Home = (props) => {
         }}
       >
         <span style={{ textTransform: "capitalize" }}>New Patient</span>
-      </Button>
+      </Button> */}
       {/* </Link> */}
       <br />
       <br />

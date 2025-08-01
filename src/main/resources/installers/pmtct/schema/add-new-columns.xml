@@ -715,5 +715,27 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="true"  id="2025-07-29-001" author="Basil-DataFI">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="currently_on_art" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD COLUMN currently_on_art character varying;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2025-07-31-002" author="Basil-DataFI">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="date_of_initial_visit" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN date_of_initial_visit DATE;
+        </sql>
+    </changeSet>
+
 
 </databaseChangeLog>

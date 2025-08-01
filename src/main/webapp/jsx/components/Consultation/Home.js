@@ -64,8 +64,12 @@ const useStyles = makeStyles((theme) => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
+  console.log("Mother Follow-up Visit obj", patientObj)
   const [errors, setErrors] = useState({});
   const [disabledField, setDisabledField] = useState(false);
+  
+  // Disable the initial visit date field if patient already has enrollment date
+  const isInitialVisitDisabled = patientObj.pmtctEnrollmentDate ? true : false;
   let temp = { ...errors };
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
@@ -84,6 +88,7 @@ const ClinicVisit = (props) => {
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
     dateOfViralLoad: "",
+    dateOfInitialVisit: patientObj.pmtctEnrollmentDate || "",
     dateOfVisit: "",
     dateOfmeternalOutcome: "",
     dateOfDelivery: "",
@@ -458,6 +463,35 @@ const ClinicVisit = (props) => {
             <br />
             <br />
             <div className="row">
+
+            <div className="form-group mb-3 col-md-3">
+                <FormGroup>
+                  <FormLabelName>
+                  Date of Initial Visit <span style={{ color: "red" }}> *</span>
+                  </FormLabelName>
+                  <Input
+                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                    name="dateOfInitialVisit"
+                    id="dateOfInitialVisit"
+                    value={objValues.dateOfInitialVisit}
+                    style={{
+                      border: "1px solid #014D88",
+                      borderRadius: "0.25rem",
+                    }}
+                    onChange={handleInputChange}
+               
+                    min={patientObj.pmtctEnrollmentDate}
+                    disabled={isInitialVisitDisabled}
+                  />
+                  {/* {errors.dateOfInitialVisit !== "" ? (
+                    <span className={classes.error}>{errors.dateOfInitialVisit}</span>
+                  ) : (
+                    ""
+                  )} */}
+                </FormGroup>
+              </div>
+
+
               <div className="form-group mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName>

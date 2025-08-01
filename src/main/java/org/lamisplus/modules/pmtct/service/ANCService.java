@@ -294,6 +294,7 @@ public class ANCService {
         anc.setPersonUuid(exist.getPersonUuid());
         anc.setAncSetting(ancRequestDto.getAncSetting());
         anc.setPreviouslyKnownHivStatus(ancRequestDto.getPreviouslyKnownHivStatus());
+        anc.setCurrentlyOnArt(ancRequestDto.getCurrentlyOnArt());
         anc.setDateOfHepatitisB(ancRequestDto.getDateOfHepatitisB());
         anc.setHepatitisB(ancRequestDto.getHepatitisB());
         anc.setTestedHepatitisB(ancRequestDto.getTestedHepatitisB());
@@ -820,6 +821,7 @@ public class ANCService {
             anc.setStatus("NV");
             anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
             anc.setPreviouslyKnownHivStatus(ancEnrollementRequestDto.getPreviouslyKnownHivStatus());
+            anc.setCurrentlyOnArt(ancEnrollementRequestDto.getCurrentlyOnArt());
             anc.setDateOfHepatitisB(ancEnrollementRequestDto.getDateOfHepatitisB());
             anc.setHepatitisB(ancEnrollementRequestDto.getHepatitisB());
             anc.setTestedHepatitisB(ancEnrollementRequestDto.getTestedHepatitisB());
@@ -935,6 +937,7 @@ public class ANCService {
             anc.setAncSetting(ancWithPersonRequestDto.getAncSetting());
             anc.setStatus("NV");
             anc.setPreviouslyKnownHivStatus(ancWithPersonRequestDto.getPreviouslyKnownHivStatus());
+            anc.setCurrentlyOnArt(ancWithPersonRequestDto.getCurrentlyOnArt());
             anc.setDateOfHepatitisB(ancWithPersonRequestDto.getDateOfHepatitisB());
             anc.setHepatitisB(ancWithPersonRequestDto.getHepatitisB());
             anc.setTestedHepatitisB(ancWithPersonRequestDto.getTestedHepatitisB());

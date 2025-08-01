@@ -17,6 +17,7 @@ public class PmtctVisitResponseDto implements Serializable {
     private int age;
     private LocalDate dateOfBirth;
     private String enteryPoint;
+    private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
     private LocalDate dateOfDelivery;
     private String fpCounseling;
