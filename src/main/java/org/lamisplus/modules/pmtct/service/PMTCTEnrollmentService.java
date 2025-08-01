@@ -484,27 +484,45 @@ private DeliveryRepository deliveryRepository;
     }
 
 
-    public boolean checkPatientOnPMTCT(String personUuid) {
-         PMTCTEnrollment person= pmtctEnrollmentReporsitory.findBypersonuuid(personUuid);
-        if (person != null) {
-            if (person.hivStatus != null && person.hivStatus != null) {
-                if (person.artStartDate != null) {
-                    DeliveryResponseDto ddto = pmtctEnrollmentReporsitory.findDeliveryByPersonUuid(personUuid);
-                    if ("Yes".equals(ddto.artStartedLdWard)) {
+//    public boolean checkPatientOnPMTCT(String personUuid) {
+//         PMTCTEnrollment person= pmtctEnrollmentReporsitory.findBypersonuuid(personUuid);
+//        if (person != null) {
+//            if (person.hivStatus != null && person.hivStatus != null) {
+//                if (person.artStartDate != null) {
+//                    DeliveryResponseDto ddto = pmtctEnrollmentReporsitory.findDeliveryByPersonUuid(personUuid);
+//                    if ("Yes".equals(ddto.artStartedLdWard)) {
+//
+//                    }
+//                }
+//            }
+//            return false;
+//        }
 
-                    }
-                }
-            }
+    public boolean checkPatientOnPMTCT(String personUuid) {
+        PMTCTEnrollment person = pmtctEnrollmentReporsitory.findBypersonuuid(personUuid);
+        if (person == null) {
+            System.out.println("No enrollment found for person: " + personUuid);
             return false;
         }
+
+        if (person.getHivStatus() == null || person.getArtStartDate() == null) {
+            System.out.println("Missing HIV status or ART start date for person: " + personUuid);
+            return false;
+        }
+
+        DeliveryResponseDto deliveryDto = pmtctEnrollmentReporsitory.findDeliveryByPersonUuid(personUuid);
+        boolean result = deliveryDto != null && "Yes".equalsIgnoreCase(deliveryDto.getArtStartedLdWard());
+        System.out.println("Delivery condition met? " + result);
+        return result;
+    }
 
 
 
 //        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
 
 
-        return false;
-    }
+
+
 
 //    public boolean checkPatientOnPMTCT(String personUuid) {
 //        return  pmtctEnrollmentReporsitory.checkPatientOnPMTCT(personUuid);
