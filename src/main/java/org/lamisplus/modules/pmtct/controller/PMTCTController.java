@@ -6,6 +6,7 @@ import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,8 @@ public class PMTCTController {
     private final ANCAcivityTracker ancAcivityTracker;
 
     private final InfantService infantService;
-    private final CurrentUserOrganizationService organizationService;
+
+   private final CurrentUserOrganizationService organizationService;
 
     private final InfantVisitService infantVisitService;
 
@@ -126,11 +128,14 @@ public class PMTCTController {
         return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
     }
 
-    @GetMapping("/art/")
-    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid) {
-        Long facility = organizationService.getCurrentUserOrganization();
-        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
-    }
+    //uncomment
+//    @GetMapping("/art/")
+//    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid) {
+//        Long facility = organizationService.getCurrentUserOrganization();
+//        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
+//    }
+
+    //uncomment
 
     @GetMapping("/vl-result/")
     public List<SingleResultProjectionDTO> vlResultOnDate(@RequestParam String PersonUuid,
@@ -530,7 +535,7 @@ public class PMTCTController {
 
 
 
-    @GetMapping(value = "view-pmtct-enrollment/{id}")
+    @GetMapping(value = "view-pmtct-hts-enrollment/{id}")
     public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
     }

@@ -81,7 +81,8 @@ function PatientCard(props) {
       : {};
 
 
-  console.log("patientObj", history.location.state, history.location.state.patientObj) 
+  console.log(" history.location.state", history.location.state) 
+  console.log("activeContent.route", activeContent) 
 
   const RecentActivities = () => {
     // if patient has ANC No
@@ -155,6 +156,7 @@ function PatientCard(props) {
 
   return (
     <div className={classes.root}>
+
       <div
         className="row page-titles mx-0"
         style={{ marginTop: "0px", marginBottom: "-10px" }}

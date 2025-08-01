@@ -478,6 +478,7 @@ public class ANCService {
             //System.out.println("I got here Doc");
             persons = ancRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
         }
+        System.out.println(persons);
         List<PatientPerson> personList = persons.getContent();
         ArrayList<ANCRespondDto> ancResponseDtos = new ArrayList<>();
         personList.forEach(person -> {
