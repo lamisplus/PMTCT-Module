@@ -20,6 +20,7 @@ public class ANCAcivityTracker {
     private final DeliveryRepository deliveryRepository;
     private final PmtctVisitRepository pmtctVisitRepository;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+    private final PmtctHtsRepository pmtctHtsRepository;
 
     private  final InfantArvRepository infantArvRepository;
 
@@ -264,6 +265,7 @@ public class ANCAcivityTracker {
 
     public List<ActivityTracker> getAllActivities(String personUuid) {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
+
         List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPersonUuid(personUuid);
         if(!(infantVisits.isEmpty()) ){
             infantVisits.forEach(infantVisit -> {
@@ -373,6 +375,27 @@ public class ANCAcivityTracker {
             activityTracker.setRecordId(ancs.get().getId());
             activityTrackers.add(activityTracker);
         }
+
+
+        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuid(personUuid);
+        if (!(pmtctHtsRecord.isEmpty()))
+        {
+            pmtctHtsRecord.forEach(pmtctHtsRec ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                activityTracker.setActivityName(pmtctHtsRec.getTestingType());
+                activityTracker.setPath("pmtct-hts");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctHtsRec.getId());
+                activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
+                activityTrackers.add(activityTracker);
+            } );
+        }
+
+
+
 
         return activityTrackers;
 

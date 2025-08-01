@@ -66,6 +66,7 @@ function PatientCard(props) {
   const [deliveryInfo, setDeliveryInfo] = useState([]);
   const [allEntryPoint, setAllEntryPoint] = useState([]);
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
+  const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -185,6 +186,7 @@ function PatientCard(props) {
             setActiveContent={setActiveContent}
             deliveryInfo={deliveryInfo}
             enrollPMTCT={enrollPMTCT}
+            setPmtctHtsRetestingType={setPmtctHtsRetestingType}
 
           />
           <br />
@@ -216,6 +218,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              PmtctHtsRetestingType={PmtctHtsRetestingType}
             />
           )}
           {activeContent.route === "anc-pnc" && (

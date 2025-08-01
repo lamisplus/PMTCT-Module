@@ -77,18 +77,20 @@ public class PmtctHtsService {
         pmtctHts.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
         pmtctHts.setTestingType(pmtctHtsRequestDTO.getTestingType());
         pmtctHts.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
-        try {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
-            Long facilityId = user.getCurrentOrganisationUnitId();
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctHts.getPersonUuid(), facilityId, 0);
-            if (persons.isPresent()) {
-                Person person = persons.get();
-                pmtctHts.setHospitalNumber(person.getHospitalNumber());
-                pmtctHts.setPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
-                pmtctHts.setArchived(0L);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+        pmtctHts.setHospitalNumber(pmtctHtsRequestDTO.getHospitalNumber());
+        pmtctHts.setArchived(0L);
+        pmtctHts.setPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
+//
+//        try {
+//            Optional<User> currentUser = this.userService.getUserWithRoles();
+//            User user = (User) currentUser.get();
+//            Long facilityId = user.getCurrentOrganisationUnitId();
+//            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctHts.getPersonUuid(), facilityId, 0);
+//            System.out.println("persons " + persons);
+//            if (persons.isPresent()) {
+//                Person person = persons.get();
+//            }
+//        } catch (Exception e) { e.printStackTrace(); }
 
         return this.pmtctHtsRepository.save(pmtctHts);
     }

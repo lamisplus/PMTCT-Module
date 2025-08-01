@@ -87,16 +87,15 @@ function SubMenu(props) {
     props.setActiveContent({ ...props.activeContent, route: "consultation" });
   };
 
-    const onClickPmtctHts= (row) => {
+    const onClickPmtctHts= (type) => {
     props.setActiveContent({ ...props.activeContent, route: "pmtct-hts-form" });
+    props.setPmtctHtsRetestingType(type)
   };
   
   const onClickHome = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "recent-history" });
   };
-  const loadPmtctHts = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts" });
-  };
+
   const onClickInfant = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "infants" });
   };
@@ -179,7 +178,7 @@ function SubMenu(props) {
             )}
           </>
         )}
-        {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>Retesting  </Menu.Item>}
+        {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("retesting")}>Retesting  </Menu.Item>}
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>

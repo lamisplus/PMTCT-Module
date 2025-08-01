@@ -222,7 +222,15 @@ const RecentHistory = (props) => {
         activeTab: "home",
         actionType: action,
       });
-    } else {
+    }  else if (row.path === "pmtct-hts") {
+      props.setActiveContent({
+        ...props.activeContent,
+        route: "pmtct-hts",
+        id: row.recordId,
+        activeTab: "home",
+        actionType: action,
+      });
+    }else {
     }
   };
   const LoadDeletePage = (row) => {

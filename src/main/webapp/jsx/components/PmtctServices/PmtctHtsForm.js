@@ -129,7 +129,8 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
      syphilis:"",
     hepatitisB: "",
     hepatitisC: "",
-
+    testingType:  props?.PmtctHtsRetestingType.toUpperCase(),
+    personUuid: locationState && locationState.patientObj? locationState.patientObj.person_uuid : props.patientObj.person_uuid,
   });
  
  
@@ -448,12 +449,11 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   };
 
   /**** Submit Button Processing  */
+ 
   const handleSubmit = (e) => {
     e.preventDefault();
    console.log("Submitting", payload);
    console.log("Submitting", payload);
-    payload.personUuid =locationState && locationState.patientObj? locationState.patientObj.uuid : props.patientObj.uuid
-      payload.testingType= "PMTCT_TEST"
      if (validate()) {
     console.log("Submitted");
 
