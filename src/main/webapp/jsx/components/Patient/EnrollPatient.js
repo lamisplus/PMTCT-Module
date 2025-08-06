@@ -29,6 +29,7 @@ import { Modal } from "react-bootstrap";
 import { calculateGestationalAge } from "../../utils";
 import FacilitySearchDropdown from "./FacilitySearchDropdown";
 
+import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 library.add(faCheckSquare, faCoffee, faEdit, faTrash);
 
 const useStyles = makeStyles((theme) => ({
@@ -177,7 +178,7 @@ const UserRegistration = (props) => {
     partnerNotification: {},
     // sourceOfReferral: "",
     staticHivStatus: patientObj?.dynamicHivStatus || "",
-    previouslyKnownHivStatus: "",
+    previouslyKnownHivStatus: patientObj.dynamicHivStatus === "Positive"? "Yes": "",
     currentlyOnArt: "",
 
     dateOfHepatitisB: "",
@@ -522,7 +523,7 @@ const UserRegistration = (props) => {
     //   : "This field is required";
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
 
-    objValues.previouslyKnownHivStatus === "Yes" &&
+    objValues.previouslyKnownHivStatus === "Yes" && objValues.currentlyOnArt === "Yes"&&
       (temp.facilityEnrolledIn = objValues.facilityEnrolledIn
         ? ""
         : "This field is required");
@@ -728,6 +729,7 @@ const UserRegistration = (props) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("validate()", validate(), errors)
     if (validate()) {
       // ANC ENTRY POINT
       if (locationState.showANC) {
@@ -994,7 +996,7 @@ const UserRegistration = (props) => {
                 </div>
               </div>
               {/* Adding  ENROLLEMENT FORM HERE */}
-
+          {console.log('patientObj ---testing', patientObj)}
               {locationState.showANC ? (
                 <div className="card">
                   <div
@@ -1813,6 +1815,8 @@ const UserRegistration = (props) => {
                   </div>
                 </div>
               ) : (
+                <>
+                {patientObj.dynamicHivStatus === "Positive"? 
                 <PmtctEnrollment
                   newRegDate={""}
                   patientObj={patientObj}
@@ -1824,6 +1828,22 @@ const UserRegistration = (props) => {
                   handleRoute={handleRoute}
                   htsHivStatus={""}
                 />
+                  :
+              <PmtctHtsForm
+              patientObj={patientObj}
+              setActiveContent={setActiveContent}
+              activeContent={activeContent}
+              PmtctHtsRetestingType={patientObj? 'pmtct-hts':'pmtct-hts'}
+               handleRoute={handleRoute}
+               onEnrollPatient={true}
+              entrypointValue={locationState.entrypointValue}
+              patientAge={basicInfo.age}
+              personUuid={patientObj.uuid}
+
+            />
+
+                }
+                </>
               )}
               {/* END OF HIV ENROLLEMENT FORM */}
               {saving ? <Spinner /> : ""}

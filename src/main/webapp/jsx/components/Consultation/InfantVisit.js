@@ -1069,7 +1069,7 @@ const ClinicVisit = (props) => {
       objValues.infantRapidAntiBodyTestDto = infantRapidTestDTO;
       objValues.infantVisitRequestDto = infantVisitRequestDto;
 
-      if (props.activeContent && props.activeContent.actionType) {
+      if (props.activeContent && props.activeContent.actionType  === "update") {
         //Perform operation for updation action
         //`${baseUrl}pmtct/anc/update-infant-visit/${props.activeContent.id}`,
 
@@ -2471,7 +2471,7 @@ const ClinicVisit = (props) => {
             {infantVisitRequestDto &&
             infantVisitRequestDto.infantHospitalNumber ? (
               <>
-                {props.activeContent && props.activeContent.actionType ? (
+                {props.activeContent && props.activeContent.actionType  === "update"? (
                   <>
                     <MatButton
                       type="submit"

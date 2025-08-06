@@ -80,6 +80,8 @@ const ClinicVisitPage = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
+                  {  console.log("eventKey", key)
+}
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">
                     <ConsultationPage
                       patientObj={patientObj}

@@ -98,12 +98,12 @@ const PmtctHtsForm = (props) => {
   const locationState = location && location.state ? location.state : null;
   const [regimenType, setRegimenType] = useState([]);
   const classes = useStyles();
-  const [disabledField, setSisabledField] = useState(false);
+  const [disabledField, setDisabledField] = useState(false);
   const [entrySetting, setEntrySetting] = useState([]);
   const [testEntryPoint, setTestEntryPoint] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
-const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
+  const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -115,8 +115,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const [urinalysisList, setUrinalysisList] = useState([]);
   const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
-  const [maxARTDate, setMaxARTDate]=useState(moment(new Date()).format("YYYY-MM-DD"));
-  const [minARTDate, setMinARTDate]=useState("");
+  const [maxARTDate, setMaxARTDate] = useState(
+    moment(new Date()).format("YYYY-MM-DD")
+  );
+  const [minARTDate, setMinARTDate] = useState("");
 
   const [payload, setPayload] = useState({
     dateOfHivTest: "",
@@ -125,16 +127,15 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     initialHivTest: "",
     stageOfPregnancy: "",
     confirmatoryHivTest: "",
-    hospitalNumber: props?.patientObj?.hospitalNumber,
-     syphilis:"",
+     hospitalNumber: props?.patientObj?.identifier?.identifier[0]?.value ,
+    syphilis: "",
     hepatitisB: "",
     hepatitisC: "",
-    testingType:  props?.PmtctHtsRetestingType.toUpperCase(),
-    personUuid: locationState && locationState.patientObj? locationState.patientObj.person_uuid : props.patientObj.person_uuid,
+    testingType: props?.PmtctHtsRetestingType.toUpperCase(),
+    personUuid: props.personUuid,
   });
- 
- 
-  
+
+    console.log("props searching", props)
 
 
 
@@ -143,45 +144,49 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
 
-    if (props?.patientObj.id) {
-      getARTStartDate();
-      getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
-    }
-   
+    if (props?.patientObj?.id && props?.activeContent?.id && props?.activeContent?.actionType !== 'create') {
+      viewPmtctHtsRecord(props?.patientObj?.id);
 
+      getARTStartDate();
+      getHIVStatus(
+        props?.patientObj?.identifier?.identifier[0]?.value,
+       props.personUuid
+      );
+    }
   }, []);
 
-
-  const GetPatientPMTCT = (id) => {
+  const viewPmtctHtsRecord = (id) => {
     axios
       .get(
-        `${baseUrl}pmtct/anc/view-pmtct-enrollment/${props.activeContent.id}`,
+        `${baseUrl}pmtct/anc/view-pmtct-hts-enrollment/${props.activeContent.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-      
-
-        setEnrollDto({ ...enroll, ...response.data });
-        if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
-
-          calculateExpectedDate(response.data.lmp)    // this console should be autocalculated by adding 40wks to the "date of the Last Menstrual Period"
-        }
-        setInfantMotherArtDto({
-          ...infantMotherArtDto,
-          regimenTypeId: response.data.regimenTypeId,
-          regimenId: response.data.regimenId,
-          motherArtInitiationTime: response.data.motherArtInitiationTime,
+        setPayload({
+          dateOfHivTest: response.data.dateOfHivTest,
+          testEntryPoint: response.data.testEntryPoint,
+          testSetting: response.data.testSetting,
+          initialHivTest: response.data.initialHivTest,
+          stageOfPregnancy: response.data.stageOfPregnancy,
+          confirmatoryHivTest: response.data.confirmatoryHivTest,
+          hospitalNumber: response.data.hospitalNumber,
+          syphilis: response.data.syphilis,
+          hepatitisB: response.data.hepatitisB,
+          hepatitisC: response.data.hepatitisC,
+          testingType: response.data.testingType,
+          personUuid:props.personUuid,
         });
-        RegimenType(response.data.regimenTypeId);
-        //regimenTypeId
+
+        if (props.activeContent.id === "view") {
+          setDisabledField(true);
+        } else if (props.activeContent.id === "update") {
+          setDisabledField(false);
+        }
       })
       .catch((error) => {
         //console.log(error);
       });
   };
-
-
-
 
   const getARTStartDate = (id) => {
     axios
@@ -213,7 +218,6 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   };
 
   const POINT_ENTRY_PMTCT = () => {
-
     axios
       .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -227,14 +231,12 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
       });
   };
 
-
-    const HTS_ENTRY_POINT_FACILITY = () => {
+  const HTS_ENTRY_POINT_FACILITY = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-   
         setCommunitySetting(response.data);
       })
       .catch((error) => {
@@ -260,17 +262,13 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
       });
   };
 
-
-  const getSettingPoint=(testEntryPoint)=>{
-
-    if(testEntryPoint.includes('ENROLLMENT_SETTING_COMMUNITY') ){
-    HTS_ENTRY_POINT_COMMUNITY()
-
-    }else{
-      HTS_ENTRY_POINT_FACILITY()
-    } 
-
-  }
+  const getSettingPoint = (testEntryPoint) => {
+    if (testEntryPoint.includes("ENROLLMENT_SETTING_COMMUNITY")) {
+      HTS_ENTRY_POINT_COMMUNITY();
+    } else {
+      HTS_ENTRY_POINT_FACILITY();
+    }
+  };
 
   const TIME_ART_INITIATION_PMTCT = () => {
     axios
@@ -278,11 +276,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-
         setartStartTime(response.data);
-
-    
-     
       })
       .catch((error) => {});
   };
@@ -301,21 +295,14 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const handleInputChange = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
 
-
-   setPayload({ ...payload, [e.target.name]: e.target.value  })
-     if (e.target.name === "testEntryPoint" && e.target.value !== "") {
-
-      getSettingPoint(e.target.value)
-
-     }
-
-
-
-
+    setPayload({ ...payload, [e.target.name]: e.target.value });
+    if (e.target.name === "testEntryPoint" && e.target.value !== "") {
+      getSettingPoint(e.target.value);
+    }
 
     // setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
     //   setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-   
+
     //   setInfantMotherArtDto({
     //     ...infantMotherArtDto,
     //     motherArtInitiationTime: e.target.value,
@@ -330,12 +317,12 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     //     updateMaxARTDate("prior")
 
     //   }
-      
+
     // }else if(e.target.name === "hivStatus" ){
     //       if(e.target.value !== "Positive" ){
     //               toast.error("Cannot enroll negative client on PMTCT");
     //       }
-        
+
     //   }else
     // if (e.target.name === "lmp" && e.target.value !== "") {
 
@@ -348,7 +335,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     //     // enroll.gaweeks = response;
     //     toast.error("Please select a validate date");
     //      setEnrollDto({ ...enroll, [e.target.name]: "",dateOfDelivery: ""  });
-      
+
     //   }
 
     //   // }
@@ -367,21 +354,19 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     //     // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
     //   }
     //   if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
-    //    let EDD = calculateExpectedDate(enroll.lmp) 
+    //    let EDD = calculateExpectedDate(enroll.lmp)
     //     setEnrollDto({ ...enroll, [e.target.name]: e.target.value, expectedDeliveryDate:  EDD });
 
     //   }else{
     //     setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
 
-
     //   }
-        
-    
+
     // }else
     // if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
- 
+
     //     let Ga =  calculateGaFromPmtct(e.target.value)
-     
+
     //  if (Ga > 0) {
     //   enroll.gaweeks = Ga;
     //   setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
@@ -390,8 +375,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     //   toast.error("Please select a validate date");
     //   setEnrollDto({ ...enroll, [e.target.name]: e.target.value , gaweeks: ""});
     // }
-      
-     
+
     // }else{
     //   setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
 
@@ -399,14 +383,16 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   };
   const getHIVStatus = (hospitalNumber, uuid) => {
     axios
-  .get(`${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
-
-        if(response.data){
-          setEnrollDto({...enroll, hivStatus: response.data})
-          setDisableHIVStatus(true)
+        if (response.data) {
+          setEnrollDto({ ...enroll, hivStatus: response.data });
+          setDisableHIVStatus(true);
         }
       })
       .catch((error) => {
@@ -416,31 +402,26 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };
-    temp.dateOfHivTest = payload.dateOfHivTest
-      ? ""
-      : "This field is required";
+    temp.dateOfHivTest = payload.dateOfHivTest ? "" : "This field is required";
     temp.testEntryPoint = payload.testEntryPoint
       ? ""
       : "This field is required";
 
-      temp.testSetting = payload.testSetting
-      ? ""
-      : "This field is required";
+    temp.testSetting = payload.testSetting ? "" : "This field is required";
 
     temp.initialHivTest = payload.initialHivTest
       ? ""
       : "This field is required";
 
+    temp.confirmatoryHivTest = payload.confirmatoryHivTest
+      ? ""
+      : "This field is required";
 
-
-    temp.confirmatoryHivTest = payload.confirmatoryHivTest ? "" : "This field is required";
-  
-  
-  
-    payload.testSetting  !== "" &&
-     payload.testSetting  === "PMTCT_ENTRY_POINT_ANC" &&
-      (temp.stageOfPregnancy = payload.stageOfPregnancy ? "" : "This field is required");
-   
+    payload.testSetting !== "" &&
+      payload.testSetting === "PMTCT_ENTRY_POINT_ANC" &&
+      (temp.stageOfPregnancy = payload.stageOfPregnancy
+        ? ""
+        : "This field is required");
 
     setErrors({
       ...temp,
@@ -449,20 +430,20 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   };
 
   /**** Submit Button Processing  */
- 
+
   const handleSubmit = (e) => {
     e.preventDefault();
-   console.log("Submitting", payload);
-   console.log("Submitting", payload);
-     if (validate()) {
-    console.log("Submitted");
+    console.log("Submitting", payload);
+    console.log("Submitting", payload);
+    if (validate()) {
+      console.log("Submitted");
 
       setSaving(true);
-      if (props.activeContent && props.activeContent.actionType ) {
+      if (props.activeContent && props.activeContent.actionType === "update") {
         axios
           .put(
-            `${baseUrl}pmtct/anc/update-pmtct-enrollment/${props.activeContent.id}`,
-            enroll,
+            `${baseUrl}pmtct/anc/update-pmtct-hts-enrollment/${props.activeContent.id}`,
+            payload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
           .then((response) => {
@@ -482,19 +463,6 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
             });
           });
       } else {
-        // let payload = {
-        //   ...enroll,
-        //   entryPoint: locationState.entrypointValue
-        //     ? locationState.entrypointValue
-        //     : props.entrypointValue,
-        //   personUuid:
-        //     locationState && locationState.patientObj
-        //       ? locationState.patientObj.uuid
-        //       : props.patientObj.uuid,
-        //   personUuid: props.patientObj.person_uuid
-        //     ? props.patientObj.person_uuid
-        //     : locationState.patientObj.uuid,
-        // };
 
         axios
           .post(`${baseUrl}pmtct/anc/pmtct-hts-enrollment`, payload, {
@@ -502,18 +470,32 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
           })
           .then((response) => {
             setSaving(false);
-            // props.patientObj.pmtctRegStatus = true;
             toast.success("Enrollment save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
-            // if (props.handleRoute) {
-            //   props.handleRoute(response.data);
-            // } else {
+            if (props.handleRoute && props.onEnrollPatient) {
+              let data = {
+
+                ...props?.patientObj, 
+                id:  props?.patientObj.id,  
+                entryPoint: props.entrypointValue,
+              
+                hospitalNumber: props?.patientObj?.identifier?.identifier[0]?.value ,
+                fullName: props?.patientObj?.surname,
+                age: props?.patientAge,
+                hivStatus: props?.patientObj?.dynamicHivStatus,
+
+                personUuid:props.personUuid ,
+            
+            };
+              props.handleRoute(data);
+              console.log("What are we passing", props?.patientObj);
+            } else {
               props.setActiveContent({
                 ...props.activeContent,
                 route: "recent-history",
               });
-            // }
+            }
           })
           .catch((error) => {
             console.log(error);
@@ -543,18 +525,22 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
                 }}
               >
                 <h5 className="card-title" style={{ color: "#fff" }}>
-                  PMTCT HTS
+                  {props?.PmtctHtsRetestingType === "pmtct-hts"
+                    ? " PMTCT HTS"
+                    : "Retesting"}
                 </h5>
               </div>
-               <div className="form-group mb-3 col-md-4">
+              <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
                     Date of HIV Test <span style={{ color: "red" }}> *</span>
                   </Label>
-                    <InputGroup>
+                  <InputGroup>
                     <Input
-                      type="date"                  
-                      onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
                       name="dateOfHivTest"
                       id="dateOfHivTest"
                       onChange={handleInputChange}
@@ -564,80 +550,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
                       disabled={disabledField}
                     />
                   </InputGroup>
-        
+
                   {errors.dateOfHivTest !== "" ? (
-                    <span className={classes.error}>{errors.dateOfHivTest}</span>
-                  ) : (
-                    ""
-                  )}
-        
-                </FormGroup>
-              </div>
-
-              
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <Label>
-                      Test Entry Point
-                      {/* <span style={{ color:"red"}}> *</span> */}
-                    </Label>
-                                      <InputGroup>
-                    <Input
-                      type="select"
-                      name="testEntryPoint"
-                      id="testEntryPoint"
-                      onChange={handleInputChange}
-                      value={payload.testEntryPoint}
-                      disabled={disabledField}
-
-                    >
-                      <option value="">Select</option>
-                    {testEntryPoint.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
-                    </Input>
-                  </InputGroup>
-
-          
-                    {errors.testEntryPoint !== "" ? (
-                      <span className={classes.error}>{errors.testEntryPoint}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-           
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Test Setting <span style={{ color: "red" }}> *</span>
-                  </Label>
-                         <InputGroup>
-                                <Input
-                      type="select"
-                      name="testSetting"
-                      id="testSetting"
-                      onChange={handleInputChange}
-                      value={payload.testSetting}
-                      disabled={disabledField}
-
-                    >
-                      <option value="">Select</option>
-                      {communitySetting.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
-                      {/* <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option> */}
-                    </Input>
-                
-                    </InputGroup>
-                  {errors.testSetting !== "" ? (
                     <span className={classes.error}>
-                      {errors.testSetting}
+                      {errors.dateOfHivTest}
                     </span>
                   ) : (
                     ""
@@ -645,184 +561,256 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
                 </FormGroup>
               </div>
 
-           
-           {console.log(payload.testSetting )}
-                  {/* FACILITY_HTS_TEST_SETTING_ANC */}
-           { payload.testSetting.includes("_ANC") &&  
-            <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Stage of Pregnancy 
-                          <span style={{ color: "red" }}>*</span>{" "}
-                        </Label>
-                        <InputGroup>
-                         <Input
-                      type="select"
-                      name="stageOfPregnancy"
-                      id="stageOfPregnancy"
-                      onChange={handleInputChange}
-                      value={payload.stageOfPregnancy}
-                      disabled={disabledField}
-
-                    >
-                      <option value="">Select</option>
-                      <option value="first trimester">First trimester</option>
-                      <option value="secound trimester">Secound trimester</option>
-                      <option value="third trimester">Third trimester"</option>
-
-                    </Input>                        
-                        </InputGroup>
-                        {errors.stageOfPregnancy !== "" ? (
-                          <span className={classes.error}>{errors.stageOfPregnancy}</span>
-                        ) : (
-                          ""
-                        )}
-                     
-                      </FormGroup>
-                    </div>}
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                           Initial HIV Test
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                              type="select"
-                              name="initialHivTest"
-                              id="initialHivTest"
-                              onChange={handleInputChange}
-                              value={payload.initialHivTest}
-                              disabled={disabledField}
-
-                            >
-                              <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
-                            </Input>   
-                        </InputGroup>
-                        {errors.initialHivTest !== "" ? (
-                          <span className={classes.error}>
-                            {errors.initialHivTest}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
- 
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
-                  <Label>  Confirmatory HIV Test   </Label>
+                  <Label>
+                    Test Entry Point
+                    {/* <span style={{ color:"red"}}> *</span> */}
+                  </Label>
                   <InputGroup>
-                         <Input
-                              type="select"
-                              name="confirmatoryHivTest"
-                              id="confirmatoryHivTest"
-                              onChange={handleInputChange}
-                              value={payload.confirmatoryHivTest}
-                              disabled={disabledField}
-
-                            >
-                              <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
-                            </Input> 
+                    <Input
+                      type="select"
+                      name="testEntryPoint"
+                      id="testEntryPoint"
+                      onChange={handleInputChange}
+                      value={payload.testEntryPoint}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      {testEntryPoint.map((value) => (
+                        <option key={value.id} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                    </Input>
                   </InputGroup>
-                  {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
+
+                  {errors.testEntryPoint !== "" ? (
+                    <span className={classes.error}>
+                      {errors.testEntryPoint}
+                    </span>
                   ) : (
                     ""
                   )}
                 </FormGroup>
               </div>
-      
-         
+
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
-                  <Label>Syphilis   </Label>
+                  <Label>
+                    Test Setting <span style={{ color: "red" }}> *</span>
+                  </Label>
                   <InputGroup>
-                         <Input
-                              type="select"
-                              name="syphilis"
-                              id="syphilis"
-                              onChange={handleInputChange}
-                              value={payload.syphilis}
-                              disabled={disabledField}
-
-                            >
-                              <option value="">Select</option>
-                              <option value="reactive">Reactive</option>
-                              <option value="non-reactive">Non reactive</option>
-                            </Input> 
+                    <Input
+                      type="select"
+                      name="testSetting"
+                      id="testSetting"
+                      onChange={handleInputChange}
+                      value={payload.testSetting}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      {communitySetting.map((value) => (
+                        <option key={value.id} value={value.code}>
+                          {value.display}
+                        </option>
+                      ))}
+                      {/* <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option> */}
+                    </Input>
                   </InputGroup>
-                  {/* {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
+                  {errors.testSetting !== "" ? (
+                    <span className={classes.error}>{errors.testSetting}</span>
                   ) : (
                     ""
-                  )} */}
+                  )}
                 </FormGroup>
               </div>
-  
+
+              {console.log(payload.testSetting)}
+              {/* FACILITY_HTS_TEST_SETTING_ANC */}
+              {payload.testSetting.includes("_ANC") && (
+                <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <Label>
+                      Stage of Pregnancy
+                      <span style={{ color: "red" }}>*</span>{" "}
+                    </Label>
+                    <InputGroup>
+                      <Input
+                        type="select"
+                        name="stageOfPregnancy"
+                        id="stageOfPregnancy"
+                        onChange={handleInputChange}
+                        value={payload.stageOfPregnancy}
+                        disabled={disabledField}
+                      >
+                        <option value="">Select</option>
+                        <option value="first trimester">First trimester</option>
+                        <option value="secound trimester">
+                          Secound trimester
+                        </option>
+                        <option value="third trimester">
+                          Third trimester"
+                        </option>
+                      </Input>
+                    </InputGroup>
+                    {errors.stageOfPregnancy !== "" ? (
+                      <span className={classes.error}>
+                        {errors.stageOfPregnancy}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+              )}
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
-                  <Label>HepatitisB</Label>
+                  <Label>
+                    Initial HIV Test
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
                   <InputGroup>
-                         <Input
-                              type="select"
-                              name="hepatitisB"
-                              id="hepatitisB"
-                              onChange={handleInputChange}
-                              value={payload.hepatitisB}
-                              disabled={disabledField}
-
-                            >
-                              <option value="">Select</option>
-                              <option value="reactive">Reactive</option>
-                              <option value="non-reactive">Non reactive</option>
-                            </Input> 
+                    <Input
+                      type="select"
+                      name="initialHivTest"
+                      id="initialHivTest"
+                      onChange={handleInputChange}
+                      value={payload.initialHivTest}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                    </Input>
                   </InputGroup>
-                  {/* {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
+                  {errors.initialHivTest !== "" ? (
+                    <span className={classes.error}>
+                      {errors.initialHivTest}
+                    </span>
                   ) : (
                     ""
-                  )} */}
+                  )}
                 </FormGroup>
               </div>
-           
-       <div className="form-group mb-3 col-md-4">
+
+              <div className="form-group mb-3 col-md-4">
                 <FormGroup>
-                  <Label>Hepatitis C</Label>
+                  <Label> Confirmatory HIV Test </Label>
                   <InputGroup>
-                         <Input
-                              type="select"
-                              name="hepatitisC"
-                              id="hepatitisC"
-                              onChange={handleInputChange}
-                              value={payload.hepatitisC}
-                              disabled={disabledField}
-
-                            >
-                              <option value="">Select</option>
-                              <option value="reactive">Reactive</option>
-                              <option value="non-reactive">Non reactive</option>
-                            </Input> 
+                    <Input
+                      type="select"
+                      name="confirmatoryHivTest"
+                      id="confirmatoryHivTest"
+                      onChange={handleInputChange}
+                      value={payload.confirmatoryHivTest}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                    </Input>
                   </InputGroup>
-                  {/* {errors.confirmatoryHivTest !== "" ? (
+                  {errors.confirmatoryHivTest !== "" ? (
+                    <span className={classes.error}>
+                      {errors.confirmatoryHivTest}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+
+              {props?.PmtctHtsRetestingType === "pmtct-hts" && (
+                <>
+                  <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                      <Label>Syphilis </Label>
+                      <InputGroup>
+                        <Input
+                          type="select"
+                          name="syphilis"
+                          id="syphilis"
+                          onChange={handleInputChange}
+                          value={payload.syphilis}
+                          disabled={disabledField}
+                        >
+                          <option value="">Select</option>
+                          <option value="reactive">Reactive</option>
+                          <option value="non-reactive">Non reactive</option>
+                        </Input>
+                      </InputGroup>
+                      {/* {errors.confirmatoryHivTest !== "" ? (
                     <span className={classes.error}>{errors.confirmatoryHivTest}</span>
                   ) : (
                     ""
                   )} */}
-                </FormGroup>
-              </div>
+                    </FormGroup>
+                  </div>
 
-            
+                  <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                      <Label>HepatitisB</Label>
+                      <InputGroup>
+                        <Input
+                          type="select"
+                          name="hepatitisB"
+                          id="hepatitisB"
+                          onChange={handleInputChange}
+                          value={payload.hepatitisB}
+                          disabled={disabledField}
+                        >
+                          <option value="">Select</option>
+                          <option value="reactive">Reactive</option>
+                          <option value="non-reactive">Non reactive</option>
+                        </Input>
+                      </InputGroup>
+                      {/* {errors.confirmatoryHivTest !== "" ? (
+                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
+                  ) : (
+                    ""
+                  )} */}
+                    </FormGroup>
+                  </div>
+
+                  <div className="form-group mb-3 col-md-4">
+                    <FormGroup>
+                      <Label>Hepatitis C</Label>
+                      <InputGroup>
+                        <Input
+                          type="select"
+                          name="hepatitisC"
+                          id="hepatitisC"
+                          onChange={handleInputChange}
+                          value={payload.hepatitisC}
+                          disabled={disabledField}
+                        >
+                          <option value="">Select</option>
+                          <option value="reactive">Reactive</option>
+                          <option value="non-reactive">Non reactive</option>
+                        </Input>
+                      </InputGroup>
+                      {/* {errors.confirmatoryHivTest !== "" ? (
+                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
+                  ) : (
+                    ""
+                  )} */}
+                    </FormGroup>
+                  </div>
+                </>
+              )}
             </div>
             {saving ? <Spinner /> : ""}
             <br />
 
+            <>
               <>
-              
+      
+
+                        
+              <>
+                {props.activeContent && props.activeContent.actionType === "update"  ? (
                   <>
                     <MatButton
                       type="submit"
@@ -835,12 +823,45 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
                       onClick={handleSubmit}
                       disabled={saving}
                     >
-                      {  !saving ? "Save" : "Saving..."}
+                      {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>
+                          Update
+                        </span>
+                      ) : (
+                        <span style={{ textTransform: "capitalize" }}>
+                          Updating...
+                        </span>
+                      )}
                     </MatButton>
                   </>
-              
+                ) : (
+                  <>
+                    <MatButton
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      className={classes.button}
+                      startIcon={<SaveIcon />}
+                      style={{ backgroundColor: "#014d88" }}
+                      onClick={handleSubmit}
+                      disabled={saving}
+                    >
+                      {!saving ? (
+                        <span style={{ textTransform: "capitalize" }}>
+                          Save
+                        </span>
+                      ) : (
+                        <span style={{ textTransform: "capitalize" }}>
+                          Saving...
+                        </span>
+                      )}
+                    </MatButton>
+                  </>
+                )}
               </>
-   
+            
+              </>
+            </>
           </form>
         </CardBody>
       </Card>

@@ -166,7 +166,9 @@ const ClinicVisit = (props) => {
       props.activeContent.id &&
       props.activeContent.id !== "" &&
       props.activeContent.id !== null &&
-      props.activeContent.activeTab === "home"
+      props.activeContent.activeTab === "home" && 
+      props.activeContent.actionType !== "create"
+
     ) {
       GetVisit(props.activeContent.id);
       setDisabledField(
@@ -947,7 +949,7 @@ const ClinicVisit = (props) => {
             )}
 
             <br />
-            {props.activeContent && props.activeContent.actionType ? (
+            {props.activeContent && props.activeContent.actionType   === "update"? (
               <>
                 <MatButton
                   type="submit"

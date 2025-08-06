@@ -124,8 +124,8 @@
     "yup": "^0.32.8"
   },
   "scripts": {
-    "start": "cross-env react-scripts --openssl-legacy-provider start",
-    "build": "cross-env react-scripts  --openssl-legacy-provider build && cp -r build/* src/main/resources/views/static/pmtct/",
+    "start": "react-scripts start",
+    "build":"react-scripts build && xcopy /s /y build src\\main\\resources\\views\\static\\hts",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

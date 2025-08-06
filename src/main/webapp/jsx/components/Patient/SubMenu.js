@@ -19,13 +19,15 @@ function SubMenu(props) {
   const [genderType, setGenderType] = useState();
   const [showRetesting, setShowRetesting]=useState(false)
   const [retestingStatus, setRetestingStatus]=useState("pmtct-hts")
-
+  // const [derivedHivStatus, setDerivedHivStatus]=useState("")
+ 
   const [deliveryStatus, setDeliveryStatus] = useState(false);
+
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
-    showRetestingMenu();
+    getLatestConfirmatoryResult();
 
     if(props?.deliveryInfo.length >0){
           props?.deliveryInfo.filter((each) => {
@@ -40,6 +42,12 @@ function SubMenu(props) {
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
   }, [props.patientObj]);
+
+    useEffect(() => {
+    getLatestConfirmatoryResult();
+
+
+  }, [props.activeContent]);
 
   useEffect(() => {
     props?.deliveryInfo?.filter((each) => {
@@ -75,32 +83,34 @@ function SubMenu(props) {
       });
   };
   const loadAncPnc = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });
+    props.setActiveContent({ ...props.activeContent, route: "anc-pnc", actionType: "create"
+ });
   };
   const loadLabourDelivery = (row) => {
     props.setActiveContent({
       ...props.activeContent,
       route: "labour-delivery",
+       actionType: "create"
     });
   };
   const onClickConsultation = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "consultation" });
+    props.setActiveContent({ ...props.activeContent, route: "consultation",   actionType: "create" });
   };
 
     const onClickPmtctHts= (type) => {
-    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts-form" });
+    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts",  actionType: "create" });
     props.setPmtctHtsRetestingType(type)
   };
   
   const onClickHome = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "recent-history" });
+    props.setActiveContent({ ...props.activeContent, route: "recent-history",   actionType: "create" });
   };
 
   const onClickInfant = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "infants" });
+    props.setActiveContent({ ...props.activeContent, route: "infants",  actionType: "create" });
   };
   const onClickPartner = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "partners" });
+    props.setActiveContent({ ...props.activeContent, route: "partners",   actionType: "create" });
   };
   const loadPatientHistory = () => {
     props.setActiveContent({
@@ -110,14 +120,40 @@ function SubMenu(props) {
   };
   //
 
-    const showRetestingMenu = () => {
-      if(props?.patientObj?.pmtctRegStatus){
+  
+  const getLatestConfirmatoryResult = async() => {
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+
+    await axios
+      .get(
+        `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
+        setPatientStatus(response.data? response.data: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+          showRetestingMenu(response.data);
+
+      })
+      .catch((error) => {
+        console.error("Error fetching confirmatory result:", error);
+      });
+  };
+
+    const showRetestingMenu = (patientHivStatus) => {
+       if(props?.patientObj?.pmtctRegStatus){
           setShowRetesting(false)
-      }else if(props?.patientObj?.hivStatus.toLowerCase() === "positive" || props?.patientObj?.dynamicHivStatus.toLowerCase() === "positive" || props?.patientObj?.dynamicHivStatus?.toLowerCase() === "positive"){
+      }
+      setPatientStatus(patientHivStatus? patientHivStatus: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus )
+
+      if(patientHivStatus === "Positive" || props?.patientObj?.hivStatus === "Positive" || props?.patientObj?.dynamicHivStatus === "Positive" || props?.patientObj?.staticHivStatus === "Positive"){
 
           setShowRetesting(false)
+          setRetestingStatus('retesting')
 
-      }else if(props?.patientObj?.hivStatus.toLowerCase() === "negative" || props?.patientObj?.dynamicHivStatus.toLowerCase() === "negative" || props?.patientObj?.dynamicHivStatus?.toLowerCase() === "negative"){
+      }else if(patientHivStatus === "Negative" || props?.patientObj?.hivStatus === "Negative" || props?.patientObj?.dynamicHivStatus === "Negative" || props?.patientObj?.staticHivStatus === "Negative"){
 
         // check if the patient is anc  = props?.patientObj?.ancNo
           setShowRetesting(true)
@@ -127,6 +163,9 @@ function SubMenu(props) {
       }else{
 
       // if the status is unknown 
+          setShowRetesting(true)
+         setRetestingStatus("pmtct-hts")
+
 
       }
     // props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });
@@ -139,7 +178,10 @@ function SubMenu(props) {
     <div>
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
-        
+{      console.log("retestingStatus",retestingStatus)
+}
+{      console.log("showRetesting",showRetesting)
+}
         {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
         {(patientStatus === "Positive" ) && (
           <>

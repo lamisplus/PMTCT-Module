@@ -539,4 +539,22 @@ public class PMTCTController {
     public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
     }
+
+
+    @PutMapping(value = "update-pmtct-hts-enrollment/{id}")
+    public ResponseEntity<PmtctHtsRequestDTO> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        return ResponseEntity.ok(pmtctHtsService.updatePmtctHts(id, pmtctHtsRequestDTO));
+    }
+
+
+
+
+    @GetMapping(value = "get-confirmatory-latest-result")
+    public  ResponseEntity<String>  getPmtctHtsConfirmatoryTest(@RequestParam String personUuid) {
+//RegisterPatientResponseDTO
+        return ResponseEntity.ok(pmtctHtsService.getLatestConfirmatoryResult(personUuid));
+
+
+    }
+
     }

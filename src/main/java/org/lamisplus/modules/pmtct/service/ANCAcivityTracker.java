@@ -377,7 +377,7 @@ public class ANCAcivityTracker {
         }
 
 
-        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuid(personUuid);
+        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuidAndUnarchived(personUuid);
         if (!(pmtctHtsRecord.isEmpty()))
         {
             pmtctHtsRecord.forEach(pmtctHtsRec ->{

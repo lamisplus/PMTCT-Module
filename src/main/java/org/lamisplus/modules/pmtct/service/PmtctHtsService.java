@@ -164,6 +164,8 @@ public class PmtctHtsService {
 
     public PmtctHtsRequestDTO updatePmtctHts(Long id, PmtctHtsRequestDTO pmtctHtsRequestDTO)
     {
+
+
         Optional <PmtctHts> pmtctHtsEnrollment = this.pmtctHtsRepository.findById(id);
         if(pmtctHtsEnrollment.isPresent())
         {
@@ -182,11 +184,10 @@ public class PmtctHtsService {
 
 
 
-//            check if the patient has LD record and update the GA
-            Optional <PmtctHts> foundRec = this.pmtctHtsRepository.findRecordByPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
-
 
             this.pmtctHtsRepository.save(pmtctEnrollment1);
+
+
         }
         return pmtctHtsRequestDTO;
     }
@@ -204,5 +205,12 @@ public class PmtctHtsService {
     public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(Long id) {
         return convertEntitytoRespondDto(pmtctHtsRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(PmtctHts.class, "Id", id+ "") ));
     }
+
+
+
+    public  String  getLatestConfirmatoryResult(String personUuid) {
+        return pmtctHtsRepository.findLatestConfirmatoryResult(personUuid).orElse("");
+    }
+
 //
 }

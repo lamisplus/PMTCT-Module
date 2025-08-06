@@ -8,7 +8,6 @@ import CardContent from "@mui/material/CardContent";
 import PatientCardDetail from "./PatientCard";
 import { useHistory } from "react-router-dom";
 import SubMenu from "./SubMenu";
-//import RecentHistory from './../History/RecentHistory';
 import ClinicVisit from "../Consultation/Index";
 import PmtctEnrollment from "./../PmtctServices/PmtctEnrollment";
 import AncEnrollement from "./../PmtctServices/AncEnrollement";
@@ -67,7 +66,7 @@ function PatientCard(props) {
   const [allEntryPoint, setAllEntryPoint] = useState([]);
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
-
+  const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState( localStorage.getItem("confirmatoryTest"));
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
     id: "",
@@ -75,35 +74,23 @@ function PatientCard(props) {
     actionType: "create",
     obj: {},
   });
+
   const { classes } = props;
   const patientObj =
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
 
-
-  console.log(" history.location.state", history.location.state) 
-  console.log("activeContent.route", activeContent) 
+  console.log("patientOb patient detailj", patientObj);
+  console.log("activeContent.route", activeContent);
 
   const RecentActivities = () => {
-    // if patient has ANC No
-    // if (props.patientObj.ancNo) {
-    //   axios
-    //     .get(`${baseUrl}${props.patientObj.ancNo}`, {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     })
-    //     .then((response) => {
-    //       setRecentActivities(response.data);
-    //     })
-    //     .catch((error) => {
-    //     });
-    // } else {
+      console.log("patientObj history.location.state", patientObj);
+console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid)
     axios
       .get(
         `${baseUrl}pmtct/anc/getAllActivities/${
-          patientObj.person_uuid
-            ? patientObj.person_uuid
-            : patientObj.personUuid
+          patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid
         }`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -111,16 +98,15 @@ function PatientCard(props) {
       )
       .then((response) => {
         console.log("response", response);
-        if(response?.data){
-
-        }else{
-          setDeliveryInfo({})
+        if (response?.data) {
+          // handle data
+        } else {
+          setDeliveryInfo({});
         }
       })
       .catch((error) => {
-        //console.log(error);
+        console.error("Error fetching recent activities:", error);
       });
-    // }
   };
 
   const POINT_ENTRY_PMTCT = () => {
@@ -130,12 +116,13 @@ function PatientCard(props) {
       })
       .then((response) => {
         setAllEntryPoint(response.data);
-        console.log(response.data);
+        console.log("Entry Points:", response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error("Error fetching entry points:", error);
       });
   };
+
 
   useEffect(() => {
     RecentActivities();
@@ -148,16 +135,13 @@ function PatientCard(props) {
         setPersonInfo(response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error("Error fetching patient info:", error);
       });
-
     POINT_ENTRY_PMTCT();
   }, []);
-  console.log(patientObj);
 
   return (
     <div className={classes.root}>
-
       <div
         className="row page-titles mx-0"
         style={{ marginTop: "0px", marginBottom: "-10px" }}
@@ -165,12 +149,12 @@ function PatientCard(props) {
         <ol className="breadcrumb">
           <li className="breadcrumb-item active">
             <h4>
-              {" "}
               <Link to={"/"}>PMTCT /</Link> Patient Dashboard
             </h4>
           </li>
         </ol>
       </div>
+
       <Card>
         <CardContent>
           {/* Patient Card Detail */}
@@ -178,7 +162,11 @@ function PatientCard(props) {
             patientObj={patientObj}
             setArt={setArt}
             setActiveContent={setActiveContent}
+            activeContent={activeContent}
+            setLastestConfirmatoryTest={setLastestConfirmatoryTest}
+
           />
+
           {/* Patient Dashboard menu */}
           <SubMenu
             patientObj={patientObj}
@@ -187,15 +175,18 @@ function PatientCard(props) {
             deliveryInfo={deliveryInfo}
             enrollPMTCT={enrollPMTCT}
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
-
+            activeContent={activeContent}
           />
           <br />
-          {/* Patient dashboard menu route */}
+
+          {/* Conditional Rendering of Routes */}
           {activeContent.route === "recent-history" && (
             <RecentHistory
               allEntryPoint={allEntryPoint}
               patientObj={patientObj}
               setActiveContent={setActiveContent}
+            setPmtctHtsRetestingType={setPmtctHtsRetestingType}
+
               activeContent={activeContent}
               entrypointValue={
                 patientObj.ancNo
@@ -212,19 +203,25 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
-          {/* PmtctHts */}
-           {activeContent.route === "pmtct-hts-form" && (
+
+          {activeContent.route === "pmtct-hts" && (
             <PmtctHtsForm
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               PmtctHtsRetestingType={PmtctHtsRetestingType}
+              handleRoute={""}
+              onEnrollPatient={false}  
+               entrypointValue={patientObj.entryPoint}
+              patientAge={patientObj?.age}
+              personUuid={patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid}
+
             />
           )}
+
           {activeContent.route === "anc-pnc" && (
             <PmtctEnrollment
-            newRegDate={""}
-
+              newRegDate={""}
               allEntryPoint={allEntryPoint}
               entrypointValue={patientObj.entryPoint}
               ancEntryType={patientObj.ancNo ? true : false}
@@ -233,8 +230,10 @@ function PatientCard(props) {
               activeContent={activeContent}
               hideUpdateButton={true}
               htsHivStatus={""}
+              lastestConfirmatoryTest={lastestConfirmatoryTest}
             />
           )}
+
           {activeContent.route === "anc-enrollment" && (
             <AncEnrollement
               patientObj={patientObj}
@@ -242,6 +241,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
           {activeContent.route === "labour-delivery" && (
             <LabourDelivery
               patientObj={patientObj}
@@ -249,14 +249,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
-          {activeContent.route === "pmtct-hts" && (
-            <PmtctHts
-              patientObj={patientObj}
-              patientAge={patientObj.age}
-              setActiveContent={setActiveContent}
-              activeContent={activeContent}
-            />
-          )}
+
           {activeContent.route === "partners" && (
             <Partners
               patientObj={patientObj}
@@ -265,6 +258,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
           {activeContent.route === "infants" && (
             <Infants
               patientObj={patientObj}
@@ -273,6 +267,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
           {activeContent.route === "add-partner" && (
             <AddPartners
               patientObj={patientObj}
@@ -281,6 +276,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
           {activeContent.route === "add-infant" && (
             <AddInfants
               patientObj={patientObj}
@@ -289,6 +285,7 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
           {activeContent.route === "patient-history" && (
             <PatientHistory
               patientObj={patientObj}
@@ -296,7 +293,6 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
-          {/* History Pages */}
         </CardContent>
       </Card>
     </div>

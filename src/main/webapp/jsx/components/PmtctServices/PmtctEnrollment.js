@@ -133,7 +133,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     id: "",
     timeOfHivDiagnosis: "",
     tbStatus: "",
-    hivStatus: patientObj.hivStatus
+    hivStatus: props.lastestConfirmatoryTest?  props.lastestConfirmatoryTest:patientObj.hivStatus
       ? patientObj.hivStatus
       : patientObj.staticHivStatus
       ? patientObj.staticHivStatus
@@ -708,7 +708,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
     if (validate()) {
       setSaving(true);
-      if (props.activeContent && props.activeContent.actionType) {
+      if (props.activeContent && props.activeContent.actionType === "update") {
         //Perform operation for update action
         axios
           .put(
@@ -818,7 +818,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
                       name="hivStatus"
                       id="hivStatus"
                       // disableHIVStatus
-                      disabled={disableHIVStatus ? true : patientObj.ancNo? true : false}
+                      disabled={disableHIVStatus ? true :props.lastestConfirmatoryTest? true: patientObj.ancNo? true : false}
 
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.hivStatus}
@@ -1372,10 +1372,10 @@ return dateOfDelivery.diff(lmp, 'weeks')
             </div>
             {saving ? <Spinner /> : ""}
             <br />
-
+            {console.log("props", props)}
             {props.hideUpdateButton && (
               <>
-                {props.activeContent && props.activeContent.actionType ? (
+                {props.activeContent && props.activeContent.actionType === "update"  ? (
                   <>
                     <MatButton
                       type="submit"

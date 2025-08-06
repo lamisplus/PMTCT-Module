@@ -65,6 +65,9 @@ function PatientCard(props) {
   );
   
   const [showHighRisKInfant, setShowHighRisKInfant] = useState(false);
+  let confirmatoryTest = JSON.parse(localStorage.getItem("confirmatoryTest")) 
+  const [confirmStatus, setConfirmStatus] = useState(confirmatoryTest? confirmatoryTest :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+
 
   const [biometricStatus, setBiometricStatus] = useState(false);
   const [devices, setDevices] = useState([]);
@@ -75,12 +78,44 @@ function PatientCard(props) {
   const [hivStatus, setHivStatus] = useState();
   const [artModal, setArtModal] = useState(false);
   const Arttoggle = () => setArtModal(!artModal);
+
+
   useEffect(() => {
+    getLatestConfirmatoryResult()
     getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
     console.log("patient", patientObj);
   }, [props.patientObj]);
+
+
+
+    useEffect(() => {
+    getLatestConfirmatoryResult();
+
+
+  }, [props.activeContent]);
+    
+  const getLatestConfirmatoryResult = async() => {
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+
+    await axios
+      .get(
+        `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
+        props.setLastestConfirmatoryTest(response.data)
+      setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+
+      })
+      .catch((error) => {
+        console.error("Error fetching confirmatory result:", error);
+      });
+  };
 
   //Get list of KP
   const CheckBiometric = () => {
@@ -141,6 +176,8 @@ function PatientCard(props) {
       .catch((error) => {});
   }
 
+
+  console.log("patientObj card", patientObj)
   // async function getPatientInfo() {
   //   axios
   //     .get(`${baseUrl}hiv/status/patient-current/${patientObj.id}`, {
@@ -273,18 +310,16 @@ function PatientCard(props) {
                         <Typography variant="caption">
                           <Label
                             color={
-                              props.patientObj.dynamicHivStatus !==
-                                "Positive" &&
-                              props.patientObj.staticHivStatus !== "Positive"
-                                ? "green"
-                                : "red"
+                          confirmStatus === "Positive"
+                                ? "red"
+                                :  confirmStatus === "Negative"? 'green': 'grey'
                             }
                             size={"mini"}
                           >
                             HIV Status
                             <Label.Detail>
 
-                            {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
+                            {confirmStatus}
                       
                             </Label.Detail>
                           </Label>

@@ -539,7 +539,7 @@ const LabourDelivery = (props) => {
 
       const targetRoute = isChildAlive ? "infants" : "recent-history";
 
-      if (props.activeContent && props.activeContent.actionType) {
+      if (props.activeContent && props.activeContent.actionType === 'update') {
         //Perform operation for updation action
         axios
           .put(
@@ -1255,7 +1255,7 @@ const LabourDelivery = (props) => {
 
             {saving ? <Spinner /> : ""}
             <br />
-            {props.activeContent && props.activeContent.actionType ? (
+            {props.activeContent && props.activeContent.actionType  === 'update'? (
               <>
                 <MatButton
                   type="submit"
