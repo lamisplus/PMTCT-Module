@@ -557,4 +557,14 @@ public class PMTCTController {
 
     }
 
+
+
+    @GetMapping(value = "get-latest-maternal-outcome")
+    public  ResponseEntity<String>  getLatestMaternalOutcome(@RequestParam String personUuid) {
+//
+        return ResponseEntity.ok(pmtctVisitService.getLatestMaternalOutcome(personUuid));
+
+
+    }
+
     }

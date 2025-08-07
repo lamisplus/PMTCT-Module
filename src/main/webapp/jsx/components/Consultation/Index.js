@@ -4,6 +4,8 @@ import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
 import ConsultationPage from "./Home";
 import InfantVisit from "./InfantVisit";
 import { url as baseUrl, token as token } from "./../../../api";
+import { convertMaternalCodeToValue } from "../../utils";
+
 
 const divStyle = {
   borderRadius: "2px",
@@ -14,6 +16,7 @@ const ClinicVisitPage = (props) => {
   const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
   const [aliveChild, setAliveChild] = useState(0);
+  const [showMaternalVisit, setShowMaternalVisit] = useState(true);
 
   const DeliveryInfo = () => {
     // if (props.patientObj.ancNo) {
@@ -60,8 +63,25 @@ const ClinicVisitPage = (props) => {
     // }
   };
 
+
+
+  
   useEffect(() => {
     setKey(props.activeContent.activeTab);
+  console.log("props.maternalOutcome", props.maternalOutcome)
+    if(props.activeContent.actionType === "create"){
+        if(props.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||   props.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_OUT" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"){
+            setShowMaternalVisit(false)
+            //  setKey("child")
+        }else{
+            setShowMaternalVisit(true)
+
+        }
+    }else{
+          setShowMaternalVisit(true)
+
+    }
+
     DeliveryInfo();
   }, [props.patientObj.id, props.activeContent.activeTab]);
   ///GET Delivery Object
@@ -80,17 +100,20 @@ const ClinicVisitPage = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-                  {  console.log("eventKey", key)
+                  {  console.log("eventKey", convertMaternalCodeToValue(props.maternalOutcome))
 }
+
+{/*  */}
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">
-                    <ConsultationPage
+                    {showMaternalVisit?<ConsultationPage
                       patientObj={patientObj}
                       setActiveContent={props.setActiveContent}
                       activeContent={props.activeContent}
-                    />
+                    />: <p>Maternal outcome: {convertMaternalCodeToValue(props.maternalOutcome)}</p>}
                   </Tab>
-                  {console.log("aliveChild", aliveChild)}
 
+   
+{/* end  */}
                   {console.log(aliveChild !== 0 && aliveChild > 0)}
                   {aliveChild !== 0 && aliveChild > 0 && (
                     <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">

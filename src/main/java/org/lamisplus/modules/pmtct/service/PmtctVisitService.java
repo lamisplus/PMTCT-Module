@@ -309,4 +309,8 @@ public class PmtctVisitService {
         this.pmtctVisitRepository.delete(exist);
     }
 
+
+    public  String  getLatestMaternalOutcome(String personUuid) {
+        return pmtctVisitRepository.findLatestMaternalOutcome(personUuid).orElse("");
+    }
 }

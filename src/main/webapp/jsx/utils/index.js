@@ -1,6 +1,7 @@
 import moment from "moment";
 import { ToastContainer, toast } from "react-toastify";
-
+import axios from "axios";
+import { url as baseUrl, token } from "../../api";
 
 export const calculate_age = (dob) => {
   if (dob !== null && dob != "") {
@@ -85,3 +86,35 @@ export const calculateGestationalAge = (enrollmentDate, lmp) => {
 
 
 }
+
+
+
+
+
+export  const convertMaternalCodeToValue = (code) => {
+  const stored = JSON.parse(localStorage.getItem("maternalOutcome"));
+
+console.log("maternal answer",stored )
+if(stored.length > 0){
+           let convertedValue =  stored.filter((each )=>{
+
+              return each.code === code
+
+             })
+
+           console.log("convertMaternalCodeToValue", convertedValue )
+
+
+        
+             return  convertedValue[0].display;
+
+          }
+     
+
+
+
+
+}
+
+
+

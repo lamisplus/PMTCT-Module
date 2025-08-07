@@ -67,6 +67,8 @@ function PatientCard(props) {
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
   const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState( localStorage.getItem("confirmatoryTest"));
+    const [maternalOutcome, setMaternalOutcome] = useState("");
+
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
     id: "",
@@ -86,7 +88,6 @@ function PatientCard(props) {
 
   const RecentActivities = () => {
       console.log("patientObj history.location.state", patientObj);
-console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid)
     axios
       .get(
         `${baseUrl}pmtct/anc/getAllActivities/${
@@ -109,6 +110,25 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
       });
   };
 
+
+     const getLatestMaternalOutcome = async() => {
+        const personUuid =   patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid
+            
+    
+        await axios
+          .get(
+            `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
+          .then((response) => {
+                setMaternalOutcome(response.data)    
+          })
+          .catch((error) => {
+            console.error("Error fetching confirmatory result:", error);
+          });
+      };
   const POINT_ENTRY_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
@@ -126,6 +146,8 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
 
   useEffect(() => {
     RecentActivities();
+     getLatestMaternalOutcome();
+
     axios
       .get(`${baseUrl}patient/${patientObj?.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -139,6 +161,13 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
       });
     POINT_ENTRY_PMTCT();
   }, []);
+
+
+      useEffect(() => {
+      getLatestMaternalOutcome();
+  
+  
+    }, [activeContent]);
 
   return (
     <div className={classes.root}>
@@ -164,7 +193,7 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
             setActiveContent={setActiveContent}
             activeContent={activeContent}
             setLastestConfirmatoryTest={setLastestConfirmatoryTest}
-
+            maternalOutcome={maternalOutcome}
           />
 
           {/* Patient Dashboard menu */}
@@ -176,6 +205,7 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
             enrollPMTCT={enrollPMTCT}
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             activeContent={activeContent}
+
           />
           <br />
 
@@ -201,6 +231,7 @@ console.log("PatientObj 247", patientObj.person_uuid ? patientObj.person_uuid : 
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+            maternalOutcome={maternalOutcome}
             />
           )}
 

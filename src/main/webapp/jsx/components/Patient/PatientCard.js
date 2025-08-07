@@ -14,7 +14,7 @@ import momentLocalizer from "react-widgets-moment";
 import axios from "axios";
 import { url as baseUrl, token } from "./../../../api";
 import Typography from "@material-ui/core/Typography";
-
+import { convertMaternalCodeToValue } from "../../utils";
 //Dtate Picker package
 Moment.locale("en");
 momentLocalizer();
@@ -81,7 +81,8 @@ function PatientCard(props) {
 
 
   useEffect(() => {
-    getLatestConfirmatoryResult()
+    // getMaternalOutcome();
+    // getLatestConfirmatoryResult()
     getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
@@ -92,6 +93,8 @@ function PatientCard(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult();
+    getMaternalOutcome();
+    getHighRiskInfantStatus();
 
 
   }, [props.activeContent]);
@@ -143,7 +146,17 @@ function PatientCard(props) {
       });
   };
 
-
+const getMaternalOutcome = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}application-codesets/v2/MATERNAL_OUTCOME`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  localStorage.setItem("maternalOutcome", JSON.stringify(response.data));
+  } catch (error) {
+    console.error("Error fetching maternal outcome:", error);
+    return []; // Return empty array on error
+  }
+};
 
    const getHighRiskInfantStatus = () => {
     axios
@@ -275,7 +288,6 @@ function PatientCard(props) {
                     </b>
                   </span>
                 </Col>
-
                 <Col md={12}>
                   {biometricStatus === true ? (
                     <>
@@ -294,6 +306,21 @@ function PatientCard(props) {
                               {props.patientObj?.biometricStatus === true
                                 ? "Captured"
                                 : "Not Captured"}
+                            </Label.Detail>
+                          </Label>
+                        </Typography>
+                      </div>
+                                <div>
+                        <Typography variant="caption">
+                          <Label
+                            color={
+                              'blue'
+                            }
+                            size={"mini"}
+                          >
+                            Maternal Outcome:
+                            <Label.Detail>
+                              {convertMaternalCodeToValue(props.maternalOutcome)}
                             </Label.Detail>
                           </Label>
                         </Typography>
