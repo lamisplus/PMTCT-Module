@@ -64,7 +64,6 @@ const useStyles = makeStyles((theme) => ({
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
-  console.log("Mother Follow-up Visit obj", patientObj)
   const [errors, setErrors] = useState({});
   const [disabledField, setDisabledField] = useState(false);
   
