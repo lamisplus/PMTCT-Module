@@ -23,6 +23,9 @@ import { Spinner } from "reactstrap";
 import { Message } from "semantic-ui-react";
 import { calculateGestationalAge } from "../../utils";
 import moment from "moment";
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
+
+
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -171,19 +174,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
       });
   };
 
-  const getTimeHivInitiation = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data); TIMING_MOTHERS_ART_INITIATION
-        setTimeHivInitiation(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
   const handleInputChangeInfantMotherArtDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
@@ -202,43 +193,8 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     RegimenType(regimenID);
     //setErrors({...temp, [e.target.name]:""})
   };
-  //console.log(props.allEntryPoint);
-  // const TIMING_MOTHERS_ART_INITIATION = () => {
-  //   axios
-  //     .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     })
-  //     .then((response) => {
-  //       setTimeMotherArt(response.data);
-  //     })
-  //     .catch((error) => {
-  //       //console.log(error);
-  //     });
-  // };
-  const TIMING_MOTHERS_ART_INITIATION = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setTimeHivDiagnosis(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const GET_URINALYSIS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PMTCT_URINALYSIS_RESULT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setUrinalysisList(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
   //GET AdultRegimenLine
   const AdultRegimenLine = () => {
     axios
@@ -255,19 +211,9 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
         //console.log(error);
       });
   };
-  const NEW_POINT_ENTRY_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAllNewEntryPoint(response.data);
-    
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
+
   const getPatientEntryType = (id) => {
     if (locationState.entrypointValue) {
       allNewEntryPoint.map((each, i) => {
@@ -288,16 +234,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
   };
   useEffect(() => {
-   
+   GET_CODESETS();
     checkTimingOfART(0)
-    getTimeHivInitiation();
-    GET_URINALYSIS();
     AdultRegimenLine();
-    TIMING_MOTHERS_ART_INITIATION();
-    NEW_POINT_ENTRY_PMTCT();
-    POINT_ENTRY_PMTCT();
-    TIME_ART_INITIATION_PMTCT();
-    TB_STATUS();
+;
 
     if (props?.patientObj.id) {
       getARTStartDate();
@@ -372,6 +312,26 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     return expectedDeliveryDate.format('YYYY-MM-DD')
 
   }
+
+
+
+    // BATCH API
+   const GET_CODESETS = () => {
+  
+     GET_CODESETS_IN_BATCH("TIMING_MOTHERS_ART_INITIATION", "PMTCT_URINALYSIS_RESULT", "TIME_HIV_DIAGNOSIS", "PMTCT_ENTRY_POINT", "POINT_ENTRY_PMTCT","TIMING_MOTHERS_ART_INITIATION", "TB_STATUS").then((response)=>{
+          console.log("GET_CODESETS_IN_BATCH", response)
+
+        setTimeHivInitiation(response.data.TIMING_MOTHERS_ART_INITIATION);
+        setUrinalysisList(response.data.PMTCT_URINALYSIS_RESULT);
+         setTimeHivDiagnosis(response.data.TIME_HIV_DIAGNOSIS)
+         setAllNewEntryPoint(response.data.PMTCT_ENTRY_POINT);
+         setartStartTime(response.data.TIMING_MOTHERS_ART_INITIATION);
+         setTbStatus(response.data.TB_STATUS);
+
+
+      })}
+      //END OF BATCH API
+
   const GetPatientPMTCT = (id) => {
     axios
       .get(
@@ -517,49 +477,11 @@ return dateOfDelivery.diff(lmp, 'weeks')
       });
   };
 
-  const POINT_ENTRY_PMTCT = () => {
-
-    axios
-      .get(`${baseUrl}application-codesets/v2/POINT_ENTRY_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setentryPoint(response.data);
-        // console.log("deducted", ans);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const TIME_ART_INITIATION_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-
-        setartStartTime(response.data);
-
-    
-     
-      })
-      .catch((error) => {});
-  };
 
 
 
-  const TB_STATUS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TB_STATUS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setTbStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
   const handleInputChangeEnrollmentDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
 

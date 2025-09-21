@@ -19,6 +19,7 @@ import { useHistory } from "react-router-dom";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import moment from "moment";
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -137,18 +138,10 @@ const LabourDelivery = (props) => {
       : props.patientObj.uuid,
   });
   useEffect(() => {
-
+      GET_CODESETS()
     getDateOfDelivery();
-    MODE_DELIVERY();
-    FEEDING_DECISION();
-    MATERNAL_OUTCOME();
-    CHILD_STATUS_DELIVERY();
-    BOOKING_STATUS();
-    ROM_DELIVERY_INTERVAL();
-    TIME_HIV_DIAGNOSIS();
-    getPlaceOfDelivery();
 
-    console.log("on it ",delivery)
+
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -206,33 +199,8 @@ const LabourDelivery = (props) => {
       });
   };
 
-  //Get list
-  const BOOKING_STATUS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/BOOKING STATUS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setBookingStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const getPlaceOfDelivery = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PLACE_OF_DELIVERY`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setPlaceOfDelivery(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
   const getDateOfDelivery = () => {
     axios
       .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
@@ -253,83 +221,26 @@ const LabourDelivery = (props) => {
         //console.log(error);
       });
   };
-  const TIME_HIV_DIAGNOSIS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIME_HIV_DIAGNOSIS_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setTimehiv(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const ROM_DELIVERY_INTERVAL = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/ROM_DELIVERY_INTERVAL`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setRomdelivery(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const MODE_DELIVERY = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/MODE_DELIVERY`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setDelieryMode(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const CHILD_STATUS_DELIVERY = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/CHILD_STATUS_DELIVERY`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setChildStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const FEEDING_DECISION = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/FEEDING DECISION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setfeedingDecision(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const MATERNAL_OUTCOME = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/MATERNAL_OUTCOME`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setmaternalOutCome(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+
+ 
+
+
+
+  // BATCH API
+ const GET_CODESETS = () => {
+
+   GET_CODESETS_IN_BATCH("MODE_DELIVERY", "FEEDING DECISION", "MATERNAL_OUTCOME", "CHILD_STATUS_DELIVERY", "BOOKING STATUS", "ROM_DELIVERY_INTERVAL","TIME_HIV_DIAGNOSIS_PMTCT","PLACE_OF_DELIVERY").then((response)=>{
+      setDelieryMode(response.data.MODE_DELIVERY);
+       setfeedingDecision(response.data["FEEDING DECISION"]);
+       setmaternalOutCome(response.data.MATERNAL_OUTCOME)
+       setChildStatus(response.data.CHILD_STATUS_DELIVERY);
+        setBookingStatus(response.data["BOOKING STATUS"]);
+        setRomdelivery(response.data.ROM_DELIVERY_INTERVAL)
+        setTimehiv(response.data.TIME_HIV_DIAGNOSIS_PMTCT)
+        setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY)
+
+   })
+  
   };
 
 

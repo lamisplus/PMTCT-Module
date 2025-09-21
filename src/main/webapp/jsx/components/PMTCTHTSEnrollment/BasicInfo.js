@@ -23,7 +23,7 @@ import "react-widgets/dist/css/react-widgets.css";
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import {  Modal } from "react-bootstrap";
-
+import GET_CODESETS_IN_BATCH from '../../utils'
 
 const useStyles = makeStyles((theme) => ({
     card: {
@@ -139,111 +139,34 @@ const BasicInfo = (props) => {
             indexClientCode:props.patientObj ? props.patientObj.indexClientCode :"",
         }
     )    
-    useEffect(() => { 
-        KP(); 
-        EnrollmentSetting(); 
-        SourceReferral();
-        Genders();
-        CounselingType();
-        PregnancyStatus()
-        IndexTesting();
-    }, [ props.patientObj]);
-    //Get list of KP
-    const KP =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TARGET_GROUP`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setKP(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of IndexTesting
-    const IndexTesting =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/INDEX_TESTING`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setIndexTesting(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of KP
-    const PregnancyStatus =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/PREGANACY_STATUS`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setPregnancyStatus(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    
-    //Get list of KP
-    const CounselingType =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/COUNSELING_TYPE`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            setCounselingType(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
-    //Get list of HIV STATUS ENROLLMENT
-    const EnrollmentSetting =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/TEST_SETTING`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setEnrollSetting(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });    
-    }
 
-    //Get list of Source of Referral
-    const SourceReferral =()=>{
-            axios
-            .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                //console.log(response.data);
-                setSourceReferral(response.data);
-            })
-            .catch((error) => {
-            //console.log(error);
-            });        
-    }
-    //Get list of Genders from 
-    const Genders =()=>{
-        axios
-        .get(`${baseUrl}application-codesets/v2/GENDER`,
-            { headers: {"Authorization" : `Bearer ${token}`} }
-        )
-        .then((response) => {
-            //console.log(response.data);
-            setGender(response.data);
-        })
-        .catch((error) => {
-        //console.log(error);
-        });        
-    }
+
+
+      // BATCH API
+ const GET_CODESETS = () => {
+
+   GET_CODESETS_IN_BATCH("TARGET_GROUP", "INDEX_TESTING", "PREGANACY_STATUS", "COUNSELING_TYPE", "TEST_SETTING", "SOURCE_REFERRAL","GENDER","PLACE_OF_DELIVERY").then((response)=>{
+      setKP(response.data.TARGET_GROUP);
+       setIndexTesting(response.data.INDEX_TESTING);
+       setPregnancyStatus(response.data.PREGANACY_STATUS)
+       setCounselingType(response.data.COUNSELING_TYPE);
+        setEnrollSetting(response.data.TEST_SETTING)
+        setSourceReferral(response.data.SOURCE_REFERRAL)
+        setGender(response.data.GENDER)
+
+   })
+  
+  };
+    useEffect(() => { 
+    GET_CODESETS();
+    }, [ props.patientObj]);
+
+ 
+
+ 
+
+
+  
     const handleInputChange = e => { 
         setErrors({...temp, [e.target.name]:""}) 
         if(e.target.name==='indexClientCode' && e.target.value!==''){

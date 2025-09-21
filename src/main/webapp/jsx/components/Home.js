@@ -9,6 +9,7 @@ import { FaUserPlus } from "react-icons/fa";
 import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
 import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
+import CheckedInPatient from "./Patient/CheckedInPatient";
 
 //import PageTitle from "./../layouts/PageTitle";
 const divStyle = {
@@ -68,6 +69,13 @@ const Home = (props) => {
                   <Tab eventKey="home" title="Find Patients">
                     <NotEnrollPatients />
                   </Tab>
+
+                  
+                  <Tab eventKey="checkedIn" title="Checked In Patients">                   
+                    <CheckedInPatient
+                    
+                    />
+                  </Tab>  
                   <Tab eventKey="anc" title="ANC Patients">
                     <ANCPatients />
                   </Tab>

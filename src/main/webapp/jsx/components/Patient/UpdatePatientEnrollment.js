@@ -27,6 +27,8 @@ import "./patient.css";
 import { Modal } from "react-bootstrap";
 import { calculateGestationalAge } from "../../utils";
 import FacilitySearchDropdown from "./FacilitySearchDropdown";
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
+
 
 library.add(faCheckSquare, faCoffee, faEdit, faTrash);
 
@@ -171,18 +173,6 @@ const UserRegistration = (props) => {
   const [allNewEntryPoint, setAllNewEntryPoint] = useState([]);
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
 
-  const NEW_POINT_ENTRY_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAllNewEntryPoint(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
 
   const getPatientEntryType = (id) => {
     allNewEntryPoint.map((each, i) => {
@@ -193,11 +183,9 @@ const UserRegistration = (props) => {
   };
 
   useEffect(() => {
-    getCommunitySetting();
-    getANCSetting();
-    loadGenders();
-    getSex();
-    PregnancyStatus();
+    GET_CODESETS()
+    
+    
     //console.log(patientObj)
     if (patientObj) {
       setDisabledField(actionType === "view" ? true : false);
@@ -223,24 +211,14 @@ const UserRegistration = (props) => {
   }, [patientObj, patientId, actionType]);
 
   useEffect(() => {
+    GET_CODESETS();
+
     viewANCInfo();
     if (locationState.entrypointValue) {
       getPatientEntryType();
     }
   }, []);
-  //Get list of Source of Referral
-  const SOURCE_REFERRAL_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setSourceOfReferral(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+ 
   const viewANCInfo = () => {
     axios
       .get(`${baseUrl}pmtct/anc/${location.state.id}`, {
@@ -253,65 +231,26 @@ const UserRegistration = (props) => {
         //console.log(error);
       });
   };
-  //get ANC setting
-  const getANCSetting = (e) => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setANCSetting(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  //get Community setting
-  const getCommunitySetting = (e) => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/COMMUNITY_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setCommunitySetting(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  // const getHIVStatus = (hospitalNumber, uuid) => {
-  //   axios
-  //     .get(
-  //     `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
-  //     {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     }
-  //   )
-  //   .then((response) => {
-  //     if (response.data) {
-  //       setObjValues({
-  //         ...objValues,
-  //         staticHivStatus: response.data,
-  //       });
-  //       console.log("obj pat", objValues);
-  //       setDisableHIVStatus(true);
-  //     } else {
-  //       objValues.staticHivStatus =
-  //         patientObj && patientObj.dynamicHivStatus === "Positive"
-  //           ? "Positive"
-  //           : "";
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     //console.log(error);
-  //   });
-  // };
-  const getSex = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SEX`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
+ 
+
+
+     const GET_CODESETS = () => {
+  
+     GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
+          console.log("GET_CODESETS_IN_BATCH", response)
+        setANCSetting(response.data.ENROLLMENT_SETTING);
+         setCommunitySetting(response.data.TEST_SETTING_CPMTCT);
+         getSex(response.data.SEX)
+         setPregnancyStatus(response.data.PREGANACY_STATUS);
+          setGenders(response.data.SEX);
+          setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT)
+     })
+      
+    };
+
+
+
+  const getSex = (sexCodeSet) => {
         let patientSex = "";
         if (
           patientObj.sex === "female" ||
@@ -327,12 +266,9 @@ const UserRegistration = (props) => {
         ) {
           patientSex = "Male";
         }
-        const getSexId = response.data.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
+        const getSexId = sexCodeSet.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
         basicInfo.sexId = getSexId.display;
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+;
   };
   const loadGenders = useCallback(async () => {
     try {

@@ -24,6 +24,7 @@ import moment from "moment";
 import { NoStroller } from "@mui/icons-material";
 import { Grid, Segment, Label, List } from "semantic-ui-react";
 import { set } from "date-fns";
+import { GET_CODESETS_IN_BATCH } from "../../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -155,18 +156,38 @@ const LabourinfantInfo = (props) => {
     dateOfCtx: "",
     dateOfArv: "",
   });
-  const INFANT_PCR_RESULT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_PCR_RESULT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setPcrResult(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+
+   const getSamplePCRType = (arr) => {
+            let newInfantPcrList=[]
+            arr.map((each, index)=>{
+              if(each.code === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
+                newInfantPcrList.push(each)
+              }
+
+            })
+        setPCRList(newInfantPcrList);
+    
   };
+
+
+
+    // BATCH API
+ const GET_CODESETS = () => {
+
+   GET_CODESETS_IN_BATCH("CHILD_TEST_AGE", "INFANT_PCR_RESULT", "SEX", "AGE_CTX_INITIATION", "INFANT_ARV_PROPHYLAXIS_TYPE", "INFANT_TESTING_PCR").then((response)=>{
+      setAtTestList(response.data.CHILD_TEST_AGE);
+      setPcrResult(response.data.INFANT_PCR_RESULT)
+      setGenders(response.data.SEX);
+      setAgeCTX(response.data.AGE_CTX_INITIATION);
+
+      setInfantArv(response.data.INFANT_ARV_PROPHYLAXIS_TYPE)
+      getSamplePCRType(response.data.INFANT_TESTING_PCR)
+     
+   })
+  
+  };
+
+
   // caluculate the PCR
   const calculateAgeInWeek = (dateOfBirth) => {
     // let ex = "2024-01-01";
@@ -215,18 +236,7 @@ const LabourinfantInfo = (props) => {
       return Math.floor(calculateYearInWeeks);
     }
   };
-  const getAgeAtTestMonthList = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/CHILD_TEST_AGE`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAtTestList(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
   const handleInputChangeInfantPCRTestDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name)infantPCRTestDto, setInfantPCRTestDto
@@ -287,19 +297,6 @@ const LabourinfantInfo = (props) => {
   };
 
 
-  //This is to get infant hospital numbet when viewing or updating infant
-  const INFANT_ARV_PROPHYLAXIS_TYPE = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_ARV_PROPHYLAXIS_TYPE`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setInfantArv(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
   const handleInputValueCheckweight = (e) => {
     if (
       e.target.name === "bodyWeight" &&
@@ -314,12 +311,8 @@ const LabourinfantInfo = (props) => {
   };
 
   useEffect(() => {
-    getAgeAtTestMonthList();
-    INFANT_PCR_RESULT();
-    SEX();
-    AGE_CTX_INITIATION();
-    INFANT_ARV_PROPHYLAXIS_TYPE();
-    PCR_SAMPLE_TYPE()
+    GET_CODESETS()
+   
     // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
@@ -377,44 +370,10 @@ const LabourinfantInfo = (props) => {
     }
   }, [props.patientObj.id, props.activeContent.id]);
 
-  const SEX = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SEX`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setGenders(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
 
 
-  const PCR_SAMPLE_TYPE = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_TESTING_PCR`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        let newInfantPcrList =[]
-        //console.log(response.data);
-         
-            response?.data.map((each, index)=>{
-              if(each.code === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
-                newInfantPcrList.push(each)
-              }
 
-            })
-          
-
-        setPCRList(newInfantPcrList);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+ 
 
 
   const calculateAgeAtCTX  =(dateaOfCTX)=>{
@@ -521,18 +480,6 @@ const LabourinfantInfo = (props) => {
 
   };
 
-  const AGE_CTX_INITIATION = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/AGE_CTX_INITIATION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAgeCTX(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };

@@ -18,6 +18,8 @@ import SaveIcon from "@material-ui/icons/Save";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
+
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -134,18 +136,21 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
-  const POINT_ENTRY_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setEntryPoint(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+    
+    // BATCH API
+   const GET_CODESETS = () => {
+  
+     GET_CODESETS_IN_BATCH("VISIT_STATUS_PMTCT", "MATERNAL_OUTCOME", "FAMILY_PLANNING_METHOD", "PMTCT_ENTRY_POINT").then((response)=>{
+        setVisitStatus(response.data.VISIT_STATUS_PMTCT);
+        
+        setMaternalCome(response.data.MATERNAL_OUTCOME);
+         setFp(response.data.FAMILY_PLANNING_METHOD);
+          setEntryPoint(response.data.PMTCT_ENTRY_POINT);
+     })
+    
+    }
+
   const getPatientEntryType = (id) => {
     entryPoint.map((each, i) => {
       if (Number(each.id) === Number(props.patientObj.entryPoint)) {
@@ -155,12 +160,11 @@ const ClinicVisit = (props) => {
   };
 
   useEffect(() => {
-    ///VitalSigns();
+    GET_CODESETS();
+
     getDateOfDelivery()
-    VISIT_STATUS_PMTCT();
-    MATERNAL_OUTCOME();
-    FAMILY_PLANNING_METHOD();
-    POINT_ENTRY_PMTCT();
+
+
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
@@ -193,58 +197,10 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
-  const VISIT_STATUS_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/VISIT_STATUS_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setVisitStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  // const POINT_ENTRY_PMTCT = () => {
-  //   axios
-  //     .get(`${baseUrl}application-codesets/v2/POINT_ENTRY`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     })
-  //     .then((response) => {
-  //       console.log(response.data);
-  //       setEntryPoint(response.data);
-  //     })
-  //     .catch((error) => {
-  //       //console.log(error);
-  //     });
-  // };
-  const FAMILY_PLANNING_METHOD = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/FAMILY_PLANNING_METHOD`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setFp(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const MATERNAL_OUTCOME = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/MATERNAL_OUTCOME`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setMaternalCome(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
+
+
   const handleInputChange = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
     if (e.target.name === "dsdModel") {

@@ -18,6 +18,11 @@ import { toast } from "react-toastify";
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
+
+
+
+
 const useStyles = makeStyles((theme) => ({
   card: {
     margin: theme.spacing(20),
@@ -222,6 +227,30 @@ const ClinicVisit = (props) => {
   const [pcrMessage, setPcrMessage] = useState("");
 
   const [infantRapidTestList, setInfantRapidTestList] = useState([]);
+
+
+
+   
+   // BATCH API
+  const GET_CODESETS = () => {
+ 
+    GET_CODESETS_IN_BATCH("SEX", "TIME_ART_INITIATION_PMTCT", "CHILD_FOLLOW_UP_VISIT_STATUS", "TIMING_MOTHERS_ART_INITIATION", "AGE_CTX_INITIATION",  "INFANT_ARV_PROPHYLAXIS_TYPE", "INFANT_PCR_RESULT", "INFANT_OUTCOME_AT_18_MONTHS", "PLACE_OF_DELIVERY", "INFANT_TESTING_PCR", "TIMING_PROPHYLAXIS_WITHIN_72HRS").then((response)=>{
+        setGenders(response.data.SEX);
+        setTimingOfArtInitiation(response.data.TIME_ART_INITIATION_PMTCT);
+        setChildStatus(response.data.CHILD_FOLLOW_UP_VISIT_STATUS);
+        setTimeMotherArt(response.data.TIMING_MOTHERS_ART_INITIATION);
+        setAgeCTX(response.data.AGE_CTX_INITIATION);
+        setInfantArv(response.data.INFANT_ARV_PROPHYLAXIS_TYPE);
+        setPcrResult(response.data.INFANT_PCR_RESULT);
+        setInfantOutcome(response.data.INFANT_OUTCOME_AT_18_MONTHS);
+        setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
+        setPcrType(response.data.INFANT_TESTING_PCR);
+        setTimingProphylaxisList(response.data.TIMING_PROPHYLAXIS_WITHIN_72HRS);
+
+
+    })
+   
+   };
   // caluculate the PCR
   const calculateAgeInWeek = (dateOfBirth) => {
     // let ex = "2024-01-01";
@@ -517,19 +546,11 @@ const ClinicVisit = (props) => {
 
 
   useEffect(() => {
-    SEX();
-    InfantInfo();
-    TIME_ART_INITIATION_PMTCT();
-    CHILD_FOLLOW_UP_VISIT_STATUS();
-    TIMING_MOTHERS_ART_INITIATION();
+   GET_CODESETS();
+
     AdultRegimenLine();
-    AGE_CTX_INITIATION();
-    INFANT_ARV_PROPHYLAXIS_TYPE();
-    INFANT_PCR_RESULT();
-    INFANT_OUTCOME_AT_18_MONTHS();
-    PLACE_OF_DELIVERY();
-    GET_PCR_SAMPLE_TYPE();
-    getTimingARVType();
+    InfantInfo();
+
 
 
 
@@ -713,118 +734,18 @@ const ClinicVisit = (props) => {
 
 
 
-  const TIME_ART_INITIATION_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIME_ART_INITIATION_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setTimingOfArtInitiation(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
 
 
   
-  const GET_PCR_SAMPLE_TYPE = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_TESTING_PCR`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setPcrType(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
 
-  const PLACE_OF_DELIVERY = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PLACE_OF_DELIVERY`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setPlaceOfDelivery(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const INFANT_OUTCOME_AT_18_MONTHS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_OUTCOME_AT_18_MONTHS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setInfantOutcome(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const INFANT_PCR_RESULT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_PCR_RESULT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setPcrResult(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const INFANT_ARV_PROPHYLAXIS_TYPE = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/INFANT_ARV_PROPHYLAXIS_TYPE`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setInfantArv(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const AGE_CTX_INITIATION = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/AGE_CTX_INITIATION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAgeCTX(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const TIMING_MOTHERS_ART_INITIATION = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/TIMING_MOTHERS_ART_INITIATION`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setTimeMotherArt(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const CHILD_FOLLOW_UP_VISIT_STATUS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/CHILD_FOLLOW_UP_VISIT_STATUS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setChildStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
+
+
+
+
+
+
   const handleInputValueCheckweight = (e) => {
     if (
       e.target.name === "bodyWeight" &&
@@ -853,19 +774,7 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
-  const SEX = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SEX`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setGenders(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
   const handleInputChangeInfantVisitRequestDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
     //console.log(e.target.name)
@@ -951,24 +860,7 @@ const ClinicVisit = (props) => {
  
   };
 
-  const getTimingARVType = (value) => {
-  
-      axios
-        .get(
-          `${baseUrl}application-codesets/v2/TIMING_PROPHYLAXIS_WITHIN_72HRS`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setTimingProphylaxisList(response.data);
-        })
 
-        .catch((error) => {
-          //console.log(error);
-        });
-    
-  };
   const handleInputChangeInfantArvDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
     //console.log(e.target.name),

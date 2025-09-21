@@ -19,6 +19,7 @@ import { url as baseUrl, token } from "./../../../../api";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import { Button } from "semantic-ui-react";
+import { GET_CODESETS_IN_BATCH } from "../../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -110,8 +111,8 @@ const Labourpartner = (props) => {
     dateConfirmedHivTest: "",
   });
   useEffect(() => {
-    PARTNER_SYPHILIS_STATUS();
-    PARTNER_REFERRED_PMTCT();
+    GET_CODESETS()
+  
     if (props.activeContent && props.activeContent.id) {
       setpartner(props.activeContent.obj);
       setDisabledField(
@@ -126,33 +127,7 @@ const Labourpartner = (props) => {
       setPartnerHivStatus(props?.patientObj?.dynamicHivStatus);
     }
   }, [props.patientObj.id, props.activeContent]);
-  //Get list
-  const PARTNER_SYPHILIS_STATUS = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PARTNER_SYPHILIS_STATUS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setSyphills(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
-  const PARTNER_REFERRED_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PARTNER_REFERRED_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setReferred(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
   const handleInputChangepartnerDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     setpartner({ ...partner, [e.target.name]: e.target.value });
@@ -164,6 +139,16 @@ const Labourpartner = (props) => {
     setpartner({ ...partner, [e.target.name]: e.target.value });
   };
 
+       // BATCH API
+    const GET_CODESETS = () => {
+   
+      GET_CODESETS_IN_BATCH("PARTNER_SYPHILIS_STATUS","PARTNER_REFERRED_PMTCT" ).then((response)=>{
+          setSyphills(response.data.PARTNER_SYPHILIS_STATUS);
+           setReferred(response.data.PARTNER_REFERRED_PMTCT);
+
+      })
+     
+     };
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };

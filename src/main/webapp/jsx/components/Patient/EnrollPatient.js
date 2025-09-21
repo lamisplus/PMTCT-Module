@@ -205,11 +205,7 @@ const UserRegistration = (props) => {
 
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
   useEffect(() => {
-    getANCSetting();
-    getCommunitySetting();
-    loadGenders();
-    getSex();
-    PregnancyStatus();
+    GET_CODESETS();
     if (patientObj) {
       const identifiers = patientObj.identifier;
       const hospitalNumber = identifiers.identifier.find(
@@ -248,170 +244,34 @@ const UserRegistration = (props) => {
     // }
     SOURCE_REFERRAL_PMTCT();
   }, [patientObj, patientId, basicInfo.dateOfRegistration]);
-  //Get list of Source of Referral
-  const SOURCE_REFERRAL_PMTCT = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SOURCE_REFERRAL_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setSourceOfReferral(response.data);
-      })
-      .catch((error) => {});
-  };
-  //get ANC setting
-  const getANCSetting = (e) => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setANCSetting(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+ 
+ 
+ 
+ 
+ 
+   // BATCH API
+ const GET_CODESETS = () => {
+
+   GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
+        console.log("GET_CODESETS_IN_BATCH", response)
+      setANCSetting(response.data.ENROLLMENT_SETTING);
+       setCommunitySetting(response.data.TEST_SETTING_CPMTCT);
+       getSex(response.data.SEX)
+       setPregnancyStatus(response.data.PREGANACY_STATUS);
+        setGenders(response.data.SEX);
+        setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT)
+   })
+  
   };
 
-  // const htsConfirmation=(clientCode)=>{
-  //   let userCode= clientCode
-  //   if(clientCode.includes("&")){
-  //     userCode= encodeURIComponent(userCode)
-  //   }
-  //   axios
-  //   .get(`${baseUrl}pmtct/anc/is-on-hts?clientCode=${userCode}`, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   })
-  //   .then((response) => {
-  //     if(response.data.status){
-  //       setRetrievedPatient(response.data)
-  //       setHtsHivStatus(response.data.hivResult)
-  //       if(response.data.testingSetting !== ""){
-  //           if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
-  //             //if entry point is diff from ANC
-  //             if(!state.showANC ){
-  //               toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
-  //             }else{
-  //               if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
-  //                 setShowRegistrationAnc(true)
-  //                 setShowRegistrationButton(true)
-  //                 setShowRegistration(true)
+  
 
-  //               }else{
+ 
+ 
 
-  //                 toast.error("User has negative HTS result, can't enroll user on PMTCT")
 
-  //               }
 
-  //             }
-
-  //           }else if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" ){
-  //             // state.postValue
-  //               if(state.postValue === "L&D"){
-  //                 if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
-  //                   setShowRegistrationButton(true)
-  //                   setShowRegistration(true)
-  //                 }else{
-
-  //                   toast.error("User has negative HTS result, can't enroll user on PMTCT")
-
-  //                 }
-
-  //               }else{
-  //                 toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
-
-  //               }
-
-  //           }else if (response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING"){
-
-  //             if(state.postValue === "Post-Partum"){
-  //               if(response.data.hivResult && response.data.hivResult.toLowerCase() === "positive"){
-  //                 setShowRegistrationButton(true)
-  //                  setShowRegistration(true)
-
-  //               }else{
-
-  //                 toast.error("User has negative HTS result, can't enroll user on PMTCT")
-
-  //               }
-
-  //             }else{
-  //               toast.error("Mismatch between the entry point selected for PMTCT and the setting recorded in HTS setting. Re-confirm the entry point")
-
-  //             }
-
-  //           }else if(response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting !==  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting !== "FACILITY_HTS_TEST_SETTING_ANC"){
-  //             // setShowRegistrationButton(true)
-  //             // setShowRegistration(true)
-  //             // setShowRegistrationAnc(true)
-
-  //             toast.error("User has HTS record but it is not PMTCT setting !");
-
-  //           }
-
-  //           // if(response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_L&D" || response.data.testingSetting ===  "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING" || response.data.testingSetting === "FACILITY_HTS_TEST_SETTING_ANC"){
-  //           //   setShowRegistrationButton(true)
-  //           // }
-  //       }
-  //     }else{
-  //       let resp= response.data.message
-  //       toast.error(response.data.message);
-
-  //     }
-  //   })
-  //   .catch((error) => {
-
-  //       toast.error("User does not have HTS record !");
-
-  //        });
-
-  // }
-
-  //get Community setting
-  const getCommunitySetting = (e) => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/COMMUNITY_PMTCT`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setCommunitySetting(response.data);
-      })
-      .catch((error) => {});
-  };
-  // const getHIVStatus = (hospitalNumber, uuid) => {
-  //   axios
-  //     .get(
-  //       `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     )
-  //     .then((response) => {
-  //       if (response.data) {
-  //         setObjValues({
-  //           ...objValues,
-  //           staticHivStatus: response.data,
-  //         });
-  //         console.log("obj pat", objValues);
-  //         setDisableHIVStatus(true);
-  //       } else {
-  //         objValues.staticHivStatus =
-  //           patientObj && patientObj.dynamicHivStatus === "Positive"
-  //             ? "Positive"
-  //             : "";
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       //console.log(error);
-  //     });
-  // };
-
-  const getSex = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/SEX`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
+  const getSex = (sexCodeSet) => {
         let patientSex = "";
         if (
           patientObj.sex === "female" ||
@@ -427,12 +287,9 @@ const UserRegistration = (props) => {
         ) {
           patientSex = "Male";
         }
-        const getSexId = response.data.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
+        const getSexId = sexCodeSet.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
         basicInfo.sexId = getSexId.display;
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+;
   };
   const loadGenders = useCallback(async () => {
     try {
@@ -538,20 +395,7 @@ const UserRegistration = (props) => {
     setBasicInfo({ ...basicInfo, [e.target.name]: e.target.value });
   };
 
-  //Get list of KP
-  const PregnancyStatus = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/PREGANACY_STATUS`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        //console.log(response.data);
-        setPregnancyStatus(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+
   const handleInputChange = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     if (e.target.name === "ancNo" && e.target.value !== "") {
