@@ -145,7 +145,7 @@ const LabourDelivery = (props) => {
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null
+      props.activeContent.id !== null && props?.activeContent?.actionType !== "create"
     ) {
       GetPatientLabourDTO(props.activeContent.id);
       setSisabledField(

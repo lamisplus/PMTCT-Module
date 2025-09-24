@@ -10,6 +10,7 @@ import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
 import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
 import CheckedInPatient from "./Patient/CheckedInPatient";
+import { usePermissions } from "../../hooks/usePermissions";
 
 //import PageTitle from "./../layouts/PageTitle";
 const divStyle = {
@@ -18,6 +19,8 @@ const divStyle = {
 };
 
 const Home = (props) => {
+    const { hasRDErole } = usePermissions();
+  
   const [key, setKey] = useState("home");
   const [modalShow, setModalShow] = useState(false);
   useEffect(() => {
@@ -36,21 +39,9 @@ const Home = (props) => {
           </li>
         </ol>
       </div>
-      {/* <Link to={"register-patient"}> */}
-      {/* <Button
-        variant="contained"
-        color="primary"
-        className=" float-end mb-10"
-        startIcon={<FaUserPlus size="10" />}
-        style={{ backgroundColor: "#014d88" }}
-        onClick={(e) => {
-          e.preventDefault();
-          setModalShow(true);
-        }}
-      >
-        <span style={{ textTransform: "capitalize" }}>New Patient</span>
-      </Button> */}
-      {/* </Link> */}
+
+
+{console.log('hasRDErole', hasRDErole)}
       <br />
       <br />
       <Row>
@@ -66,16 +57,18 @@ const Home = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-                  <Tab eventKey="home" title="Find Patients">
-                    <NotEnrollPatients />
-                  </Tab>
 
-                  
-                  <Tab eventKey="checkedIn" title="Checked In Patients">                   
+                  {hasRDErole ?     <Tab eventKey="home" title="Find Patients">
+                    <NotEnrollPatients />
+                  </Tab>:        
+                  <Tab eventKey="home" title="Checked In Patients">                   
                     <CheckedInPatient
                     
                     />
-                  </Tab>  
+                       </Tab> 
+                 }
+              
+               
                   <Tab eventKey="anc" title="ANC Patients">
                     <ANCPatients />
                   </Tab>

@@ -33,7 +33,7 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String timeOfViralLoad;
     private LocalDate dateOfViralLoad;
     private Integer gaOfViralLoad;
-    private Integer resultOfViralLoad;
+    private Long resultOfViralLoad;
     private String dsd;
     private String dsdOption;
     private String dsdModel;

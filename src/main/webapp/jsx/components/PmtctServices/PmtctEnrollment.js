@@ -246,7 +246,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null
+      props.activeContent.id !== null && props?.activeContent?.actionType !== "create"
     ) {
       GetPatientPMTCT(props.activeContent.id);
       setSisabledField(

@@ -206,7 +206,15 @@ public class PmtctHtsService {
         return convertEntitytoRespondDto(pmtctHtsRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(PmtctHts.class, "Id", id+ "") ));
     }
 
+    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String personUuid) {
+        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentById(personUuid);
 
+        if (entity == null) {
+            return null;
+        }
+
+        return convertEntitytoRespondDto(entity);
+    }
 
     public  String  getLatestConfirmatoryResult(String personUuid) {
         return pmtctHtsRepository.findLatestConfirmatoryResult(personUuid).orElse("");

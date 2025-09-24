@@ -119,6 +119,15 @@ const PmtctHtsForm = (props) => {
     moment(new Date()).format("YYYY-MM-DD")
   );
   const [minARTDate, setMinARTDate] = useState("");
+  const [lastPmtctHtsRecord, setLastPmtctHtsRecord] = useState({
+        confirmatoryHivTest: "",
+        dateOfHivTest: "",
+        testEntryPoint: "",
+        testSetting: "",
+        initialHivTest: "",
+        stageOfPregnancy: "",
+            
+          });
 
   const [payload, setPayload] = useState({
     dateOfHivTest: "",
@@ -138,12 +147,32 @@ const PmtctHtsForm = (props) => {
     console.log("props searching", props)
 
 
+//get the person last record on PMTCT HTS if exist 
+
+  const getLastPmtctHtsRecord = (personUuid) => {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+
+          if(response.data){
+           setLastPmtctHtsRecord(response.data)
+
+          }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
 
   useEffect(() => {
     POINT_ENTRY_PMTCT();
     TIME_ART_INITIATION_PMTCT();
     TB_STATUS();
-
+    getLastPmtctHtsRecord();
     if (props?.patientObj?.id && props?.activeContent?.id && props?.activeContent?.actionType !== 'create') {
       viewPmtctHtsRecord(props?.patientObj?.id);
 
@@ -545,7 +574,7 @@ const PmtctHtsForm = (props) => {
                       id="dateOfHivTest"
                       onChange={handleInputChange}
                       value={payload.dateOfHivTest}
-                      // min={patientObj.ancNo? props.patientObj.firstAncDate: props?.newRegDate? props?.newRegDate: ""}
+                       min={patientObj.ancNo? props.patientObj.firstAncDate: lastPmtctHtsRecord.dateOfHivTest? lastPmtctHtsRecord.dateOfHivTest: ""}
                       max={moment(new Date()).format("YYYY-MM-DD")}
                       disabled={disabledField}
                     />

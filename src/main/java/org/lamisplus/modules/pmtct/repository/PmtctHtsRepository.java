@@ -23,4 +23,9 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
     @Query(value = "SELECT confirmatory_hiv_test FROM pmtct_hts where person_uuid=?1 AND archived = 0 ORDER BY id DESC LIMIT 1 ", nativeQuery = true)
     Optional<String> findLatestConfirmatoryResult(String personUuid);
 
+    @Query(value = "SELECT * FROM pmtct_hts WHERE person_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    PmtctHts findLatestPMTCTHTSEnrollmentById(String personUuid);
+
+
+
 }

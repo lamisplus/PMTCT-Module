@@ -23,7 +23,7 @@ import "react-widgets/dist/css/react-widgets.css";
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import {  Modal } from "react-bootstrap";
-import GET_CODESETS_IN_BATCH from '../../utils'
+import {GET_CODESETS_IN_BATCH} from '../../../utils'
 
 const useStyles = makeStyles((theme) => ({
     card: {

@@ -80,6 +80,7 @@ function PatientCard(props) {
   const Arttoggle = () => setArtModal(!artModal);
 
 
+
   useEffect(() => {
     // getMaternalOutcome();
     // getLatestConfirmatoryResult()
@@ -93,8 +94,7 @@ function PatientCard(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult();
-    getMaternalOutcome();
-    getHighRiskInfantStatus();
+    // getMaternalOutcome();
 
 
   }, [props.activeContent]);
@@ -113,7 +113,7 @@ function PatientCard(props) {
         console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
         props.setLastestConfirmatoryTest(response.data)
       setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
-
+      props.setLatestHivStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
       })
       .catch((error) => {
         console.error("Error fetching confirmatory result:", error);
@@ -160,13 +160,12 @@ const getMaternalOutcome = async () => {
 
    const getHighRiskInfantStatus = () => {
     axios
-      .get(`${baseUrl}modules/check-for-infant-high-risk/${patientObj.person_uuid}`, {
+      .get(`${baseUrl}pmtct/anc/check-for-infant-high-risk/${props.patientObj.person_uuid?  props.patientObj.person_uuid : props.patientObj.personUuid}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("getHighRiskInfantStatus =>response", response)
         if (response.data) {
-          setShowHighRisKInfant(true)
+          setShowHighRisKInfant(response.data)
       
         }else{
         setShowHighRisKInfant(false)
@@ -284,7 +283,7 @@ const getMaternalOutcome = async () => {
                     {" "}
                     Address :{" "}
                     <b>
-                      {patientObj?.address && getAddress(patientObj?.address)}{" "}
+                      { typeof patientObj.address !== 'object' ?  patientObj?.address   : getAddress(patientObj?.address)}
                     </b>
                   </span>
                 </Col>
@@ -310,7 +309,7 @@ const getMaternalOutcome = async () => {
                           </Label>
                         </Typography>
                       </div>
-                                <div>
+                             {props.maternalOutcome &&   <div>
                         <Typography variant="caption">
                           <Label
                             color={
@@ -320,11 +319,11 @@ const getMaternalOutcome = async () => {
                           >
                             Maternal Outcome:
                             <Label.Detail>
-                              {convertMaternalCodeToValue(props.maternalOutcome)}
+                              {props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome)}
                             </Label.Detail>
                           </Label>
                         </Typography>
-                      </div>
+                      </div>} 
                     </>
                   ) : (
                     <></>
@@ -356,21 +355,17 @@ const getMaternalOutcome = async () => {
                   ) : (
                     <></>
                   )}
-                  <div>
+                 {showHighRisKInfant &&  <div>
                         <Typography variant="caption">
                           <Label
                             color={ "red"}
                             size={"mini"}
                           >
-Infant high risk                  
-          {/* <Label.Detail>
-
-                            {props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus}
-                      
-                            </Label.Detail> */}
+                            Infant high risk                  
+      
                           </Label>
                         </Typography>
-                      </div>
+                      </div>}
                   
                   
                   </div>

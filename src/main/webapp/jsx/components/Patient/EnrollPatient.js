@@ -28,7 +28,7 @@ import PmtctEnrollment from "../PmtctServices/PmtctEnrollment";
 import { Modal } from "react-bootstrap";
 import { calculateGestationalAge } from "../../utils";
 import FacilitySearchDropdown from "./FacilitySearchDropdown";
-
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 library.add(faCheckSquare, faCoffee, faEdit, faTrash);
 
@@ -206,11 +206,18 @@ const UserRegistration = (props) => {
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
   useEffect(() => {
     GET_CODESETS();
+
+    let hospitalNumber
+
     if (patientObj) {
+         //
+      if(patientObj?.identifier){
       const identifiers = patientObj.identifier;
-      const hospitalNumber = identifiers.identifier.find(
-        (obj) => obj.type === "HospitalNumber"
-      );
+       hospitalNumber = identifiers.identifier.find(
+        (obj) => obj.type === "HospitalNumber");
+    }else{
+          hospitalNumber= patientObj?.hospitalNumber
+    }
       basicInfo.dob = patientObj.dateOfBirth;
       basicInfo.firstName = patientObj.firstName;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
@@ -218,7 +225,7 @@ const UserRegistration = (props) => {
       basicInfo.lastName = patientObj.surname;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
       basicInfo.hospitalNumber =
-        hospitalNumber && hospitalNumber ? hospitalNumber.value : "";
+        hospitalNumber && typeof hospitalNumber === 'string' ? hospitalNumber : hospitalNumber?.value;
       setObjValues({
         ...objValues,
         uniqueId: hospitalNumber ? hospitalNumber.value : "",
@@ -236,13 +243,7 @@ const UserRegistration = (props) => {
       alert("Date of registration can not be earlier than date of birth");
     }
 
-    // if (patientObj?.dynamicHivStatus) {
-    //   getHIVStatus(
-    //     patientObj?.identifier?.identifier[0]?.value,
-    //     patientObj.uuid
-    //   );
-    // }
-    SOURCE_REFERRAL_PMTCT();
+
   }, [patientObj, patientId, basicInfo.dateOfRegistration]);
  
  
@@ -574,18 +575,21 @@ const UserRegistration = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("validate()", validate(), errors)
+    setSaving(true)
     if (validate()) {
       // ANC ENTRY POINT
       if (locationState.showANC) {
         try {
           objValues.entryPoint = locationState.entrypointValue;
 
-          objValues.person_uuid = patientObj.uuid;
+          objValues.person_uuid = patientObj.uuid? patientObj.uuid: patientObj?.personUuid;
           const response = await axios.post(
             `${baseUrl}pmtct/anc/anc-enrollement`,
             objValues,
             { headers: { Authorization: `Bearer ${token}` } }
           );
+          setSaving(false)
+
           toast.success("Patient Register successful", {
             position: toast.POSITION.BOTTOM_CENTER,
           });
@@ -599,6 +603,8 @@ const UserRegistration = (props) => {
           });
           // history.push("/");
         } catch (error) {
+                    setSaving(false)
+
           if (error.response && error.response.data) {
             let errorMessage =
               error.response.data.apierror &&
@@ -648,11 +654,14 @@ const UserRegistration = (props) => {
               entrypointValue: locationState.entrypointValue,
             },
           });
+              setSaving(false)
 
           toast.success("Patient Register successful", {
             position: toast.POSITION.BOTTOM_CENTER,
           });
         } catch (error) {
+                    setSaving(false)
+
           if (error.response && error.response.data) {
             let errorMessage =
               error.response.data.apierror &&

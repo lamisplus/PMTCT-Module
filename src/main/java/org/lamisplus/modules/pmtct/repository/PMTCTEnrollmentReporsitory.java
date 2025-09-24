@@ -145,4 +145,20 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "UPDATE public.pmtct_enrollment SET lmp = ?1 WHERE person_uuid = ?2", nativeQuery = true)
   void updateTheGA(Long gaweeks , String personUuid);
 
+
+
+
+
+  @Query(value = "select art_start_time from pmtct_enrollment WHERE person_uuid = ?1 LIMIT 1", nativeQuery = true)
+  String getMotherARTInitial (String personUuid);
+
+    @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE person_uuid =?1 ", nativeQuery = true)
+    String checkRuptureMembraneAt4hrs (String personUuid);
+
+    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE uuid =?1  OR unique_uuid = ?1  ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    String getNVPandAZT (String personUuid);
+
+    @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)
+    String getMotherVL (String personUuid);
+
 }

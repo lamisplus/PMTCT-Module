@@ -28,6 +28,8 @@ import { MdDashboard } from "react-icons/md";
 import "@reach/menu-button/styles.css";
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
+import { usePermissions } from "../../../hooks/usePermissions";
+import { useMemo } from "react";
 
 //Dtate Picker package
 Moment.locale("en");
@@ -67,6 +69,20 @@ const PmtctPatients = (props) => {
     }
   };
 
+
+
+    const { hasPermission, hasRDErole } = usePermissions();
+ 
+  const permissions = useMemo(
+    () => ({
+      canSeeEnrollButton: hasPermission("maternal_cohort_register"),
+      genPermission: hasRDErole  || hasPermission("maternal_cohort_register")}),
+
+    
+    [hasPermission, hasRDErole]
+  );
+
+
   return (
     <div>
       <MaterialTable
@@ -105,6 +121,9 @@ const PmtctPatients = (props) => {
                 resolve({
                   data: result.data.records.map((row) => ({
                     name: (
+                      <>
+                      { permissions.genPermission &&  <div>
+                       
                       <Link
                         to={{
                           pathname: "/patient-history",
@@ -115,6 +134,9 @@ const PmtctPatients = (props) => {
                         {" "}
                         {row.surname ? row.surname : row.fullName}
                       </Link>
+
+                       </div>}
+                      </>
                     ),
 
                     hospital_number: row.hospitalNumber,

@@ -29,7 +29,7 @@ public class PmtctVisitRequestDto implements Serializable {
     private String timeOfViralLoad;
     private LocalDate dateOfViralLoad;
     private Integer gaOfViralLoad;
-    private Integer resultOfViralLoad;
+    private Long resultOfViralLoad;
     private String dsd;
     private String dsdOption;
     private String dsdModel;

@@ -22,6 +22,7 @@ import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
+import PatientVisits from "./CheckedInVisit";
 
 const styles = (theme) => ({
   root: {
@@ -67,7 +68,9 @@ function PatientCard(props) {
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
   const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState( localStorage.getItem("confirmatoryTest"));
-    const [maternalOutcome, setMaternalOutcome] = useState("");
+  const [maternalOutcome, setMaternalOutcome] = useState("");
+  const [lastestHivStatus, setLatestHivStatus] = useState("");
+  const [mainDeliveryStatus, setMainDeliveryStatus] = useState(false);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -100,7 +103,8 @@ function PatientCard(props) {
       .then((response) => {
         console.log("response", response);
         if (response?.data) {
-          // handle data
+          const hasDeliveryActivity = response.data.some((each)=> each.activityName == "Labour and Delivery");
+            setMainDeliveryStatus(hasDeliveryActivity)
         } else {
           setDeliveryInfo({});
         }
@@ -194,6 +198,7 @@ function PatientCard(props) {
             activeContent={activeContent}
             setLastestConfirmatoryTest={setLastestConfirmatoryTest}
             maternalOutcome={maternalOutcome}
+            setLatestHivStatus={setLatestHivStatus}
           />
 
           {/* Patient Dashboard menu */}
@@ -205,6 +210,7 @@ function PatientCard(props) {
             enrollPMTCT={enrollPMTCT}
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             activeContent={activeContent}
+            mainDeliveryStatus={mainDeliveryStatus}
 
           />
           <br />
@@ -216,7 +222,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
-
+              lastestHivStatus={lastestHivStatus}
               activeContent={activeContent}
               entrypointValue={
                 patientObj.ancNo
@@ -324,6 +330,14 @@ function PatientCard(props) {
               activeContent={activeContent}
             />
           )}
+
+           {activeContent.route === "patient-visit" && (
+                  <PatientVisits
+                    patientObj={patientObj}
+                    setActiveContent={setActiveContent}
+                    activeContent={activeContent}
+                  />
+                )}
         </CardContent>
       </Card>
     </div>

@@ -442,7 +442,7 @@ private DeliveryRepository deliveryRepository;
 //            check if the patient has LD record and update the GA
             Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(pmtctEnrollmentRequestDto.getPersonUuid());
 
-            if(deliverys.isPresent()){
+            if(deliverys.isPresent() & !pmtctEnrollmentRequestDto.getDateOfDelivery().isEmpty()){
 
                 deliveryService.updateDateOfDeliveryFromPMTCT(pmtctEnrollmentRequestDto.getPersonUuid(), pmtctEnrollmentRequestDto.getDateOfDelivery(), pmtctEnrollmentRequestDto.getGAWeeks());
 

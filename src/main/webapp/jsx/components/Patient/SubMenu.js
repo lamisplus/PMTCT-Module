@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Dropdown, Menu } from "semantic-ui-react";
 import { makeStyles } from "@material-ui/core/styles";
 import { url as baseUrl, token } from "../../../api";
+import { usePermissions } from "../../../hooks/usePermissions";
+
+
 
 const useStyles = makeStyles((theme) => ({
   navItemText: {
@@ -24,6 +27,30 @@ function SubMenu(props) {
   const [deliveryStatus, setDeliveryStatus] = useState(false);
 
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+
+
+  const [isOnPMTCT, setIsOnPMTCT] = useState(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
+
+
+
+
+  const { hasPermission, hasRDErole } = usePermissions();
+
+    const permissions = useMemo(
+    () => ({
+      canSeePMTCT: hasPermission("maternal_cohort_register" ),
+      canSeeDelivery: hasPermission("delivery_register"),
+      genAndPmtct: hasRDErole  || hasPermission("maternal_cohort_register" ),
+     genAndANC: hasRDErole  || hasPermission("delivery_register" ),
+
+
+    }),
+    [hasPermission]
+  );
+
+  
+  
+  
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
@@ -45,20 +72,11 @@ function SubMenu(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult();
+    setDeliveryStatus(patientObj.deliveryStatus ||   props.mainDeliveryStatus)
+    setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
+  }, [props.activeContent, props?.patientObj]);
 
 
-  }, [props.activeContent]);
-
-  useEffect(() => {
-    props?.deliveryInfo?.filter((each) => {
-      // console.log(each);
-
-      if (each.activityName === "Labour and Delivery") {
-        setDeliveryStatus(true);
-      }
-    });
-    // console.log(props.deliveryInfo);
-  }, [props.deliveryInfo]);
   //Get list of RegimenLine
   const Observation = () => {
     axios
@@ -178,20 +196,21 @@ function SubMenu(props) {
     <div>
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
-{      console.log("retestingStatus",retestingStatus)
-}
-{      console.log("showRetesting",showRetesting)
+
+{      console.log("isOnPMTCT",isOnPMTCT, 'props?.patientObj?.pmtctRegStatus', props?.patientObj?.pmtctRegStatus, 'props?.patientObj?.isOnPmtct', props?.patientObj?.isOnPmtct)
 }
         {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
         {(patientStatus === "Positive" ) && (
           <>
            
 
-            {patientObj.pmtctRegStatus !== true ? (
+            {isOnPMTCT !== true ? (
               <>
-                <Menu.Item onClick={() => loadAncPnc()}>
+              <>
+                {permissions.canSeePMTCT &&<Menu.Item onClick={() => loadAncPnc()}>
                   PMTCT Enrollment
-                </Menu.Item>
+                </Menu.Item>}
+              </>
               </>
             ) : (
               <>
@@ -199,8 +218,7 @@ function SubMenu(props) {
                   Follow Up Visit
                 </Menu.Item>
 
-                {patientObj.deliveryStatus !== true &&
-                  deliveryStatus !== true && (
+                {!deliveryStatus  && (
                     <Menu.Item onClick={() => loadLabourDelivery()}>
                       Labour and Delivery
                     </Menu.Item>

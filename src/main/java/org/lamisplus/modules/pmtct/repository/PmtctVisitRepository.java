@@ -35,7 +35,7 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, Lo
 
 
         //
-        @Query(value = "SELECT maternal_outcome FROM public.pmtct_mother_visitation WHERE person_uuid=?1 ORDER BY ID DESC", nativeQuery = true)
+        @Query(value = "SELECT maternal_outcome FROM public.pmtct_mother_visitation WHERE person_uuid=?1 ORDER BY ID DESC LIMIT 1", nativeQuery = true)
         Optional<String> findLatestMaternalOutcome(String personUuid);
 
 }

@@ -55,23 +55,7 @@ public class PMTCTController {
         return ResponseEntity.ok(ancService.newANCRegistration(ancWithPersonRequestDto));
     }
 
-    @GetMapping(value = "check-for-infant-high-risk")
-    public boolean checkForInfantRiskStatus(@PathVariable String PersonUuid) {
 
-        return ancService.isInfantRisk(PersonUuid);
-    }
-
-//    @PutMapping
-//    public ANCRequestDto updateANC(@RequestBody ANCRequestDto ancRequestDto) {
-//        this.ancService.save(ancRequestDto);
-//        return ancRequestDto;
-//    }
-
-
-//    @GetMapping
-//    public ResponseEntity<List<ANCRespondDto>> getAllANC() {
-//        return ResponseEntity.ok(this.ancService.getAllAnc());
-//    }
 
     @GetMapping("{id}")
     public ResponseEntity<ANC> getSingleANC(@PathVariable Long id) {
@@ -540,6 +524,10 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
     }
 
+    @GetMapping(value = "get-latest-pmtct-hts-enrollment/{personUuid}")
+    public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSEnrollmentById(@PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(personUuid));
+    }
 
     @PutMapping(value = "update-pmtct-hts-enrollment/{id}")
     public ResponseEntity<PmtctHtsRequestDTO> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
@@ -567,4 +555,11 @@ public class PMTCTController {
 
     }
 
+
+    @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
+    public boolean checkForInfantRiskStatus(@PathVariable String personUuid) {
+
+        return ancService.isInfantRisk(personUuid);
     }
+
+}

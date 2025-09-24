@@ -558,7 +558,7 @@ const ClinicVisit = (props) => {
       props.activeContent.id &&
       props.activeContent.id !== "" &&
       props.activeContent.id !== null &&
-      props.activeContent.activeTab === "child"
+      props.activeContent.activeTab === "child" && props?.activeContent?.actionType !== "create"
     ) {
       GetVisit(props.activeContent.id);
       setDisabledField(

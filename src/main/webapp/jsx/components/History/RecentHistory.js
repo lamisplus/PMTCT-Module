@@ -35,6 +35,9 @@ const RecentHistory = (props) => {
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
 
+    let unknownStatus = props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown"
+    const [showHTSStatus, setShowHTSStatus] = useState(props.lastestHivStatus !== "Unknown"? false : unknownStatus);
+    
   console.log(props);
   useEffect(() => {
     if (props?.allEntryPoint) {
@@ -747,8 +750,7 @@ const RecentHistory = (props) => {
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
-              {props.patientObj.hivStatus === "Unknown" ||
-              props.patientObj.staticHivStatus === "Unknown" ? (
+              {showHTSStatus ? (
                 <b>Patient has no HTS record. Please refer for testing...</b>
               ) : (
                 ""

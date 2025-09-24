@@ -1,10 +1,11 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useMemo} from "react";
 import axios from "axios";
 import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
 import ConsultationPage from "./Home";
 import InfantVisit from "./InfantVisit";
 import { url as baseUrl, token as token } from "./../../../api";
 import { convertMaternalCodeToValue } from "../../utils";
+import { usePermissions } from "../../../hooks/usePermissions";
 
 
 const divStyle = {
@@ -13,10 +14,22 @@ const divStyle = {
 };
 
 const ClinicVisitPage = (props) => {
+    const { hasPermission, hasRDErole } = usePermissions();
+  
   const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
   const [aliveChild, setAliveChild] = useState(0);
   const [showMaternalVisit, setShowMaternalVisit] = useState(true);
+
+
+  const permissions = useMemo(
+    () => ({
+      canSeeChildFollowUp: hasPermission("child_follow_up_register" ),
+        genPermission: hasRDErole   ||  hasPermission("child_follow_up_register") }),
+    [hasPermission, hasRDErole]
+  );
+
+
 
   const DeliveryInfo = () => {
     // if (props.patientObj.ancNo) {
@@ -100,7 +113,7 @@ const ClinicVisitPage = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-                  {  console.log("eventKey", convertMaternalCodeToValue(props.maternalOutcome))
+                  {  console.log("eventKey",props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome))
 }
 
 {/*  */}
@@ -109,13 +122,11 @@ const ClinicVisitPage = (props) => {
                       patientObj={patientObj}
                       setActiveContent={props.setActiveContent}
                       activeContent={props.activeContent}
-                    />: <p>Maternal outcome: {convertMaternalCodeToValue(props.maternalOutcome)}</p>}
+                    />: <p>Maternal outcome: {props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome)}</p>}
                   </Tab>
 
    
-{/* end  */}
-                  {console.log(aliveChild !== 0 && aliveChild > 0)}
-                  {aliveChild !== 0 && aliveChild > 0 && (
+                  {aliveChild !== 0 && aliveChild > 0 && permissions.genPermission &&(
                     <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
                       <InfantVisit
                         patientObj={patientObj}
