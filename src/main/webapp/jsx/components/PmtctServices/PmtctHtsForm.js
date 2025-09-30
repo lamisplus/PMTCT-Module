@@ -182,7 +182,7 @@ const PmtctHtsForm = (props) => {
        props.personUuid
       );
     }
-  }, []);
+  }, [props?.activeContent]);
 
   const viewPmtctHtsRecord = (id) => {
     axios
@@ -559,6 +559,7 @@ const PmtctHtsForm = (props) => {
                     : "Retesting"}
                 </h5>
               </div>
+
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
@@ -574,7 +575,7 @@ const PmtctHtsForm = (props) => {
                       id="dateOfHivTest"
                       onChange={handleInputChange}
                       value={payload.dateOfHivTest}
-                       min={patientObj.ancNo? props.patientObj.firstAncDate: lastPmtctHtsRecord.dateOfHivTest? lastPmtctHtsRecord.dateOfHivTest: ""}
+                       min={ lastPmtctHtsRecord.dateOfHivTest?  moment(lastPmtctHtsRecord.dateOfHivTest).add(1, 'days').format("YYYY-MM-DD"): patientObj.ancNo? props.patientObj.firstAncDate:""}
                       max={moment(new Date()).format("YYYY-MM-DD")}
                       disabled={disabledField}
                     />

@@ -3,14 +3,32 @@ import Modal from "react-bootstrap/Modal";
 import { Link, useHistory } from "react-router-dom";
 import { url as baseUrl, token } from "../../../../api";
 import axios from "axios";
+import { usePermissions } from "../../../../hooks/usePermissions";
 
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useMemo } from "react";
 const PmtctEntryPoint = (props) => {
   const [key, setKey] = useState("home");
   const [postPartumValue, setPostPartumValue] = useState("");
   const [entryPoint, setentryPoint] = useState([]);
 
   const history = useHistory();
+
+  const { hasPermission, hasRDErole } = usePermissions();
+
+
+
+
+      const permissions = useMemo(
+      () => ({
+        canSeePMTCT: hasPermission("maternal_cohort_register" ),
+        genAndPmtct: hasRDErole  || hasPermission("maternal_cohort_register" ),
+        genAndANC: hasRDErole  || hasPermission("general_anc_register" ),
+  
+  
+      }),
+      [hasPermission, hasRDErole]
+    );
+
 
   const POINT_ENTRY_PMTCT = () => {
     axios
@@ -54,8 +72,10 @@ const PmtctEntryPoint = (props) => {
               alignItems: "center",
             }}
           >
+
+            {/* /  */}
             {entryPoint.map((each, i) => {
-              if (each.display === "ANC") {
+              if (each.display === "ANC" && permissions.genAndANC ) {
                 return (
                   <Link
                     to={{
@@ -90,7 +110,7 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "L&D") {
+              } else if (each.display === "L&D" && permissions.genAndPmtct ) {
                 return (
                   <Link
                     to={{
@@ -125,7 +145,7 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "Post-Partum") {
+              } else if (each.display === "Post-Partum"  && permissions.genAndPmtct) {
                 return (
                   <select
                     style={{

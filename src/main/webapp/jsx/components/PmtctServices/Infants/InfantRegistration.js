@@ -310,6 +310,9 @@ const LabourinfantInfo = (props) => {
     }
   };
 
+
+
+
   useEffect(() => {
     GET_CODESETS()
    
@@ -503,7 +506,6 @@ const LabourinfantInfo = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (validate()) {
       setSaving(true);
       infantInfo.infantArvDto = infantArvDto;

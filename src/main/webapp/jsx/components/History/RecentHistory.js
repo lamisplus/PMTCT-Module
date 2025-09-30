@@ -34,8 +34,7 @@ const RecentHistory = (props) => {
   });
   const [activeAccordionHeaderShadow, setActiveAccordionHeaderShadow] =
     useState(0);
-
-    let unknownStatus = props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown"
+ const [unknownStatus, setUnknownStatus] =useState(props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown");
     const [showHTSStatus, setShowHTSStatus] = useState(props.lastestHivStatus !== "Unknown"? false : unknownStatus);
     
   console.log(props);
@@ -43,6 +42,10 @@ const RecentHistory = (props) => {
     if (props?.allEntryPoint) {
       // getPatientEntryType();
     }
+
+    let generalStatus = props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown"
+    setShowHTSStatus(props.lastestHivStatus !== "Unknown"? false : generalStatus)
+
     InfantInfo();
     RecentActivities();
     SummaryChart();
@@ -742,10 +745,7 @@ const RecentHistory = (props) => {
         ) : (
           ""
         )}
-        {console.log(
-          props.patientObj.dynamicHivStatus === "Unknown",
-          props.patientObj.hivStatus === "Unknown"
-        )}
+   
         {/* props.patientObj.dynamicHivStatus === "Unknown" || */}
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">

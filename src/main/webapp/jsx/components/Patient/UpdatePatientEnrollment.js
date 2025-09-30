@@ -238,7 +238,7 @@ const UserRegistration = (props) => {
   
      GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
           console.log("GET_CODESETS_IN_BATCH", response)
-        setANCSetting(response.data.ENROLLMENT_SETTING);
+        setANCSetting(response.data.ENROLLMENT_SETTING || []);
          setCommunitySetting(response.data.TEST_SETTING_CPMTCT);
          getSex(response.data.SEX)
          setPregnancyStatus(response.data.PREGANACY_STATUS);
@@ -785,7 +785,7 @@ const UserRegistration = (props) => {
                             disabled={disabledField}
                           >
                             <option value="">Select</option>
-                            {ANCSetting.length > 0 &&
+                            {ANCSetting && ANCSetting.length > 0 &&
                               ANCSetting.map((each) => {
                                 return (
                                   <option value={each.code}>

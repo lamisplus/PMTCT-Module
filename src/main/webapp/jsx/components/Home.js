@@ -19,7 +19,7 @@ const divStyle = {
 };
 
 const Home = (props) => {
-    const { hasRDErole } = usePermissions();
+    const { hasRDErole, hasStrictylyRDE } = usePermissions();
   
   const [key, setKey] = useState("home");
   const [modalShow, setModalShow] = useState(false);
@@ -41,7 +41,6 @@ const Home = (props) => {
       </div>
 
 
-{console.log('hasRDErole', hasRDErole)}
       <br />
       <br />
       <Row>
@@ -58,15 +57,19 @@ const Home = (props) => {
                   className="mb-3"
                 >
 
-                  {hasRDErole ?     <Tab eventKey="home" title="Find Patients">
+                  {/* {hasRDErole ?     */}
+                  
+                  <Tab eventKey="home" title="Find Patients">
                     <NotEnrollPatients />
-                  </Tab>:        
-                  <Tab eventKey="home" title="Checked In Patients">                   
+                  </Tab>
+                  {/* // :         */}
+
+                 {!hasStrictylyRDE &&  <Tab eventKey="checked-in" title="Checked In Patients">                   
                     <CheckedInPatient
                     
                     />
-                       </Tab> 
-                 }
+                       </Tab> }
+                {/* //  } */}
               
                
                   <Tab eventKey="anc" title="ANC Patients">

@@ -69,9 +69,9 @@ const ANCPatients = (props) => {
     const permissions = useMemo(
       () => ({
         canSeeEnrollButton: hasPermission("general_anc_register"),
-        genAncPermission : hasPermission("general_anc_register") ||  hasRDErole,
+        genAncPermission :  hasRDErole  || hasPermission("general_anc_register") ,
       }),
-      [hasPermission]
+      [hasPermission, hasRDErole]
     );
 
 
@@ -105,7 +105,6 @@ const ANCPatients = (props) => {
 
           return (
             <div>
-
                 {permissions.genAncPermission &&  <div>
                        <Link
                           to={{
@@ -160,7 +159,7 @@ const ANCPatients = (props) => {
         },
       },
     ],
-    [showPPI, permissions.canSeeEnrollButton]
+    [showPPI, permissions.canSeeEnrollButton, permissions.genAncPermission]
   );
  
   const getData = async (query) => {

@@ -23,7 +23,7 @@ function SubMenu(props) {
   const [showRetesting, setShowRetesting]=useState(false)
   const [retestingStatus, setRetestingStatus]=useState("pmtct-hts")
   // const [derivedHivStatus, setDerivedHivStatus]=useState("")
- 
+ const[closeCycle, setCloseCycle]=useState(true)
   const [deliveryStatus, setDeliveryStatus] = useState(false);
 
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
@@ -68,7 +68,17 @@ function SubMenu(props) {
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
-  }, [props.patientObj]);
+
+
+
+    if(props.maternalOutcome){
+      const negativeOutcome=["MATERNAL_OUTCOME_DEAD", "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP", "MATERNAL_OUTCOME_TRANSFERRED_OUT"  ]
+      let isNegativeOutcome=negativeOutcome.includes(props.maternalOutcome)
+
+      console.log('isNegativeOutcome', isNegativeOutcome, props.maternalOutcome)
+      setCloseCycle(!isNegativeOutcome)
+    }
+  }, [props]);
 
     useEffect(() => {
     getLatestConfirmatoryResult();
@@ -197,8 +207,7 @@ function SubMenu(props) {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-{      console.log("isOnPMTCT",isOnPMTCT, 'props?.patientObj?.pmtctRegStatus', props?.patientObj?.pmtctRegStatus, 'props?.patientObj?.isOnPmtct', props?.patientObj?.isOnPmtct)
-}
+
         {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
         {(patientStatus === "Positive" ) && (
           <>
@@ -214,7 +223,8 @@ function SubMenu(props) {
               </>
             ) : (
               <>
-                <Menu.Item onClick={() => onClickConsultation()}>
+              {closeCycle &&  <>
+               <Menu.Item onClick={() => onClickConsultation()}>
                   Follow Up Visit
                 </Menu.Item>
 
@@ -234,6 +244,10 @@ function SubMenu(props) {
                   {" "}
                   Infant Information
                 </Menu.Item>
+              
+              
+              </>  }
+               
               </>
             )}
           </>

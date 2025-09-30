@@ -107,7 +107,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const CheckedInPatients = (props) => {
-  const { hasAnyPermission } = usePermissions();
+  const { hasAnyPermission, hasRDErole } = usePermissions();
   const [showPPI, setShowPPI] = useState(true);
   const { fetchPatients } = useCheckedInPatientData(baseUrl, token);
   const [tableRefreshTrigger, setTableRefreshTrigger] = useState(0);
@@ -117,8 +117,9 @@ const CheckedInPatients = (props) => {
   const permissions = useMemo(
     () => ({
       canSeeEnrollButton: hasAnyPermission("maternal_cohort_register","general_anc_register"  ),
+      allpermission: hasRDErole  || hasAnyPermission("maternal_cohort_register","general_anc_register"  )
     }),
-    [hasAnyPermission]
+    [hasAnyPermission, hasRDErole]
   );
 
   const onMessageReceived = (msg) => {
@@ -174,10 +175,10 @@ const CheckedInPatients = (props) => {
         field: "actions",
         render: (rowData) => {
           const isEnrolled = rowData.isEnrolled;
-console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData.isOnAnc)
+      console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData.isOnAnc)
           return (
             <div>
-     { permissions.canSeeEnrollButton &&  rowData.isOnPmtct ?
+     { permissions.allpermission &&  rowData.isOnPmtct ?
       <div
             onClick={(e) => {
               setInfo({ patientId: rowData.id, patientObj: rowData });
@@ -223,7 +224,7 @@ console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData
               </Button>
             </ButtonGroup>
             </Link>
-      </div> : permissions.canSeeEnrollButton &&  rowData.isOnAnc? 
+      </div> : permissions.allpermission &&  rowData.isOnAnc? 
       <div
             onClick={(e) => {
               setInfo({ patientId: rowData.id, patientObj: rowData });
@@ -269,7 +270,7 @@ console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData
               </Button>
             </ButtonGroup>
             </Link>
-      </div>:permissions.canSeeEnrollButton?
+      </div>:permissions.allpermission?
        <div
             onClick={(e) => {
               setModalShow(true);
@@ -325,7 +326,7 @@ console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData
         },
       },
     ],
-    [showPPI, permissions.canSeeEnrollButton]
+    [showPPI, permissions.canSeeEnrollButton, permissions.allpermission]
   );
 
   const getData = async (query) => {

@@ -76,6 +76,9 @@ function PatientCard(props) {
   const [biometricModal, setBiometricModal] = useState(false);
   const BiometricModalToggle = () => setBiometricModal(!biometricModal);
   const [hivStatus, setHivStatus] = useState();
+  const [PCRPrompt, setPCRPrompt] = useState(JSON.parse(localStorage.getItem("PCRprompt")) || {});
+
+  // 
   const [artModal, setArtModal] = useState(false);
   const Arttoggle = () => setArtModal(!artModal);
 
@@ -94,6 +97,8 @@ function PatientCard(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult();
+     getHighRiskInfantStatus();
+    setPCRPrompt(JSON.parse(localStorage.getItem("PCRprompt")) || {})
     // getMaternalOutcome();
 
 
@@ -288,7 +293,8 @@ const getMaternalOutcome = async () => {
                   </span>
                 </Col>
                 <Col md={12}>
-                  {biometricStatus === true ? (
+                {/* biometricStatus == */}
+                  { true ? (
                     <>
                       <div>
                         <Typography variant="caption">
@@ -320,6 +326,19 @@ const getMaternalOutcome = async () => {
                             Maternal Outcome:
                             <Label.Detail>
                               {props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome)}
+                            </Label.Detail>
+                          </Label>
+                        </Typography>
+                      </div>} 
+
+                          {PCRPrompt &&  PCRPrompt?.id === props?.patientObj?.person_uuid  && PCRPrompt?.message && <div>
+                        <Typography variant="caption">
+                          <Label
+                            color={
+                              'red'
+                            }
+                            size={"mini"}
+                          ><Label.Detail>{PCRPrompt?.message}
                             </Label.Detail>
                           </Label>
                         </Typography>

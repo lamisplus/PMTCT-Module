@@ -23,7 +23,7 @@ import axios from "axios";
 import { url as baseUrl, token as token } from "./../../../api";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 import PatientVisits from "./CheckedInVisit";
-
+import { GET_CODESETS_IN_BATCH } from "../../../utils";
 const styles = (theme) => ({
   root: {
     width: "100%",
@@ -148,7 +148,18 @@ function PatientCard(props) {
   };
 
 
+      // BATCH API
+     const GET_CODESETS = () => {
+    
+       GET_CODESETS_IN_BATCH( "MATERNAL_OUTCOME").then((response)=>{
+          
+          localStorage.setItem("maternalOutcome", JSON.stringify(response.data.MATERNAL_OUTCOME));
+       })
+      
+      }
+
   useEffect(() => {
+    GET_CODESETS()
     RecentActivities();
      getLatestMaternalOutcome();
 
@@ -211,6 +222,7 @@ function PatientCard(props) {
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             activeContent={activeContent}
             mainDeliveryStatus={mainDeliveryStatus}
+            maternalOutcome={maternalOutcome}
 
           />
           <br />
