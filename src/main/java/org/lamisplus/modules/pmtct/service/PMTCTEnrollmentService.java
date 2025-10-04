@@ -24,6 +24,7 @@ import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
+import org.lamisplus.modules.pmtct.repository.InfantVisitRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,8 @@ public class PMTCTEnrollmentService {
   private final ApplicationCodesetRepository applicationCodesetRepository;
   private final InfantVisitService infantVisitService;
   private final CurrentUserOrganizationService currentUserOrganizationService;
+
+  private final InfantVisitRepository infantVisitRepository;
 
   @Autowired
   private  DeliveryService   deliveryService;
@@ -589,5 +592,66 @@ private DeliveryRepository deliveryRepository;
 }
 
 
+
+    public boolean checkHEIPrompt(String personUuid) {
+   // GET ALL the infant attached to the patient
+
+
+        
+//    get  last visitDate
+//    infantVisitRepository
+
+
+//    get  the delivery date
+
+// get the list of infants the mother has
+
+//calculate each child in ageInWeeks and ageInMonth
+
+//get the last PCR test type
+
+//
+//
+//        if(lastPCR){
+//            if(vistDate.diff(deliveryDate, 'weeks') > 52  && lastPCR !==  "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)"){
+//
+//                expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
+//
+//            }else if(vistDate.diff(deliveryDate, 'months') > 9 &&  lastPCR !==  "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE"){
+//
+//                expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
+//
+//            }else if(vistDate.diff(deliveryDate, 'weeks') > 6 &&  lastPCR !==  "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED"){
+//                expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
+//
+//            } else if(vistDate.diff(deliveryDate, 'hours') > 72  &&  lastPCR !==  "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
+//                expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
+//
+//            }
+//        }else{
+//            if(vistDate.diff(deliveryDate, 'weeks') > 52 ){
+//
+//                expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
+//
+//            }else if(vistDate.diff(deliveryDate, 'months') > 9 ){
+//
+//                expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
+//
+//            }else if(vistDate.diff(deliveryDate, 'weeks') > 6 ){
+//                expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
+//
+//            } else if(vistDate.diff(deliveryDate, 'hours') > 72  ){
+//                expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
+//
+//            }
+//
+//
+//
+//        }
+
+
+
+        return true;
+    }
 
 }

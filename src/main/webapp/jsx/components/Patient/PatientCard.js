@@ -65,8 +65,7 @@ function PatientCard(props) {
   );
   
   const [showHighRisKInfant, setShowHighRisKInfant] = useState(false);
-  let confirmatoryTest = JSON.parse(localStorage.getItem("confirmatoryTest")) 
-  const [confirmStatus, setConfirmStatus] = useState(confirmatoryTest? confirmatoryTest :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+  const [confirmStatus, setConfirmStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
 
 
   const [biometricStatus, setBiometricStatus] = useState(false);
@@ -85,8 +84,7 @@ function PatientCard(props) {
 
 
   useEffect(() => {
-    // getMaternalOutcome();
-    // getLatestConfirmatoryResult()
+ 
     getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
@@ -116,9 +114,13 @@ function PatientCard(props) {
       )
       .then((response) => {
         console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
-        props.setLastestConfirmatoryTest(response.data)
-      setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
-      props.setLatestHivStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+        if(response.data){
+          
+          props.setLastestConfirmatoryTest(response.data)
+          setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+          props.setLatestHivStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+
+        }
       })
       .catch((error) => {
         console.error("Error fetching confirmatory result:", error);

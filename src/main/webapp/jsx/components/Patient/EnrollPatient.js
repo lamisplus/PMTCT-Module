@@ -256,7 +256,7 @@ const UserRegistration = (props) => {
    GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
         console.log("GET_CODESETS_IN_BATCH", response)
       setANCSetting(response.data.ENROLLMENT_SETTING);
-       setCommunitySetting(response.data.TEST_SETTING_CPMTCT);
+       setCommunitySetting(response.data.COMMUNITY_PMTCT);
        getSex(response.data.SEX)
        setPregnancyStatus(response.data.PREGANACY_STATUS);
         setGenders(response.data.SEX);

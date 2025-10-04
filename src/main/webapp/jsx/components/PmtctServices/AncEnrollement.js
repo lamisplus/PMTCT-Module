@@ -127,7 +127,7 @@ const AncEnrollement = (props) => {
   //get ANC setting
   const getANCSetting = (e) => {
     axios
-      .get(`${baseUrl}application-codesets/v2/TEST_SETTING_CPMTCT`, {
+      .get(`${baseUrl}application-codesets/v2/COMMUNITY_PMTCT`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {

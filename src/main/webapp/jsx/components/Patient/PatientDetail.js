@@ -67,7 +67,7 @@ function PatientCard(props) {
   const [allEntryPoint, setAllEntryPoint] = useState([]);
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
-  const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState( localStorage.getItem("confirmatoryTest"));
+  const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState('');
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(false);

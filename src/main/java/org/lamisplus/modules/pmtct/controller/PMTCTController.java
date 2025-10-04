@@ -562,4 +562,12 @@ public class PMTCTController {
         return ancService.isInfantRisk(personUuid);
     }
 
+
+    @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
+    public boolean getHEIPrompt(@PathVariable String personUuid) {
+
+
+        return ancService.isInfantRisk(personUuid);
+    }
+
 }

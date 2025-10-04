@@ -45,7 +45,7 @@ function SubMenu(props) {
 
 
     }),
-    [hasPermission]
+    [hasPermission, hasRDErole]
   );
 
   
@@ -174,7 +174,7 @@ function SubMenu(props) {
        if(props?.patientObj?.pmtctRegStatus){
           setShowRetesting(false)
       }
-      setPatientStatus(patientHivStatus? patientHivStatus: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus )
+      // setPatientStatus(patientHivStatus? patientHivStatus: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus )
 
       if(patientHivStatus === "Positive" || props?.patientObj?.hivStatus === "Positive" || props?.patientObj?.dynamicHivStatus === "Positive" || props?.patientObj?.staticHivStatus === "Positive"){
 
@@ -209,14 +209,20 @@ function SubMenu(props) {
 
 
         {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
-        {(patientStatus === "Positive" ) && (
+       
+       
+        {console.log("patientStatus", patientStatus)}
+        {console.log("isOnPMTCT", isOnPMTCT)}
+
+
+        {(patientStatus?.trim() === "Positive" ) && (
           <>
            
 
             {isOnPMTCT !== true ? (
               <>
               <>
-                {permissions.canSeePMTCT &&<Menu.Item onClick={() => loadAncPnc()}>
+                {permissions.genAndPmtct &&<Menu.Item onClick={() => loadAncPnc()}>
                   PMTCT Enrollment
                 </Menu.Item>}
               </>

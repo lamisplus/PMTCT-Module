@@ -205,6 +205,7 @@ const PmtctHtsForm = (props) => {
           testingType: response.data.testingType,
           personUuid:props.personUuid,
         });
+      getSettingPoint(response.data.testEntryPoint);
 
         if (props.activeContent.id === "view") {
           setDisabledField(true);
@@ -260,18 +261,46 @@ const PmtctHtsForm = (props) => {
       });
   };
 
+  // const HTS_ENTRY_POINT_FACILITY = () => {
+  //   axios
+  //     .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     })
+  //     .then((response) => {
+  //       setCommunitySetting(response.data);
+  //     })
+  //     .catch((error) => {
+  //       //console.log(error);
+  //     });
+  // };
+
+
   const HTS_ENTRY_POINT_FACILITY = () => {
-    axios
-      .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setCommunitySetting(response.data);
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
+  axios
+    .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((response) => {
+              if(response.data){
+
+      const requiredCodes = [
+        "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY",
+        "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING",
+        "FACILITY_HTS_TEST_SETTING_L&D",
+        "FACILITY_HTS_TEST_SETTING_ANC"
+      ];
+
+      const filteredData = response.data.filter(item => 
+        requiredCodes.includes(item.code)
+      );
+
+      setCommunitySetting(filteredData);
+    }
+    })
+    .catch((error) => {
+      console.error("Error fetching HTS entry points:", error);
+    });
+};
 
   const HTS_ENTRY_POINT_COMMUNITY = () => {
     axios
@@ -283,8 +312,25 @@ const PmtctHtsForm = (props) => {
         }
       )
       .then((response) => {
-        //console.log(response.data);
-        setCommunitySetting(response.data);
+
+
+        if(response.data){
+              const requiredCodes = [
+     "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING",
+ "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES",
+"COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX",
+ "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"
+      ];
+
+const filteredData = response.data.filter(item => 
+        requiredCodes.includes(item.code)
+      );
+
+      setCommunitySetting(filteredData);
+
+
+
+        }
       })
       .catch((error) => {
         //console.log(error);
@@ -678,10 +724,10 @@ const PmtctHtsForm = (props) => {
                         <option value="">Select</option>
                         <option value="first trimester">First trimester</option>
                         <option value="secound trimester">
-                          Secound trimester
+                          Second trimester
                         </option>
                         <option value="third trimester">
-                          Third trimester"
+                          Third trimester
                         </option>
                       </Input>
                     </InputGroup>
