@@ -24,7 +24,7 @@ function SubMenu(props) {
   const [retestingStatus, setRetestingStatus]=useState("pmtct-hts")
   // const [derivedHivStatus, setDerivedHivStatus]=useState("")
  const[closeCycle, setCloseCycle]=useState(true)
-  const [deliveryStatus, setDeliveryStatus] = useState(false);
+  const [deliveryStatus, setDeliveryStatus] = useState(true);
 
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
 
@@ -56,13 +56,7 @@ function SubMenu(props) {
   useEffect(() => {
     getLatestConfirmatoryResult();
 
-    if(props?.deliveryInfo.length >0){
-          props?.deliveryInfo.filter((each) => {
-      if (each.activityName === "Labour and Delivery") {
-        setDeliveryStatus(true);
-      }
-    });
-    }
+
     console.log("THE logic", props)
     Observation();
     gender =
@@ -82,9 +76,12 @@ function SubMenu(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult();
-    setDeliveryStatus(patientObj.deliveryStatus ||   props.mainDeliveryStatus)
+
+      setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
+
+
     setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
-  }, [props.activeContent, props?.patientObj]);
+  }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus]);
 
 
   //Get list of RegimenLine

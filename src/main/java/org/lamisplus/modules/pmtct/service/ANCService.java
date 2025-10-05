@@ -1404,7 +1404,8 @@ public class ANCService {
 
         // NVP + AZT selected as ARV prophylaxis for infant
         String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(personUuid);
-        if ("INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
+
+        if (nvpAndAZT.equals("INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_")) {
             highRiskInfant = true;
         }
 

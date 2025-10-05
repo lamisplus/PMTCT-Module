@@ -18,14 +18,9 @@ import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.entity.ANC;
-import org.lamisplus.modules.pmtct.domain.entity.Delivery;
+import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
-import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
-import org.lamisplus.modules.pmtct.repository.ANCRepository;
-import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
-import org.lamisplus.modules.pmtct.repository.InfantVisitRepository;
-import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
@@ -54,6 +50,8 @@ public class PMTCTEnrollmentService {
   private final CurrentUserOrganizationService currentUserOrganizationService;
 
   private final InfantVisitRepository infantVisitRepository;
+private final InfantPCRTestRepository   infantPCRTestRepository;
+  private final InfantRepository infantRepository;
 
   @Autowired
   private  DeliveryService   deliveryService;
@@ -593,65 +591,127 @@ private DeliveryRepository deliveryRepository;
 
 
 
-    public boolean checkHEIPrompt(String personUuid) {
-   // GET ALL the infant attached to the patient
+    public List<InfantPCRAlert>  checkHEIPrompt(String personUuid) {
+        // Get all infants for the patient
+        List<Infant> allInfant = infantRepository.getAllInfantByPersonUuid(personUuid);
 
 
-        
-//    get  last visitDate
-//    infantVisitRepository
+        // Check if infants exist
+        if (allInfant == null || allInfant.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<InfantPCRAlert>  infantsResult = new ArrayList<>();
+        // Process each infant
+        for (Infant infant : allInfant) {
+            try {
+                InfantPCRAlert infantRes = new InfantPCRAlert();
+
+                InfantPCRAlert infantResult = processInfant(infant, infantRes);
+                if (infantResult != null) {
+                    infantsResult.add(infantResult);
+                }
+            } catch (Exception e) {
+                // Log error but continue processing other infants
+                System.err.println("Error processing infant: " + infant.getHospitalNumber() + " - " + e.getMessage());
+            }
+        }
 
 
-//    get  the delivery date
-
-// get the list of infants the mother has
-
-//calculate each child in ageInWeeks and ageInMonth
-
-//get the last PCR test type
-
-//
-//
-//        if(lastPCR){
-//            if(vistDate.diff(deliveryDate, 'weeks') > 52  && lastPCR !==  "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)"){
-//
-//                expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
-//
-//            }else if(vistDate.diff(deliveryDate, 'months') > 9 &&  lastPCR !==  "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE"){
-//
-//                expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
-//
-//            }else if(vistDate.diff(deliveryDate, 'weeks') > 6 &&  lastPCR !==  "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED"){
-//                expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
-//
-//            } else if(vistDate.diff(deliveryDate, 'hours') > 72  &&  lastPCR !==  "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
-//                expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
-//
-//            }
-//        }else{
-//            if(vistDate.diff(deliveryDate, 'weeks') > 52 ){
-//
-//                expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
-//
-//            }else if(vistDate.diff(deliveryDate, 'months') > 9 ){
-//
-//                expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
-//
-//            }else if(vistDate.diff(deliveryDate, 'weeks') > 6 ){
-//                expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
-//
-//            } else if(vistDate.diff(deliveryDate, 'hours') > 72  ){
-//                expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
-//
-//            }
-//
-//
-//
-//        }
-
-
-
-        return true;
+        return infantsResult;
     }
+
+    private InfantPCRAlert  processInfant(Infant infant, InfantPCRAlert infantRes ) {
+        // Get delivery date and hospital number
+        LocalDate deliveryDate = infant.getDateOfDelivery();
+        String infantHospitalNo = infant.getHospitalNumber();
+
+        infantRes.setInfantHospitalNo(infantHospitalNo);
+        infantRes.setDeliveryDate(deliveryDate);
+
+        // Validate required fields
+        if (deliveryDate == null || infantHospitalNo == null || infantHospitalNo.isEmpty()) {
+            infantRes.setAlertMessage("No delivery date or hospital number provided");
+
+            return infantRes;
+        }
+
+        // Get latest visit date for this infant
+        LocalDate visitDate = infantVisitRepository.getLatestInfantVisitDate(infantHospitalNo);
+        infantRes.setLastVisitDate(visitDate);
+        // If no visit date, use current date or skip
+        if (visitDate == null) {
+            visitDate= deliveryDate;
+            infantRes.setLastVisitDate(deliveryDate);
+
+        }
+
+        // Get latest PCR info
+        InfantPCRTest lastPCR = new InfantPCRTest();
+         lastPCR = infantPCRTestRepository.getLatestInfantPCRInfo(infantHospitalNo, visitDate);
+
+        // Calculate age
+        long ageInWeeks = ChronoUnit.WEEKS.between(deliveryDate, visitDate);
+        long ageInMonths = ChronoUnit.MONTHS.between(deliveryDate, visitDate);
+        long ageInHours = ChronoUnit.HOURS.between(deliveryDate.atStartOfDay(), visitDate.atStartOfDay());
+
+        // Determine expected PCR
+
+
+        return determineExpectedPCR(ageInWeeks, ageInMonths, ageInHours, lastPCR, infantRes);
+    }
+
+    private InfantPCRAlert determineExpectedPCR(long ageInWeeks, long ageInMonths, long ageInHours, InfantPCRTest lastPCR, InfantPCRAlert  infantRes) {
+        System.out.println(infantRes.getInfantHospitalNo() + " " + "ageInWeeks: " + ageInWeeks + " ageInMonths " + ageInMonths +  " ageInHours " + ageInHours);
+
+
+        // PCR test type constants
+        final String PCR_1ST = "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT";
+        final String PCR_2ND = "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED";
+        final String PCR_3RD = "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE";
+        final String PCR_4TH = "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)";
+
+
+        if (lastPCR != null ) {
+            infantRes.setLastPCRTest(lastPCR);
+            String lastPCRTestType = lastPCR.getTestType();
+
+            // If infant has previous PCR tests
+
+            // Check for 4th PCR (after 52 weeks / ~12 months)
+            if (ageInWeeks > 52 && !PCR_4TH.equals(lastPCRTestType)) {
+                infantRes.setAlertMessage( "Infant due for 4th PCR");
+            }else if (ageInMonths > 9 && !PCR_3RD.equals(lastPCRTestType)) {
+                infantRes.setAlertMessage("Infant due for 3rd PCR");
+            }else if (ageInWeeks > 6 && !PCR_2ND.equals(lastPCRTestType)) {
+                infantRes.setAlertMessage("Infant due for 2nd PCR");
+            }else if (ageInHours > 72 && !PCR_1ST.equals(lastPCRTestType)) {
+                infantRes.setAlertMessage("Infant due for 1st PCR");
+            }
+                return infantRes;
+        } else {
+            // If infant has no previous PCR tests
+
+            // Check for 4th PCR (after 52 weeks)
+            if (ageInWeeks > 52) {
+                infantRes.setAlertMessage("Infant due for 4th PCR");
+
+            }else if (ageInMonths > 9) {
+                infantRes.setAlertMessage("Infant due for 3rd PCR");
+            }else if (ageInWeeks > 6) {
+                infantRes.setAlertMessage("Infant due for 2nd PCR");
+            }else if (ageInHours > 72) {
+                infantRes.setAlertMessage("Infant due for 1st PCR");
+            }
+            return infantRes; // No alert needed
+
+        }
+
+    }
+
+
+
+
+
 
 }

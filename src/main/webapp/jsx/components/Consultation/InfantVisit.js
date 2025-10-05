@@ -302,70 +302,6 @@ const ClinicVisit = (props) => {
       return Math.floor(calculateYearInWeeks);
     }
   };
-const checkHEIPrompt= (vistDate1)=>{
- //get the age of the child in weeks and month
- let vistDate= moment(vistDate1)
-
-
-  let deliveryDate= moment(choosenInfant.dateOfDelivery);
-  let lastPCR = latestPCR?.testType
-  let nextPCR ;
-    let orderOfPCR= ["1ST_PCR", "2ND_PCR","IF_PREVIOUS_TEST_POSITIVE","4TH_PCR" ] 
-
-  let expectedPCR = ''
-// latestPCR
- let ageInWeeks = vistDate.diff(deliveryDate, 'weeks') 
- let ageInMonth =vistDate.diff(deliveryDate, 'months') 
-
-     console.log("deliveryDate", choosenInfant.dateOfDelivery, vistDate1)
-
-   if(lastPCR){
-    if(vistDate.diff(deliveryDate, 'weeks') > 52  && lastPCR !==  "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)"){
-      
-          expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
-
-   }else if(vistDate.diff(deliveryDate, 'months') > 9 &&  lastPCR !==  "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE"){
-      
-     expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
-
-      }else if(vistDate.diff(deliveryDate, 'weeks') > 6 &&  lastPCR !==  "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED"){
-          expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
-
-     } else if(vistDate.diff(deliveryDate, 'hours') > 72  &&  lastPCR !==  "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"){
-         expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
-
-    }
-  }else{
-          if(vistDate.diff(deliveryDate, 'weeks') > 52 ){
-            
-                expectedPCR ='PCR Test Alert!! Infant due for 4th PCR'
-
-        }else if(vistDate.diff(deliveryDate, 'months') > 9 ){
-            
-          expectedPCR ='PCR Test Alert!! Infant due for 3rd PCR'
-
-            }else if(vistDate.diff(deliveryDate, 'weeks') > 6 ){
-                expectedPCR ='PCR Test Alert!! Infant due for 2nd PCR'
-
-          } else if(vistDate.diff(deliveryDate, 'hours') > 72  ){
-              expectedPCR ='PCR Test Alert!! Infant due for 1st PCR'
-
-          }
-
-
-
-  }
-    console.log("PCRprompt", expectedPCR, ageInWeeks, ageInMonth)
-
-
-    let userPCR={
-      message: expectedPCR,
-      id: props.patientObj.person_uuid
-    }
-    localStorage.setItem("PCRprompt", JSON.stringify(userPCR));
-
-
-}
 
   const calculateAgeAtTestMonth = (weeks) => {
     if (weeks < 7) {
@@ -532,7 +468,6 @@ const checkHEIPrompt= (vistDate1)=>{
 
     let childAge = vistDate.diff(deliveryDate, 'months')
 
-      // checkHEIPrompt(dateOfVisit, deliveryDate)
 
     let nextPCR ;
     let orderOfPCR= ["1ST_PCR", "2ND_PCR","IF_PREVIOUS_TEST_POSITIVE","4TH_PCR" ] 
@@ -1038,7 +973,6 @@ const checkHEIPrompt= (vistDate1)=>{
           })
           .then((response) => {
             setSaving(false);
-            checkHEIPrompt(infantVisitRequestDto.visitDate)
 
             toast.success("Clinic Visit save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
@@ -1074,7 +1008,6 @@ const checkHEIPrompt= (vistDate1)=>{
           })
           .then((response) => {
             setSaving(false);
-           checkHEIPrompt(infantVisitRequestDto.visitDate)
 
             toast.success("Clinic Visit save successful", {
               position: toast.POSITION.BOTTOM_CENTER,

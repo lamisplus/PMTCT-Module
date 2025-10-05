@@ -41,4 +41,10 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
     void updateDeliveryDate(LocalDate deliveryDate , String personUuid);
 
 
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid=?1 ", nativeQuery = true)
+    List<Infant> getAllInfantByPersonUuid(String personUuid);
+
+
+
+
 }

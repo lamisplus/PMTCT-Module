@@ -70,7 +70,7 @@ function PatientCard(props) {
   const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState('');
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
-  const [mainDeliveryStatus, setMainDeliveryStatus] = useState(false);
+  const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",

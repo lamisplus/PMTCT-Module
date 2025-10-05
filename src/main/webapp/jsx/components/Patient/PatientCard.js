@@ -12,9 +12,30 @@ import { Col, Row } from "reactstrap";
 import Moment from "moment";
 import momentLocalizer from "react-widgets-moment";
 import axios from "axios";
+import Chip from '@mui/material/Chip';
+
 import { url as baseUrl, token } from "./../../../api";
 import Typography from "@material-ui/core/Typography";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  Alert,
+  AlertTitle,
+  Box,
+  Divider,
+} from '@mui/material';
 import { convertMaternalCodeToValue } from "../../utils";
+
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
+
+
 //Dtate Picker package
 Moment.locale("en");
 momentLocalizer();
@@ -74,17 +95,27 @@ function PatientCard(props) {
   const toggle = () => setModal(!modal);
   const [biometricModal, setBiometricModal] = useState(false);
   const BiometricModalToggle = () => setBiometricModal(!biometricModal);
-  const [hivStatus, setHivStatus] = useState();
-  const [PCRPrompt, setPCRPrompt] = useState(JSON.parse(localStorage.getItem("PCRprompt")) || {});
+  const [hivStatus, setHivStatus] = useState('');
+  const [infantHeiPcr, setInfantHeiPcr] = useState([]);
+  const [infantHeiPcrAlert, setInfantHeiPcrAlert] = useState([]);
 
   // 
   const [artModal, setArtModal] = useState(false);
   const Arttoggle = () => setArtModal(!artModal);
 
+let alerts =[{infantName: 'ade', infantHospitalNo: 'dgd', expectedPCR: 'ffd'}]
+
+const [expandedIndex, setExpandedIndex] = useState(false);
+
+  const handleClick = () => {
+    setExpandedIndex(!expandedIndex);
+  };
+
 
 
   useEffect(() => {
- 
+      getHETInfantStatus();
+
     getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
@@ -93,10 +124,11 @@ function PatientCard(props) {
 
 
 
-    useEffect(() => {
+    useEffect(() => {   
+       getHETInfantStatus();
+
     getLatestConfirmatoryResult();
      getHighRiskInfantStatus();
-    setPCRPrompt(JSON.parse(localStorage.getItem("PCRprompt")) || {})
     // getMaternalOutcome();
 
 
@@ -115,7 +147,7 @@ function PatientCard(props) {
       .then((response) => {
         console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
         if(response.data){
-          
+
           props.setLastestConfirmatoryTest(response.data)
           setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
           props.setLatestHivStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
@@ -177,6 +209,27 @@ const getMaternalOutcome = async () => {
         }else{
         setShowHighRisKInfant(false)
 
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+
+ const getHETInfantStatus = () => {
+    axios
+      .get(`${baseUrl}pmtct/anc/check-for-infant-pcr-alert/${props.patientObj.person_uuid?  props.patientObj.person_uuid : props.patientObj.personUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data) {
+          setInfantHeiPcr(response.data)
+          let heiInfant=  response.data.filter((each)=>{
+                return each.alertMessage 
+
+            })
+        setInfantHeiPcrAlert(heiInfant)
         }
       })
       .catch((error) => {
@@ -296,8 +349,8 @@ const getMaternalOutcome = async () => {
                 </Col>
                 <Col md={12}>
                 {/* biometricStatus == */}
-                  { true ? (
-                    <>
+                
+                    
                       <div>
                         <Typography variant="caption">
                           <Label
@@ -332,23 +385,56 @@ const getMaternalOutcome = async () => {
                           </Label>
                         </Typography>
                       </div>} 
+                   {infantHeiPcrAlert && infantHeiPcrAlert.length > 0 && (
+  <div>
+    <Typography variant="caption">
+      <List sx={{ 
+        maxWidth: '150px', 
+        width: 'fit-content',
+        maxHeight: '200px', 
+        bgcolor: '#db2828',
+        padding: '0px', 
+        borderRadius: '4px',
+        color: 'white',
+        fontSize: '9px',
+        border: '1px solid #e0e0e0' 
+      }}>
+        {/* Move the Fragment and key inside the map */}
+        <ListItem sx={{ padding: '0px' }}>
+          <ListItemButton 
+            onClick={() => handleClick()} 
+            sx={{ 
+              padding: '0px', 
+              fontSize: '9px',
+            }}
+          >
+            <Label color={'red'} style={{ padding: '2px 4px' }}>    
+              <span style={{fontSize: '9px'}}>PCR Alerts!!  ({infantHeiPcrAlert.length})</span>       
+            </Label>
+            {expandedIndex ? <ExpandMore /> : <ExpandLess />}
+          </ListItemButton>
+        </ListItem>
 
-                          {PCRPrompt &&  PCRPrompt?.id === props?.patientObj?.person_uuid  && PCRPrompt?.message && <div>
-                        <Typography variant="caption">
-                          <Label
-                            color={
-                              'red'
-                            }
-                            size={"mini"}
-                          ><Label.Detail>{PCRPrompt?.message}
-                            </Label.Detail>
-                          </Label>
-                        </Typography>
-                      </div>} 
-                    </>
-                  ) : (
-                    <></>
-                  )}
+        {/* Map through alerts */}
+        {infantHeiPcrAlert.map((alert, index) => (
+          <React.Fragment key={index}>
+            <Collapse in={expandedIndex} timeout="auto" unmountOnExit>
+              <Box sx={{ pl: 0.5, pr: 0.5, pb: 0.5, pt: 0, fontSize: '9px' }}>
+                <Typography variant="body2" gutterBottom>
+                  <span style={{fontSize: '9px'}}>
+                    <strong>{alert.infantHospitalNo}:</strong> {alert.alertMessage}
+                  </span> 
+                </Typography>
+              </Box>
+            </Collapse>
+          </React.Fragment>
+        ))}
+      </List>
+    </Typography>
+  </div>
+)}
+                    
+                 
                   <div  style={{display: 'flex', gap: '2px'}}>
                   {props.patientObj.dynamicHivStatus !== null ||
                   props.patientObj.staticHivStatus !== null ? (

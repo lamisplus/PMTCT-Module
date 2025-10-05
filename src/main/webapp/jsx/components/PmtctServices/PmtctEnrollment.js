@@ -241,7 +241,7 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 
     if (props?.patientObj.id) {
       getARTStartDate();
-      getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
+      // getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
     }
     if (
       props.activeContent.id &&

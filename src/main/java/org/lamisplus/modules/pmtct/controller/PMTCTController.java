@@ -563,11 +563,11 @@ public class PMTCTController {
     }
 
 
-    @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
-    public boolean getHEIPrompt(@PathVariable String personUuid) {
+    @GetMapping(value = "check-for-infant-pcr-alert/{personUuid}")
+    public List<InfantPCRAlert> getHEIPrompt(@PathVariable String personUuid) {
 
 
-        return ancService.isInfantRisk(personUuid);
+        return pmtctEnrollmentService.checkHEIPrompt(personUuid);
     }
 
 }
