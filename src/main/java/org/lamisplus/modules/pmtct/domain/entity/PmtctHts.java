@@ -30,5 +30,7 @@ public class PmtctHts {
     @Column(name = "hepatitis_c")
     private String hepatitisC;
     private String testingType;
+    private String ancNo;
+
 
 }

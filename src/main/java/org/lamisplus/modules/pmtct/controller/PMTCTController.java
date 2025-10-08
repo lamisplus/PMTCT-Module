@@ -570,4 +570,13 @@ public class PMTCTController {
         return pmtctEnrollmentService.checkHEIPrompt(personUuid);
     }
 
+
+
+    @GetMapping(value = "check-if-date-exist")
+    public boolean checkifDateExist(@RequestParam String personUuid,  @RequestParam LocalDate dateOfHivTest) {
+
+
+        return pmtctHtsService.confirmIfDateExist(personUuid, dateOfHivTest);
+    }
+
 }

@@ -24,6 +24,7 @@ public class PmtctHtsReponseDTO {
     private String syphilis;
     private String hepatitisB;
     private String hepatitisC;
+    private String ancNo;
 
 
 }

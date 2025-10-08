@@ -24,6 +24,7 @@ public class PmtctHtsRequestDTO {
     private String hepatitisB;
     private String hepatitisC;
     private String testingType;
+    private String ancNo;
 
 
 }

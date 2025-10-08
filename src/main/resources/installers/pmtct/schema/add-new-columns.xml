@@ -738,4 +738,15 @@
     </changeSet>
 
 
+    <changeSet failOnError="true"  id="2025-10-08-001" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="anc_no" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN anc_no character varying;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

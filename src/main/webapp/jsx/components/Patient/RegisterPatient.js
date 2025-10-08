@@ -3333,6 +3333,8 @@ const UserRegistration = (props) => {
                             <option value="">Select</option>
                             <option value="Positive">Positive</option>
                             <option value="Negative">Negative</option>
+                            <option value="Not tested">Not Tested</option>
+
                           </Input>
                         </InputGroup>
                         {errors.staticHivStatus !== "" ? (

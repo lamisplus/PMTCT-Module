@@ -913,7 +913,7 @@ const UserRegistration = (props) => {
                                 {objValues.ancSetting ===
                                 "ENROLLMENT_SETTING_COMMUNITY" ? (
                                   <>
-                                    {communitySetting.length > 0 &&
+                                    {communitySetting && communitySetting.length > 0 &&
                                       communitySetting.map((each) => {
                                         return (
                                           <option value={each.code}>
@@ -1653,6 +1653,7 @@ const UserRegistration = (props) => {
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>
                               <option value="Negative">Negative</option>
+                              <option value="Not tested">Not Tested</option>
                             </Input>
                           </InputGroup>
                           {errors.staticHivStatus !== "" ? (

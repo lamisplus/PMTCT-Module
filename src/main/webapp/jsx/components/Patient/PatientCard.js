@@ -452,7 +452,7 @@ const getMaternalOutcome = async () => {
                             HIV Status
                             <Label.Detail>
 
-                            {confirmStatus}
+                            {confirmStatus !== 'Unknown'? confirmStatus: 'Not Tested'}
                       
                             </Label.Detail>
                           </Label>

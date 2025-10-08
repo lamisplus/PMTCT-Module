@@ -12,6 +12,7 @@ import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,6 +45,7 @@ public class PmtctHtsService {
         pmtctHtsReponseDTO.setHepatitisB(pmtctHts.getHepatitisB());
         pmtctHtsReponseDTO.setTestingType(pmtctHts.getTestingType());
         pmtctHtsReponseDTO.setSyphilis(pmtctHts.getSyphilis());
+        pmtctHtsReponseDTO.setAncNo(pmtctHts.getAncNo());
                try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
@@ -80,85 +82,11 @@ public class PmtctHtsService {
         pmtctHts.setHospitalNumber(pmtctHtsRequestDTO.getHospitalNumber());
         pmtctHts.setArchived(0L);
         pmtctHts.setPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
-//
-//        try {
-//            Optional<User> currentUser = this.userService.getUserWithRoles();
-//            User user = (User) currentUser.get();
-//            Long facilityId = user.getCurrentOrganisationUnitId();
-//            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctHts.getPersonUuid(), facilityId, 0);
-//            System.out.println("persons " + persons);
-//            if (persons.isPresent()) {
-//                Person person = persons.get();
-//            }
-//        } catch (Exception e) { e.printStackTrace(); }
+        pmtctHts.setAncNo(pmtctHtsRequestDTO.getAncNo());
 
         return this.pmtctHtsRepository.save(pmtctHts);
     }
 
-
-//
-//    public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
-//        PmtctVisit pmtctVisit = new PmtctVisit();
-//        pmtctVisit.setId(id);
-//        pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
-//        pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
-//        pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
-//        pmtctVisit.setUuid(existingVisit.getUuid());
-//        pmtctVisit.setPersonUuid(existingVisit.getUuid());
-//        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
-//        pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
-//        pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
-//        pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
-//        pmtctVisit.setGaOfViralLoad(pmtctVisitRequestDto.getGaOfViralLoad());
-//        pmtctVisit.setResultOfViralLoad(pmtctVisitRequestDto.getResultOfViralLoad());
-//        if(pmtctVisitRequestDto.getGaOfViralLoad()!=null) {
-//            int ga = pmtctVisitRequestDto.getGaOfViralLoad();
-//            String tVL = "Other Time";
-//            if ((ga >= 32) || (ga <= 36)) tVL = "Between 32 and 36";
-//            pmtctVisit.setTimeOfViralLoad(tVL);
-//        }
-//        pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
-//        pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
-//        pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
-//        pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
-//        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
-//        pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
-//        pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
-//        pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
-//        String visitStatus = pmtctVisitRequestDto.getVisitStatus();
-//        try {
-//            Optional<User> currentUser = this.userService.getUserWithRoles();
-//            User user = (User) currentUser.get();
-//            Long facilityId = user.getCurrentOrganisationUnitId();
-//            System.out.println("facilityId = "+facilityId);
-//            System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
-//            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
-//            if (persons.isPresent()) {
-//                Person person = persons.get();
-//                pmtctVisit.setHospitalNumber(person.getHospitalNumber());
-//                pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
-//                //System.out.println("visitStatus = " + visitStatus);
-//                if (visitStatus != null) {
-//                    System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
-//                    Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
-//                    if(ancs.isPresent()) {
-//                        ANC anc = ancs.get();
-//                        if (visitStatus.contains("_IN")) {
-//
-//                            ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
-//                        } else {
-//                            ancService.graduateFromANC(anc, visitStatus);
-//                        }
-//                    }
-//
-//                }
-//
-//
-//            }
-//        } catch (Exception e) { e.printStackTrace(); }
-//
-//        return this.pmtctVisitRepository.save(pmtctVisit);
-//    }
 //
 
 
@@ -179,6 +107,7 @@ public class PmtctHtsService {
             pmtctEnrollment1.setSyphilis(pmtctHtsRequestDTO.getSyphilis());
             pmtctEnrollment1.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
             pmtctEnrollment1.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
+            pmtctEnrollment1.setAncNo(pmtctHtsRequestDTO.getAncNo());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
 
 
@@ -220,5 +149,10 @@ public class PmtctHtsService {
         return pmtctHtsRepository.findLatestConfirmatoryResult(personUuid).orElse("");
     }
 
+
+
+    public boolean confirmIfDateExist(String personUuid, LocalDate dateOfHivTest) {
+        return pmtctHtsRepository.findIfDateExist(personUuid, dateOfHivTest);
+    }
 //
 }
