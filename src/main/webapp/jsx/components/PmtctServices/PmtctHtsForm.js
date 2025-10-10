@@ -104,6 +104,7 @@ const PmtctHtsForm = (props) => {
   const [communitySetting, setCommunitySetting] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
   const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
+  const [disableEntryPoint, setDisableEntryPoint] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -135,6 +136,7 @@ const PmtctHtsForm = (props) => {
 
   const [existingDate, setExistingDate] = useState('');
 
+  const [validateHIVRetest,setValidateHIVRetest ] = useState({message: '', isValid: true, showError: false});
 
   const [payload, setPayload] = useState({
     dateOfHivTest: "",
@@ -177,12 +179,32 @@ const PmtctHtsForm = (props) => {
   };
 
 
+  function calculateGestationalAge(dateOfHivTest) {
+      let lmpDate=  props?.patientObj?.lmp
+    
+
+  // Parse LMP date
+  const lmp = moment(lmpDate, "YYYY-MM-DD");
+  const today = moment(dateOfHivTest, "YYYY-MM-DD");
+ 
+
+
+  // Calculate difference in weeks
+  const weeks = today.diff(lmp, 'weeks');
+
+
+  return weeks;
+}
+
+
   const getStageOfPregnancy = (testSetting) => {
 
-
+            
       if(props?.patientObj?.ancNo && props?.patientObj?.gaweeks  && testSetting.includes("_ANC")){
 
-          let gestationalAge= props?.patientObj?.gaweeks
+          let gestationalAge=calculateGestationalAge(payload.dateOfHivTest)
+          console.log('calculateGestationalAge', gestationalAge)
+          //  props?.patientObj?.gaweeks
             // Determine trimester based on gestational age
             if (gestationalAge >= 0 && gestationalAge <= 12) {
 
@@ -357,10 +379,10 @@ const PmtctHtsForm = (props) => {
 
         if(response.data){
               const requiredCodes = [
-     "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING",
- "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES",
-"COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX",
- "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"
+        "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING",
+        "COMMUNITY_HTS_TEST_SETTING_DELIVERY_HOMES",
+        "COMMUNITY_HTS_TEST_SETTING_TBA_ORTHODOX",
+        "COMMUNITY_HTS_TEST_SETTING_TBA_RT-HCW"
       ];
 
 const filteredData = response.data.filter(item => 
@@ -413,7 +435,30 @@ const filteredData = response.data.filter(item =>
 
     if (e.target.name === "testEntryPoint" && e.target.value !== "") {
        getSettingPoint(e.target.value);
-       setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: ''  });
+        if(e.target.value === "ENROLLMENT_SETTING_FACILITY"  && props?.patientObj?.ancNo){
+          
+          setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_ANC"  });
+            setDisableEntryPoint(true)
+
+        }else if(e.target.value === "ENROLLMENT_SETTING_FACILITY"  && props?.entrypointValue ==="PMTCT_ENTRY_POINT_L&D"){
+         setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_L&D"  });
+            setDisableEntryPoint(true)
+
+
+        }else if(e.target.value === "ENROLLMENT_SETTING_FACILITY"  && props?.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"){
+
+          setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING"  });
+            setDisableEntryPoint(true)
+
+        }else{
+
+          setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: ''  });
+            setDisableEntryPoint(false)
+
+        }
+
+
+
 
     }else if(e.target.name === "dateOfHivTest" && e.target.value !== ""){
       checkifDateExist(e.target.value)
@@ -462,10 +507,13 @@ const filteredData = response.data.filter(item =>
       setDateOfHivTestExist(response.data && existingDate !== dateOfHivTest ? true : false )
       setCheckingForTheDate(false)
 
-      console.log(existingDate, dateOfHivTest)
-        setErrors({ ...errors,  dateOfHivTest: response.data && existingDate !== dateOfHivTest ? "Date already exist": '' });
+      setPayload({...payload, dateOfHivTest: dateOfHivTest})
+      setErrors({ ...errors,  dateOfHivTest: response.data && existingDate !== dateOfHivTest ? "Date already exist": '' });
 
+      if(lastPmtctHtsRecord?.dateOfHivTest){
+       validateHIVRetestDate(dateOfHivTest)
 
+      }   
 
       })
       .catch((error) => {
@@ -515,13 +563,90 @@ const filteredData = response.data.filter(item =>
     return Object.values(temp).every((x) => x == "");
   };
 
+
+  function validateHIVRetestDate(newTestDate) {
+
+  let lastTestDate= lastPmtctHtsRecord?.dateOfHivTest
+
+
+  // Parse dates using moment
+  const newDate = moment(newTestDate);
+  const lastDate = moment(lastTestDate);
+
+ 
+
+  // Check if new test is before or same as last test
+  if (newDate.isSameOrBefore(lastDate)) {
+    setValidateHIVRetest({
+        message: "New test date must be after the last test date",
+        isValid: false, 
+        showError: true
+
+    })
+
+  }
+
+
+  // Calculate difference in days
+  const daysDifference = newDate.diff(lastDate, 'days');
+  const isWithinOneMonth = daysDifference < 30;
+
+  if (isWithinOneMonth ) {
+        setValidateHIVRetest({
+         message: `Cannot document HIV test. Test is within 1 month (${daysDifference} days) of last test.`,
+        isValid: false, 
+        showError: true
+
+    })
+ 
+  }
+
+
+  let gestationalAge= calculateGestationalAge(newTestDate)
+  if(props?.patientObj?.ancNo){
+
+          // Determine trimesters
+          const getTrimester = (gestationalAge) => {
+            if (gestationalAge >= 0 && gestationalAge <= 12) return "first trimester";
+            if (gestationalAge >= 13 && gestationalAge <= 24) return "second trimester";
+            if (gestationalAge >= 25 && gestationalAge <= 40) return "third trimester";
+            return "Unknown";
+          };
+
+          const lastTrimester =lastPmtctHtsRecord?.stageOfPregnancy
+          const newTrimester = getTrimester(gestationalAge);
+          const isSameTrimester = lastTrimester === newTrimester
+
+
+            if ( isSameTrimester) {
+                setValidateHIVRetest({
+                message: `Cannot document HIV test. Test is in the same trimester (${newTrimester}).`,
+                isValid: false, 
+                showError: true
+
+            })
+ 
+  }
+
+
+
+}
+     setValidateHIVRetest({
+        message: "HIV test date is valid", 
+         isValid: true,
+        showError: false
+
+    })
+
+}
+
   /**** Submit Button Processing  */
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting", payload);
     console.log("Submitting", payload);
-    if (validate() && !checkingForTheDate) {
+    if (validate() && !checkingForTheDate && validateHIVRetest.isValid) {
       console.log("Submitted");
 
       setSaving(true);
@@ -591,6 +716,13 @@ const filteredData = response.data.filter(item =>
             });
           });
       }
+    }
+
+    if(!validateHIVRetest.isValid){
+        console.log('validateHIVRetest', validateHIVRetest)
+   toast.error(validateHIVRetest.message, {
+              position: toast.POSITION.BOTTOM_CENTER,
+            });
     }
   };
 
@@ -734,7 +866,7 @@ const filteredData = response.data.filter(item =>
                       id="testSetting"
                       onChange={handleInputChange}
                       value={payload.testSetting}
-                      disabled={disabledField}
+                      disabled={disableEntryPoint? disableEntryPoint: disabledField}
                     >
                       <option value="">Select</option>
                       {communitySetting.map((value) => (
@@ -774,7 +906,7 @@ const filteredData = response.data.filter(item =>
                       >
                         <option value="">Select</option>
                         <option value="first trimester">First trimester</option>
-                        <option value="secound trimester">
+                        <option value="second trimester">
                           Second trimester
                         </option>
                         <option value="third trimester">

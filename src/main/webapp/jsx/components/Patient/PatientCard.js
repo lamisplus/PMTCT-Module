@@ -443,16 +443,16 @@ const getMaternalOutcome = async () => {
                         <Typography variant="caption">
                           <Label
                             color={
-                          confirmStatus === "Positive"
+                          confirmStatus === "Positive" || confirmStatus === 'reactive'
                                 ? "red"
-                                :  confirmStatus === "Negative"? 'green': 'grey'
+                                :  confirmStatus === "Negative" || confirmStatus === 'non-reactive'? 'green': 'grey'
                             }
                             size={"mini"}
                           >
                             HIV Status
                             <Label.Detail>
 
-                            {confirmStatus !== 'Unknown'? confirmStatus: 'Not Tested'}
+                            {confirmStatus === 'Unknown'?  'Not Tested' : confirmStatus === 'reactive'? 'Positive' : confirmStatus === 'non-reactive'? 'Negative': confirmStatus}
                       
                             </Label.Detail>
                           </Label>

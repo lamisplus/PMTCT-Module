@@ -77,7 +77,7 @@ function SubMenu(props) {
     useEffect(() => {
     getLatestConfirmatoryResult();
 
-      setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
+    setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
 
     setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
@@ -173,12 +173,13 @@ function SubMenu(props) {
       }
       // setPatientStatus(patientHivStatus? patientHivStatus: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus )
 
-      if(patientHivStatus === "Positive" || props?.patientObj?.hivStatus === "Positive" || props?.patientObj?.dynamicHivStatus === "Positive" || props?.patientObj?.staticHivStatus === "Positive"){
+      let hivStatusSource= [patientHivStatus, props?.patientObj?.hivStatus, props?.patientObj?.dynamicHivStatus, props?.patientObj?.staticHivStatus]
+      if(hivStatusSource.some(status => String(status).includes("Positive"))  || hivStatusSource.some(status => String(status).includes("reactive"))){
 
           setShowRetesting(false)
           setRetestingStatus('retesting')
 
-      }else if(patientHivStatus === "Negative" || props?.patientObj?.hivStatus === "Negative" || props?.patientObj?.dynamicHivStatus === "Negative" || props?.patientObj?.staticHivStatus === "Negative"){
+      }else if(hivStatusSource.some(status => String(status).includes("Negative")) || hivStatusSource.some(status => String(status).includes("non-reactive"))){
 
         // check if the patient is anc  = props?.patientObj?.ancNo
           setShowRetesting(true)
@@ -207,12 +208,10 @@ function SubMenu(props) {
 
         {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
        
-       
-        {console.log("patientStatus", patientStatus)}
-        {console.log("isOnPMTCT", isOnPMTCT)}
+  
 
 
-        {(patientStatus?.trim() === "Positive" ) && (
+        {["Positive", "reactive"].includes(patientStatus?.trim()) && (
           <>
            
 
@@ -256,6 +255,8 @@ function SubMenu(props) {
           </>
         )}
         {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("retesting")}>Retesting  </Menu.Item>}
+
+        {console.log('showRetesting', showRetesting)}
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
