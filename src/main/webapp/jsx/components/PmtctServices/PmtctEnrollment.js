@@ -121,36 +121,38 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const [maxARTDate, setMaxARTDate]=useState(moment(new Date()).format("YYYY-MM-DD"));
   const [minARTDate, setMinARTDate]=useState("");
 
-  const [enroll, setEnrollDto] = useState({
-    hepatitisB: patientObj.hepatitisB ? patientObj.hepatitisB : "",
-    urinalysis: patientObj.urinalysis ? patientObj.urinalysis : "",
-    ancNo: patientObj.ancNo ? patientObj.ancNo : "",
-    pmtctEnrollmentDate: "",
-    dateOfDelivery: "" ,
-    expectedDeliveryDate: "",
-    entryPoint: entryValueDisplay?.id,
-    ga: "",          //props.patientObj.gaweeks
-    gravida: props.patientObj.gravida,
-    artStartDate: "",
-    artStartTime: patientObj.artStartTime ? patientObj.artStartTime : "",
-    id: "",
-    timeOfHivDiagnosis: "",
-    tbStatus: "",
-    hivStatus: props.lastestConfirmatoryTest?  props.lastestConfirmatoryTest:patientObj.hivStatus
-      ? patientObj.hivStatus
-      : patientObj.staticHivStatus
-      ? patientObj.staticHivStatus
-      : "",
+// Extract hivStatus calculation outside
+const getInitialHivStatus = () => {
+  const statusMap = {
+    'reactive': 'Positive',
+    'non-reactive': 'Negative'
+  };
+  return statusMap[props.lastestConfirmatoryTest] || 
+         patientObj?.hivStatus || 
+         patientObj?.staticHivStatus || 
+         "";
+};
 
-    lmp: props?.patientObj?.lmp ? props?.patientObj?.lmp : "",
-    gaweeks: "",
-
-    // personUuid:
-    //   locationState && locationState.patientObj
-    //     ? locationState.patientObj.uuid
-    //     : null,
-    pmtctType: entryValueDisplay.display,
-  });
+const [enroll, setEnrollDto] = useState({
+  hepatitisB: patientObj.hepatitisB || "",
+  urinalysis: patientObj.urinalysis || "",
+  ancNo: patientObj.ancNo || "",
+  pmtctEnrollmentDate: "",
+  dateOfDelivery: "",
+  expectedDeliveryDate: "",
+  entryPoint: entryValueDisplay?.id,
+  ga: "",
+  gravida: props.patientObj.gravida,
+  artStartDate: "",
+  artStartTime: patientObj.artStartTime || "",
+  id: "",
+  timeOfHivDiagnosis: "",
+  tbStatus: "",
+  hivStatus: getInitialHivStatus(),
+  lmp: props?.patientObj?.lmp || "",
+  gaweeks: "",
+  pmtctType: entryValueDisplay.display,
+});
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
@@ -319,7 +321,6 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
    const GET_CODESETS = () => {
   
      GET_CODESETS_IN_BATCH("TIMING_MOTHERS_ART_INITIATION", "PMTCT_URINALYSIS_RESULT", "TIME_HIV_DIAGNOSIS", "PMTCT_ENTRY_POINT", "POINT_ENTRY_PMTCT","TIMING_MOTHERS_ART_INITIATION", "TB_STATUS").then((response)=>{
-          console.log("GET_CODESETS_IN_BATCH", response)
 
         setTimeHivInitiation(response.data.TIMING_MOTHERS_ART_INITIATION);
         setUrinalysisList(response.data.PMTCT_URINALYSIS_RESULT);
@@ -368,22 +369,17 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 // }
 
 const updateMaxARTDate=(action)=>{
-console.log("the action", action)
   if(action === "pp" || action === "ld" ){
     let MAT = enroll.pmtctEnrollmentDate? enroll.pmtctEnrollmentDate: ""
     setMinARTDate(MAT)
-    console.log("the min is ", enroll.pmtctEnrollmentDate)
 
   }else if(action === "prior"){
     let MAT = ""
     setMinARTDate(MAT)
-    console.log("the min is ", "")
 
   }else if(action === "ga"){
-    console.log("entered", action)
 
     let MAT = enroll.lmp? enroll.lmp: ""
-    console.log("the min is ",enroll.lmp)
 
     setMinARTDate(MAT)
 

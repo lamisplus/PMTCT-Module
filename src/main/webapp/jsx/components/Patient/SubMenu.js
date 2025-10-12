@@ -57,7 +57,6 @@ function SubMenu(props) {
     getLatestConfirmatoryResult();
 
 
-    console.log("THE logic", props)
     Observation();
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
@@ -69,7 +68,6 @@ function SubMenu(props) {
       const negativeOutcome=["MATERNAL_OUTCOME_DEAD", "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP", "MATERNAL_OUTCOME_TRANSFERRED_OUT"  ]
       let isNegativeOutcome=negativeOutcome.includes(props.maternalOutcome)
 
-      console.log('isNegativeOutcome', isNegativeOutcome, props.maternalOutcome)
       setCloseCycle(!isNegativeOutcome)
     }
   }, [props]);
@@ -166,39 +164,53 @@ function SubMenu(props) {
         console.error("Error fetching confirmatory result:", error);
       });
   };
+const showRetestingMenu = (patientHivStatus) => {
 
-    const showRetestingMenu = (patientHivStatus) => {
-       if(props?.patientObj?.pmtctRegStatus){
-          setShowRetesting(false)
-      }
-      // setPatientStatus(patientHivStatus? patientHivStatus: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus )
+  if (props?.patientObj?.pmtctRegStatus) {
+    setShowRetesting(false);
+    return; // Exit early if pmtct registered
+  }
 
-      let hivStatusSource= [patientHivStatus, props?.patientObj?.hivStatus, props?.patientObj?.dynamicHivStatus, props?.patientObj?.staticHivStatus]
-      if(hivStatusSource.some(status => String(status).includes("Positive"))  || hivStatusSource.some(status => String(status).includes("reactive"))){
+  let hivStatusSource = [
+    patientHivStatus, 
+    props?.patientObj?.hivStatus, 
+    props?.patientObj?.dynamicHivStatus, 
+    props?.patientObj?.staticHivStatus
+  ];
+  
 
-          setShowRetesting(false)
-          setRetestingStatus('retesting')
+  // Filter out null/undefined and convert to lowercase
+  const validStatuses = hivStatusSource
+    .filter(status => status != null && status !== '')
+    .map(status => String(status).toLowerCase().trim());
 
-      }else if(hivStatusSource.some(status => String(status).includes("Negative")) || hivStatusSource.some(status => String(status).includes("non-reactive"))){
+  // Check for positive/reactive (excluding non-reactive)
+  const hasPositive = validStatuses.some(status => {
+    // Exclude non-reactive first
+    if (status.includes("non-reactive") || status.includes("non reactive")) {
+      return false;
+    }
+    // Then check for positive/reactive
+    return status.includes("positive") || status.includes("reactive");
+  });
 
-        // check if the patient is anc  = props?.patientObj?.ancNo
-          setShowRetesting(true)
-          setRetestingStatus('retesting')
+  // Check for negative/non-reactive
+  const hasNegative = validStatuses.some(status => 
+    status.includes("negative") || status.includes("non-reactive") || status.includes("non reactive")
+  );
 
-
-      }else{
-
-      // if the status is unknown 
-          setShowRetesting(true)
-         setRetestingStatus("pmtct-hts")
-
-
-      }
-    // props.setActiveContent({ ...props.activeContent, route: "anc-pnc" });
-
-
-
-  };
+  if (hasPositive) {
+    setShowRetesting(false);
+    setRetestingStatus('retesting');
+  } else if (hasNegative) {
+    setShowRetesting(true);
+    setRetestingStatus('retesting');
+  } else {
+    // if the status is unknown 
+    setShowRetesting(true);
+    setRetestingStatus("pmtct-hts");
+  }
+};
 
   return (
     <div>
@@ -256,7 +268,7 @@ function SubMenu(props) {
         )}
         {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("retesting")}>Retesting  </Menu.Item>}
 
-        {console.log('showRetesting', showRetesting)}
+   
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
