@@ -259,6 +259,7 @@ const PmtctHtsForm = (props) => {
           initialHivTest: response.data.initialHivTest,
           stageOfPregnancy: response.data.stageOfPregnancy,
           confirmatoryHivTest: response.data.confirmatoryHivTest,
+          
           hospitalNumber: response.data.hospitalNumber,
           syphilis: response.data.syphilis,
           hepatitisB: response.data.hepatitisB,
@@ -981,6 +982,33 @@ const filteredData = response.data.filter(item =>
                 </FormGroup>
               </div>
 
+
+          <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>Tie Breaker</Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="tieBreaker"
+                      id="tieBreaker"
+                      onChange={handleInputChange}
+                      value={payload.confirmatoryHivTest}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                        <option value="reactive">Reactive</option>
+                      <option value="non-reactive">Non-reactive</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.confirmatoryHivTest !== "" ? (
+                    <span className={classes.error}>
+                      {errors.confirmatoryHivTest}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
               {props?.PmtctHtsRetestingType === "pmtct-hts" && (
                 <>
                   <div className="form-group mb-3 col-md-4">
