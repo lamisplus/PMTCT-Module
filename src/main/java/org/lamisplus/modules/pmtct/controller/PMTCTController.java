@@ -579,4 +579,14 @@ public class PMTCTController {
         return pmtctHtsService.confirmIfDateExist(personUuid, dateOfHivTest);
     }
 
+    @GetMapping(value = "get-hiv-retest-status")
+    public  ResponseEntity<HivRetestStatusResponse>  getStatusBaseOnLastRetesting(@RequestParam String personUuid) {
+
+
+        HivRetestStatusResponse response = pmtctHtsService.getHivRetestStatus(personUuid);
+
+        return ResponseEntity.ok(response);
+
+    }
+
 }

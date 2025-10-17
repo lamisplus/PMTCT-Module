@@ -20,7 +20,7 @@ import { url as baseUrl, token } from "../../../api";
 import { useHistory, useLocation } from "react-router-dom";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
-import { Message } from "semantic-ui-react";
+import { Message, Label as LabelRibbon } from "semantic-ui-react";
 import { calculateGestationalAge } from "../../utils";
 import moment from "moment";
 
@@ -127,6 +127,7 @@ const PmtctHtsForm = (props) => {
         testSetting: "",
         initialHivTest: "",
         stageOfPregnancy: "",
+        id: '',
             
           });
 
@@ -137,27 +138,204 @@ const PmtctHtsForm = (props) => {
   const [existingDate, setExistingDate] = useState('');
 
   const [validateHIVRetest,setValidateHIVRetest ] = useState({message: '', isValid: true, showError: false});
+  const [finalResult, setFinalResult] = useState("");
+  const [resultStatus, setResultStatus] = useState("");
+  const [showRetesting, setShowRetesting] = useState(false);
+
+
+  const [initialHivTest, setInitialHivTest] = useState({result: '', dateOfTest: ''});
+  const [confirmatoryHivTest, setConfirmatoryHivTest] = useState({result: '', dateOfTest: ''});
+  const [tieBreaker, setTieBreaker] = useState({result: '', dateOfTest: ''});
+  const [retesting, setRetesting] = useState({result: '', dateOfTest: ''});
+  const [confirmatoryTest2, setConfirmatoryTest2] = useState({result: '', dateOfTest: ''});
+  const [tieBreaker2, setTieBreaker2] = useState({result: '', dateOfTest: ''});
+
 
   const [payload, setPayload] = useState({
     dateOfHivTest: "",
     testEntryPoint: "",
     testSetting: "",
     initialHivTest: "",
-    stageOfPregnancy: "",
     confirmatoryHivTest: "",
+    tieBreaker:  "",
+    retesting:  "",
+    confirmatoryTest2:  "",
+    tieBreaker2:  "",
+    stageOfPregnancy:  "",
     hospitalNumber: props?.patientObj?.identifier?.identifier[0]?.value? props?.patientObj?.identifier?.identifier[0]?.value: props?.patientObj?.hospitalNumber ,
     syphilis: "",
     hepatitisB: "",
     hepatitisC: "",
-    testingType: props?.PmtctHtsRetestingType.toUpperCase(),
+    testingType: props.onEnrollPatient  && lastPmtctHtsRecord?.id ?"RETESTING" :props?.PmtctHtsRetestingType.toUpperCase(),
     personUuid: props.personUuid,
     ancNo: props?.patientObj?.ancNo,
+    finalResult: '',
    
   });
 
-    console.log("props searching", props)
 
 
+
+
+
+  const handleInitialInputChange = (e) => {
+
+      let res = 'initial' + e.target.name
+        
+        setErrors({ ...errors, [res] :"" });
+
+        setInitialHivTest({...initialHivTest,[e.target.name]: e.target.value})
+       
+        
+        
+    if(e.target.value === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else{
+              setFinalResult('')
+
+    }
+
+
+        setConfirmatoryHivTest({result: '', dateOfTest: ''})
+        setTieBreaker({result: '', dateOfTest: ''})
+        setRetesting({result: '', dateOfTest: ''})
+        setConfirmatoryTest2({result: '', dateOfTest: ''})
+        setTieBreaker2({result: '', dateOfTest: ''})
+
+    
+
+
+  }
+
+
+ const handleConfirmatoryInputChange = (e) => {
+
+        let res = 'confirmatory' + e.target.name
+
+        setErrors({ ...errors, [res]: "" });
+
+        setConfirmatoryHivTest({...confirmatoryHivTest,[e.target.name]: e.target.value})
+
+
+
+
+        
+      
+        setTieBreaker({result: '', dateOfTest: ''})
+        setRetesting({result: '', dateOfTest: ''})
+        setConfirmatoryTest2({result: '', dateOfTest: ''})
+        setTieBreaker2({result: '', dateOfTest: ''})
+
+    
+
+    
+         setFinalResult('')
+
+    
+
+
+  }
+
+
+   const handleTieBreakerInputChange = (e) => {
+            let res = 'tiebreaker' + e.target.name
+
+        setErrors({ ...errors, [res]: "" });
+
+        setTieBreaker({...tieBreaker,[e.target.name]: e.target.value})
+
+        if(e.target.value === 'non-reactive'){
+
+        setFinalResult('Negative')
+
+    }else{
+              setFinalResult('')
+
+    }
+
+            
+      
+        setRetesting({result: '', dateOfTest: ''})
+        setConfirmatoryTest2({result: '', dateOfTest: ''})
+        setTieBreaker2({result: '', dateOfTest: ''})
+
+    
+  }
+
+
+
+  const handleRetestingInputChange = (e) => {
+     let res = 'retesting' + e.target.name
+
+        setErrors({ ...errors, [res]: "" });
+
+        setRetesting({...retesting,[e.target.name]: e.target.value})
+
+                
+    if(e.target.value === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else{
+              setFinalResult('')
+
+    }
+
+
+      
+        setConfirmatoryTest2({result: '', dateOfTest: ''})
+        setTieBreaker2({result: '', dateOfTest: ''})
+
+    
+  }
+
+
+    const handleConfirmatory2InputChange = (e) => {
+           let res = 'confirmatoryTest2' + e.target.name
+
+        setErrors({ ...errors, [res]: "" });
+
+        setConfirmatoryTest2({...confirmatoryTest2,[e.target.name]: e.target.value})
+
+        if(e.target.value === 'reactive'){
+                  
+        setFinalResult('Positive')
+
+
+    }else{
+              setFinalResult('')
+
+    }
+
+
+      
+        setTieBreaker2({result: '', dateOfTest: ''})
+
+    
+
+  }
+
+
+
+   const handleTieBreaker2InputChange = (e) => {
+          let res = 'tieBreaker2' + e.target.name
+
+        setErrors({ ...errors, [res]: "" });
+
+        setTieBreaker2({...tieBreaker2,[e.target.name]: e.target.value})
+
+        if(e.target.value === 'reactive'){
+
+        setFinalResult('Positive')
+
+      }else if(e.target.value  === 'non-reactive'){
+
+         setFinalResult('Negative')
+
+    }
+  }
 //get the person last record on PMTCT HTS if exist 
 
   const getLastPmtctHtsRecord = (personUuid) => {
@@ -179,7 +357,8 @@ const PmtctHtsForm = (props) => {
   };
 
 
-  function calculateGestationalAge(dateOfHivTest) {
+  function calculateGestationalAge2(dateOfHivTest) {
+
       let lmpDate=  props?.patientObj?.lmp
     
 
@@ -197,37 +376,73 @@ const PmtctHtsForm = (props) => {
 }
 
 
-  const getStageOfPregnancy = (testSetting) => {
 
+const getFinalResult= ()=>{
+
+
+    if(initialHivTest.result === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else if(retesting.result === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else if(tieBreaker.result   === 'non-reactive'){
+
+        setFinalResult('Negative')
+
+    }else if(confirmatoryTest2.result === 'reactive'){
+                  
+        setFinalResult('Positive')
+
+
+    }else if(tieBreaker2.result === 'reactive'){
+
+        setFinalResult('Positive')
+
+    }else if(tieBreaker2.result === 'non-reactive'){
+
+         setFinalResult('Negative')
+
+    }
+
+
+}
+
+  const getStageOfPregnancy = (testSetting, testEntryPoint, testEntryPointValue) => {
+
+
+           let gestationalAge=calculateGestationalAge2(payload.dateOfHivTest)
             
-      if(props?.patientObj?.ancNo && props?.patientObj?.gaweeks  && testSetting.includes("_ANC")){
+      if(props?.patientObj?.ancNo && props?.patientObj?.gaweeks  && testSetting.includes("_ANC") && gestationalAge){
 
-          let gestationalAge=calculateGestationalAge(payload.dateOfHivTest)
-          console.log('calculateGestationalAge', gestationalAge)
+         
           //  props?.patientObj?.gaweeks
             // Determine trimester based on gestational age
             if (gestationalAge >= 0 && gestationalAge <= 12) {
 
-              setPayload({...payload, stageOfPregnancy: "first trimester", testSetting: testSetting})
+              setPayload({...payload, stageOfPregnancy: "first trimester", testSetting: testSetting,[testEntryPoint]: testEntryPointValue})
 
             } else if (gestationalAge >= 13 && gestationalAge <= 24) {
 
-              setPayload({...payload, stageOfPregnancy: "secound trimester", testSetting: testSetting})
+              setPayload({...payload, stageOfPregnancy: "second trimester", testSetting: testSetting, [testEntryPoint]: testEntryPointValue})
 
             } else if (gestationalAge >= 25 && gestationalAge <= 40) {
 
-              setPayload({...payload, stageOfPregnancy: "third trimester", testSetting: testSetting})
+              setPayload({...payload, stageOfPregnancy: "third trimester",  testSetting: testSetting,[testEntryPoint]: testEntryPointValue})
 
             }
             
           
       }else{
           
-              setPayload({...payload, stageOfPregnancy: "", testSetting: testSetting})
+              setPayload({...payload, stageOfPregnancy: "", testSetting: testSetting,[testEntryPoint]: testEntryPointValue})
 
       }
 
   };
+
 
   useEffect(() => {
     POINT_ENTRY_PMTCT();
@@ -242,7 +457,14 @@ const PmtctHtsForm = (props) => {
         props?.patientObj?.identifier?.identifier[0]?.value,
        props.personUuid
       );
-    }
+    } 
+
+    if(props.onEnrollPatient && lastPmtctHtsRecord?.id && lastPmtctHtsRecord?.finalResult === "Negative"){
+    
+         toast.info("Last HIV test was Negative", {
+          position: toast.POSITION.BOTTOM_CENTER,
+    });
+        }
   }, [props?.activeContent]);
 
   const viewPmtctHtsRecord = (id) => {
@@ -256,9 +478,9 @@ const PmtctHtsForm = (props) => {
           dateOfHivTest: response.data.dateOfHivTest,
           testEntryPoint: response.data.testEntryPoint,
           testSetting: response.data.testSetting,
-          initialHivTest: response.data.initialHivTest,
+          // initialHivTest: response.data.initialHivTest,
           stageOfPregnancy: response.data.stageOfPregnancy,
-          confirmatoryHivTest: response.data.confirmatoryHivTest,
+          // confirmatoryHivTest: response.data.confirmatoryHivTest,
           
           hospitalNumber: response.data.hospitalNumber,
           syphilis: response.data.syphilis,
@@ -267,6 +489,61 @@ const PmtctHtsForm = (props) => {
           testingType: response.data.testingType,
           personUuid:props.personUuid,
         });
+
+         if(response.data.initialHivTest){
+            setInitialHivTest( response.data.initialHivTest);
+
+            }
+      if(response.data.confirmatoryHivTest){
+             setConfirmatoryHivTest(response.data.confirmatoryHivTest);
+
+            }
+      if(response.data.tieBreaker){
+              setTieBreaker(response.data.tieBreaker);
+
+            }
+   if(response.data.retesting){
+          setRetesting(response.data.retesting);
+
+            }
+
+       if(response.data.confirmatoryTest2){
+          setConfirmatoryTest2(response.data.confirmatoryTest2);
+
+            } 
+  if(response.data.confirmatoryTest2){
+          setTieBreaker2(response.data.tieBreaker2);
+
+            }          
+
+
+
+    if(response.data.initialHivTest.result === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else if(response.data.retesting.result === 'non-reactive' ){
+
+        setFinalResult('Negative')
+
+    }else if(response.data.tieBreaker.result   === 'non-reactive'){
+
+        setFinalResult('Negative')
+
+    }else if(response.data.confirmatoryTest2.result === 'reactive'){
+                  
+        setFinalResult('Positive')
+
+
+    }else if(response.data.tieBreaker2.result === 'reactive'){
+
+        setFinalResult('Positive')
+
+    }else if(response.data.tieBreaker2.result === 'non-reactive'){
+
+         setFinalResult('Negative')
+
+    }
 
       setExistingDate(response.data.dateOfHivTest)
       getSettingPoint(response.data.testEntryPoint);
@@ -325,19 +602,6 @@ const PmtctHtsForm = (props) => {
       });
   };
 
-  // const HTS_ENTRY_POINT_FACILITY = () => {
-  //   axios
-  //     .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     })
-  //     .then((response) => {
-  //       setCommunitySetting(response.data);
-  //     })
-  //     .catch((error) => {
-  //       //console.log(error);
-  //     });
-  // };
-
 
   const HTS_ENTRY_POINT_FACILITY = () => {
   axios
@@ -346,7 +610,6 @@ const PmtctHtsForm = (props) => {
     })
     .then((response) => {
               if(response.data){
-//         "FACILITY_HTS_TEST_SETTING_SPOKE_HEALTH_FACILITY",
 
       const requiredCodes = [
         "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING",
@@ -431,14 +694,20 @@ const filteredData = response.data.filter(item =>
         //console.log(error);
       });
   };
+
+     console.log('payload', payload)
+
   const handleInputChange = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
+
 
     if (e.target.name === "testEntryPoint" && e.target.value !== "") {
        getSettingPoint(e.target.value);
         if(e.target.value === "ENROLLMENT_SETTING_FACILITY"  && props?.patientObj?.ancNo){
           
-          setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_ANC"  });
+          // setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_ANC"  });
+
+          getStageOfPregnancy("FACILITY_HTS_TEST_SETTING_ANC", e.target.name, e.target.value)
             setDisableEntryPoint(true)
 
         }else if(e.target.value === "ENROLLMENT_SETTING_FACILITY"  && props?.entrypointValue ==="PMTCT_ENTRY_POINT_L&D"){
@@ -461,12 +730,17 @@ const filteredData = response.data.filter(item =>
 
 
 
-    }else if(e.target.name === "dateOfHivTest" && e.target.value !== ""){
+    }else if(e.target.name === "dateOfHivTest" && e.target.value !== "" ){
       checkifDateExist(e.target.value)
-    }else if(e.target.name === "testSetting" && e.target.value !== ""){
-            getStageOfPregnancy(e.target.value)
 
-      }else{
+    }// else if(e.target.name === "testSetting" && e.target.value !== ""){
+
+    //                 console.log('entered testSetting', e.target.value)
+
+    //         // getStageOfPregnancy(e.target.value)
+
+    //   }
+    else{
           setPayload({ ...payload, [e.target.name]: e.target.value });
 
 
@@ -507,8 +781,14 @@ const filteredData = response.data.filter(item =>
       //  
       setDateOfHivTestExist(response.data && existingDate !== dateOfHivTest ? true : false )
       setCheckingForTheDate(false)
-
+        setInitialHivTest({...initialHivTest, dateOfTest: dateOfHivTest})
       setPayload({...payload, dateOfHivTest: dateOfHivTest})
+      //dependent  dates
+        setConfirmatoryHivTest({...confirmatoryHivTest, dateOfTest: ''})
+        setTieBreaker({...tieBreaker, dateOfTest: ''})
+        setRetesting({...retesting, dateOfTest: ''})
+        setConfirmatoryTest2({...confirmatoryTest2, dateOfTest: ''})
+        setTieBreaker2({...tieBreaker2, dateOfTest: ''})
       setErrors({ ...errors,  dateOfHivTest: response.data && existingDate !== dateOfHivTest ? "Date already exist": '' });
 
       if(lastPmtctHtsRecord?.dateOfHivTest){
@@ -545,18 +825,126 @@ const filteredData = response.data.filter(item =>
       ? ""
       : "This field is required";
 
-    temp.confirmatoryHivTest = payload.confirmatoryHivTest
-      ? ""
-      : "This field is required";
-
-
-
-
-    payload.testSetting !== "" &&
+   payload.testSetting !== "" &&
       payload.testSetting === "PMTCT_ENTRY_POINT_ANC" &&
       (temp.stageOfPregnancy = payload.stageOfPregnancy
         ? ""
         : "This field is required");
+
+
+
+
+    // temp.initialdateOfTest =initialHivTest.dateOfTest ?  "" : "This field is required"
+    temp.initialresult =initialHivTest.result ?  "" : "This field is required"
+
+
+
+        //
+   initialHivTest.result  !== "" &&
+   initialHivTest.result  === "reactive" &&
+  
+    (temp.confirmatorydateOfTest = confirmatoryHivTest.dateOfTest
+        ? ""
+        : "This field is required");
+      //
+   initialHivTest.result  !== "" &&
+   initialHivTest.result  === "reactive" &&
+  
+    (temp.confirmatoryresult = confirmatoryHivTest.result
+        ? ""
+        : "This field is required");
+ //
+
+  confirmatoryHivTest.result  !== "" &&
+   confirmatoryHivTest.result  === "reactive" &&
+  
+    (temp.retestingdateOfTest = retesting.dateOfTest
+        ? ""
+        : "This field is required");
+
+ //
+
+  confirmatoryHivTest.result  !== "" &&
+   confirmatoryHivTest.result  === "reactive" &&
+  
+    (temp.retestingresult = retesting.result
+        ? ""
+        : "This field is required");
+ 
+//
+
+
+  confirmatoryHivTest.result  !== "" &&
+   confirmatoryHivTest.result  === "non-reactive" &&
+  
+    (temp.tieBreakerdateOfTest = tieBreaker.dateOfTest
+        ? ""
+        : "This field is required");
+ 
+ 
+//
+
+  confirmatoryHivTest.result  !== "" &&
+   confirmatoryHivTest.result  === "non-reactive" &&
+  
+    (temp.tieBreakerresult = tieBreaker.result
+        ? ""
+        : "This field is required");
+
+
+
+ 
+//
+  retesting.result  !== "" &&
+   retesting.result  === "reactive" &&
+  
+    (temp.confirmatoryTest2result = confirmatoryTest2.result
+        ? ""
+        : "This field is required");
+
+//
+  retesting.result  !== "" &&
+   retesting.result  === "reactive" &&
+  
+    (temp.confirmatoryTest2dateOfTest = confirmatoryTest2.dateOfTest
+        ? ""
+        : "This field is required");
+
+  //
+  tieBreaker.result  !== "" &&
+   tieBreaker.result  === "reactive" &&
+  
+    (temp.retestingdateOfTest = retesting.dateOfTest
+        ? ""
+        : "This field is required");
+
+
+  //
+  tieBreaker.result  !== "" &&
+   tieBreaker.result  === "reactive" &&
+  
+    (temp.retestingresult = retesting.result
+        ? ""
+        : "This field is required");
+
+
+  //
+  confirmatoryTest2.result  !== "" &&
+   confirmatoryTest2.result  === "non-reactive" &&
+  
+   (temp.tieBreaker2result = tieBreaker2.result
+        ? ""
+        : "This field is required");
+
+
+  //
+  confirmatoryTest2.result  !== "" &&
+   confirmatoryTest2.result  === "non-reactive" &&
+  
+   (temp.tieBreaker2dateOfTest = tieBreaker2.dateOfTest
+        ? ""
+        : "This field is required");
+
 
     setErrors({
       ...temp,
@@ -584,7 +972,7 @@ const filteredData = response.data.filter(item =>
         showError: true
 
     })
-
+    return;
   }
 
 
@@ -599,7 +987,7 @@ const filteredData = response.data.filter(item =>
         showError: true
 
     })
- 
+    return;
   }
 
 
@@ -626,7 +1014,7 @@ const filteredData = response.data.filter(item =>
                 showError: true
 
             })
- 
+            return;
   }
 
 
@@ -645,10 +1033,22 @@ const filteredData = response.data.filter(item =>
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitting", payload);
-    console.log("Submitting", payload);
+
+    payload.initialHivTest = initialHivTest
+    payload.confirmatoryHivTest = confirmatoryHivTest
+    payload.tieBreaker = tieBreaker
+    payload.retesting = retesting
+    payload.confirmatoryTest2 = confirmatoryTest2
+    payload.tieBreaker2 = tieBreaker2
+    payload.finalResult= finalResult
+
+    let finalAnswer =validate() 
+
+
+
+
+
     if (validate() && !checkingForTheDate && validateHIVRetest.isValid) {
-      console.log("Submitted");
 
       setSaving(true);
       if (props.activeContent && props.activeContent.actionType === "update") {
@@ -701,7 +1101,6 @@ const filteredData = response.data.filter(item =>
             
             };
               props.handleRoute(data);
-              console.log("What are we passing", props?.patientObj);
             } else {
               props.setActiveContent({
                 ...props.activeContent,
@@ -720,7 +1119,6 @@ const filteredData = response.data.filter(item =>
     }
 
     if(!validateHIVRetest.isValid){
-        console.log('validateHIVRetest', validateHIVRetest)
    toast.error(validateHIVRetest.message, {
               position: toast.POSITION.BOTTOM_CENTER,
             });
@@ -732,7 +1130,7 @@ const filteredData = response.data.filter(item =>
       <Card className={classes.root}>
         <CardBody>
           <form>
-            <div className="row ">
+            <div className="row">
               <div
                 className="card-header mb-3 "
                 style={{
@@ -744,7 +1142,7 @@ const filteredData = response.data.filter(item =>
                 }}
               >
                 <h5 className="card-title" style={{ color: "#fff" }}>
-                  {props?.PmtctHtsRetestingType === "pmtct-hts"
+                  {props.onEnrollPatient && lastPmtctHtsRecord?.id &&  lastPmtctHtsRecord?.finalResult === "Negative"?"Retesting" : props?.PmtctHtsRetestingType === "pmtct-hts"
                     ? " PMTCT HTS"
                     : "Retesting"}
                 </h5>
@@ -793,7 +1191,6 @@ const filteredData = response.data.filter(item =>
                             type="text"
                             name="hospitalNumber"
                             id="hospitalNumber"
-                            // onChange={handleInputChange}
                             value={payload.hospitalNumber}
                             disabled
                           />
@@ -813,7 +1210,6 @@ const filteredData = response.data.filter(item =>
                             type="text"
                             name="ancNo"
                             id="ancNo"
-                            // onChange={handleInputChangeANC}
                             value={payload.ancNo}
                             disabled
 
@@ -825,7 +1221,6 @@ const filteredData = response.data.filter(item =>
                 <FormGroup>
                   <Label>
                     Test Entry Point
-                    {/* <span style={{ color:"red"}}> *</span> */}
                   </Label>
                   <InputGroup>
                     <Input
@@ -875,8 +1270,6 @@ const filteredData = response.data.filter(item =>
                           {value.display}
                         </option>
                       ))}
-                      {/* <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option> */}
                     </Input>
                   </InputGroup>
                   {errors.testSetting !== "" ? (
@@ -887,8 +1280,6 @@ const filteredData = response.data.filter(item =>
                 </FormGroup>
               </div>
 
-              {console.log(payload.testSetting)}
-              {/* FACILITY_HTS_TEST_SETTING_ANC */}
               {payload.testSetting.includes("_ANC") && (
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
@@ -925,6 +1316,32 @@ const filteredData = response.data.filter(item =>
                   </FormGroup>
                 </div>
               )}
+
+                {/* <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Initial HIV Test </Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={initialHivTest.dateOfTest}
+                                onChange={handleInitialInputChange}
+                                min={patientObj.ancNo? props?.patientObj?.firstAncDate:payload?.dateOfHiv9aTest? payload?.dateOfHivTest: ''}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                                  />
+
+                               {errors.initialHivTest !== "" ? (
+                    <span className={classes.error}>
+                      {errors.initialHivTest}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                                </FormGroup>
+                  </div> */}
+
               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <Label>
@@ -934,10 +1351,10 @@ const filteredData = response.data.filter(item =>
                   <InputGroup>
                     <Input
                       type="select"
-                      name="initialHivTest"
-                      id="initialHivTest"
-                      onChange={handleInputChange}
-                      value={payload.initialHivTest}
+                      name="result"
+                      id="result"
+                      onChange={handleInitialInputChange}
+                      value={initialHivTest.result}
                       disabled={disabledField}
                     >
                       <option value="">Select</option>
@@ -945,26 +1362,117 @@ const filteredData = response.data.filter(item =>
                       <option value="non-reactive">Non-reactive</option>
                     </Input>
                   </InputGroup>
-                  {errors.initialHivTest !== "" ? (
+                  {errors.initialresult !== "" ? (
                     <span className={classes.error}>
-                      {errors.initialHivTest}
+                      {errors.initialresult}
                     </span>
                   ) : (
                     ""
                   )}
                 </FormGroup>
               </div>
+
+
+
+
+             { initialHivTest.result === 'reactive' &&  <> 
+             
+                    <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Confirmatory Test <span style={{ color: "red" }}> *</span></Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={confirmatoryHivTest.dateOfTest}
+                                onChange={handleConfirmatoryInputChange}
+                                min={patientObj.ancNo? props?.patientObj?.firstAncDate:payload.dateOfHivTest? payload.dateOfHivTest: ''}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                            
+                                  />
+
+                               {errors.confirmatorydateOfTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.confirmatorydateOfTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                                </FormGroup>
+                    </div>
+
+
+              
+              <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <Label> Confirmatory HIV Test <span style={{ color: "red" }}> *</span></Label>
+                    <InputGroup>
+                      <Input
+                        type="select"
+                        name="result"
+                        id="result"
+                        onChange={handleConfirmatoryInputChange}
+                        value={confirmatoryHivTest.result}
+                        disabled={disabledField}
+                          >
+                          <option value="">Select</option>
+                            <option value="reactive">Reactive</option>
+                          <option value="non-reactive">Non-reactive</option>
+                        </Input>
+                      </InputGroup>
+                
+                         {errors.confirmatoryresult !== "" ? (
+                        <span className={classes.error}>
+                          {errors.confirmatoryresult}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+              
+              </>}
+
+
+              {(confirmatoryHivTest.result === 'non-reactive') && <>
+                      <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Tie Breaker Test <span style={{ color: "red" }}> *</span></Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={tieBreaker.dateOfTest}
+                                onChange={handleTieBreakerInputChange}
+                                min={confirmatoryHivTest.dateOfTest}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                                  />
+
+                            {errors.tieBreakerdateOfTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.tieBreakerdateOfTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                                </FormGroup>
+                  </div>
+
 
               <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label> Confirmatory HIV Test </Label>
+                 <FormGroup>
+                  <Label>Tie Breaker<span style={{ color: "red" }}> *</span></Label>
                   <InputGroup>
                     <Input
                       type="select"
-                      name="confirmatoryHivTest"
-                      id="confirmatoryHivTest"
-                      onChange={handleInputChange}
-                      value={payload.confirmatoryHivTest}
+                      name="result"
+                      id="result"
+                      onChange={handleTieBreakerInputChange}
+                      value={tieBreaker.result}
                       disabled={disabledField}
                     >
                       <option value="">Select</option>
@@ -972,27 +1480,117 @@ const filteredData = response.data.filter(item =>
                       <option value="non-reactive">Non-reactive</option>
                     </Input>
                   </InputGroup>
-                  {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>
-                      {errors.confirmatoryHivTest}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
+                   {errors.tieBreakerresult !== "" ? (
+                        <span className={classes.error}>
+                          {errors.tieBreakerresult}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                 </FormGroup>
+               </div></>}
 
 
-          <div className="form-group mb-3 col-md-4">
+
+           {(tieBreaker.result === 'reactive' || confirmatoryHivTest.result === 'reactive') && <>
+               
+                <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Retesting <span style={{ color: "red" }}> *</span></Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={retesting.dateOfTest}
+                                onChange={handleRetestingInputChange}
+                                min={confirmatoryHivTest.dateOfTest? confirmatoryHivTest.dateOfTest:tieBreaker.dateOfTest }
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                                  />
+
+
+                                       {errors.retestingdateOfTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.retestingdateOfTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                                </FormGroup>
+                  </div>
+               
+               
+               <div className="form-group mb-3 col-md-4">
                 <FormGroup>
-                  <Label>Tie Breaker</Label>
+                  <Label>Retesting<span style={{ color: "red" }}> *</span></Label>
                   <InputGroup>
                     <Input
                       type="select"
-                      name="tieBreaker"
-                      id="tieBreaker"
-                      onChange={handleInputChange}
-                      value={payload.confirmatoryHivTest}
+                      name="result"
+                      id="result"
+                      onChange={handleRetestingInputChange}
+                      value={retesting.result}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                        <option value="reactive">Reactive</option>
+                      <option value="non-reactive">Non-reactive</option>
+                    </Input>
+
+                  </InputGroup>
+                    {errors.retestingresult !== "" ? (
+                        <span className={classes.error}>
+                          {errors.retestingresult}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                  
+                </FormGroup>
+               
+              </div>
+               </>
+              }
+
+           {retesting.result === 'reactive' && <>
+
+              
+                <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Confirmatory Test 2 <span style={{ color: "red" }}> *</span></Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={confirmatoryTest2.dateOfTest}
+                                onChange={handleConfirmatory2InputChange}
+                                min={retesting.dateOfTest}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                                  />
+                       {errors.confirmatoryTest2dateOfTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.confirmatoryTest2dateOfTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                                </FormGroup>
+                  </div>
+
+
+            <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>Confirmatory Test 2<span style={{ color: "red" }}> *</span></Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="result"
+                      id="result"
+                      onChange={handleConfirmatory2InputChange}
+                      value={confirmatoryTest2.result}
                       disabled={disabledField}
                     >
                       <option value="">Select</option>
@@ -1000,15 +1598,75 @@ const filteredData = response.data.filter(item =>
                       <option value="non-reactive">Non-reactive</option>
                     </Input>
                   </InputGroup>
-                  {errors.confirmatoryHivTest !== "" ? (
+                    {errors.confirmatoryTest2result !== "" ? (
+                        <span className={classes.error}>
+                          {errors.confirmatoryTest2result}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                  
+                </FormGroup>
+              </div> </>}
+
+           {confirmatoryTest2?.result === 'non-reactive' && <>
+           
+
+                  <div className="form-group mb-3 col-md-4">
+                       <FormGroup>
+                       <Label for=""> Date of Tie Breaker Test 2 <span style={{ color: "red" }}> *</span></Label>
+                           <Input
+                             type="date"
+                             onKeyPress={(e) => {e.preventDefault()}}
+                               name="dateOfTest"
+                               id="dateOfTest"
+                                value={tieBreaker2.dateOfTest}
+                                onChange={handleTieBreaker2InputChange}
+                                min={confirmatoryTest2.dateOfTest}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                               disabled={disabledField}
+                                  />
+
+                                      {errors.tieBreaker2dateOfTest !== "" ? (
+                        <span className={classes.error}>
+                          {errors.tieBreaker2dateOfTest}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                                </FormGroup>
+                  </div>
+
+
+                  <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>Tie Breaker Test 2<span style={{ color: "red" }}> *</span></Label>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="result"
+                      id="result"
+                      onChange={handleTieBreaker2InputChange}
+                      value={tieBreaker2.result}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select</option>
+                        <option value="reactive">Reactive</option>
+                      <option value="non-reactive">Non-reactive</option>
+                    </Input>
+                  </InputGroup>
+                  {errors.tieBreaker2result !== "" ? (
                     <span className={classes.error}>
-                      {errors.confirmatoryHivTest}
+                      {errors.tieBreaker2result}
                     </span>
                   ) : (
                     ""
                   )}
+                  
                 </FormGroup>
               </div>
+              </>}
+
               {props?.PmtctHtsRetestingType === "pmtct-hts" && (
                 <>
                   <div className="form-group mb-3 col-md-4">
@@ -1027,11 +1685,6 @@ const filteredData = response.data.filter(item =>
                       <option value="reactive">Reactive</option>
                       <option value="non-reactive">Non-reactive</option>                        </Input>
                       </InputGroup>
-                      {/* {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
-                  ) : (
-                    ""
-                  )} */}
                     </FormGroup>
                   </div>
 
@@ -1052,11 +1705,6 @@ const filteredData = response.data.filter(item =>
                           <option value="negative">Negative</option>
                         </Input>
                       </InputGroup>
-                      {/* {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
-                  ) : (
-                    ""
-                  )} */}
                     </FormGroup>
                   </div>}
 
@@ -1076,11 +1724,6 @@ const filteredData = response.data.filter(item =>
                           <option value="positive">Positive</option>
                           <option value="negative">Negative</option>                        </Input>
                       </InputGroup>
-                      {/* {errors.confirmatoryHivTest !== "" ? (
-                    <span className={classes.error}>{errors.confirmatoryHivTest}</span>
-                  ) : (
-                    ""
-                  )} */}
                     </FormGroup>
                   </div>}
                 </>
@@ -1092,7 +1735,20 @@ const filteredData = response.data.filter(item =>
             <>
               <>
       
+{/*  */}
+                       {finalResult && <>
+                          <b>Result : </b>
+                          <LabelRibbon color={finalResult=== 'Positive' ? 'red':"green"}>{finalResult}</LabelRibbon>
+                          <br />
+                        </>
+                       }
+                     
+                    
+                    
 
+
+
+{/*  */}
                         
            <>
                 {props.activeContent && props.activeContent.actionType === "update"  ? (

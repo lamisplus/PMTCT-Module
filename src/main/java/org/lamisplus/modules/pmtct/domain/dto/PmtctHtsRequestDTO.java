@@ -15,8 +15,6 @@ public class PmtctHtsRequestDTO {
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
     private String testSetting;
-    private String initialHivTest;
-    private String confirmatoryHivTest;
     private String stageOfPregnancy;
     private String personUuid;
     private String hospitalNumber;
@@ -25,6 +23,17 @@ public class PmtctHtsRequestDTO {
     private String hepatitisC;
     private String testingType;
     private String ancNo;
+    private HivTestDto initialHivTest;
+    private HivTestDto confirmatoryHivTest;
+    private HivTestDto tieBreaker;
+    private HivTestDto retesting;
+    private HivTestDto confirmatoryTest2;
+    private HivTestDto tieBreaker2;
+    private String finalResult;
+
+
+
+
 
 
 }

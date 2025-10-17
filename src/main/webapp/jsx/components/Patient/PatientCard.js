@@ -98,6 +98,11 @@ function PatientCard(props) {
   const [hivStatus, setHivStatus] = useState('');
   const [infantHeiPcr, setInfantHeiPcr] = useState([]);
   const [infantHeiPcrAlert, setInfantHeiPcrAlert] = useState([]);
+  const [retestStatus, setRetestStatus] = useState({
+        status: '',
+        seroconverted: '',
+        remainedHivNegative: '',
+  });
 
   // 
   const [artModal, setArtModal] = useState(false);
@@ -111,22 +116,42 @@ const [expandedIndex, setExpandedIndex] = useState(false);
     setExpandedIndex(!expandedIndex);
   };
 
+const getHivRetestStatus = async () => {
+      const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
 
+  try {
+    const response = await axios.get(
+      `${baseUrl}pmtct/anc/get-hiv-retest-status?personUuid=${personUuid}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    
+     setRetestStatus(response.data);
+    
+
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching HIV retest status:", error);
+    toast.error("Failed to load HIV retest status");
+  }
+};
 
   useEffect(() => {
       getHETInfantStatus();
 
+
     getHighRiskInfantStatus();
     PatientCurrentStatus();
     CheckBiometric();
-    console.log("patient", patientObj);
   }, [props.patientObj]);
 
 
 
     useEffect(() => {   
        getHETInfantStatus();
-
+      getHivRetestStatus()
     getLatestConfirmatoryResult();
      getHighRiskInfantStatus();
     // getMaternalOutcome();
@@ -249,7 +274,6 @@ const getMaternalOutcome = async () => {
   }
 
 
-  console.log("patientObj card", patientObj)
   // async function getPatientInfo() {
   //   axios
   //     .get(`${baseUrl}hiv/status/patient-current/${patientObj.id}`, {
@@ -369,7 +393,28 @@ const getMaternalOutcome = async () => {
                             </Label.Detail>
                           </Label>
                         </Typography>
+
                       </div>
+
+            
+                       {(retestStatus?.seroconverted || retestStatus?.remainedHivNegative) &&  
+                           <div>
+                               <Typography variant="caption"> <Label
+                            color={
+                              retestStatus?.remainedHivNegative === true
+                                ? "green"
+                                : "red"
+                            }
+                            size={"mini"}
+                          >{retestStatus?.seroconverted
+                                ? "Seroconverted to HIV Positive"
+                                :retestStatus?.remainedHivNegative? "Remained HIV Negative": ''}
+                            
+                          </Label>
+                        </Typography>
+
+                      </div>}
+                      {/* retestStatus */}
                              {props.maternalOutcome &&   <div>
                         <Typography variant="caption">
                           <Label

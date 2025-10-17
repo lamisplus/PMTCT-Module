@@ -86,11 +86,9 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
-  console.log("patientOb patient detailj", patientObj);
-  console.log("activeContent.route", activeContent);
+
 
   const RecentActivities = () => {
-      console.log("patientObj history.location.state", patientObj);
     axios
       .get(
         `${baseUrl}pmtct/anc/getAllActivities/${
@@ -140,7 +138,6 @@ function PatientCard(props) {
       })
       .then((response) => {
         setAllEntryPoint(response.data);
-        console.log("Entry Points:", response.data);
       })
       .catch((error) => {
         console.error("Error fetching entry points:", error);
@@ -280,6 +277,8 @@ function PatientCard(props) {
               hideUpdateButton={true}
               htsHivStatus={""}
               lastestConfirmatoryTest={lastestConfirmatoryTest}
+               showLastHivTestMessage={false}
+
             />
           )}
 

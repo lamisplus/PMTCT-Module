@@ -44,7 +44,7 @@ const RecentHistory = (props) => {
     }
 
     let generalStatus = props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown"
-    setShowHTSStatus(props.lastestHivStatus !== "Unknown"? false : generalStatus)
+    setShowHTSStatus(props.lastestHivStatus !== "Unknown" && props.lastestHivStatus !== ""? false : generalStatus)
 
     InfantInfo();
     RecentActivities();

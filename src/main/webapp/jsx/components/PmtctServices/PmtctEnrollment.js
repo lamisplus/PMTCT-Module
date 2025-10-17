@@ -125,7 +125,10 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
 const getInitialHivStatus = () => {
   const statusMap = {
     'reactive': 'Positive',
-    'non-reactive': 'Negative'
+    'non-reactive': 'Negative',
+    'Positive': 'Positive',
+    'Negative': 'Negative',
+
   };
   return statusMap[props.lastestConfirmatoryTest] || 
          patientObj?.hivStatus || 
@@ -196,7 +199,7 @@ const [enroll, setEnrollDto] = useState({
     //setErrors({...temp, [e.target.name]:""})
   };
 
-
+console.log('fddd', enroll.hivStatus)
   //GET AdultRegimenLine
   const AdultRegimenLine = () => {
     axios
@@ -256,7 +259,8 @@ const [enroll, setEnrollDto] = useState({
       );
     }
     if(!props.activeContent.id && props.htsHivStatus){
-        setEnrollDto({...enroll, hivStatus: props.htsHivStatus})
+      let result= getInitialHivStatus()
+        setEnrollDto({...enroll, hivStatus: result? result: props.htsHivStatus})
     }
     if (
       props?.patientObj?.person_uuid ||
@@ -274,23 +278,21 @@ const [enroll, setEnrollDto] = useState({
         personUuid: locationState.patientObj.uuid,
       });
     }
-    // else {
-    //   setEnrollDto({
-    //     ...enroll,
-    //     personDto:
-    //       locationState && locationState.patientObj
-    //         ? locationState.patientObj
-    //         : null,
-    //   });
-    // }
 
-    // setEnrollDto(
-    //   patientObj.hivStatus
-    //     ? patientObj.hivStatus
-    //     : patientObj.staticHivStatus
-    //     ? patientObj.staticHivStatus
-    //     : ""
-    // );
+
+    if(props.showLastHivTestMessage){
+
+     toast.info("Last HIV test was Positive", {
+      position: toast.POSITION.BOTTOM_CENTER,
+});
+
+
+    }
+
+
+    
+
+
   }, []);
 
   useEffect(() => {
@@ -304,6 +306,17 @@ const [enroll, setEnrollDto] = useState({
       props.getPMTCTInfo(enroll);
     }
   }, [enroll]);
+
+
+    useEffect(() => {
+      console.log('props.lastestConfirmatoryTest', props.lastestConfirmatoryTest, props.htsHivStatus)
+    if(props.lastestConfirmatoryTest){
+       setEnrollDto({...enroll, hivStatus:  getInitialHivStatus()})
+       
+
+    }
+  }, [props.lastestConfirmatoryTest]);
+
 
   const calculateExpectedDate=(lmp)=>{
     let LastPeriod = moment(lmp)
@@ -966,7 +979,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   <Label>
                     Art Start Date <span style={{ color: "red" }}> *</span>
                   </Label>
-                  {console.log("artStartDate min", minARTDate)}
                   <InputGroup>
                     <Input
                       type="date"                       onKeyPress={(e)=>{e.preventDefault()}}

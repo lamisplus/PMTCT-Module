@@ -3392,6 +3392,8 @@ const UserRegistration = (props) => {
                 hideUpdateButton={false}
                 ancEntryType={false}
                 htsHivStatus={htsHivStatus}
+               showLastHivTestMessage={false}
+
               />
             )}
             {saving ? <Spinner /> : ""}

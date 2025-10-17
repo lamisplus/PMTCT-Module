@@ -153,6 +153,16 @@ const UserRegistration = (props) => {
 
   const [ANCSetting, setANCSetting] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
+  const [lastPmtctHtsRecord, setLastPmtctHtsRecord] = useState({
+        confirmatoryHivTest: "",
+        dateOfHivTest: "",
+        testEntryPoint: "",
+        testSetting: "",
+        initialHivTest: "",
+        stageOfPregnancy: "",
+        id: '',
+
+  });
 
   //const [values, setValues] = useState([]);
   const [objValues, setObjValues] = useState({
@@ -204,13 +214,33 @@ const UserRegistration = (props) => {
   const toggle = () => setOpen(!open);
 
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
+
+const getLastPmtctHtsRecord = (personUuid) => {
+      axios
+        .get(
+          `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        .then((response) => {
+  
+            if(response.data){
+             setLastPmtctHtsRecord(response.data)
+  
+            }
+        })
+        .catch((error) => {
+          //console.log(error);
+        });
+    };
+
   useEffect(() => {
     GET_CODESETS();
 
     let hospitalNumber
 
     if (patientObj) {
-         //
+       getLastPmtctHtsRecord(patientObj?.uuid)
+
       if(patientObj?.identifier){
       const identifiers = patientObj.identifier;
        hospitalNumber = identifiers.identifier.find(
@@ -696,6 +726,9 @@ const UserRegistration = (props) => {
       }
     }
   };
+
+  
+
 
   return (
     <>
@@ -1670,7 +1703,8 @@ const UserRegistration = (props) => {
                 </div>
               ) : (
                 <>
-                {patientObj.dynamicHivStatus === "Positive"? 
+                {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
+                {(patientObj.dynamicHivStatus === "Positive" || lastPmtctHtsRecord?.finalResult === "Positive" )? 
                 <PmtctEnrollment
                   newRegDate={""}
                   patientObj={patientObj}
@@ -1680,14 +1714,17 @@ const UserRegistration = (props) => {
                   entrypointValue={locationState.entrypointValue}
                   ancEntryType={patientObj.ancNo ? true : false}
                   handleRoute={handleRoute}
-                  htsHivStatus={""}
+                  htsHivStatus={lastPmtctHtsRecord?.finalResult}
+                  showLastHivTestMessage={lastPmtctHtsRecord?.finalResult === "Positive"?true: false}
+                  lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult }
+
                 />
                   :
               <PmtctHtsForm
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
-              PmtctHtsRetestingType={patientObj? 'pmtct-hts':'pmtct-hts'}
+              PmtctHtsRetestingType={'pmtct-hts'}
                handleRoute={handleRoute}
                onEnrollPatient={true}
               entrypointValue={locationState.entrypointValue}

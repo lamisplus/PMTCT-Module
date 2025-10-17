@@ -454,13 +454,13 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="true" author="20240613-003" id="israel-ace3">
+    <changeSet failOnError="true" id="20240613-003" author="israel-ace3">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
                 FROM pg_attribute
                 WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_anc')
-                AND attname = 'previously_known_hiv_status';
+                  AND attname = 'previously_known_hiv_status';
             </sqlCheck>
         </preConditions>
         <sql>
@@ -468,13 +468,14 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="true" author="20240613-005" id="israel-ace3">
+
+    <changeSet failOnError="true" id="20240613-005" author="israel-ace3">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
                 FROM pg_attribute
                 WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'pmtct_enrollment')
-                AND attname = 'time_of_hiv_diagnosis';
+                  AND attname = 'time_of_hiv_diagnosis';
             </sqlCheck>
         </preConditions>
         <sql>
@@ -726,7 +727,7 @@
         </sql>
     </changeSet>
 
-    <changeSet failOnError="true" id="2025-07-31-002" author="Basil-DataFI">
+    <changeSet failOnError="false" id="2025-07-31-002" author="Basil-DataFI">
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="pmtct_mother_visitation" columnName="date_of_initial_visit" />
@@ -737,8 +738,8 @@
         </sql>
     </changeSet>
 
-
-    <changeSet failOnError="true"  id="2025-10-08-001" author="Ganiyat">
+<!---->
+    <changeSet failOnError="false"  id="2025-10-08-001" author="Ganiyat">
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="pmtct_hts" columnName="anc_no" />
@@ -748,5 +749,302 @@
             ALTER TABLE pmtct_hts ADD COLUMN anc_no character varying;
         </sql>
     </changeSet>
+    <!---->
+    <changeSet failOnError="false"  id="2025-10-17-001-added-Final-result-column" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="final_result" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN final_result character varying;
+        </sql>
+    </changeSet>
+
+
+    <!-- Step 1: Create initial_hiv_test column if it doesn't exist -->
+    <changeSet failOnError="false" id="20251017-001-create-initial-hiv-test" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="initial_hiv_test"/>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN initial_hiv_test jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Step 2: Convert initial_hiv_test from string to JSONB (only if exists as string) -->
+    <changeSet failOnError="false" id="20251017-002-convert-initial-hiv-test-to-jsonb" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="initial_hiv_test"/>
+                <or>
+                    <sqlCheck expectedResult="character varying">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="varchar">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="text">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                </or>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+            ALTER COLUMN initial_hiv_test TYPE jsonb
+        USING jsonb_build_object('result', initial_hiv_test, 'dateOfTest', NULL);
+        </sql>
+    </changeSet>
+
+    <!-- Step 3: Create confirmatory_hiv_test column if it doesn't exist -->
+    <changeSet failOnError="false" id="20251017-003-create-confirmatory-hiv-test" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_hiv_test"/>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN confirmatory_hiv_test jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Step 4: Convert confirmatory_hiv_test from string to JSONB (only if exists as string) -->
+    <changeSet failOnError="false" id="20251017-004-convert-confirmatory-hiv-test-to-jsonb" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_hiv_test"/>
+                <or>
+                    <sqlCheck expectedResult="character varying">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="varchar">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="text">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                </or>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+            ALTER COLUMN confirmatory_hiv_test TYPE jsonb
+        USING jsonb_build_object('result', confirmatory_hiv_test, 'dateOfTest', NULL);
+        </sql>
+    </changeSet>
+
+
+    <!-- FIX 2: Add columns individually with proper existence checks -->
+    <changeSet failOnError="false" id="20251017-add-tie-breaker" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="tie_breaker" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN tie_breaker jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="20251017-add-retesting" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="retesting" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN retesting jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="20251017-add-confirmatory-test2" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_test2" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN confirmatory_test2 jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="20251017-add-tie-breaker2" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="tie_breaker2" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN tie_breaker2 jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Convert initial_hiv_test from string to JSONB (only if exists as string) -->
+    <changeSet failOnError="false" id="20251017-001-convert-initial-hiv-test-to-jsonb" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="initial_hiv_test"/>
+                <or>
+                    <sqlCheck expectedResult="character varying">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="varchar">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="text">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'initial_hiv_test'
+                    </sqlCheck>
+                </or>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+            ALTER COLUMN initial_hiv_test TYPE jsonb
+        USING jsonb_build_object('result', initial_hiv_test, 'dateOfTest', NULL);
+        </sql>
+
+    </changeSet>
+
+
+    <changeSet failOnError="false" id="20251017-016-update-positive-negative-to-reactive-nonreactive" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="initial_hiv_test"/>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_hiv_test"/>
+            </and>
+        </preConditions>
+        <comment>Update initial_hiv_test and confirmatory_hiv_test result values: positive -> reactive, negative -> non-reactive</comment>
+        <sql>
+            UPDATE pmtct_hts
+            SET initial_hiv_test = jsonb_set(
+                    initial_hiv_test,
+                    '{result}',
+                    CASE
+                        WHEN LOWER(initial_hiv_test->>'result') = 'positive' THEN '"reactive"'::jsonb
+                        WHEN LOWER(initial_hiv_test->>'result') = 'negative' THEN '"non-reactive"'::jsonb
+                        ELSE initial_hiv_test->'result'
+                        END
+                                   )
+            WHERE initial_hiv_test IS NOT NULL
+              AND LOWER(initial_hiv_test->>'result') IN ('positive', 'negative');
+
+            UPDATE pmtct_hts
+            SET confirmatory_hiv_test = jsonb_set(
+                    confirmatory_hiv_test,
+                    '{result}',
+                    CASE
+                        WHEN LOWER(confirmatory_hiv_test->>'result') = 'positive' THEN '"reactive"'::jsonb
+                        WHEN LOWER(confirmatory_hiv_test->>'result') = 'negative' THEN '"non-reactive"'::jsonb
+                        ELSE confirmatory_hiv_test->'result'
+                        END
+                                        )
+            WHERE confirmatory_hiv_test IS NOT NULL
+              AND LOWER(confirmatory_hiv_test->>'result') IN ('positive', 'negative');
+        </sql>
+    </changeSet>
+
+
+    <!-- Convert confirmatory_hiv_test from string to JSONB (only if exists as string) -->
+    <changeSet failOnError="false" id="20251017-003-convert-confirmatory-hiv-test-to-jsonb" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_hiv_test"/>
+                <or>
+                    <sqlCheck expectedResult="character varying">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="varchar">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                    <sqlCheck expectedResult="text">
+                        SELECT data_type FROM information_schema.columns
+                        WHERE table_name = 'pmtct_hts'
+                        AND column_name = 'confirmatory_hiv_test'
+                    </sqlCheck>
+                </or>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+            ALTER COLUMN confirmatory_hiv_test TYPE jsonb
+        USING jsonb_build_object('result', confirmatory_hiv_test, 'dateOfTest', NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="20251017-015-sync-initial-to-confirmatory-results" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="initial_hiv_test"/>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_hiv_test"/>
+                <columnExists tableName="pmtct_hts" columnName="tie_breaker"/>
+                <columnExists tableName="pmtct_hts" columnName="retesting"/>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_test2"/>
+                <columnExists tableName="pmtct_hts" columnName="tie_breaker2"/>
+            </and>
+        </preConditions>
+        <sql>
+            UPDATE pmtct_hts
+            SET initial_hiv_test = jsonb_set(
+                    initial_hiv_test,
+                    '{result}',
+                    confirmatory_hiv_test->'result'
+                                   )
+            WHERE initial_hiv_test IS NOT NULL
+              AND confirmatory_hiv_test IS NOT NULL
+              AND tie_breaker IS NULL
+              AND retesting IS NULL
+              AND confirmatory_test2 IS NULL
+              AND tie_breaker2 IS NULL
+              AND confirmatory_hiv_test->>'result' IN ('reactive', 'Positive')
+              AND initial_hiv_test->>'result' IN ('Negative', 'reactive')
+              AND initial_hiv_test->>'result' != confirmatory_hiv_test->>'result';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="20251017-017-clear-confirmatory-if-both-negative" author="Ganiyat">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_hts" columnName="initial_result"/>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_result"/>
+            </and>
+        </preConditions>
+        <comment>Set confirmatory_result to empty string when both initial and confirmatory results are negative</comment>
+        <sql>
+            UPDATE pmtct_hts
+            SET confirmatory_result = ''
+            WHERE LOWER(initial_result) = 'non-reactive'
+              AND LOWER(confirmatory_result) = 'non-reactive'
+              AND confirmatory_result IS NOT NULL
+              AND confirmatory_result != '';
+        </sql>
+    </changeSet>
+
+
+
 
 </databaseChangeLog>
