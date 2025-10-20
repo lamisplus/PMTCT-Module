@@ -71,6 +71,7 @@ function PatientCard(props) {
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
+  const [checkForRetesting, setCheckForRetesting] = useState(true);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -103,6 +104,8 @@ function PatientCard(props) {
         if (response?.data) {
           const hasDeliveryActivity = response.data.some((each)=> each.activityName == "Labour and Delivery");
             setMainDeliveryStatus(hasDeliveryActivity)
+          const hasRetestingActivity = response.data.some((each)=> each.activityName == "RETESTING"|| each.activityName === "PMTCT-HTS" );
+            setCheckForRetesting(hasRetestingActivity? false: true)
         } else {
           setDeliveryInfo({});
         }
@@ -233,6 +236,7 @@ function PatientCard(props) {
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
               lastestHivStatus={lastestHivStatus}
               activeContent={activeContent}
+              checkForRetesting={checkForRetesting}
               entrypointValue={
                 patientObj.ancNo
                   ? "PMTCT_ENTRY_POINT_ANC"

@@ -155,7 +155,6 @@ function SubMenu(props) {
         }
       )
       .then((response) => {
-        console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
         setPatientStatus(response.data? response.data: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
           showRetestingMenu(response.data);
 
@@ -272,7 +271,6 @@ const showRetestingMenu = (patientHivStatus) => {
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
       </Menu>
-      {console.log(patientObj)}
     </div>
   );
 }

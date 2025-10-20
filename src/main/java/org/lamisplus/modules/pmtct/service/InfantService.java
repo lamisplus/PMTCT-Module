@@ -79,11 +79,23 @@ private final   InfantRapidTestRepository rapidTestRepository;
         infant.setCtxStatus(infantDto.getCtxStatus());
         Infant result = infantRepository.save(infant);
 
+        // Declare variables outside the if blocks
+        InfantArv infantArv = null;
+        InfantPCRTest infantPCRTest = null;
+
         //save InfantArv
-        InfantArv infantArv =  saveInfantArv(infantDto.getInfantArvDto(),result);
+        if(infantDto.getInfantArvDto() != null
+                && infantDto.getInfantArvDto().getInfantArvType() != null
+                && !infantDto.getInfantArvDto().getInfantArvType().isEmpty()){
+            infantArv = saveInfantArv(infantDto.getInfantArvDto(), result);
+        }
 
         //save InfantPCRTest
-        InfantPCRTest infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(),result);
+        if(infantDto.getInfantPCRTestDto() != null
+                && infantDto.getInfantPCRTestDto().getTestType() != null
+                && !infantDto.getInfantPCRTestDto().getTestType().isEmpty()){
+            infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(), result);
+        }
 
         return InfantDtoResponse.builder()
                 .infant(result)
@@ -91,7 +103,6 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 .infantPCRTest(infantPCRTest)
                 .build();
     }
-
     private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
 
 //        System.out.println("infantArvDto " + infantArvDto);

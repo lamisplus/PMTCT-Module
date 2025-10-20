@@ -309,7 +309,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
 
-        if ((infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null) ){
+        if (infantVisitationConsolidatedDto.getInfantPCRTestDto() != null  && infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType() != null && !infantVisitationConsolidatedDto.getInfantPCRTestDto().getTestType().isEmpty()){
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
@@ -499,13 +499,15 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
     public InfantArvDto getInfantArvByUUID(String personUuid) {
         InfantArvDto infantArvDto = null;
-        Optional<InfantArvDto> infantArvDtoOptional = Optional.ofNullable(convertInfantArvEntityToInfantArvDto(infantArvRepository.getTopByUuid(personUuid)));
-        if (infantArvDtoOptional.isPresent()) {
-            infantArvDto = infantArvDtoOptional.get();
+        InfantArv infantArvEntity = infantArvRepository.getTopByUuid(personUuid);
+
+        // Add null check before conversion
+        if (infantArvEntity != null) {
+            infantArvDto = convertInfantArvEntityToInfantArvDto(infantArvEntity);
         }
+
         return infantArvDto;
     }
-
     public InfantPCRTestDto getInfantPCRTestByInfantHospitalNumber(String hospitalNumber) {
         InfantPCRTestDto infantPCRTestDto = null;
         Optional<InfantPCRTestDto> infantPCRTestOptional = this.infantPCRTestRepository.findTopByInfantHospitalNumber(hospitalNumber);
@@ -517,10 +519,13 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
     public InfantPCRTestDto getInfantPCRTestByUUID(String personUuid) {
         InfantPCRTestDto infantPCRTestDto = null;
-        Optional<InfantPCRTestDto> infantPCRTestOptional = Optional.ofNullable(convertInfantPCRTestEntityToInfantPCRTestDto(infantPCRTestRepository.getTopByUuid(personUuid)));
-        if (infantPCRTestOptional.isPresent()) {
-            infantPCRTestDto = infantPCRTestOptional.get();
+        InfantPCRTest infantPCRTestEntity = infantPCRTestRepository.getTopByUuid(personUuid);
+
+        // Add null check before conversion
+        if (infantPCRTestEntity != null) {
+            infantPCRTestDto = convertInfantPCRTestEntityToInfantPCRTestDto(infantPCRTestEntity);
         }
+
         return infantPCRTestDto;
     }
 

@@ -188,7 +188,7 @@ const UserRegistration = (props) => {
     partnerNotification: {},
     // sourceOfReferral: "",
     staticHivStatus: patientObj?.dynamicHivStatus || "",
-    previouslyKnownHivStatus: patientObj.dynamicHivStatus === "Positive"? "Yes": "",
+    previouslyKnownHivStatus: patientObj.dynamicHivStatus === "Positive"? "Yes": patientObj.dynamicHivStatus === "Negative"?'No' :'',
     currentlyOnArt: "",
 
     dateOfHepatitisB: "",
@@ -284,7 +284,6 @@ const getLastPmtctHtsRecord = (personUuid) => {
  const GET_CODESETS = () => {
 
    GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
-        console.log("GET_CODESETS_IN_BATCH", response)
       setANCSetting(response.data.ENROLLMENT_SETTING);
        setCommunitySetting(response.data.COMMUNITY_PMTCT);
        getSex(response.data.SEX)
@@ -882,7 +881,6 @@ const getLastPmtctHtsRecord = (personUuid) => {
                 </div>
               </div>
               {/* Adding  ENROLLEMENT FORM HERE */}
-          {console.log('patientObj ---testing', patientObj)}
               {locationState.showANC ? (
                 <div className="card">
                   <div
@@ -1584,10 +1582,11 @@ const getLastPmtctHtsRecord = (personUuid) => {
                               name="previouslyKnownHivStatus"
                               id="previouslyKnownHivStatus"
                               onChange={handleInputChange}
-                              // disabled={
-                              //   disableHIVStatus
-                              //     ? true: false
-                              // }
+                              disabled={
+                                disableHIVStatus
+                                  ? true: false
+                              }
+                            // : patientObj.dynamicHivStatus === "Negative"
                               value={objValues.previouslyKnownHivStatus}
                             >
                               <option value="">Select</option>

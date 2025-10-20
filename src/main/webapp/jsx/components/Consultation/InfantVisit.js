@@ -130,9 +130,36 @@ const ClinicVisit = (props) => {
   const [disabledField, setDisabledField] = useState(false);
   const [objValues, setObjValues] = useState({
     infantVisitRequestDto: "",
-    // infantArvDto: "",
+    infantArvDto: {
+    ageAtCtx: "" ,
+    ancNumber: "",
+    arvDeliveryPoint: "",
+    infantArvTime: "",
+    infantArvType: "",
+    infantHospitalNumber: "",
+    timingOfAvrWithin72Hours: "",
+    timingOfAvrAfter72Hours: "",
+    otherProphylaxisType: "",
+    id: "",
+    uuid: "",
+    uniqueUuid: "",
+    dateOfCtx: "",
+  },
     // infantMotherArtDto: "",
-    // infantPCRTestDto: "",
+    infantPCRTestDto: {
+    ageAtTest: "",
+    ancNumber: '',
+    dateResultReceivedAtFacility: "",
+    dateResultReceivedByCaregiver: "",
+    dateSampleCollected: "",
+    dateSampleSent: "",
+    infantHospitalNumber: "",
+    results: "",
+    testType: "",
+    id: "",
+    uuid: "",
+    uniqueUuid: "",
+  },
   });
   const [rapidResultMessage, setRapidResultMessage] = useState("Kindly fill ART form");
 
@@ -939,6 +966,12 @@ const ClinicVisit = (props) => {
       : "This field is required";
       infantVisitRequestDto.ctxStatus === "YES" &&   (temp.dateOfCtx =  infantArvDto.dateOfCtx? "" : "This field is required");
       infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+      infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+
+
+   infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");
+    infantPCRTestDto.testType !== "" && ( temp.dateSampleSent =infantPCRTestDto.dateSampleSent ? "" : "This field is required");
+
 
     setErrors({
       ...temp,
@@ -951,14 +984,23 @@ const ClinicVisit = (props) => {
     e.preventDefault();
     if (validate()) {
       setSaving(true);
-      objValues.infantArvDto = infantArvDto;
-      objValues.infantArvDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantMotherArtDto = infantMotherArtDto;
       objValues.infantMotherArtDto.visitDate = infantVisitRequestDto.visitDate;
-      objValues.infantPCRTestDto = infantPCRTestDto;
+
+
+      if(infantArvDto.infantArvType){
+      objValues.infantArvDto = infantArvDto;
+      objValues.infantArvDto.visitDate = infantVisitRequestDto.visitDate;
+
+      }
+     if(infantPCRTestDto.testType &&  infantPCRTestDto.dateSampleCollected && infantPCRTestDto.dateSampleSent ){
+         
+        objValues.infantPCRTestDto = infantPCRTestDto;
       objValues.infantPCRTestDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantPCRTestDto.infantHospitalNumber =
         infantArvDto.infantHospitalNumber;
+      }
+     
 
       objValues.infantRapidAntiBodyTestDto = infantRapidTestDTO;
       objValues.infantVisitRequestDto = infantVisitRequestDto;

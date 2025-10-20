@@ -124,7 +124,6 @@ const LabourinfantInfo = (props) => {
     bodyWeight: "",
     uuid: patientObj.ancUuid,
     dateOfDelivery: "",
-    infantArvDto: "",
     ctxStatus: "",
     // hospitalNumber: patientObj?.hospitalNumber,
     hospitalNumber: "",
@@ -133,6 +132,30 @@ const LabourinfantInfo = (props) => {
       : props.patientObj.personUuid
       ? props.patientObj.personUuid
       : props.patientObj.uuid,
+     infantPCRTestDto:  {
+              ageAtTest: "",
+              ancNumber: '',
+              dateResultReceivedAtFacility: "",
+              dateResultReceivedByCaregiver: "",
+              dateSampleCollected: "",
+              dateSampleSent: "",
+              infantHospitalNumber: '',
+              results: "",
+              testType: "",
+
+  },
+      infantArvDto: {
+    ageAtCtx: "",
+    ancNumber: '',
+    arvDeliveryPoint: "",
+    infantArvTime: "",
+    infantArvType: "",
+    infantHospitalNumber:'',
+    dateOfCtx: "",
+    dateOfArv: "",
+  },
+
+      
   });
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
     ageAtTest: "",
@@ -322,10 +345,10 @@ const LabourinfantInfo = (props) => {
       let weeks = calculateAgeInWeek(infantInfo.dateOfDelivery);
     //  weeks < 7
       if (weeks < 7) {
-        setInfantPCRTestDto({
-          ...infantPCRTestDto,
-          testType: "First PCR",
-        });
+        // setInfantPCRTestDto({
+        //   ...infantPCRTestDto,
+        //   testType: "First PCR",
+        // });
         axios
           .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -339,10 +362,10 @@ const LabourinfantInfo = (props) => {
       }
 
       if (weeks > 11) {
-        setInfantPCRTestDto({
-          ...infantPCRTestDto,
-          testType: "Second PCR",
-        });
+        // setInfantPCRTestDto({
+        //   ...infantPCRTestDto,
+        //   testType: "Second PCR",
+        // });
         axios
           .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -442,7 +465,7 @@ const LabourinfantInfo = (props) => {
       let weeks = calculateAgeInWeek(e.target.value);
 
       if (weeks < 7) {
-        setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
+        // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
         axios
           .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -455,7 +478,7 @@ const LabourinfantInfo = (props) => {
           });
       }
       if (weeks > 11) {
-        setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
+        // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
         axios
           .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -496,6 +519,10 @@ const LabourinfantInfo = (props) => {
     temp.sex = infantInfo.sex ? "" : "This field is required";
     infantInfo.ctxStatus === "YES" && ( temp.dateOfCtx =infantArvDto.dateOfCtx? "" : "This field is required");
     infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+    infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.infantArvType = infantArvDto.infantArvType? "" : "This field is required");
+
+    infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");
+    infantPCRTestDto.testType !== "" && ( temp.dateSampleSent =infantPCRTestDto.dateSampleSent ? "" : "This field is required");
 
     //temp.bookingStatus = infantInfo.bookingStatus ? "" : "This field is required"
     setErrors({
@@ -508,8 +535,19 @@ const LabourinfantInfo = (props) => {
     e.preventDefault();
     if (validate()) {
       setSaving(true);
-      infantInfo.infantArvDto = infantArvDto;
-      infantInfo.infantPCRTestDto = infantPCRTestDto;
+
+      if(infantPCRTestDto.testType &&  infantPCRTestDto.dateSampleCollected && infantPCRTestDto.dateSampleSent ){
+         
+        infantInfo.infantPCRTestDto = infantPCRTestDto;
+
+      }
+
+
+
+      if(infantArvDto.infantArvType){
+         infantInfo.infantArvDto = infantArvDto;
+
+      }
 
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios

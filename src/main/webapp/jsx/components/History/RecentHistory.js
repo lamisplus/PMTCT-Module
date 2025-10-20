@@ -37,7 +37,6 @@ const RecentHistory = (props) => {
  const [unknownStatus, setUnknownStatus] =useState(props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown");
     const [showHTSStatus, setShowHTSStatus] = useState(props.lastestHivStatus !== "Unknown"? false : unknownStatus);
     
-  console.log(props);
   useEffect(() => {
     if (props?.allEntryPoint) {
       // getPatientEntryType();
@@ -750,7 +749,7 @@ const RecentHistory = (props) => {
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
-              {showHTSStatus ? (
+              {props.checkForRetesting ? (
                 <b>Patient has no HTS record. Please refer for testing...</b>
               ) : (
                 ""

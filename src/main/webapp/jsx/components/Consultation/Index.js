@@ -81,7 +81,6 @@ const ClinicVisitPage = (props) => {
   
   useEffect(() => {
     setKey(props.activeContent.activeTab);
-  console.log("props.maternalOutcome", props.maternalOutcome)
     if(props.activeContent.actionType === "create"){
         if(props.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||   props.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_OUT" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"){
             setShowMaternalVisit(false)
@@ -113,8 +112,7 @@ const ClinicVisitPage = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-                  {  console.log("eventKey",props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome))
-}
+
 
 {/*  */}
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">
