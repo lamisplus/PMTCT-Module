@@ -348,7 +348,12 @@ const PmtctHtsForm = (props) => {
 
           if(response.data){
            setLastPmtctHtsRecord(response.data)
-
+          if(props.onEnrollPatient && response?.data?.id && response?.data?.finalResult === "Negative" ){
+          
+              toast.info("Last HIV test was " + response?.data?.finalResult, {
+                position: toast.POSITION.TOP_RIGHT,
+          });
+              }
           }
       })
       .catch((error) => {
@@ -413,7 +418,7 @@ const getFinalResult= ()=>{
   const getStageOfPregnancy = (testSetting, testEntryPoint, testEntryPointValue) => {
 
 
-           let gestationalAge=calculateGestationalAge2(payload.dateOfHivTest)
+     let gestationalAge=calculateGestationalAge2(payload.dateOfHivTest)
             
       if(props?.patientObj?.ancNo && props?.patientObj?.gaweeks  && testSetting.includes("_ANC") && gestationalAge){
 
@@ -459,12 +464,6 @@ const getFinalResult= ()=>{
       );
     } 
 
-    if(props.onEnrollPatient && lastPmtctHtsRecord?.id && lastPmtctHtsRecord?.finalResult === "Negative"){
-    
-         toast.info("Last HIV test was Negative", {
-          position: toast.POSITION.BOTTOM_CENTER,
-    });
-        }
   }, [props?.activeContent]);
 
   const viewPmtctHtsRecord = (id) => {
@@ -474,6 +473,8 @@ const getFinalResult= ()=>{
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
+        
+
         setPayload({
           dateOfHivTest: response.data.dateOfHivTest,
           testEntryPoint: response.data.testEntryPoint,
@@ -695,7 +696,6 @@ const filteredData = response.data.filter(item =>
       });
   };
 
-     console.log('payload', payload)
 
   const handleInputChange = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
@@ -790,12 +790,15 @@ const filteredData = response.data.filter(item =>
         setConfirmatoryTest2({...confirmatoryTest2, dateOfTest: ''})
         setTieBreaker2({...tieBreaker2, dateOfTest: ''})
       setErrors({ ...errors,  dateOfHivTest: response.data && existingDate !== dateOfHivTest ? "Date already exist": '' });
+   
 
-      if(lastPmtctHtsRecord?.dateOfHivTest){
+      if(lastPmtctHtsRecord?.dateOfHivTest !== existingDate){
        validateHIVRetestDate(dateOfHivTest)
 
       }   
+       if(props?.patientObj?.ancNo){
 
+          calculateStageOfPregnancy(dateOfHivTest)}
       })
       .catch((error) => {
         //console.log(error);
@@ -953,80 +956,88 @@ const filteredData = response.data.filter(item =>
   };
 
 
+
+  function calculateStageOfPregnancy(newTestDate) {
+      let gestationalAge= calculateGestationalAge2(newTestDate)
+                        // Determine trimesters
+                        const getTrimester = (gestationalAge) => {
+                          if (gestationalAge >= 0 && gestationalAge <= 12) return "first trimester";
+                          if (gestationalAge >= 13 && gestationalAge <= 24) return "second trimester";
+                          if (gestationalAge >= 25 && gestationalAge <= 40) return "third trimester";
+                          return "Unknown";
+                        };
+
+                        const lastTrimester =lastPmtctHtsRecord?.stageOfPregnancy
+                        const newTrimester = getTrimester(gestationalAge);
+                        const isSameTrimester = lastTrimester === newTrimester
+
+
+                          if ( isSameTrimester) {
+                              setValidateHIVRetest({
+                              message: `Cannot document HIV test. Test is in the same trimester (${newTrimester}).`,
+                              isValid: false, 
+                              showError: true
+
+                          })
+                          return;
+                }
+
+
+
+         
+  }
+
+
+
+
+
   function validateHIVRetestDate(newTestDate) {
 
-  let lastTestDate= lastPmtctHtsRecord?.dateOfHivTest
+                let lastTestDate= lastPmtctHtsRecord?.dateOfHivTest
 
 
-  // Parse dates using moment
-  const newDate = moment(newTestDate);
-  const lastDate = moment(lastTestDate);
+                // Parse dates using moment
+                const newDate = moment(newTestDate);
+                const lastDate = moment(lastTestDate);
 
- 
+              
 
-  // Check if new test is before or same as last test
-  if (newDate.isSameOrBefore(lastDate)) {
-    setValidateHIVRetest({
-        message: "New test date must be after the last test date",
-        isValid: false, 
-        showError: true
+                // Check if new test is before or same as last test
+                if (newDate.isSameOrBefore(lastDate)) {
+                  setValidateHIVRetest({
+                      message: `New test date must be after the last test date,  ${lastTestDate}` ,
+                      isValid: false, 
+                      showError: true
 
-    })
-    return;
-  }
-
-
-  // Calculate difference in days
-  const daysDifference = newDate.diff(lastDate, 'days');
-  const isWithinOneMonth = daysDifference < 30;
-
-  if (isWithinOneMonth ) {
-        setValidateHIVRetest({
-         message: `Cannot document HIV test. Test is within 1 month (${daysDifference} days) of last test.`,
-        isValid: false, 
-        showError: true
-
-    })
-    return;
-  }
+                  })
+                  return;
+                }
 
 
-  let gestationalAge= calculateGestationalAge(newTestDate)
-  if(props?.patientObj?.ancNo){
+                // Calculate difference in days
+                const daysDifference = newDate.diff(lastDate, 'days');
+                const isWithinOneMonth = daysDifference < 30;
 
-          // Determine trimesters
-          const getTrimester = (gestationalAge) => {
-            if (gestationalAge >= 0 && gestationalAge <= 12) return "first trimester";
-            if (gestationalAge >= 13 && gestationalAge <= 24) return "second trimester";
-            if (gestationalAge >= 25 && gestationalAge <= 40) return "third trimester";
-            return "Unknown";
-          };
+                if (isWithinOneMonth ) {
+                      setValidateHIVRetest({
+                      message: `Cannot document HIV test. Test is within 1 month,  (${daysDifference} days) of last test.`,
+                      isValid: false, 
+                      showError: true
 
-          const lastTrimester =lastPmtctHtsRecord?.stageOfPregnancy
-          const newTrimester = getTrimester(gestationalAge);
-          const isSameTrimester = lastTrimester === newTrimester
-
-
-            if ( isSameTrimester) {
-                setValidateHIVRetest({
-                message: `Cannot document HIV test. Test is in the same trimester (${newTrimester}).`,
-                isValid: false, 
-                showError: true
-
-            })
-            return;
-  }
+                  })
+                  return;
+                }
 
 
+          
+                  setValidateHIVRetest({
+                      message: "HIV test date is valid", 
+                      isValid: true,
+                      showError: false
 
-}
-     setValidateHIVRetest({
-        message: "HIV test date is valid", 
-         isValid: true,
-        showError: false
+                  })
 
-    })
-
+  
 }
 
   /**** Submit Button Processing  */
@@ -1061,7 +1072,7 @@ const filteredData = response.data.filter(item =>
           .then((response) => {
             setSaving(false);
             toast.success("Record updated successful", {
-              position: toast.POSITION.BOTTOM_CENTER,
+              position: toast.POSITION.TOP_RIGHT,
             });
             props.setActiveContent({
               ...props.activeContent,
@@ -1071,7 +1082,7 @@ const filteredData = response.data.filter(item =>
           .catch((error) => {
             setSaving(false);
             toast.error("Something went wrong", {
-              position: toast.POSITION.BOTTOM_CENTER,
+              position: toast.POSITION.TOP_RIGHT,
             });
           });
       } else {
@@ -1083,7 +1094,7 @@ const filteredData = response.data.filter(item =>
           .then((response) => {
             setSaving(false);
             toast.success("Enrollment save successful", {
-              position: toast.POSITION.BOTTOM_CENTER,
+              position: toast.POSITION.TOP_RIGHT,
             });
             if (props.handleRoute && props.onEnrollPatient) {
               let data = {
@@ -1112,7 +1123,7 @@ const filteredData = response.data.filter(item =>
             console.log(error);
             setSaving(false);
             toast.error("Something went wrong", {
-              position: toast.POSITION.BOTTOM_CENTER,
+              position: toast.POSITION.TOP_RIGHT,
             });
           });
       }
@@ -1120,7 +1131,7 @@ const filteredData = response.data.filter(item =>
 
     if(!validateHIVRetest.isValid){
    toast.error(validateHIVRetest.message, {
-              position: toast.POSITION.BOTTOM_CENTER,
+              position: toast.POSITION.TOP_RIGHT,
             });
     }
   };
