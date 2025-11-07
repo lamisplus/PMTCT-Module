@@ -433,7 +433,7 @@ const ClinicVisit = (props) => {
 
 
       if(latestPCR?.results !== "INFANT_PCR_RESULT_POSITIVE"){
-        let pcrRes= latestPCR.results.includes("POSITIVE")? "Positive": latestPCR.results.includes("NEGATIVE")? "Negtive": "Indeterminate"
+        let pcrRes= latestPCR?.results?.includes("POSITIVE")? "Positive": latestPCR?.results?.includes("NEGATIVE")? "Negative": "Indeterminate"
         setPcrMessage(`Last PCR test result is ${pcrRes}, reconfirm input`)
         handleOpen()
       }
@@ -527,8 +527,8 @@ const ClinicVisit = (props) => {
                 if(theindex < orderOfPCR.length  ){
                   pcrType.map((each, index )=>{
 
-                    if(each.code.includes( orderOfPCR[theindex])){
-                      nextPCR =each  
+                    if(each.code?.includes( orderOfPCR[theindex])){
+                      nextPCR =each
                       setExpectedPCR(each.code)
                     }
 
@@ -546,8 +546,8 @@ const ClinicVisit = (props) => {
 
     }else{
         pcrType.map((each, index )=>{
-          if(each.display.includes("1ST_PCR")){
-            nextPCR =each  
+          if(each.display?.includes("1ST_PCR")){
+            nextPCR =each
             setExpectedPCR(each.code)
           }
     })
@@ -701,9 +701,9 @@ const ClinicVisit = (props) => {
               })
               .then((response) => {
             setLatestPCR(response.data)
-          // check if the last PCR is Confirmatory and positive  
+          // check if the last PCR is Confirmatory and positive
 
-          if(response?.data && response?.data?.results.includes("POSITIVE") && response?.data?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
+          if(response?.data && response?.data?.results?.includes("POSITIVE") && response?.data?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
           //Deactive the whole form and display the child's HIV positive status on child's dashboard
 
           setShowInfantVist(false)
@@ -717,15 +717,15 @@ const ClinicVisit = (props) => {
            let newList =newPCRList.filter((each, index)=>{
 
                   return each.code !== "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"
-                  
+
 
                 })
 
           newPCRList=newList
           }
 
-            //check if the last PCR is positive then set the PCRType to confirmatory 
-            if(response?.data && response?.data?.results.includes("POSITIVE") &&  !props?.activeContent?.id ){
+            //check if the last PCR is positive then set the PCRType to confirmatory
+            if(response?.data && response?.data?.results?.includes("POSITIVE") &&  !props?.activeContent?.id ){
               newPCRList.map((each, index)=>{
 
                   if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
@@ -1141,7 +1141,7 @@ const ClinicVisit = (props) => {
     setChoosenInfant(obj);
     getLatestPCR(obj.hospitalNumber)
     getLatestRapidTest(obj.hospitalNumber, obj.personUuid)
-    setInfantArvDto({...infantArvDto,ageAtCtx: obj.infantArvDto.ageAtCtx , dateOfCtx: obj.infantArvDto.dateOfCtx})
+    setInfantArvDto({...infantArvDto,ageAtCtx: obj.infantArvDto?.ageAtCtx || "" , dateOfCtx: obj.infantArvDto?.dateOfCtx || ""})
     // setInfantVisitRequestDto({...infantVisitRequestDto, ctxStatus: obj.ctxStatus})
     let weeks = calculateAgeInWeek(obj.dateOfDelivery);
     setWeeksValue(weeks);

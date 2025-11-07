@@ -117,6 +117,7 @@ const Patients = (props) => {
           },
           { title: "Sex", field: "gender", filtering: false },
           { title: "Age", field: "age", filtering: false },
+          { title: "Pregnancy Count", field: "pregnancy_count", filtering: false },
           //{ title: "Enrollment Status", field: "v_status", filtering: false },
           //{ title: "ART Number", field: "v_status", filtering: false },
           // { title: "ART Status", field: "status", filtering: false },
@@ -158,6 +159,7 @@ const Patients = (props) => {
                         : calculate_age(
                             moment(row.dateOfBirth).format("DD-MM-YYYY")
                           ),
+                    pregnancy_count: row.pregnancyCount || 0,
 
                     //status: (<Label color="blue" size="mini">{row.currentStatus}</Label>),
                     //enroll-patient
@@ -203,7 +205,7 @@ const Patients = (props) => {
                                 fontWeight: "bolder",
                               }}
                             >
-                              Enroll Patient
+                              {row.hasExistingEnrollment ? "Re-enroll Patient" : "Enroll Patient"}
                             </span>
                           </Button>
                         </ButtonGroup>

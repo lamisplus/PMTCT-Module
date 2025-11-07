@@ -177,7 +177,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
     public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
         List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
         if (CollectionUtils.isEmpty(infantList)) {
-           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No record found for Infant.");
+           return new ArrayList<>();
         }
         return infantList;
     }
@@ -347,20 +347,22 @@ private final   InfantRapidTestRepository rapidTestRepository;
     }
     public InfantPCRTestDto getLatestPCR(String infantHospitalNumber) {
         if (!infantHospitalNumber.isEmpty()) {
-            return convertInfanTPCREntityToDTO( infantPCRTestRepository.getLastPCR(infantHospitalNumber));
-        } else {
-            return new InfantPCRTestDto();
-
+            InfantPCRTest pcrTest = infantPCRTestRepository.getLastPCR(infantHospitalNumber);
+            if (pcrTest != null) {
+                return convertInfanTPCREntityToDTO(pcrTest);
+            }
         }
+        return new InfantPCRTestDto();
     }
 
     public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid) {
 
         String lastVisitId = String.valueOf(rapidTestRepository.getLastInfantVisit(infantHospitalNumber, motherUuid));
 
-        if(!lastVisitId.isEmpty()){
+        if(!lastVisitId.isEmpty() && !lastVisitId.equals("null")){
         InfantRapidAntiBodyTest result= rapidTestRepository.getLastInfantRapid(lastVisitId);
 
+            if(result != null){
                 InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto = new InfantRapidAntiBodyTestDto();
                 infantRapidAntiBodyTestDto.setId(result.getId());
                 infantRapidAntiBodyTestDto.setRapidTestType(result.getRapidTestType());
@@ -372,10 +374,9 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantRapidAntiBodyTestDto.setUuid(result.getUuid());
 
             return infantRapidAntiBodyTestDto;
-        }else{
-            return new InfantRapidAntiBodyTestDto();
-
+            }
         }
+        return new InfantRapidAntiBodyTestDto();
     }
 
 

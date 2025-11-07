@@ -19,4 +19,5 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String  uniqueUuid;
     @JsonIgnore
     private String uuid;
+    private Long pmtctCycleId;
 }

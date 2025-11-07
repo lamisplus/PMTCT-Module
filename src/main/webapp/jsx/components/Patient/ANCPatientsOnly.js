@@ -86,6 +86,7 @@ const Patients = (props) => {
           },
           { title: "Sex", field: "gender", filtering: false },
           { title: "Age", field: "age", filtering: false },
+          { title: "Pregnancy Count", field: "pregnancy_count", filtering: false },
           //{ title: "Enrollment Status", field: "v_status", filtering: false },
           //{ title: "ART Number", field: "v_status", filtering: false },
           // { title: "ART Status", field: "status", filtering: false },
@@ -119,6 +120,7 @@ const Patients = (props) => {
                     hospital_number: row.hospitalNumber,
                     gender: row && row.sex ? row.sex : "Female",
                     age: row.age,
+                    pregnancy_count: row.pregnancyCount || 0,
                     actions: (
                       <div>
                         <Link

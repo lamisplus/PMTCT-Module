@@ -84,7 +84,8 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                     "    full_name AS fullName, " +
                     "    pp.hospital_number AS hospitalNumber, " +
                     "    CAST(address AS TEXT) AS address, " +
-                    "    CAST(contact_point AS TEXT) AS contactPoint " +
+                    "    CAST(contact_point AS TEXT) AS contactPoint, " +
+                    "    ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount " +
                     "  FROM " +
                     "    patient_person pp " +
                     "  INNER JOIN " +
@@ -121,7 +122,8 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
             "  full_name AS fullName, " +
             "  pp.hospital_number AS hospitalNumber, " +
             "  CAST(address AS TEXT) AS address, " +
-            "  CAST(contact_point AS TEXT) AS contactPoint " +
+            "  CAST(contact_point AS TEXT) AS contactPoint, " +
+            "  ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount " +
             "FROM " +
             "  patient_person pp " +
             "INNER JOIN " +

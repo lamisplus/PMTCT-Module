@@ -43,6 +43,7 @@ public class ANCRequestDto implements Serializable
     private String treatedHepatitisC;
     private String referredHepatitisC;
     private String facilityEnrolledIn;
+    private Long pmtctCycleId;
 
 
 

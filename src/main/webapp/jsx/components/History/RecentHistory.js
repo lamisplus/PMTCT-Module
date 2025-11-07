@@ -749,7 +749,7 @@ const RecentHistory = (props) => {
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
-              {props.checkForRetesting ? (
+              {props.checkForRetesting && !recentActivities.some(activity => activity.path === "pmtct-hts") ? (
                 <b>Patient has no HTS record. Please refer for testing...</b>
               ) : (
                 ""

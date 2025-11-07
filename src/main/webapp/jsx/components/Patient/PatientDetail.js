@@ -67,7 +67,7 @@ function PatientCard(props) {
   const [allEntryPoint, setAllEntryPoint] = useState([]);
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
-  const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState('');
+  const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState("");
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
@@ -87,13 +87,15 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
-
-
   const RecentActivities = () => {
     axios
       .get(
         `${baseUrl}pmtct/anc/getAllActivities/${
-          patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid
+          patientObj.person_uuid
+            ? patientObj.person_uuid
+            : patientObj.personUuid
+            ? patientObj.personUuid
+            : patientObj.uuid
         }`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -102,10 +104,18 @@ function PatientCard(props) {
       .then((response) => {
         console.log("response", response);
         if (response?.data) {
-          const hasDeliveryActivity = response.data.some((each)=> each.activityName == "Labour and Delivery");
-            setMainDeliveryStatus(hasDeliveryActivity)
-          const hasRetestingActivity = response.data.some((each)=> each.activityName == "RETESTING"|| each.activityName === "PMTCT-HTS" );
-            setCheckForRetesting(hasRetestingActivity? false: true)
+          const hasDeliveryActivity = response.data.some(
+            (each) => each.activityName == "Labour and Delivery"
+          );
+          setMainDeliveryStatus(hasDeliveryActivity);
+          const hasRetestingActivity = response.data.some(
+            (each) =>
+              (each.activityName &&
+                each.activityName.toUpperCase().includes("RETEzzSTING")) ||
+              (each.activityName &&
+                each.activityName.toUpperCase().includes("PMTCT-HTS"))
+          );
+          setCheckForRetesting(hasRetestingActivity ? false : true);
         } else {
           setDeliveryInfo({});
         }
@@ -115,25 +125,27 @@ function PatientCard(props) {
       });
   };
 
+  const getLatestMaternalOutcome = async () => {
+    const personUuid = patientObj.person_uuid
+      ? patientObj.person_uuid
+      : patientObj.personUuid
+      ? patientObj.personUuid
+      : patientObj.uuid;
 
-     const getLatestMaternalOutcome = async() => {
-        const personUuid =   patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid
-            
-    
-        await axios
-          .get(
-            `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          )
-          .then((response) => {
-                setMaternalOutcome(response.data)    
-          })
-          .catch((error) => {
-            console.error("Error fetching confirmatory result:", error);
-          });
-      };
+    await axios
+      .get(
+        `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setMaternalOutcome(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching confirmatory result:", error);
+      });
+  };
   const POINT_ENTRY_PMTCT = () => {
     axios
       .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
@@ -147,21 +159,20 @@ function PatientCard(props) {
       });
   };
 
-
-      // BATCH API
-     const GET_CODESETS = () => {
-    
-       GET_CODESETS_IN_BATCH( "MATERNAL_OUTCOME").then((response)=>{
-          
-          localStorage.setItem("maternalOutcome", JSON.stringify(response.data.MATERNAL_OUTCOME));
-       })
-      
-      }
+  // BATCH API
+  const GET_CODESETS = () => {
+    GET_CODESETS_IN_BATCH("MATERNAL_OUTCOME").then((response) => {
+      localStorage.setItem(
+        "maternalOutcome",
+        JSON.stringify(response.data.MATERNAL_OUTCOME)
+      );
+    });
+  };
 
   useEffect(() => {
-    GET_CODESETS()
+    GET_CODESETS();
     RecentActivities();
-     getLatestMaternalOutcome();
+    getLatestMaternalOutcome();
 
     axios
       .get(`${baseUrl}patient/${patientObj?.id}`, {
@@ -177,12 +188,9 @@ function PatientCard(props) {
     POINT_ENTRY_PMTCT();
   }, []);
 
-
-      useEffect(() => {
-      getLatestMaternalOutcome();
-  
-  
-    }, [activeContent]);
+  useEffect(() => {
+    getLatestMaternalOutcome();
+  }, [activeContent]);
 
   return (
     <div className={classes.root}>
@@ -223,7 +231,6 @@ function PatientCard(props) {
             activeContent={activeContent}
             mainDeliveryStatus={mainDeliveryStatus}
             maternalOutcome={maternalOutcome}
-
           />
           <br />
 
@@ -233,7 +240,7 @@ function PatientCard(props) {
               allEntryPoint={allEntryPoint}
               patientObj={patientObj}
               setActiveContent={setActiveContent}
-            setPmtctHtsRetestingType={setPmtctHtsRetestingType}
+              setPmtctHtsRetestingType={setPmtctHtsRetestingType}
               lastestHivStatus={lastestHivStatus}
               activeContent={activeContent}
               checkForRetesting={checkForRetesting}
@@ -250,7 +257,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
-            maternalOutcome={maternalOutcome}
+              maternalOutcome={maternalOutcome}
             />
           )}
 
@@ -261,11 +268,16 @@ function PatientCard(props) {
               activeContent={activeContent}
               PmtctHtsRetestingType={PmtctHtsRetestingType}
               handleRoute={""}
-              onEnrollPatient={false}  
-               entrypointValue={patientObj.entryPoint}
+              onEnrollPatient={false}
+              entrypointValue={patientObj.entryPoint}
               patientAge={patientObj?.age}
-              personUuid={patientObj.person_uuid ? patientObj.person_uuid : patientObj.personUuid? patientObj.personUuid: patientObj.uuid}
-
+              personUuid={
+                patientObj.person_uuid
+                  ? patientObj.person_uuid
+                  : patientObj.personUuid
+                  ? patientObj.personUuid
+                  : patientObj.uuid
+              }
             />
           )}
 
@@ -281,8 +293,7 @@ function PatientCard(props) {
               hideUpdateButton={true}
               htsHivStatus={""}
               lastestConfirmatoryTest={lastestConfirmatoryTest}
-               showLastHivTestMessage={false}
-
+              showLastHivTestMessage={false}
             />
           )}
 
@@ -346,13 +357,13 @@ function PatientCard(props) {
             />
           )}
 
-           {activeContent.route === "patient-visit" && (
-                  <PatientVisits
-                    patientObj={patientObj}
-                    setActiveContent={setActiveContent}
-                    activeContent={activeContent}
-                  />
-                )}
+          {activeContent.route === "patient-visit" && (
+            <PatientVisits
+              patientObj={patientObj}
+              setActiveContent={setActiveContent}
+              activeContent={activeContent}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

@@ -30,6 +30,7 @@ public class PmtctHtsRequestDTO {
     private HivTestDto confirmatoryTest2;
     private HivTestDto tieBreaker2;
     private String finalResult;
+    private Long pmtctCycleId;
 
 
 

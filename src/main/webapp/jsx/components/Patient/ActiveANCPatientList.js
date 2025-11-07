@@ -97,6 +97,7 @@ const ANCPatients = (props) => {
       },
       { title: "Sex", field: "sex", filtering: false },
       { title: "Age", field: "age", filtering: false },
+      { title: "Pregnancy Count", field: "pregnancyCount", filtering: false },
       {
         title: "Actions",
         field: "actions",

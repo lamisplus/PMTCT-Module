@@ -1390,22 +1390,22 @@ public class ANCService {
 
         // Mother enrolled on ART after 36 weeks gestation or postpartum or at L&D
         String motherTimeOfART = pmtctEnrollmentRepository.getMotherARTInitial(personUuid);
-        if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART) ||
+        if (motherTimeOfART != null && ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART) ||
                 "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)".equals(motherTimeOfART) ||
-                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART)) {
+                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART))) {
             highRiskInfant = true;
         }
 
         // Rupture of membranes < 4hrs before delivery
         String rupOfMembrane = pmtctEnrollmentRepository.checkRuptureMembraneAt4hrs(personUuid);
-        if ("ROM_DELIVERY_INTERVAL_<4HRS".equals(rupOfMembrane)) {
+        if (rupOfMembrane != null && "ROM_DELIVERY_INTERVAL_<4HRS".equals(rupOfMembrane)) {
             highRiskInfant = true;
         }
 
         // NVP + AZT selected as ARV prophylaxis for infant
         String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(personUuid);
 
-        if (nvpAndAZT.equals("INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_")) {
+        if (nvpAndAZT != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
             highRiskInfant = true;
         }
 

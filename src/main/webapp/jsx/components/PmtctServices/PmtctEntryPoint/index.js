@@ -87,6 +87,7 @@ const PmtctEntryPoint = (props) => {
                         ...props.info,
                       },
                     }}
+                    key={i}
                   >
                     <Button
                       variant="primary"
@@ -122,6 +123,7 @@ const PmtctEntryPoint = (props) => {
                         ...props.info,
                       },
                     }}
+                    key={i}
                   >
                     <Button
                       variant="primary"
@@ -159,6 +161,7 @@ const PmtctEntryPoint = (props) => {
                       borderRadius: "3px",
                       border: "none",
                     }}
+                    key={i}
                     onChange={(e) => {
                       setPostPartumValue(e.target.value);
                       history.push({

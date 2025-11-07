@@ -31,5 +31,7 @@ public interface PatientInfo {
     String getEmploymentStatus();
     String getIdentifier();
     String getEducation();
+    Boolean getHasExistingEnrollment();
+    Long getPregnancyCount();
 
 }
