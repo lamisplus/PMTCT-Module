@@ -576,7 +576,16 @@ const UserRegistration = (props) => {
       setConfirmHTSRecord({ ...confirmHTSRecord, clientOnHTS: e.target.value });
 
       if (e.target.value === "no") {
-        toggleConfirmation();
+        // Check if patient already has positive HIV status before showing the modal
+        const hasPositiveStatus =
+          objValues.staticHivStatus?.toLowerCase() === "positive" ||
+          retrievedPatient?.hivResult?.toLowerCase() === "positive" ||
+          htsHivStatus?.toLowerCase() === "positive";
+
+        // Only show modal if patient does not have positive HIV status
+        if (!hasPositiveStatus) {
+          toggleConfirmation();
+        }
       }
     }
 

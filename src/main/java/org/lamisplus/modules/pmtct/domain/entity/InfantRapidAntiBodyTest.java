@@ -28,8 +28,4 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String  uniqueUuid;
     @Column(name = "uuid")
     private String uuid;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
-    private Long archived;
-    private Long pmtctCycleId;
 }

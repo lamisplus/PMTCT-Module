@@ -30,6 +30,5 @@ public class PmtctHtsReponseDTO {
     private HivTestDto confirmatoryTest2;
     private HivTestDto tieBreaker2;
     private String finalResult;
-    private Long pmtctCycleId;
 
 }

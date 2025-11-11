@@ -29,7 +29,6 @@ public class InfantVisit implements Serializable, Persistable<Long> {
     private String motherPersonUuid;
     @Column(name = "unique_uuid")
     private String uniqueUuid;
-    private Long pmtctCycleId;
 
 
     @Override

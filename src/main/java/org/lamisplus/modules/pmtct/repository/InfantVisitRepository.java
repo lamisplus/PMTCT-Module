@@ -31,7 +31,7 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
       @Query(value = "SELECT visit_date FROM pmtct_infant_visit WHERE infant_hospital_number=?1 ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)
     LocalDate getLatestInfantVisitDate(String infantHospitalNo);
 
-    java.util.Optional<InfantVisit> findByUniqueUuid(String uniqueUuid);
+//    java.util.Optional<InfantVisit> findByUniqueUuid(String uniqueUuid);
 
 
 }

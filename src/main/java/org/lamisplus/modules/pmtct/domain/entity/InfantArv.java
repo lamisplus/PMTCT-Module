@@ -38,10 +38,6 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private LocalDate dateOfArv;
     private Long infantId;
     private String otherProphylaxisType;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
-    private Long archived;
-    private Long pmtctCycleId;
 
 
 

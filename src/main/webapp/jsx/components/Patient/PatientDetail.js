@@ -86,44 +86,44 @@ function PatientCard(props) {
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
-
   const RecentActivities = () => {
     axios
-      .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${
-          patientObj.person_uuid
-            ? patientObj.person_uuid
-            : patientObj.personUuid
-            ? patientObj.personUuid
-            : patientObj.uuid
-        }`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        console.log("response", response);
-        if (response?.data) {
-          const hasDeliveryActivity = response.data.some(
-            (each) => each.activityName == "Labour and Delivery"
-          );
-          setMainDeliveryStatus(hasDeliveryActivity);
-          const hasRetestingActivity = response.data.some(
-            (each) =>
-              (each.activityName &&
-                each.activityName.toUpperCase().includes("RETEzzSTING")) ||
-              (each.activityName &&
-                each.activityName.toUpperCase().includes("PMTCT-HTS"))
-          );
-          setCheckForRetesting(hasRetestingActivity ? false : true);
-        } else {
-          setDeliveryInfo({});
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching recent activities:", error);
-      });
+        .get(
+            `${baseUrl}pmtct/anc/getAllActivities/${
+                patientObj.person_uuid
+                    ? patientObj.person_uuid
+                    : patientObj.personUuid
+                        ? patientObj.personUuid
+                        : patientObj.uuid
+            }`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+        )
+        .then((response) => {
+          console.log("response", response);
+          if (response?.data) {
+            const hasDeliveryActivity = response.data.some(
+                (each) => each.activityName == "Labour and Delivery"
+            );
+            setMainDeliveryStatus(hasDeliveryActivity);
+            const hasRetestingActivity = response.data.some(
+                (each) =>
+                    (each.activityName &&
+                        each.activityName.toUpperCase().includes("RETESTING")) ||
+                    (each.activityName &&
+                        each.activityName.toUpperCase().includes("PMTCT-HTS"))
+            );
+            setCheckForRetesting(hasRetestingActivity ? false : true);
+          } else {
+            setDeliveryInfo({});
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching recent activities:", error);
+        });
   };
+
 
   const getLatestMaternalOutcome = async () => {
     const personUuid = patientObj.person_uuid

@@ -25,5 +25,4 @@ public class InfantVisitResponseDto implements Serializable
     private String ageAtCtx;
     private String infantOutcomeAt18Months;
     private String uniqueUuid;
-    private Long pmtctCycleId;
 }

@@ -26,6 +26,5 @@ public interface PatientPerson {
    String getPersonUuid();
    String getAncNo();
    String getTbStatus();
-   Long getPregnancyCount();
 
 }

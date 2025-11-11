@@ -60,6 +60,5 @@ public class PmtctHts {
     @Column(name = "tie_breaker2",columnDefinition = "jsonb")
     private HivTestDto tieBreaker2;
 
-    private Long pmtctCycleId;
 
 }

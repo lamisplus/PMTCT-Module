@@ -33,6 +33,5 @@
      private String timeOfHivDiagnosis;
      private String dateOfDelivery;
      private String expectedDeliveryDate;
-     private Long pmtctCycleId;
 
  }

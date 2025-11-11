@@ -35,5 +35,4 @@ public class DeliveryResponseDto implements Serializable {
     private String referalSource;
     private String personUuid;
     private String placeOfDelivery;
-    private Long pmtctCycleId;
 }

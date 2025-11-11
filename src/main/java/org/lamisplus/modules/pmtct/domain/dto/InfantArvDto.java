@@ -28,6 +28,5 @@ public class InfantArvDto implements Serializable
     private String  uniqueUuid;
     private LocalDate dateOfCtx;
     private LocalDate dateOfArv;
-    private Long pmtctCycleId;
 
 }

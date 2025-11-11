@@ -111,13 +111,16 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setUuid(UUID.randomUUID().toString());
         pmtctEnrollment.setArchived(0L);
         pmtctEnrollment.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
+
+        // Set facility and user information from current user
+        pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
+        pmtctEnrollment.setCreatedBy(user.getUserName());
+        pmtctEnrollment.setLastModifiedBy(user.getUserName());
+
         ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
         if (anc != null) {
 //            pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
             pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
-            pmtctEnrollment.setFacilityId(anc.getFacilityId());
-            pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
-            pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
         }
 
 
@@ -402,6 +405,9 @@ private DeliveryRepository deliveryRepository;
 
     public void  updateDateOfDeliveryFromDelivery(String personUuid, String deliveryDate, Integer ga)
     {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
+
         Optional <PMTCTEnrollment> pmtctEnrollment = Optional.ofNullable(this.pmtctEnrollmentReporsitory.findPMTCTEnrollmentByPersonUuid(personUuid));
         if(pmtctEnrollment.isPresent())
         {
@@ -409,16 +415,26 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setDateOfDelivery(deliveryDate);
             pmtctEnrollment1.setGAWeeks(ga);
 
+            // Update last_modified_by on update
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
+
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
         }
     }
 
     public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto)
     {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
+
         Optional <PMTCTEnrollment> pmtctEnrollment = this.pmtctEnrollmentReporsitory.findById(id);
         if(pmtctEnrollment.isPresent())
         {
             PMTCTEnrollment pmtctEnrollment1 = pmtctEnrollment.get();
+
+            // Update last_modified_by on update
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
+
             pmtctEnrollment1.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
             pmtctEnrollment1.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
             pmtctEnrollment1.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());

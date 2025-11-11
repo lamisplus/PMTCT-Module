@@ -42,7 +42,6 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String visitStatus;
     private String transferTo;
     private LocalDate nextAppointmentDate;
-    private Long pmtctCycleId;
 
 
 

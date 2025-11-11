@@ -56,7 +56,6 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String treatedHepatitisC;
     private String referredHepatitisC;
     private String facilityEnrolledIn;
-    private Long pmtctCycleId;
 
 
 

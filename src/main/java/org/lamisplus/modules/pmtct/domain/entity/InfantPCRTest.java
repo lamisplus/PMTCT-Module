@@ -30,10 +30,6 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private String uuid;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
-    private Long archived;
-    private Long pmtctCycleId;
 
     @Override
     public boolean isNew() {
