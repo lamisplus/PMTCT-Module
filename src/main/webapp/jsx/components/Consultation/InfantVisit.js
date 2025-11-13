@@ -196,6 +196,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     ctxStatus:  "" ,
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "" ,
@@ -211,6 +212,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     dateOfCtx: "",
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -221,6 +223,7 @@ const ClinicVisit = (props) => {
     id: "",
     uuid: "",
     uniqueUuid: "",
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -236,6 +239,7 @@ const ClinicVisit = (props) => {
     id: "",
     uuid: "",
     uniqueUuid: "",
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -246,6 +250,7 @@ const ClinicVisit = (props) => {
     ancNumber: props.patientObj.ancNo,
     uniqueUuid: "",
     uuid: "",
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
 
   //Vital signs clinical decision support

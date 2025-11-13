@@ -2,6 +2,8 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
+
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data
@@ -43,6 +45,7 @@ public class ANCRequestDto implements Serializable
     private String treatedHepatitisC;
     private String referredHepatitisC;
     private String facilityEnrolledIn;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 

@@ -1010,7 +1010,6 @@ const PmtctHtsForm = (props) => {
     payload.confirmatoryTest2 = confirmatoryTest2;
     payload.tieBreaker2 = tieBreaker2;
     payload.finalResult = finalResult;
-    payload.pmtctCycleId = props?.latestPmtctCycle?.id;
 
     let finalAnswer = validate();
 
@@ -1040,6 +1039,8 @@ const PmtctHtsForm = (props) => {
             });
           });
       } else {
+            payload.pmtctCycleId = props?.latestPmtctCycle?.id;
+
         axios
           .post(`${baseUrl}pmtct/anc/pmtct-hts-enrollment`, payload, {
             headers: { Authorization: `Bearer ${token}` },

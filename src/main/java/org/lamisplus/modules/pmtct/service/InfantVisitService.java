@@ -62,6 +62,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantRapid.setResult(infantRapidDto.getResult());
         infantRapid.setUuid(UUID.randomUUID().toString());
         infantRapid.setUniqueUuid(infantRapidDto.getUniqueUuid());
+        infantRapid.setPmtctCycleId(infantRapidDto.getPmtctCycleId());
         infantRapid.setArchived(0L);
 
         return this.infantRapidTestRepository.save(infantRapid);
@@ -76,6 +77,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantRapid.setResult(infantRapidDto.getResult());
         infantRapid.setUuid(UUID.randomUUID().toString());
         infantRapid.setUniqueUuid(infantRapidDto.getUniqueUuid());
+        infantRapid.setPmtctCycleId(infantRapidDto.getPmtctCycleId());
         infantRapid.setMotherPersonUuid(motherPersonUuid);
         infantRapid.setArchived(0L);
 
@@ -100,6 +102,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
         infantArv.setDateOfArv(infantArvDto.getDateOfArv());
         infantArv.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
+        infantArv.setPmtctCycleId(infantArvDto.getPmtctCycleId());
         infantArv.setArchived(0L);
 
         return this.infantArvRepository.save(infantArv);
@@ -121,6 +124,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
         infantArv.setDateOfArv(infantArvDto.getDateOfArv());
         infantArv.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
+        infantArv.setPmtctCycleId(infantArvDto.getPmtctCycleId());
         infantArv.setMotherPersonUuid(motherPersonUuid);
         infantArv.setArchived(0L);
 
@@ -141,6 +145,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setDateSampleCollected(infantPCRTestDto.getDateSampleCollected());
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
+        infantPCRTest.setPmtctCycleId(infantPCRTestDto.getPmtctCycleId());
         infantPCRTest.setArchived(0L);
 
         return this.infantPCRTestRepository.save(infantPCRTest);
@@ -160,6 +165,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setDateSampleCollected(infantPCRTestDto.getDateSampleCollected());
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
+        infantPCRTest.setPmtctCycleId(infantPCRTestDto.getPmtctCycleId());
         infantPCRTest.setMotherPersonUuid(motherPersonUuid);
         infantPCRTest.setArchived(0L);
 
@@ -194,6 +200,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         //infantVisit.setAgeAtCtx(infantVisitRequestDto.getAgeAtCtx());
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
+        infantVisit.setPmtctCycleId(infantVisitRequestDto.getPmtctCycleId());
 
         return this.infantVisitRepository.save(infantVisit);
        // return this.infantVisitRepository.save(infantVisit);
@@ -276,6 +283,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisitResponseDto.setVisitDate(infantVisit.getVisitDate());
         infantVisitResponseDto.setVisitStatus(infantVisit.getVisitStatus());
         infantVisitResponseDto.setUniqueUuid(infantVisit.getUniqueUuid());
+        infantVisitResponseDto.setPmtctCycleId(infantVisit.getPmtctCycleId());
 
         return infantVisitResponseDto;
     }
@@ -316,6 +324,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
+        infantMotherArt.setPmtctCycleId(infantMotherArtDto.getPmtctCycleId());
         infantMotherArt.setArchived(0L);
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
@@ -329,6 +338,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
+        infantMotherArt.setPmtctCycleId(infantMotherArtDto.getPmtctCycleId());
         infantMotherArt.setMotherPersonUuid(motherPersonUuid);
         infantMotherArt.setArchived(0L);
         return this.infantMotherArtRepository.save(infantMotherArt);
@@ -484,6 +494,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
+        infantMotherArt.setPmtctCycleId(infantMotherArtDto.getPmtctCycleId());
         return infantMotherArt;
     }
 
@@ -624,6 +635,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArvDto.setAgeAtCtx(infantArv.getAgeAtCtx());
         infantArvDto.setDateOfArv(infantArv.getDateOfArv());
         infantArvDto.setOtherProphylaxisType(infantArv.getOtherProphylaxisType());
+        infantArvDto.setPmtctCycleId(infantArv.getPmtctCycleId());
         return infantArvDto;
     }
 
@@ -644,6 +656,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setDateSampleCollected(infantPCRTestDto.getDateSampleCollected());
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
+        infantPCRTest.setPmtctCycleId(infantPCRTestDto.getPmtctCycleId());
         return infantPCRTest;
     }
 
@@ -656,6 +669,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantDTO.setDateOfTest(infantRapidAntiBodyTest.getDateOfTest());
         infantDTO.setResult(infantRapidAntiBodyTest.getResult());
         infantDTO.setUniqueUuid(infantRapidAntiBodyTest.getUniqueUuid());
+        infantDTO.setPmtctCycleId(infantRapidAntiBodyTest.getPmtctCycleId());
         return infantDTO;
     }
 

@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -31,5 +32,6 @@ public class DeliveryRequestDto implements Serializable {
     private Integer numberOfInfantsDead;
     private String personUuid;
     private String placeOfDelivery;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 }

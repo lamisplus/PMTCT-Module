@@ -7,6 +7,7 @@
  import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
  import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 
+ import javax.validation.constraints.NotNull;
  import java.io.Serializable;
  import java.time.LocalDate;
 
@@ -38,6 +39,7 @@
      private String timeOfHivDiagnosis;
      private String dateOfDelivery;
      private String expectedDeliveryDate;
+     @NotNull(message = "pmtctCycleId is required")
      private Long pmtctCycleId;
 
  }

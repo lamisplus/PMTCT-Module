@@ -80,6 +80,13 @@ public class DeliveryService
         delivery.setLastModifiedBy(user.getUserName());
         delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
         delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+
+        // Set pmtctCycleId - this is now compulsory
+        if (deliveryRequestDto.getPmtctCycleId() == null) {
+            throw new IllegalArgumentException("pmtctCycleId is required for delivery");
+        }
+        delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+
         PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
 
@@ -122,6 +129,7 @@ public class DeliveryService
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
         deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
         deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
+        deliveryResponseDto.setPmtctCycleId(delivery.getPmtctCycleId());
 
         return deliveryResponseDto;
     }
@@ -252,6 +260,12 @@ public class DeliveryService
             delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
             delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+
+            // Update pmtctCycleId if provided
+            if (deliveryRequestDto.getPmtctCycleId() != null) {
+                delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+            }
+
             //check if the chld has been created
 
             boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());

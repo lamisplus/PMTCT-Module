@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -19,5 +20,6 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String  uniqueUuid;
     @JsonIgnore
     private String uuid;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 }

@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 
-
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 @Data
 public class InfantArvDto implements Serializable
@@ -28,6 +28,7 @@ public class InfantArvDto implements Serializable
     private String  uniqueUuid;
     private LocalDate dateOfCtx;
     private LocalDate dateOfArv;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 }

@@ -596,6 +596,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
         //console.log(error);
       });
   };
+            console.log("patientObj", patientObj);
+
   //FORM VALIDATION
   const validate = () => {
     let temp = { ...errors };
@@ -678,6 +680,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
           personUuid: props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : locationState.patientObj.uuid,
+          pmtctCycleId: props?.latestPmtctCycle?.id,
         };
 
         axios

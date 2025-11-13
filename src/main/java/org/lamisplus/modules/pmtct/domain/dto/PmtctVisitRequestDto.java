@@ -11,6 +11,7 @@ import org.lamisplus.modules.patient.domain.dto.ContactPointDto;
 import org.lamisplus.modules.patient.domain.dto.IdentifierDto;
 
 import javax.persistence.Column;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,5 +40,6 @@ public class PmtctVisitRequestDto implements Serializable {
     private String transferTo;
     private LocalDate nextAppointmentDate;
     private String personUuid;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 }

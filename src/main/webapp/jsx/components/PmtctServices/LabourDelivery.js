@@ -136,6 +136,7 @@ const LabourDelivery = (props) => {
       : props.patientObj.personUuid
       ? props.patientObj.personUuid
       : props.patientObj.uuid,
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
   useEffect(() => {
       GET_CODESETS()
@@ -190,8 +191,9 @@ const LabourDelivery = (props) => {
           vaginalTear: response.data.vaginalTear,
           numberOfInfantsAlive: response.data.numberOfInfantsAlive,
           numberOfInfantsDead: response.data.numberOfInfantsDead,
-          personUuid:response.data.personUuid
-      
+          personUuid:response.data.personUuid,
+          pmtctCycleId: response.data.pmtctCycleId
+
         });
       })
       .catch((error) => {

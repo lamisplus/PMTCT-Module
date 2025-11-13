@@ -7,7 +7,6 @@ import { url as baseUrl, token as token } from "./../../../api";
 import { convertMaternalCodeToValue } from "../../utils";
 import { usePermissions } from "../../../hooks/usePermissions";
 
-
 const divStyle = {
   borderRadius: "2px",
   fontSize: 14,

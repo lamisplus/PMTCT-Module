@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class InfantPCRTestDto implements Serializable
     private String results;
     private String uuid;
     private String  uniqueUuid;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 }

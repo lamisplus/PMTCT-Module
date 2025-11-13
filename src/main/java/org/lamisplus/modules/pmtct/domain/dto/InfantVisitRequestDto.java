@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data
@@ -25,6 +26,7 @@ public class InfantVisitRequestDto implements Serializable
     private String infantOutcomeAt18Months;
     private String personUuid;
     private String uniqueUuid;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 

@@ -3,6 +3,7 @@ package org.lamisplus.modules.pmtct.domain.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data
@@ -23,6 +24,7 @@ public class InfantDto implements Serializable
     private String personUuid;
     private Double bodyWeight;
     private String ctxStatus;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;

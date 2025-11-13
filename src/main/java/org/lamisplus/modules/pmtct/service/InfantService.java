@@ -77,6 +77,13 @@ private final   InfantRapidTestRepository rapidTestRepository;
         infant.setDefaultDays(0);
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
+
+        // Set pmtctCycleId - this is now compulsory
+        if (infantDto.getPmtctCycleId() == null) {
+            throw new IllegalArgumentException("pmtctCycleId is required for infant registration");
+        }
+        infant.setPmtctCycleId(infantDto.getPmtctCycleId());
+
         Infant result = infantRepository.save(infant);
 
         // Declare variables outside the if blocks
@@ -112,6 +119,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantArvDto.setUuid(infant.getMotherPersonUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
+            infantArvDto.setPmtctCycleId(infant.getPmtctCycleId());
 //        }
         return infantVisitService.save(infantArvDto);
     }
@@ -123,6 +131,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantPCRTestDto.setAncNumber(infant.getAncNo());
             infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
+            infantPCRTestDto.setPmtctCycleId(infant.getPmtctCycleId());
 //        }
         return infantVisitService.save(infantPCRTestDto);
     }
@@ -168,6 +177,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 .personUuid(infant.getMotherPersonUuid())
                 .bodyWeight(infant.getBodyWeight())
                 .ctxStatus(infant.getCtxStatus())
+                .pmtctCycleId(infant.getPmtctCycleId())
                 .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
                 .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
                 .build();
@@ -214,6 +224,11 @@ private final   InfantRapidTestRepository rapidTestRepository;
          infant.setBodyWeight(infantDto.getBodyWeight());
          infant.setCtxStatus(infantDto.getCtxStatus());
          infant.setMotherPersonUuid(infantDto.getPersonUuid());
+
+         // Update pmtctCycleId if provided
+         if (infantDto.getPmtctCycleId() != null) {
+             infant.setPmtctCycleId(infantDto.getPmtctCycleId());
+         }
 
          Infant result =  infantRepository.save(infant);
 
@@ -342,6 +357,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
         infantPCRTestDto.setResults(infantPCREntity.getResults());
         infantPCRTestDto.setUuid(infantPCREntity.getUuid());
         infantPCRTestDto.setUniqueUuid(infantPCREntity.getUniqueUuid());
+        infantPCRTestDto.setPmtctCycleId(infantPCREntity.getPmtctCycleId());
         return infantPCRTestDto;
 
     }
@@ -372,6 +388,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantRapidAntiBodyTestDto.setResult(result.getResult());
             infantRapidAntiBodyTestDto.setUniqueUuid(result.getUniqueUuid());
             infantRapidAntiBodyTestDto.setUuid(result.getUuid());
+            infantRapidAntiBodyTestDto.setPmtctCycleId(result.getPmtctCycleId());
 
             return infantRapidAntiBodyTestDto;
             }

@@ -52,6 +52,7 @@ public class PMTCTEnrollmentService {
   private final InfantVisitRepository infantVisitRepository;
 private final InfantPCRTestRepository   infantPCRTestRepository;
   private final InfantRepository infantRepository;
+  private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
 
   @Autowired
   private  DeliveryService   deliveryService;
@@ -126,9 +127,25 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
         pmtctEnrollment.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
         pmtctEnrollment.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
+
+        // Set pmtctCycleId - this is now compulsory
+        if (pmtctEnrollmentRequestDto.getPmtctCycleId() == null) {
+            throw new IllegalArgumentException("pmtctCycleId is required for PMTCT enrollment");
+        }
+        pmtctEnrollment.setPmtctCycleId(pmtctEnrollmentRequestDto.getPmtctCycleId());
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
-        return (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+        PMTCTEnrollment savedEnrollment = (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
+
+        // Update pregnancy cycle status to ACTIVE
+        Optional<PmtctPregnancyCycle> pregnancyCycleOptional = this.pmtctPregnancyCycleRepository.findById(pmtctEnrollmentRequestDto.getPmtctCycleId());
+        if (pregnancyCycleOptional.isPresent()) {
+            PmtctPregnancyCycle pregnancyCycle = pregnancyCycleOptional.get();
+            pregnancyCycle.setPmtctStatus("ACTIVE");
+            this.pmtctPregnancyCycleRepository.save(pregnancyCycle);
+        }
+
+        return savedEnrollment;
     }
 
     public String createPerson(PersonDto personDto) {
@@ -305,6 +322,7 @@ private DeliveryRepository deliveryRepository;
            pmtctEnrollmentRespondDto.setDateOfDelivery(pmtctEnrollment.getDateOfDelivery());
            pmtctEnrollmentRespondDto.setExpectedDeliveryDate(pmtctEnrollment.getExpectedDeliveryDate());
            pmtctEnrollmentRespondDto.setAncNo(pmtctEnrollment.getAncNo());
+           pmtctEnrollmentRespondDto.setPmtctCycleId(pmtctEnrollment.getPmtctCycleId());
 
 
 
@@ -438,7 +456,18 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
 
+            // Update pmtctCycleId if provided
+            if (pmtctEnrollmentRequestDto.getPmtctCycleId() != null) {
+                pmtctEnrollment1.setPmtctCycleId(pmtctEnrollmentRequestDto.getPmtctCycleId());
 
+                // Update pregnancy cycle status to ACTIVE
+                Optional<PmtctPregnancyCycle> pregnancyCycleOptional = this.pmtctPregnancyCycleRepository.findById(pmtctEnrollmentRequestDto.getPmtctCycleId());
+                if (pregnancyCycleOptional.isPresent()) {
+                    PmtctPregnancyCycle pregnancyCycle = pregnancyCycleOptional.get();
+                    pregnancyCycle.setPmtctStatus("ACTIVE");
+                    this.pmtctPregnancyCycleRepository.save(pregnancyCycle);
+                }
+            }
 
 //            check if the patient has LD record and update the GA
             Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(pmtctEnrollmentRequestDto.getPersonUuid());

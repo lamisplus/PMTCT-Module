@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -18,6 +19,7 @@ public class InfantMotherArtDto implements Serializable
     private Long regimenId;
     private String  uuid;
     private String  uniqueUuid;
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 
