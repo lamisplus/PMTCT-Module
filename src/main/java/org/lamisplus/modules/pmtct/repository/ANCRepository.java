@@ -68,75 +68,107 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 //            nativeQuery = true
 //    )
     @Query(
-            value = "SELECT p.dateOfBirth AS dateOfBirth, p.id AS id, p.personUuid AS personUuid, p.uuid AS uuid, p.personId AS personId, p.sex AS sex, p.artStartDate AS artStartDate, p.firstName AS firstName, p.surname AS surname, p.otherName AS otherName, p.fullName AS fullName, p.hospitalNumber AS hospitalNumber, CAST(p.address AS TEXT) AS address, CAST(p.contactPoint AS TEXT) AS contactPoint " +
-                    "FROM (" +
-                    "  SELECT " +
-                    "    date_of_birth AS dateOfBirth, " +
-                    "    pp.id AS id, " +
-                    "    pp.uuid AS personUuid, " +
-                    "    pa.uuid AS uuid, " +
-                    "    pa.id AS personId, " +
-                    "    sex, " +
-                    "    hac.visit_date AS artStartDate, " +
-                    "    first_name AS firstName, " +
-                    "    surname, " +
-                    "    other_name AS otherName, " +
-                    "    full_name AS fullName, " +
-                    "    pp.hospital_number AS hospitalNumber, " +
-                    "    CAST(address AS TEXT) AS address, " +
-                    "    CAST(contact_point AS TEXT) AS contactPoint, " +
-                    "    ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount " +
-                    "  FROM " +
-                    "    patient_person pp " +
-                    "  INNER JOIN " +
-                    "    pmtct_anc pa ON (pp.uuid = pa.person_uuid AND pa.archived = 0) " +
-                    "  LEFT JOIN " +
-                    " hiv_art_clinical hac ON (pp.uuid = hac.person_uuid AND hac.is_commencement = true) " +
-                    "  WHERE " +
-                    "    (first_name ILIKE :queryParam OR surname ILIKE :queryParam OR other_name ILIKE :queryParam OR full_name ILIKE :queryParam OR pp.hospital_number ILIKE :queryParam) " +
-                    "    AND pp.archived = :archived " +
-                    "    AND pp.facility_id = :facilityId " +
-                    "    AND pp.sex ILIKE 'FEMALE' " +
-                    "    AND (EXTRACT (YEAR FROM NOW()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) " +
-                    ") p " +
-                    "ORDER BY p.personId DESC",
+            value =
+                    "SELECT " +
+                            "  pp.date_of_birth AS dateOfBirth, " +
+                            "  pp.id AS id, " +
+                            "  pp.uuid AS personUuid, " +
+                            "  pa.uuid AS uuid, " +
+                            "  pa.id AS personId, " +
+                            "  pp.sex, " +
+                            "  hac.visit_date AS artStartDate, " +
+                            "  pp.first_name AS firstName, " +
+                            "  pp.surname, " +
+                            "  pp.other_name AS otherName, " +
+                            "  pp.full_name AS fullName, " +
+                            "  pp.hospital_number AS hospitalNumber, " +
+                            "  CAST(pp.address AS TEXT) AS address, " +
+                            "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                            "  COALESCE(( " +
+                            "     SELECT COUNT(*) " +
+                            "     FROM pmtct_pregnancy_cycle ppc " +
+                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "  ), 0) AS pregnancyCount " +
+                            "FROM patient_person pp " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
+                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "WHERE ( " +
+                            "   pp.first_name ILIKE ?1 OR " +
+                            "   pp.surname ILIKE ?1 OR " +
+                            "   pp.other_name ILIKE ?1 OR " +
+                            "   pp.full_name ILIKE ?1 OR " +
+                            "   pp.hospital_number ILIKE ?1 " +
+                            ") " +
+                            "AND pp.archived = ?2 " +
+                            "AND pp.facility_id = ?3 " +
+                            "AND pp.sex ILIKE 'FEMALE' " +
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "ORDER BY pa.id DESC",
+            countQuery =
+                    "SELECT COUNT(*) " +
+                            "FROM patient_person pp " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
+                            "WHERE ( " +
+                            "   pp.first_name ILIKE ?1 OR " +
+                            "   pp.surname ILIKE ?1 OR " +
+                            "   pp.other_name ILIKE ?1 OR " +
+                            "   pp.full_name ILIKE ?1 OR " +
+                            "   pp.hospital_number ILIKE ?1 " +
+                            ") " +
+                            "AND pp.archived = ?2 " +
+                            "AND pp.facility_id = ?3 " +
+                            "AND pp.sex ILIKE 'FEMALE' " +
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
             nativeQuery = true
     )
     Page<PatientPerson> getActiveOnANCBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
 
+
     //    @Query(
 //            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
 //            nativeQuery = true
-//    )
-    @Query(value = "SELECT " +
-            "  date_of_birth AS dateOfBirth, " +
-            "  pp.id AS id, " +
-            "  pp.uuid AS personUuid, " +
-            "  pa.uuid AS uuid, " +
-            "  pa.id AS personId, " +
-            "  sex, " +
-            "  hac.visit_date AS artStartDate, " +
-            "  first_name AS firstName, " +
-            "  surname, " +
-            "  other_name AS otherName, " +
-            "  full_name AS fullName, " +
-            "  pp.hospital_number AS hospitalNumber, " +
-            "  CAST(address AS TEXT) AS address, " +
-            "  CAST(contact_point AS TEXT) AS contactPoint, " +
-            "  ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount " +
-            "FROM " +
-            "  patient_person pp " +
-            "INNER JOIN " +
-            "  pmtct_anc pa ON (pp.uuid = pa.person_uuid AND pa.archived = :archived) " +
-            "  LEFT JOIN " +
-            " hiv_art_clinical hac ON (pp.uuid = hac.person_uuid AND hac.is_commencement = true) " +
-            "WHERE " +
-            "  pp.archived = 0 " +
-            "  AND pp.facility_id = :facilityId " +
-            "  AND pp.sex ILIKE 'FEMALE' " +
-            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-            "ORDER BY " +
-            "  pa.id DESC", nativeQuery = true)
+    @Query(
+            value =
+                    "SELECT " +
+                            "  pp.date_of_birth AS dateOfBirth, " +
+                            "  pp.id AS id, " +
+                            "  pp.uuid AS personUuid, " +
+                            "  pa.uuid AS uuid, " +
+                            "  pa.id AS personId, " +
+                            "  pp.sex, " +
+                            "  hac.visit_date AS artStartDate, " +
+                            "  pp.first_name AS firstName, " +
+                            "  pp.surname, " +
+                            "  pp.other_name AS otherName, " +
+                            "  pp.full_name AS fullName, " +
+                            "  pp.hospital_number AS hospitalNumber, " +
+                            "  CAST(pp.address AS TEXT) AS address, " +
+                            "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                            "  COALESCE( ( " +
+                            "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
+                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "  ), 0) AS pregnancyCount " +
+                            "FROM patient_person pp " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
+                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "WHERE pp.archived = ?1 " +
+                            "  AND pp.facility_id = ?2 " +
+                            "  AND pp.sex ILIKE 'FEMALE' " +
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "ORDER BY pa.id DESC",
+            countQuery =
+                    "SELECT COUNT(*) " +
+                            "FROM patient_person pp " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
+                            "WHERE pp.archived = ?1 " +
+                            "  AND pp.facility_id = ?2 " +
+                            "  AND pp.sex ILIKE 'FEMALE' " +
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+            nativeQuery = true
+    )
     Page<PatientPerson> getActiveOnANC(Integer archived, Long facilityId, Pageable pageable);
+
+
+
 
 }

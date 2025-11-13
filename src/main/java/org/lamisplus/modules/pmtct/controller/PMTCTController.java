@@ -36,9 +36,15 @@ public class PMTCTController {
     private final InfantVisitService infantVisitService;
 
     private final PmtctHtsService pmtctHtsService;
+
+    private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
+
     @PostMapping(value = "anc-enrollement")
-    public ResponseEntity<ANCRespondDto> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
-        //System.out.println("Doc I got here nau");
+    public ResponseEntity<?> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
+        if (ancEnrollementRequestDto.getPmtctCycleId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"pmtct cycle id is required\"}");
+        }
         return ResponseEntity.ok(ancService.ANCEnrollement(ancEnrollementRequestDto));
     }
 
@@ -505,8 +511,12 @@ public class PMTCTController {
 
 
     @PostMapping(value = "/pmtct-hts-enrollment")
-    public PmtctHtsReponseDTO pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
-        return this.pmtctHtsService.save(pmtctHtsRequestDTO);
+    public ResponseEntity<?> pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        if (pmtctHtsRequestDTO.getPmtctCycleId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"pmtct cycle id is required\"}");
+        }
+        return ResponseEntity.ok(this.pmtctHtsService.save(pmtctHtsRequestDTO));
     }
 
 
@@ -530,7 +540,11 @@ public class PMTCTController {
     }
 
     @PutMapping(value = "update-pmtct-hts-enrollment/{id}")
-    public ResponseEntity<PmtctHtsRequestDTO> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+    public ResponseEntity<?> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        if (pmtctHtsRequestDTO.getPmtctCycleId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"pmtct cycle id is required\"}");
+        }
         return ResponseEntity.ok(pmtctHtsService.updatePmtctHts(id, pmtctHtsRequestDTO));
     }
 
@@ -587,6 +601,46 @@ public class PMTCTController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    @PostMapping(value = "pregnancy-cycle")
+    public ResponseEntity<?> createPregnancyCycle(@RequestBody PmtctPregnancyCycleRequestDto requestDto) {
+        if (requestDto.getPersonUuid() == null || requestDto.getPersonUuid().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"person_uuid is not provided\"}");
+        }
+
+        PmtctPregnancyCycleResponseDto response = pmtctPregnancyCycleService.save(requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "get-latest-pregnancy-cycle")
+    public ResponseEntity<?> getLatestPregnancyCycle(@RequestParam String personUuid) {
+        if (personUuid == null || personUuid.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"person_uuid is required\"}");
+        }
+
+        PmtctPregnancyCycleResponseDto cycle = pmtctPregnancyCycleService.getLatestCycleByPersonUuid(personUuid);
+
+        if (cycle == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"message\": \"No pregnancy cycle found for this patient\"}");
+        }
+
+        return ResponseEntity.ok(cycle);
+    }
+
+    @GetMapping(value = "pregnancy-cycles")
+    public ResponseEntity<?> getAllPregnancyCycles(@RequestParam String personUuid) {
+        if (personUuid == null || personUuid.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"person_uuid is required\"}");
+        }
+
+        List<PmtctPregnancyCycleResponseDto> cycles = pmtctPregnancyCycleService.getAllCyclesByPersonUuid(personUuid);
+
+        return ResponseEntity.ok(cycles);
     }
 
 }

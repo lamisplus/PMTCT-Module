@@ -13,6 +13,7 @@ const PmtctEntryPoint = (props) => {
 
   const history = useHistory();
 
+
   const { hasPermission, hasRDErole } = usePermissions();
 
 
@@ -62,7 +63,7 @@ const PmtctEntryPoint = (props) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h4> </h4>
+          {/* <h4>Type: {props?.info?.patientObj?.hasExistingEnrollment ? 'Re-enrollment': 'New Enrollment'}</h4> */}
 
           <div
             className=" "
@@ -72,10 +73,9 @@ const PmtctEntryPoint = (props) => {
               alignItems: "center",
             }}
           >
-
             {/* /  */}
             {entryPoint.map((each, i) => {
-              if (each.display === "ANC" && permissions.genAndANC ) {
+              if (each.display === "ANC" && permissions.genAndANC) {
                 return (
                   <Link
                     to={{
@@ -111,7 +111,7 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "L&D" && permissions.genAndPmtct ) {
+              } else if (each.display === "L&D" && permissions.genAndPmtct) {
                 return (
                   <Link
                     to={{
@@ -147,7 +147,10 @@ const PmtctEntryPoint = (props) => {
                     </Button>
                   </Link>
                 );
-              } else if (each.display === "Post-Partum"  && permissions.genAndPmtct) {
+              } else if (
+                each.display === "Post-Partum" &&
+                permissions.genAndPmtct
+              ) {
                 return (
                   <select
                     style={{

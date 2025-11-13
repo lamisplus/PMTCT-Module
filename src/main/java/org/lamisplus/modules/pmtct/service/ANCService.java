@@ -77,6 +77,9 @@ public class ANCService {
 
     private final DeliveryRepository deliveryRepository;
 
+    @Autowired
+    private PmtctPregnancyCycleService pmtctPregnancyCycleService;
+
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
@@ -434,6 +437,7 @@ public class ANCService {
         } else {
             // Integer rec = ancRepository.getTotalAnc();
             //if (rec >= 1) {
+            System.out.println("mycurrentOrganisationUnitId " + currentOrganisationUnitId);
             persons = pmtctEnrollmentReporsitory.findFemalePerson(0, currentOrganisationUnitId, paging);
             //} else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
         }
@@ -564,9 +568,9 @@ public class ANCService {
         return pmtctPersonDto;
     }
 
-    public PersonResponseDto getDtoFromPerson(PatientInfo person) {
+    public PMTCTPersonResponseDto getDtoFromPerson(PatientInfo person) {
         //Log.info("person {}", person);
-        PersonResponseDto personResponseDto = new PersonResponseDto();
+        PMTCTPersonResponseDto personResponseDto = new PMTCTPersonResponseDto();
         personResponseDto.setId(person.getId());
         personResponseDto.setNinNumber(person.getNinNumber());
         personResponseDto.setEmrId(person.getEmrId());
@@ -591,6 +595,8 @@ public class ANCService {
         personResponseDto.setDeceasedDateTime(person.getDeceasedDateTime());
         personResponseDto.setOrganization(parseJsonString(person.getOrganization()));
         personResponseDto.setUuid(person.getUuid());
+        personResponseDto.setPregnancyCount(person.getPregnancyCount());
+        personResponseDto.setHasExistingEnrollment(person.getHasExistingEnrollment());
         String hivStatus = "Unknown";
         try {
             hivStatus = this.getDynamicHivStatus(person.getUuid());
@@ -834,6 +840,7 @@ public class ANCService {
             anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
+            anc.setPmtctCycleId(ancEnrollementRequestDto.getPmtctCycleId());
 
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
@@ -867,7 +874,15 @@ public class ANCService {
                 anc.setPartnerNotification(partnerNotificationInfoJsonNode);
             }
         }
-        return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
+
+        ANC savedAnc = ancRepository.save(anc);
+
+        // Update pregnancy cycle status to ACTIVE
+        if (ancEnrollementRequestDto.getPmtctCycleId() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(ancEnrollementRequestDto.getPmtctCycleId());
+        }
+
+        return getANCRespondDtoFromPersonAndAnc(person, savedAnc);
     }
 
     public ANCRespondDto getANCRespondDtoFromPersonAndAnc(Person persons, ANC anc) {
@@ -1006,7 +1021,7 @@ public class ANCService {
         pmtctWithPersonRespondDto.setEntryPoint(person.getEntryPoint());
         pmtctWithPersonRespondDto.setTbStatus(person.getTbStatus());
         pmtctWithPersonRespondDto.setPmtctRegStatus(true);
-
+        pmtctWithPersonRespondDto.setPregnancyCount(person.getPregnancyCount());
         Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
         if(ancs.isPresent()) {
             ANC anc = ancs.get();
@@ -1077,7 +1092,7 @@ public class ANCService {
             ancRespondDto.setHivStatus(anc.getStaticHivStatus());
             ancRespondDto.setArtStartDate(person.getArtStartDate());
             ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
-
+            ancRespondDto.setPregnancyCount(person.getPregnancyCount());
             String hivStatus = "Unknown";
             try {
                 hivStatus = this.getDynamicHivStatus(anc.getPersonUuid());

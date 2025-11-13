@@ -33,19 +33,226 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
 
 
-
-  @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex,first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint, ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
+  @Query(
+          value =
+                  "SELECT " +
+                          "  pa.entry_point AS entryPoint, " +
+                          "  pa.tb_status AS tbStatus, " +
+                          "  pa.anc_no AS ancNo, " +
+                          "  pa.art_start_date AS artStartDate, " +
+                          "  pp.date_of_birth AS dateOfBirth, " +
+                          "  pp.id AS personId, " +
+                          "  pp.uuid AS personUuid, " +
+                          "  pa.uuid AS uuid, " +
+                          "  pa.id AS id, " +
+                          "  pa.hiv_status AS hivStatus, " +
+                          "  pp.sex, " +
+                          "  pp.first_name AS firstName, " +
+                          "  pp.surname, " +
+                          "  pp.other_name AS otherName, " +
+                          "  pp.full_name AS fullName, " +
+                          "  pp.hospital_number AS hospitalNumber, " +
+                          "  CAST(pp.address AS TEXT) AS address, " +
+                          "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                          "  COALESCE( ( " +
+                          "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
+                          "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "  ), 0) AS pregnancyCount " +
+                          "FROM patient_person pp " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "WHERE pp.archived = ?1 " +
+                          "  AND pp.facility_id = ?2 " +
+                          "  AND pp.sex ILIKE 'FEMALE' " +
+                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                          "ORDER BY pa.id DESC",
+          countQuery =
+                  "SELECT COUNT(*) " +
+                          "FROM patient_person pp " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "WHERE pp.archived = ?1 " +
+                          "  AND pp.facility_id = ?2 " +
+                          "  AND pp.sex ILIKE 'FEMALE' " +
+                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+          nativeQuery = true
+  )
   Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
 
-  @Query(value = "SELECT pa.entry_point AS entryPoint, pa.tb_status AS tbStatus, pa.anc_no AS ancNo, pa.art_start_date AS ArtStartDate, date_of_birth AS dateOfBirth, pp.id AS personId, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS Id, pa.hiv_status AS hivStatus, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint, ((SELECT COUNT(*) FROM pmtct_anc pan WHERE pan.person_uuid = pp.uuid AND pan.archived = 0) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = 0)) AS pregnancyCount FROM patient_person pp INNER JOIN pmtct_enrollment pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE (first_name ilike ?1 OR surname ilike ?1 OR other_name ilike ?1 OR full_name ilike ?1 OR pp.hospital_number ilike ?1) AND pp.archived=?2 AND pp.facility_id=?3 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5 ) ORDER BY pa.id desc", nativeQuery = true)
+
+  @Query(
+          value =
+                  "SELECT " +
+                          "  pa.entry_point AS entryPoint, " +
+                          "  pa.tb_status AS tbStatus, " +
+                          "  pa.anc_no AS ancNo, " +
+                          "  pa.art_start_date AS artStartDate, " +
+                          "  pp.date_of_birth AS dateOfBirth, " +
+                          "  pp.id AS personId, " +
+                          "  pp.uuid AS personUuid, " +
+                          "  pa.uuid AS uuid, " +
+                          "  pa.id AS id, " +
+                          "  pa.hiv_status AS hivStatus, " +
+                          "  pp.sex, " +
+                          "  pp.first_name AS firstName, " +
+                          "  pp.surname, " +
+                          "  pp.other_name AS otherName, " +
+                          "  pp.full_name AS fullName, " +
+                          "  pp.hospital_number AS hospitalNumber, " +
+                          "  CAST(pp.address AS TEXT) AS address, " +
+                          "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                          "  COALESCE( ( " +
+                          "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
+                          "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "  ), 0) AS pregnancyCount " +
+                          "FROM patient_person pp " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "WHERE ( " +
+                          "   pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.other_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.hospital_number ILIKE CONCAT('%', ?1, '%') " +
+                          ") " +
+                          "AND pp.archived = ?2 " +
+                          "AND pp.facility_id = ?3 " +
+                          "AND pp.sex ILIKE 'FEMALE' " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                          "ORDER BY pa.id DESC",
+          countQuery =
+                  "SELECT COUNT(*) " +
+                          "FROM patient_person pp " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "WHERE ( " +
+                          "   pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.other_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
+                          "   pp.hospital_number ILIKE CONCAT('%', ?1, '%') " +
+                          ") " +
+                          "AND pp.archived = ?2 " +
+                          "AND pp.facility_id = ?3 " +
+                          "AND pp.sex ILIKE 'FEMALE' " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+          nativeQuery = true
+  )
   Page<PatientPerson> getActiveOnPMTCTBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
 
-  @Query(value = "SELECT active, deceased_date_time, deceased, date_of_registration AS dateOfRegistration, CAST(identifier AS TEXT) AS identifier, CAST(education AS TEXT) AS education, CAST(employment_status AS TEXT) AS employmentStatus, CAST(marital_status AS TEXT) AS maritalStatus, CAST(gender AS TEXT) AS gender, CAST(organization AS TEXT) AS organization, CAST(contact_point AS TEXT) AS contactPoint, CAST(address AS TEXT) AS address,CAST(contact AS TEXT) AS contact, is_date_of_birth_estimated AS isDateOfBirthEstimated, facility_id AS facilityId, emr_id AS emrId, nin_number AS niNumber, date_of_birth AS dateOfBirth, pp.id, pp.uuid, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, (EXISTS (SELECT 1 FROM pmtct_anc pa WHERE pa.person_uuid = pp.uuid AND pa.archived = ?2) OR EXISTS (SELECT 1 FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = ?2)) AS hasExistingEnrollment, ((SELECT COUNT(*) FROM pmtct_anc pa WHERE pa.person_uuid = pp.uuid AND pa.archived = ?2) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = ?2)) AS pregnancyCount FROM patient_person pp WHERE pp.archived = ?2 AND pp.facility_id = ?3 AND UPPER(pp.sex) = 'FEMALE' AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 AND (pp.first_name ilike ?1 OR pp.surname ilike ?1 OR pp.other_name ilike ?1 OR pp.full_name ilike ?1 OR pp.hospital_number ilike ?1) ORDER BY pp.id DESC", nativeQuery = true)
-  Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
 
-  //@Query(value = "SELECT * FROM patient_person pp WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike '%FEMALE%' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pp.id desc", nativeQuery = true)
-  @Query(value = "SELECT active, deceased_date_time, deceased, date_of_registration AS dateOfRegistration, CAST(identifier AS TEXT) AS identifier, CAST(education AS TEXT) AS education, CAST(employment_status AS TEXT) AS employmentStatus, CAST(marital_status AS TEXT) AS maritalStatus, CAST(gender AS TEXT) AS gender, CAST(organization AS TEXT) AS organization, CAST(contact_point AS TEXT) AS contactPoint, CAST(address AS TEXT) AS address,CAST(contact AS TEXT) AS contact, is_date_of_birth_estimated AS isDateOfBirthEstimated, facility_id AS facilityId, emr_id AS emrId, nin_number AS niNumber, date_of_birth AS dateOfBirth, pp.id, pp.uuid, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, (EXISTS (SELECT 1 FROM pmtct_anc pa WHERE pa.person_uuid = pp.uuid AND pa.archived = ?1) OR EXISTS (SELECT 1 FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = ?1)) AS hasExistingEnrollment, ((SELECT COUNT(*) FROM pmtct_anc pa WHERE pa.person_uuid = pp.uuid AND pa.archived = ?1) + (SELECT COUNT(*) FROM pmtct_enrollment pe WHERE pe.person_uuid = pp.uuid AND pe.archived = ?1)) AS pregnancyCount FROM patient_person pp WHERE pp.archived = ?1 AND pp.facility_id = ?2 AND UPPER(pp.sex) = 'FEMALE' AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 ORDER BY pp.id DESC", nativeQuery = true)
+//  PMTCT FROM PERSON
+@Query(
+        value =
+                "SELECT " +
+                        "pp.active, " +
+                        "pp.deceased_date_time, " +
+                        "pp.deceased, " +
+                        "pp.date_of_registration AS dateOfRegistration, " +
+                        "CAST(pp.identifier AS TEXT) AS identifier, " +
+                        "CAST(pp.education AS TEXT) AS education, " +
+                        "CAST(pp.employment_status AS TEXT) AS employmentStatus, " +
+                        "CAST(pp.marital_status AS TEXT) AS maritalStatus, " +
+                        "CAST(pp.gender AS TEXT) AS gender, " +
+                        "CAST(pp.organization AS TEXT) AS organization, " +
+                        "CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                        "CAST(pp.address AS TEXT) AS address, " +
+                        "CAST(pp.contact AS TEXT) AS contact, " +
+                        "pp.is_date_of_birth_estimated AS isDateOfBirthEstimated, " +
+                        "pp.facility_id AS facilityId, " +
+                        "pp.emr_id AS emrId, " +
+                        "pp.nin_number AS niNumber, " +
+                        "pp.date_of_birth AS dateOfBirth, " +
+                        "pp.id, " +
+                        "pp.uuid, " +
+                        "pp.sex, " +
+                        "pp.first_name AS firstName, " +
+                        "pp.surname, " +
+                        "pp.other_name AS otherName, " +
+                        "pp.full_name AS fullName, " +
+                        "pp.hospital_number AS hospitalNumber, " +
+                        "COUNT(DISTINCT ppc.id) AS pregnancyCount, " +
+                        "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment " +
+
+                        "FROM patient_person pp " +
+                        "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?2 " +
+                        "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?2 " +
+                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+
+                        "WHERE pp.archived = ?2 " +
+                        "AND pp.facility_id = ?3 " +
+                        "AND UPPER(pp.sex) = 'FEMALE' " +
+                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                        "AND (" +
+                        "  pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.other_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.hospital_number ILIKE CONCAT('%', ?1, '%')" +
+                        ") " +
+
+                        "GROUP BY " +
+                        "pp.id, pp.active, pp.deceased_date_time, pp.deceased, " +
+                        "pp.date_of_registration, pp.identifier, pp.education, " +
+                        "pp.employment_status, pp.marital_status, pp.gender, " +
+                        "pp.organization, pp.contact_point, pp.address, pp.contact, " +
+                        "pp.is_date_of_birth_estimated, pp.facility_id, pp.emr_id, " +
+                        "pp.nin_number, pp.date_of_birth, pp.uuid, pp.sex, " +
+                        "pp.first_name, pp.surname, pp.other_name, pp.full_name, pp.hospital_number " +
+                        "ORDER BY pp.id DESC",
+        nativeQuery = true
+)
+Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
+
+  @Query(
+          value =
+                  "SELECT " +
+                          "pp.active, " +
+                          "pp.deceased_date_time, " +
+                          "pp.deceased, " +
+                          "pp.date_of_registration AS dateOfRegistration, " +
+                          "CAST(pp.identifier AS TEXT) AS identifier, " +
+                          "CAST(pp.education AS TEXT) AS education, " +
+                          "CAST(pp.employment_status AS TEXT) AS employmentStatus, " +
+                          "CAST(pp.marital_status AS TEXT) AS maritalStatus, " +
+                          "CAST(pp.gender AS TEXT) AS gender, " +
+                          "CAST(pp.organization AS TEXT) AS organization, " +
+                          "CAST(pp.contact_point AS TEXT) AS contactPoint, " +
+                          "CAST(pp.address AS TEXT) AS address, " +
+                          "CAST(pp.contact AS TEXT) AS contact, " +
+                          "pp.is_date_of_birth_estimated AS isDateOfBirthEstimated, " +
+                          "pp.facility_id AS facilityId, " +
+                          "pp.emr_id AS emrId, " +
+                          "pp.nin_number AS niNumber, " +
+                          "pp.date_of_birth AS dateOfBirth, " +
+                          "pp.id, " +
+                          "pp.uuid, " +
+                          "pp.sex, " +
+                          "pp.first_name AS firstName, " +
+                          "pp.surname, " +
+                          "pp.other_name AS otherName, " +
+                          "pp.full_name AS fullName, " +
+                          "pp.hospital_number AS hospitalNumber, " +
+                          "COUNT(DISTINCT ppc.id) AS pregnancyCount, " +
+                          "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment " +
+                          "FROM patient_person pp " +
+                          "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?1 " +
+                          "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?1 " +
+                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                          "WHERE pp.archived = ?1 " +
+                          "AND pp.facility_id = ?2 " +
+                          "AND UPPER(pp.sex) = 'FEMALE' " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                          "GROUP BY " +
+                          "pp.id, pp.active, pp.deceased_date_time, pp.deceased, " +
+                          "pp.date_of_registration, pp.identifier, pp.education, " +
+                          "pp.employment_status, pp.marital_status, pp.gender, " +
+                          "pp.organization, pp.contact_point, pp.address, pp.contact, " +
+                          "pp.is_date_of_birth_estimated, pp.facility_id, pp.emr_id, " +
+                          "pp.nin_number, pp.date_of_birth, pp.uuid, pp.sex, " +
+                          "pp.first_name, pp.surname, pp.other_name, pp.full_name, pp.hospital_number " +
+                          "ORDER BY pp.id DESC",
+          nativeQuery = true
+  )
   Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);
+
+
 
   @Query(value = "SELECT CASE WHEN date_started IS NULL THEN date_of_registration ELSE date_started END AS artStartDate from hiv_enrollment WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0", nativeQuery = true)
   List<PatientArtData> getArtDate (String personUuid, Long facilityId);

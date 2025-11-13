@@ -79,9 +79,7 @@ const Home = (props) => {
                   <Tab eventKey="pmtct" title="General PMTCT Patients">
                     <PmtctPatients />
                   </Tab>
-                  {/* <Tab eventKey="visualization" title="Data Visualisation">                   
-                    <VisualisationHome />
-                  </Tab>                     */}
+               
                 </Tabs>
               </div>
             </Card.Body>

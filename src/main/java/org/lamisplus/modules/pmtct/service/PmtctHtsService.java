@@ -24,6 +24,7 @@ public class PmtctHtsService {
     private final UserService userService;
     private final PersonRepository personRepository;
     private final PmtctHtsRepository pmtctHtsRepository;
+    private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
 
     public PmtctHtsReponseDTO save(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
@@ -95,8 +96,16 @@ public class PmtctHtsService {
         pmtctHts.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
+        pmtctHts.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
 
-        return this.pmtctHtsRepository.save(pmtctHts);
+        PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
+
+        // Update pregnancy cycle status to ACTIVE
+        if (pmtctHtsRequestDTO.getPmtctCycleId() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleId());
+        }
+
+        return savedHts;
     }
 
 //
@@ -125,6 +134,7 @@ public class PmtctHtsService {
             pmtctEnrollment1.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
+            pmtctEnrollment1.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
 
 
@@ -132,6 +142,11 @@ public class PmtctHtsService {
 
 
             this.pmtctHtsRepository.save(pmtctEnrollment1);
+
+            // Update pregnancy cycle status to ACTIVE
+            if (pmtctHtsRequestDTO.getPmtctCycleId() != null) {
+                pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleId());
+            }
 
 
         }

@@ -72,6 +72,7 @@ function PatientCard(props) {
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
   const [checkForRetesting, setCheckForRetesting] = useState(true);
+  const [latestPmtctCycle, setLatestPmtctCycle] = useState({});
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -87,6 +88,28 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
+ 
+  const getLatestPmtctCycle = async () => {
+    const personUuid = patientObj.person_uuid
+      ? patientObj.person_uuid
+      : patientObj.personUuid
+      ? patientObj.personUuid
+      : patientObj.uuid;
+
+    await axios
+      .get(
+        `${baseUrl}pmtct/anc/get-latest-pregnancy-cycle?personUuid=${personUuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setLatestPmtctCycle(response.data);
+      })
+      .catch((error) => {
+        toast.error(error?.message);
+      });
+  };
   const RecentActivities = () => {
     axios
       .get(
@@ -186,10 +209,12 @@ function PatientCard(props) {
         console.error("Error fetching patient info:", error);
       });
     POINT_ENTRY_PMTCT();
+    getLatestPmtctCycle();
   }, []);
 
   useEffect(() => {
     getLatestMaternalOutcome();
+    getLatestPmtctCycle();
   }, [activeContent]);
 
   return (
@@ -218,6 +243,7 @@ function PatientCard(props) {
             setLastestConfirmatoryTest={setLastestConfirmatoryTest}
             maternalOutcome={maternalOutcome}
             setLatestHivStatus={setLatestHivStatus}
+            latestPmtctCycle={latestPmtctCycle}
           />
 
           {/* Patient Dashboard menu */}
@@ -249,6 +275,7 @@ function PatientCard(props) {
                   ? "PMTCT_ENTRY_POINT_ANC"
                   : patientObj.entryPoint
               }
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -258,6 +285,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               maternalOutcome={maternalOutcome}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -278,6 +306,7 @@ function PatientCard(props) {
                   ? patientObj.personUuid
                   : patientObj.uuid
               }
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -294,6 +323,7 @@ function PatientCard(props) {
               htsHivStatus={""}
               lastestConfirmatoryTest={lastestConfirmatoryTest}
               showLastHivTestMessage={false}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -302,6 +332,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -310,6 +341,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -319,6 +351,7 @@ function PatientCard(props) {
               patientAge={patientObj.age}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -328,6 +361,7 @@ function PatientCard(props) {
               patientAge={patientObj.age}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -337,6 +371,7 @@ function PatientCard(props) {
               patientAge={patientObj.age}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -346,6 +381,7 @@ function PatientCard(props) {
               patientAge={patientObj.age}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -354,6 +390,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
 
@@ -362,6 +399,7 @@ function PatientCard(props) {
               patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
             />
           )}
         </CardContent>

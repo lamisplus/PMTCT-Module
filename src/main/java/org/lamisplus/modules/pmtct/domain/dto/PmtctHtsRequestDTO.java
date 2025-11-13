@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data
@@ -30,6 +31,8 @@ public class PmtctHtsRequestDTO {
     private HivTestDto confirmatoryTest2;
     private HivTestDto tieBreaker2;
     private String finalResult;
+
+    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 
 

@@ -1549,7 +1549,7 @@
             -- =====================================================================
             INSERT INTO pmtct_pregnancy_cycle (
                 person_uuid,
-                pregnancy_status,
+                maternal_outcome,
                 entry_point,
                 hiv_status,
                 pregnancy_outcome,
@@ -1636,8 +1636,8 @@
             SELECT
                 ap.person_uuid,
 
-                -- pregnancy_status: From delivery.child_status, else NULL
-                d.child_status as pregnancy_status,
+                -- maternal_outcome: From delivery.child_status, else NULL
+                d.maternal_outcome as maternal_outcome,
 
                 -- entry_point: ANC if has ANC record, else map enrollment
                 CASE

@@ -65,6 +65,7 @@ public class ANCRespondDto implements Serializable {
     private String referredHepatitisC;
     private String facilityEnrolledIn;
     private Long pmtctCycleId;
+    private Long pregnancyCount;
 
 
 }

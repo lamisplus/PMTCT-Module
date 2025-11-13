@@ -4,6 +4,8 @@ import { Dropdown, Menu } from "semantic-ui-react";
 import { makeStyles } from "@material-ui/core/styles";
 import { url as baseUrl, token } from "../../../api";
 import { usePermissions } from "../../../hooks/usePermissions";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 
@@ -27,6 +29,7 @@ function SubMenu(props) {
   const [deliveryStatus, setDeliveryStatus] = useState(true);
 
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+  const [allPmtctCycleRecord, setAllPmtctCycleRecord] = useState([]);
 
 
   const [isOnPMTCT, setIsOnPMTCT] = useState(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
@@ -48,14 +51,31 @@ function SubMenu(props) {
     [hasPermission, hasRDErole]
   );
 
+
+      const getAllPmtctCycle = async () => {
+        const personUuid = patientObj.person_uuid
+          ? patientObj.person_uuid
+          : patientObj.personUuid
+          ? patientObj.personUuid
+          : patientObj.uuid;
   
-  
+        await axios
+          .get(`${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((response) => {
+            setAllPmtctCycleRecord(response.data);
+          })
+          .catch((error) => {
+            toast.error(error?.message);
+          });
+      }; 
   
   let mentalStatus = false;
   let initialEvaluationStatus = false;
   useEffect(() => {
     getLatestConfirmatoryResult();
-
+    getAllPmtctCycle();
 
     Observation();
     gender =
@@ -270,6 +290,36 @@ const showRetestingMenu = (patientHivStatus) => {
    
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
+
+        <Menu.Menu position="right" style={{ marginLeft: 'auto' }}>
+          {allPmtctCycleRecord && allPmtctCycleRecord.length > 0 && (
+            <Dropdown item text="Pregnancy Cycle" style={{ borderLeft: '2px solid rgba(255,255,255,0.3)', paddingLeft: '15px' }}>
+              <Dropdown.Menu>
+                <Dropdown.Header>Select Pregnancy Cycle</Dropdown.Header>
+                <Dropdown.Divider />
+                {allPmtctCycleRecord.map((cycle, index) => (
+                  <Dropdown.Item
+                    key={cycle.id}
+                    onClick={() => {
+                      // You can add logic here to handle cycle selection
+                      console.log('Selected cycle:', cycle);
+                    }}
+                  >
+                    <div>
+                      <strong>Cycle {index + 1}</strong>
+                      <br />
+                      <small>Status: {cycle.pmtctStatus || 'N/A'}</small>
+                      <br />
+                      <small>
+                        Created: {cycle.createdDate ? new Date(cycle.createdDate).toLocaleDateString() : 'N/A'}
+                      </small>
+                    </div>
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          )} 
+        </Menu.Menu>
       </Menu>
     </div>
   );

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -47,5 +48,8 @@ public class ANCEnrollementRequestDto{
     private String treatedHepatitisC;
     private String referredHepatitisC;
     private String facilityEnrolledIn;
+
+    @NotNull(message = "pmtctCycleId is required")
+    private Long pmtctCycleId;
 
 }

@@ -154,14 +154,22 @@ const UserRegistration = (props) => {
   const [ANCSetting, setANCSetting] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
   const [lastPmtctHtsRecord, setLastPmtctHtsRecord] = useState({
-        confirmatoryHivTest: "",
-        dateOfHivTest: "",
-        testEntryPoint: "",
-        testSetting: "",
-        initialHivTest: "",
-        stageOfPregnancy: "",
-        id: '',
-
+    confirmatoryHivTest: "",
+    dateOfHivTest: "",
+    testEntryPoint: "",
+    testSetting: "",
+    initialHivTest: "",
+    stageOfPregnancy: "",
+    id: "",
+  });
+  const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
+    personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+    maternalOutcome: "",
+    entryPoint: locationState.entrypointValue,
+    hivStatus: patientObj?.dynamicHivStatus || "",
+    pregnancyOutcome: "",
+    numberOfInfants: 0,
+    pmtctStatus: "INACTIVE",
   });
 
   //const [values, setValues] = useState([]);
@@ -188,7 +196,12 @@ const UserRegistration = (props) => {
     partnerNotification: {},
     // sourceOfReferral: "",
     staticHivStatus: patientObj?.dynamicHivStatus || "",
-    previouslyKnownHivStatus: patientObj.dynamicHivStatus === "Positive"? "Yes": patientObj.dynamicHivStatus === "Negative"?'No' :'',
+    previouslyKnownHivStatus:
+      patientObj.dynamicHivStatus === "Positive"
+        ? "Yes"
+        : patientObj.dynamicHivStatus === "Negative"
+        ? "No"
+        : "",
     currentlyOnArt: "",
 
     dateOfHepatitisB: "",
@@ -203,6 +216,7 @@ const UserRegistration = (props) => {
     treatedHepatitisC: "",
     referredHepatitisC: "",
     facilityEnrolledIn: "",
+    pmtctCycleId: "",
   });
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
   //set ro show the facility name field if is transfer in
@@ -215,39 +229,38 @@ const UserRegistration = (props) => {
 
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
 
-const getLastPmtctHtsRecord = (personUuid) => {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-  
-            if(response.data){
-             setLastPmtctHtsRecord(response.data)
-  
-            }
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-    };
+  const getLastPmtctHtsRecord = (personUuid) => {
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (response.data) {
+          setLastPmtctHtsRecord(response.data);
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
 
   useEffect(() => {
     GET_CODESETS();
 
-    let hospitalNumber
+    let hospitalNumber;
 
     if (patientObj) {
-       getLastPmtctHtsRecord(patientObj?.uuid)
+      getLastPmtctHtsRecord(patientObj?.uuid);
 
-      if(patientObj?.identifier){
-      const identifiers = patientObj.identifier;
-       hospitalNumber = identifiers.identifier.find(
-        (obj) => obj.type === "HospitalNumber");
-    }else{
-          hospitalNumber= patientObj?.hospitalNumber
-    }
+      if (patientObj?.identifier) {
+        const identifiers = patientObj.identifier;
+        hospitalNumber = identifiers.identifier.find(
+          (obj) => obj.type === "HospitalNumber"
+        );
+      } else {
+        hospitalNumber = patientObj?.hospitalNumber;
+      }
       basicInfo.dob = patientObj.dateOfBirth;
       basicInfo.firstName = patientObj.firstName;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
@@ -255,7 +268,9 @@ const getLastPmtctHtsRecord = (personUuid) => {
       basicInfo.lastName = patientObj.surname;
       basicInfo.dateOfRegistration = patientObj.dateOfRegistration;
       basicInfo.hospitalNumber =
-        hospitalNumber && typeof hospitalNumber === 'string' ? hospitalNumber : hospitalNumber?.value;
+        hospitalNumber && typeof hospitalNumber === "string"
+          ? hospitalNumber
+          : hospitalNumber?.value;
       setObjValues({
         ...objValues,
         uniqueId: hospitalNumber ? hospitalNumber.value : "",
@@ -272,54 +287,90 @@ const getLastPmtctHtsRecord = (personUuid) => {
     if (basicInfo.dateOfRegistration < basicInfo.dob) {
       alert("Date of registration can not be earlier than date of birth");
     }
-
-
   }, [patientObj, patientId, basicInfo.dateOfRegistration]);
- 
- 
- 
- 
- 
-   // BATCH API
- const GET_CODESETS = () => {
 
-   GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
+  // BATCH API
+  const GET_CODESETS = () => {
+    GET_CODESETS_IN_BATCH(
+      "ENROLLMENT_SETTING",
+      "TEST_SETTING_CPMTCT",
+      "SEX",
+      "PREGANACY_STATUS",
+      "SOURCE_REFERRAL_PMTCT"
+    ).then((response) => {
       setANCSetting(response.data.ENROLLMENT_SETTING);
-       setCommunitySetting(response.data.COMMUNITY_PMTCT);
-       getSex(response.data.SEX)
-       setPregnancyStatus(response.data.PREGANACY_STATUS);
-        setGenders(response.data.SEX);
-        setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT)
-   })
-  
+      setCommunitySetting(response.data.COMMUNITY_PMTCT);
+      getSex(response.data.SEX);
+      setPregnancyStatus(response.data.PREGANACY_STATUS);
+      setGenders(response.data.SEX);
+      setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT);
+    });
   };
 
-  
+  const createCycle = async () => {
+    let payload = {
+      personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+      maternalOutcome: "",
+      entryPoint: locationState.entrypointValue,
+      hivStatus: objValues.staticHivStatus,
+      pregnancyOutcome: "",
+      numberOfInfants: 0,
+      pmtctStatus: "INACTIVE",
+    };
 
- 
- 
+    try {
 
+     const response = await axios.post(
+       `${baseUrl}pmtct/anc/pregnancy-cycle`,
+       payload,
+       {
+         headers: { Authorization: `Bearer ${token}` },
+       }
+     );
+      if (response?.data) {
+        setPmtctCycleCreated(response.data);
+        return {
+          status: true,
+          response: response.data,
+        };
+      } else {
+        toast.error("Failed to create new PMTCT cycle: no data returned");
+        return {
+          status: false,
+          response: null,
+        };      
+     }
 
+    } catch (e) {
+      console.log(e)
+      toast.error(
+        `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
+      );
+        return {
+          status: false,
+          response: null,
+        }; 
+    }
+  };
 
   const getSex = (sexCodeSet) => {
-        let patientSex = "";
-        if (
-          patientObj.sex === "female" ||
-          patientObj.sex === "Female" ||
-          patientObj.sex === "FEMALE"
-        ) {
-          patientSex = "Female";
-        }
-        if (
-          patientObj.sex === "Male" ||
-          patientObj.sex === "male" ||
-          patientObj.sex === "MALE"
-        ) {
-          patientSex = "Male";
-        }
-        const getSexId = sexCodeSet.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
-        basicInfo.sexId = getSexId.display;
-;
+    let patientSex = "";
+    if (
+      patientObj.sex === "female" ||
+      patientObj.sex === "Female" ||
+      patientObj.sex === "FEMALE"
+    ) {
+      patientSex = "Female";
+    }
+    if (
+      patientObj.sex === "Male" ||
+      patientObj.sex === "male" ||
+      patientObj.sex === "MALE"
+    ) {
+      patientSex = "Male";
+    }
+    const getSexId = sexCodeSet.find((x) => x.display === patientSex); //get patient sex ID by filtering the request
+    basicInfo.sexId = getSexId.display;
   };
   const loadGenders = useCallback(async () => {
     try {
@@ -410,7 +461,8 @@ const getLastPmtctHtsRecord = (personUuid) => {
     //   : "This field is required";
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
 
-    objValues.previouslyKnownHivStatus === "Yes" && objValues.currentlyOnArt === "Yes"&&
+    objValues.previouslyKnownHivStatus === "Yes" &&
+      objValues.currentlyOnArt === "Yes" &&
       (temp.facilityEnrolledIn = objValues.facilityEnrolledIn
         ? ""
         : "This field is required");
@@ -424,7 +476,6 @@ const getLastPmtctHtsRecord = (personUuid) => {
 
     setBasicInfo({ ...basicInfo, [e.target.name]: e.target.value });
   };
-
 
   const handleInputChange = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
@@ -603,25 +654,35 @@ const getLastPmtctHtsRecord = (personUuid) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("validate()", validate(), errors)
-    setSaving(true)
+    console.log("validate()", validate(), errors);
+    setSaving(true);
+
     if (validate()) {
-      // ANC ENTRY POINT
-      if (locationState.showANC) {
-        try {
+      try {
+        // Wait for createCycle() to complete
+        const checkIfCycleIsCreated = await createCycle();
+        console.log("checkIfCycleIsCreated", checkIfCycleIsCreated);
+
+        if (checkIfCycleIsCreated?.status) {
           objValues.entryPoint = locationState.entrypointValue;
+          objValues.person_uuid = patientObj.uuid || patientObj?.personUuid;
+          objValues.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
 
-          objValues.person_uuid = patientObj.uuid? patientObj.uuid: patientObj?.personUuid;
-          const response = await axios.post(
-            `${baseUrl}pmtct/anc/anc-enrollement`,
-            objValues,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setSaving(false)
+          let url = "";
+          if (locationState.showANC) {
+            // ANC ENTRY POINT
+            url = `${baseUrl}pmtct/anc/anc-enrollement`;
+          } else {
+            // LD OR POSTPARTUM ENTRY POINT
+            url = `${baseUrl}pmtct/anc/pmtct-enrollment`;
+          }
 
-          toast.success("Patient Register successful", {
-            position: toast.POSITION.BOTTOM_CENTER,
+          const response = await axios.post(url, objValues, {
+            headers: { Authorization: `Bearer ${token}` },
           });
+
+          toast.success("Patient registered successfully");
+
           history.push({
             pathname: "/patient-history",
             state: {
@@ -630,103 +691,37 @@ const getLastPmtctHtsRecord = (personUuid) => {
               entrypointValue: locationState.entrypointValue,
             },
           });
-          // history.push("/");
-        } catch (error) {
-                    setSaving(false)
-
-          if (error.response && error.response.data) {
-            let errorMessage =
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== ""
-                ? error.response.data.apierror.message
-                : "Something went wrong, please try again";
-            if (
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== "" &&
-              error.response.data.apierror &&
-              error.response.data.apierror.subErrors[0].message !== ""
-            ) {
-              toast.error(
-                error.response.data.apierror.message +
-                  " : " +
-                  error.response.data.apierror.subErrors[0].field +
-                  " " +
-                  error.response.data.apierror.subErrors[0].message,
-                { position: toast.POSITION.BOTTOM_CENTER }
-              );
-            } else {
-              toast.error(errorMessage, {
-                position: toast.POSITION.BOTTOM_CENTER,
-              });
-            }
-          } else {
-            toast.error("Something went wrong. Please try again...", {
-              position: toast.POSITION.BOTTOM_CENTER,
-            });
-          }
+        } else {
+          toast.error("Failed to create PMTCT cycle.");
         }
-      } else {
-        // LD AND POSTPARTUM ENTRY POINT
-        try {
-          objValues.person_uuid = patientObj.uuid;
-          const response = await axios.post(
-            `${baseUrl}pmtct/anc/pmtct-enrollment`,
-            objValues,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          // history.push("/");
-          history.push({
-            pathname: "/patient-history",
-            state: {
-              patientObj: response.data,
-              postValue: locationState.postValue,
-              entrypointValue: locationState.entrypointValue,
-            },
-          });
-              setSaving(false)
+      } catch (error) {
+       setSaving(false);
 
-          toast.success("Patient Register successful", {
-            position: toast.POSITION.BOTTOM_CENTER,
-          });
-        } catch (error) {
-                    setSaving(false)
+       console.error("Error response:", error.response);
 
-          if (error.response && error.response.data) {
-            let errorMessage =
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== ""
-                ? error.response.data.apierror.message
-                : "Something went wrong, please try again";
-            if (
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== "" &&
-              error.response.data.apierror &&
-              error.response.data.apierror.subErrors[0].message !== ""
-            ) {
-              toast.error(
-                error.response.data.apierror.message +
-                  " : " +
-                  error.response.data.apierror.subErrors[0].field +
-                  " " +
-                  error.response.data.apierror.subErrors[0].message,
-                { position: toast.POSITION.BOTTOM_CENTER }
-              );
-            } else {
-              toast.error(errorMessage, {
-                position: toast.POSITION.BOTTOM_CENTER,
-              });
-            }
-          } else {
-            toast.error("Something went wrong. Please try again...", {
-              position: toast.POSITION.BOTTOM_CENTER,
-            });
-          }
-        }
+       //  More robust error extraction
+       const apiError = error.response?.data?.apierror;
+       const subError = apiError?.subErrors?.[0];
+
+       let errorMessage =
+         apiError?.message ||
+         subError?.message ||
+         error.response?.data?.message || 
+         error.message ||
+         "Something went wrong, please try again";
+
+       if (apiError?.message && subError?.field && subError?.message) {
+         errorMessage = `${apiError.message}: ${subError.field} ${subError.message}`;
+       }
+
+       toast.error(errorMessage);
+      } finally {
+        setSaving(false);
       }
+    } else {
+      setSaving(false);
     }
   };
-
-  
 
 
   return (
@@ -944,7 +939,8 @@ const getLastPmtctHtsRecord = (personUuid) => {
                                 {objValues.ancSetting ===
                                 "ENROLLMENT_SETTING_COMMUNITY" ? (
                                   <>
-                                    {communitySetting && communitySetting.length > 0 &&
+                                    {communitySetting &&
+                                      communitySetting.length > 0 &&
                                       communitySetting.map((each) => {
                                         return (
                                           <option value={each.code}>
@@ -1582,11 +1578,8 @@ const getLastPmtctHtsRecord = (personUuid) => {
                               name="previouslyKnownHivStatus"
                               id="previouslyKnownHivStatus"
                               onChange={handleInputChange}
-                              disabled={
-                                disableHIVStatus
-                                  ? true: false
-                              }
-                            // : patientObj.dynamicHivStatus === "Negative"
+                              disabled={disableHIVStatus ? true : false}
+                              // : patientObj.dynamicHivStatus === "Negative"
                               value={objValues.previouslyKnownHivStatus}
                             >
                               <option value="">Select</option>
@@ -1661,9 +1654,7 @@ const getLastPmtctHtsRecord = (personUuid) => {
 
                       <div className="form-group mb-3 col-md-6">
                         <FormGroup>
-                          <Label>
-                            HIV Status
-                          </Label>
+                          <Label>HIV Status</Label>
                           <InputGroup>
                             <Input
                               type="select"
@@ -1702,37 +1693,39 @@ const getLastPmtctHtsRecord = (personUuid) => {
                 </div>
               ) : (
                 <>
-                {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
-                {(patientObj.dynamicHivStatus === "Positive" || lastPmtctHtsRecord?.finalResult === "Positive" )? 
-                <PmtctEnrollment
-                  newRegDate={""}
-                  patientObj={patientObj}
-                  setActiveContent={setActiveContent}
-                  activeContent={activeContent}
-                  hideUpdateButton={true}
-                  entrypointValue={locationState.entrypointValue}
-                  ancEntryType={patientObj.ancNo ? true : false}
-                  handleRoute={handleRoute}
-                  htsHivStatus={lastPmtctHtsRecord?.finalResult}
-                  showLastHivTestMessage={lastPmtctHtsRecord?.finalResult === "Positive"?true: false}
-                  lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult }
-
-                />
-                  :
-              <PmtctHtsForm
-              patientObj={patientObj}
-              setActiveContent={setActiveContent}
-              activeContent={activeContent}
-              PmtctHtsRetestingType={'pmtct-hts'}
-               handleRoute={handleRoute}
-               onEnrollPatient={true}
-              entrypointValue={locationState.entrypointValue}
-              patientAge={basicInfo.age}
-              personUuid={patientObj.uuid}
-
-            />
-
-                }
+                  {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
+                  {patientObj.dynamicHivStatus === "Positive" ||
+                  lastPmtctHtsRecord?.finalResult === "Positive" ? (
+                    <PmtctEnrollment
+                      newRegDate={""}
+                      patientObj={patientObj}
+                      setActiveContent={setActiveContent}
+                      activeContent={activeContent}
+                      hideUpdateButton={true}
+                      entrypointValue={locationState.entrypointValue}
+                      ancEntryType={patientObj.ancNo ? true : false}
+                      handleRoute={handleRoute}
+                      htsHivStatus={lastPmtctHtsRecord?.finalResult}
+                      showLastHivTestMessage={
+                        lastPmtctHtsRecord?.finalResult === "Positive"
+                          ? true
+                          : false
+                      }
+                      lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult}
+                    />
+                  ) : (
+                    <PmtctHtsForm
+                      patientObj={patientObj}
+                      setActiveContent={setActiveContent}
+                      activeContent={activeContent}
+                      PmtctHtsRetestingType={"pmtct-hts"}
+                      handleRoute={handleRoute}
+                      onEnrollPatient={true}
+                      entrypointValue={locationState.entrypointValue}
+                      patientAge={basicInfo.age}
+                      personUuid={patientObj.uuid}
+                    />
+                  )}
                 </>
               )}
               {/* END OF HIV ENROLLEMENT FORM */}
