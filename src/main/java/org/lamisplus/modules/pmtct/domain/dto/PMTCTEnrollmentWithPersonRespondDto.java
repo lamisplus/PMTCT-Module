@@ -34,5 +34,6 @@ public class PMTCTEnrollmentWithPersonRespondDto implements Serializable {
     private String dateOfDelivery;
     private String expectedDeliveryDate;
     private Long pregnancyCount;
+    private Long pmtctCycleId;
 
 }

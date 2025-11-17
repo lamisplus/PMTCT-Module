@@ -112,14 +112,11 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setUuid(UUID.randomUUID().toString());
         pmtctEnrollment.setArchived(0L);
         pmtctEnrollment.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
-        ANC anc = this.ancRepository.findByAncNoAndArchived(pmtctEnrollmentRequestDto.getAncNo(), Long.valueOf(0L));
-        if (anc != null) {
-//            pmtctEnrollment.setGAWeeks(anc.getGAWeeks());
-            pmtctEnrollment.setHospitalNumber(anc.getHospitalNumber());
-            pmtctEnrollment.setFacilityId(anc.getFacilityId());
-            pmtctEnrollment.setCreatedBy(anc.getCreatedBy());
-            pmtctEnrollment.setLastModifiedBy(anc.getLastModifiedBy());
-        }
+
+        // Set facility ID and audit fields from current user
+        pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
+        pmtctEnrollment.setCreatedBy(user.getUserName());
+        pmtctEnrollment.setLastModifiedBy(user.getUserName());
 
 
         pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
@@ -433,6 +430,9 @@ private DeliveryRepository deliveryRepository;
 
     public PMTCTEnrollmentRequestDto updatePMTCTEnrollment(Long id, PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto)
     {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
+
         Optional <PMTCTEnrollment> pmtctEnrollment = this.pmtctEnrollmentReporsitory.findById(id);
         if(pmtctEnrollment.isPresent())
         {
@@ -455,6 +455,9 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
+
+            // Update lastModifiedBy with current user
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
 
             // Update pmtctCycleId if provided
             if (pmtctEnrollmentRequestDto.getPmtctCycleId() != null) {

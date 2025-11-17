@@ -144,6 +144,9 @@ const LabourinfantInfo = (props) => {
               results: "",
               testType: "",
               pmtctCycleId: props?.latestPmtctCycle?.id,
+              motherPersonUuid: props.patientObj.person_uuid
+                ? props.patientObj.person_uuid
+                : props.patientObj.personUuid,
 
   },
       infantArvDto: {
@@ -156,6 +159,9 @@ const LabourinfantInfo = (props) => {
     dateOfCtx: "",
     dateOfArv: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   },
 
 
@@ -171,6 +177,9 @@ const LabourinfantInfo = (props) => {
     results: "",
     testType: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
 
   });
   const [infantArvDto, setInfantArvDto] = useState({
@@ -183,6 +192,9 @@ const LabourinfantInfo = (props) => {
     dateOfCtx: "",
     dateOfArv: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   });
 
    const getSamplePCRType = (arr) => {

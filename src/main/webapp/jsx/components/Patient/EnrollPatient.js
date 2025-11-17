@@ -1705,7 +1705,11 @@ const UserRegistration = (props) => {
                       entrypointValue={locationState.entrypointValue}
                       ancEntryType={patientObj.ancNo ? true : false}
                       handleRoute={handleRoute}
+                      onEnrollPatient={true}
                       htsHivStatus={lastPmtctHtsRecord?.finalResult}
+                      hasPmtctHtsRecord={
+                        lastPmtctHtsRecord?.finalResult ? true : false
+                      }
                       showLastHivTestMessage={
                         lastPmtctHtsRecord?.finalResult === "Positive"
                           ? true
@@ -1724,6 +1728,9 @@ const UserRegistration = (props) => {
                       entrypointValue={locationState.entrypointValue}
                       patientAge={basicInfo.age}
                       personUuid={patientObj.uuid}
+                      hasPmtctHtsRecord={
+                        lastPmtctHtsRecord?.finalResult ? true : false
+                      }
                     />
                   )}
                 </>

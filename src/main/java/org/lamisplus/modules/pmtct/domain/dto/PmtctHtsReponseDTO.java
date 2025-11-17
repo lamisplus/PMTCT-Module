@@ -31,5 +31,16 @@ public class PmtctHtsReponseDTO {
     private HivTestDto tieBreaker2;
     private String finalResult;
     private Long pmtctCycleId;
+    private Long personId;
+    private String sex;
+    private Integer age;
+    private LocalDate dateOfBirth;
+    private Long pregnancyCount;
+    private String fullName;
+    private String hivStatus;
+    private Boolean pmtctRegStatus;
+    private String entryPoint;
+    private LocalDate artStartDate;
+    private String tbStatus;
 
 }

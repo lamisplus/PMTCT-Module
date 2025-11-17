@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -108,6 +109,16 @@ public class PMTCTController {
         return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/all-active-pmtct-hts")
+    public ResponseEntity<PersonMetaDataDto> getActiveOnPmtctHts(
+            @RequestParam(defaultValue = "*") String searchParam,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize
+    ) {
+        PersonMetaDataDto personMetaDataDto = pmtctHtsService.getActiveOnPmtctHts(searchParam, pageNo, pageSize);
+        return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
     //    @GetMapping(value = "/non-active-anc")
 //    public ResponseEntity<List<ANCRespondDto>> getNonactiveANC() {
 //        return ResponseEntity.ok(this.ancService.getNonActiveAnc());
@@ -144,7 +155,7 @@ public class PMTCTController {
 //    }
 //
     @PostMapping(value = "/pmtct-visit")
-    public PmtctVisitResponseDto pmtctVisit(@RequestBody PmtctVisitRequestDto pmtctVisitRequestDto) {
+    public PmtctVisitResponseDto pmtctVisit(@Valid @RequestBody PmtctVisitRequestDto pmtctVisitRequestDto) {
         return this.pmtctVisitService.save(pmtctVisitRequestDto);
     }
 //

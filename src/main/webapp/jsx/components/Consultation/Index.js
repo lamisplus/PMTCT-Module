@@ -111,27 +111,36 @@ const ClinicVisitPage = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-
-
-{/*  */}
+                  {/*  */}
                   <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">
-                    {showMaternalVisit?<ConsultationPage
-                      patientObj={patientObj}
-                      setActiveContent={props.setActiveContent}
-                      activeContent={props.activeContent}
-                    />: <p>Maternal outcome: {props.maternalOutcome && convertMaternalCodeToValue(props.maternalOutcome)}</p>}
-                  </Tab>
-
-   
-                  {aliveChild !== 0 && aliveChild > 0 && permissions.genPermission &&(
-                    <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
-                      <InfantVisit
+                    {showMaternalVisit ? (
+                      <ConsultationPage
                         patientObj={patientObj}
                         setActiveContent={props.setActiveContent}
                         activeContent={props.activeContent}
+                        latestPmtctCycle={props?.latestPmtctCycle}
                       />
-                    </Tab>
-                  )}
+                    ) : (
+                      <p>
+                        Maternal outcome:{" "}
+                        {props.maternalOutcome &&
+                          convertMaternalCodeToValue(props.maternalOutcome)}
+                      </p>
+                    )}
+                  </Tab>
+
+                  {aliveChild !== 0 &&
+                    aliveChild > 0 &&
+                    permissions.genPermission && (
+                      <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
+                        <InfantVisit
+                          patientObj={patientObj}
+                          setActiveContent={props.setActiveContent}
+                          activeContent={props.activeContent}
+                          latestPmtctCycle={props?.latestPmtctCycle}
+                        />
+                      </Tab>
+                    )}
                 </Tabs>
               </div>
             </Card.Body>

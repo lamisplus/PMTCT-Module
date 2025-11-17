@@ -31,7 +31,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   PMTCTEnrollment findPMTCTEnrollmentByPersonUuid(String personUuid);
 
-
+  Optional<PMTCTEnrollment> findByPmtctCycleIdAndArchived(Long pmtctCycleId, Long archived);
 
   @Query(
           value =

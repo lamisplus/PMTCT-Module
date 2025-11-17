@@ -30,5 +30,6 @@ public class InfantArvDto implements Serializable
     private LocalDate dateOfArv;
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
+    private String motherPersonUuid;
 
 }

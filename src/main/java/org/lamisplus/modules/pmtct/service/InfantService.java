@@ -120,6 +120,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
             infantArvDto.setPmtctCycleId(infant.getPmtctCycleId());
+            infantArvDto.setMotherPersonUuid(infant.getMotherPersonUuid());
 //        }
         return infantVisitService.save(infantArvDto);
     }
@@ -132,6 +133,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
             infantPCRTestDto.setVisitDate(LocalDate.now());
             infantPCRTestDto.setPmtctCycleId(infant.getPmtctCycleId());
+            infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
 //        }
         return infantVisitService.save(infantPCRTestDto);
     }

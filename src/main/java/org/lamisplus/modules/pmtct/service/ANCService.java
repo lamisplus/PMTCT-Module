@@ -27,6 +27,7 @@ import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -80,6 +81,8 @@ public class ANCService {
     @Autowired
     private PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
+    @Autowired
+    private PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
@@ -493,7 +496,7 @@ public class ANCService {
 
         PageDTO pageDTO = personService.generatePagination(persons);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(ancResponseDtos.size());
+        personMetaDataDto.setTotalRecords((int) persons.getTotalElements());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
@@ -530,7 +533,7 @@ public class ANCService {
 
         PageDTO pageDTO = personService.generatePagination(persons);
         PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
-        personMetaDataDto.setTotalRecords(pmtctResponseDtos.size());
+        personMetaDataDto.setTotalRecords((int) persons.getTotalElements());
         personMetaDataDto.setPageSize(pageDTO.getPageSize());
         personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
         personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
@@ -1005,6 +1008,7 @@ public class ANCService {
 
     public PMTCTEnrollmentWithPersonRespondDto getPMTCTRespondDtoFromPerson(@NotNull PatientPerson person) {
         PMTCTEnrollmentWithPersonRespondDto pmtctWithPersonRespondDto = new PMTCTEnrollmentWithPersonRespondDto();
+        // Set basic person information
         pmtctWithPersonRespondDto.setDateOfBirth(person.getDateOfBirth());
         pmtctWithPersonRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
         pmtctWithPersonRespondDto.setSex(person.getSex());
@@ -1016,28 +1020,56 @@ public class ANCService {
         pmtctWithPersonRespondDto.setAddress(parseJsonString(person.getAddress()));
         pmtctWithPersonRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
         pmtctWithPersonRespondDto.setHospitalNumber(person.getHospitalNumber());
-        pmtctWithPersonRespondDto.setHivStatus(person.getHivStatus());
-        pmtctWithPersonRespondDto.setArtStartDate(person.getArtStartDate());
-        pmtctWithPersonRespondDto.setEntryPoint(person.getEntryPoint());
-        pmtctWithPersonRespondDto.setTbStatus(person.getTbStatus());
-        pmtctWithPersonRespondDto.setPmtctRegStatus(true);
         pmtctWithPersonRespondDto.setPregnancyCount(person.getPregnancyCount());
-        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
-        if(ancs.isPresent()) {
-            ANC anc = ancs.get();
-            pmtctWithPersonRespondDto.setAncNo(anc.getAncNo());
-            pmtctWithPersonRespondDto.setGravida(anc.getGravida());
-            pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
 
+        // Get latest pregnancy cycle ID and use it to fetch enrollment data
+        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
+
+        if (latestCycle.isPresent()) {
+            Long cycleId = latestCycle.get().getId();
+            pmtctWithPersonRespondDto.setPmtctCycleId(cycleId);
+
+            // Use cycle ID to get enrollment data for the latest pregnancy cycle
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+
+            if (enrollment.isPresent()) {
+                PMTCTEnrollment enrollmentData = enrollment.get();
+                // Set all enrollment-related data from the latest cycle enrollment
+                pmtctWithPersonRespondDto.setPmtctEnrollmentDate(enrollmentData.getPmtctEnrollmentDate());
+                pmtctWithPersonRespondDto.setAncNo(enrollmentData.getAncNo());
+                pmtctWithPersonRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
+                pmtctWithPersonRespondDto.setArtStartTime(enrollmentData.getArtStartTime());
+                pmtctWithPersonRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
+                pmtctWithPersonRespondDto.setTbStatus(enrollmentData.getTbStatus());
+                pmtctWithPersonRespondDto.setPmtctRegStatus(true);
+                pmtctWithPersonRespondDto.setHivStatus(enrollmentData.getHivStatus());
+
+                // Get ANC data for the latest cycle using person_uuid and pmtct_cycle_id
+                Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(person.getPersonUuid(), cycleId, 0L);
+                if(ancs.isPresent()) {
+                    ANC anc = ancs.get();
+                    pmtctWithPersonRespondDto.setGravida(anc.getGravida());
+                    pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
+                } else {
+                    // Fallback: If no ANC found by cycle ID, try by ancNo if available
+                    if (enrollmentData.getAncNo() != null) {
+                        Optional<ANC> ancsByAncNo = ancRepository.getByAncNoAndArchived(enrollmentData.getAncNo(), 0L);
+                        if(ancsByAncNo.isPresent()) {
+                            ANC anc = ancsByAncNo.get();
+                            pmtctWithPersonRespondDto.setGravida(anc.getGravida());
+                            pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
+                        }
+                    }
+                }
+            } else {
+                // No enrollment found for the latest cycle
+                pmtctWithPersonRespondDto.setPmtctRegStatus(false);
+            }
+        } else {
+            // No pregnancy cycle found - set pmtctRegStatus to false
+            pmtctWithPersonRespondDto.setPmtctRegStatus(false);
         }
-        PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByPersonUuid(person.getPersonUuid());
-        if(pmtctEnrollmentRespondDto != null) {
-            pmtctWithPersonRespondDto.setPmtctEnrollmentDate(pmtctEnrollmentRespondDto.getPmtctEnrollmentDate());
-//            pmtctWithPersonRespondDto.setEntryPoint(pmtctEnrollmentRespondDto.getEntryPoint());
-            pmtctWithPersonRespondDto.setArtStartTime(pmtctEnrollmentRespondDto.getArtStartTime());
-//            pmtctWithPersonRespondDto.setTbStatus(pmtctEnrollmentRespondDto.getTbStatus());
-//            pmtctWithPersonRespondDto.setHospitalNumber(pmtctEnrollmentRespondDto.getHospitalNumber());
-        }
+
         return pmtctWithPersonRespondDto;
     }
 
@@ -1055,66 +1087,104 @@ public class ANCService {
 
     public ANCRespondDto getANCRespondDtoFromPerson(PatientPerson person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
-        String ancNo = "";
-        String personUuidStr = "";
-        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
-        if (ancs.isPresent()) {
-            ANC anc = ancs.get();
-            ancNo = anc.getAncNo();
-            personUuidStr = anc.getPersonUuid();
-            ancRespondDto.setId(anc.getId());
-            ancRespondDto.setAncNo(anc.getAncNo());
-            ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
-            ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
-            ancRespondDto.setAncUuid(anc.getUuid());
-            ancRespondDto.setPerson_uuid(person.getPersonUuid());
-            ancRespondDto.setPersonId(person.getPersonId());
-            ancRespondDto.setAddress(parseJsonString(person.getAddress()));
-            ancRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
-            ancRespondDto.setSex(person.getSex());
-            ancRespondDto.setDateOfBirth(person.getDateOfBirth());
-            ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
-            ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
-            ancRespondDto.setGravida(anc.getGravida());
-            ancRespondDto.setParity(anc.getParity());
-            ancRespondDto.setLMP(anc.getLMP());
-            ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
-            ancRespondDto.setGAWeeks(anc.getGAWeeks());
-            ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-            ancRespondDto.setTestedSyphilis(anc.getTestedSyphilis());
-            ancRespondDto.setTestResultSyphilis(anc.getTestResultSyphilis());
-            ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
-            //ancRespondDto.setSourceOfReferral(anc.getSourceOfReferral());
-            ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
-            ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-            ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
-            ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
-            ancRespondDto.setHivStatus(anc.getStaticHivStatus());
-            ancRespondDto.setArtStartDate(person.getArtStartDate());
-            ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
-            ancRespondDto.setPregnancyCount(person.getPregnancyCount());
-            String hivStatus = "Unknown";
-            try {
-                hivStatus = this.getDynamicHivStatus(anc.getPersonUuid());
-            } catch (Exception e) { }
-            ancRespondDto.setDynamicHivStatus(hivStatus);
 
-            boolean deliveryStatus = Boolean.FALSE;
-            try {
-                deliveryStatus = this.getDeliveryStatus(anc.getAncNo());
-            } catch (Exception e) { }
-            ancRespondDto.setDeliveryStatus(deliveryStatus);
+        // Set basic person information
+        ancRespondDto.setHospitalNumber(person.getHospitalNumber());
+        ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
+        ancRespondDto.setPerson_uuid(person.getPersonUuid());
+        ancRespondDto.setPersonId(person.getPersonId());
+        ancRespondDto.setAddress(parseJsonString(person.getAddress()));
+        ancRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
+        ancRespondDto.setSex(person.getSex());
+        ancRespondDto.setDateOfBirth(person.getDateOfBirth());
+        ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
+        ancRespondDto.setPregnancyCount(person.getPregnancyCount());
 
-        }
+        // Get latest pregnancy cycle ID and use it to fetch ANC and enrollment data
+        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
 
+        if (latestCycle.isPresent()) {
+            Long cycleId = latestCycle.get().getId();
+            ancRespondDto.setPmtctCycleId(cycleId);
 
-        if (activeOnPMTCT(ancNo) || activeOnPMTCTByPersonUuid(personUuidStr)) {
-            PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancNo);
-            ancRespondDto.setPmtctRegStatus(true);
-            ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
+            // Use cycle ID to get enrollment data for the latest pregnancy cycle
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+
+            if (enrollment.isPresent()) {
+                PMTCTEnrollment enrollmentData = enrollment.get();
+
+                // Set enrollment-related data from the latest cycle
+                ancRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
+                ancRespondDto.setTbStatus(enrollmentData.getTbStatus());
+                ancRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
+                ancRespondDto.setHivStatus(enrollmentData.getHivStatus());
+                ancRespondDto.setPmtctRegStatus(true);
+
+                // Get the ANC number from enrollment
+                String ancNo = enrollmentData.getAncNo();
+                ancRespondDto.setAncNo(ancNo);
+
+                // Get ANC record for this specific cycle using person_uuid and pmtct_cycle_id
+                Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(person.getPersonUuid(), cycleId, 0L);
+
+                // Fallback: If no ANC found by cycle ID, try by ancNo or get latest by personUuid
+                if (!ancs.isPresent()) {
+                    if (ancNo != null && !ancNo.isEmpty()) {
+                        ancs = ancRepository.getByAncNoAndArchived(ancNo, 0L);
+                    }
+                    // If still not found, get the latest ANC record for this person
+                    if (!ancs.isPresent()) {
+                        ancs = ancRepository.findLatestANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
+                    }
+                }
+
+                if (ancs.isPresent()) {
+                    ANC anc = ancs.get();
+                    ancRespondDto.setId(anc.getId());
+                    ancRespondDto.setAncUuid(anc.getUuid());
+                    ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
+                    ancRespondDto.setGravida(anc.getGravida());
+                    ancRespondDto.setParity(anc.getParity());
+                    ancRespondDto.setLMP(anc.getLMP());
+                    ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
+                    ancRespondDto.setGAWeeks(anc.getGAWeeks());
+                    ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
+                    ancRespondDto.setTestedSyphilis(anc.getTestedSyphilis());
+                    ancRespondDto.setTestResultSyphilis(anc.getTestResultSyphilis());
+                    ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
+                    ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
+                    ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
+                    ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
+                    ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
+                    ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
+
+                    // Get dynamic HIV status for the latest cycle
+                    String dynamicHivStatus = "Unknown";
+                    try {
+                        dynamicHivStatus = this.getDynamicHivStatus(person.getPersonUuid());
+                    } catch (Exception e) { }
+                    ancRespondDto.setDynamicHivStatus(dynamicHivStatus);
+
+                    // Get delivery status for the latest cycle
+                    boolean deliveryStatus = Boolean.FALSE;
+                    try {
+                        deliveryStatus = this.getDeliveryStatus(ancNo);
+                    } catch (Exception e) { }
+                    ancRespondDto.setDeliveryStatus(deliveryStatus);
+                }
+
+                // Get PMTCT enrollment details for the latest cycle
+                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancRespondDto.getAncNo());
+                ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
+            } else {
+                // No enrollment found for the latest cycle
+                ancRespondDto.setPmtctRegStatus(false);
+            }
         } else {
+            // No pregnancy cycle found
             ancRespondDto.setPmtctRegStatus(false);
         }
+
         return ancRespondDto;
     }
 

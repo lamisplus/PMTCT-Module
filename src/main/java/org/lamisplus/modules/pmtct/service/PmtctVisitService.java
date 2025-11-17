@@ -68,6 +68,7 @@ public class PmtctVisitService {
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
+        pmtctVisit.setPmtctCycleId(pmtctVisitRequestDto.getPmtctCycleId());
         pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
         pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
@@ -132,6 +133,7 @@ public class PmtctVisitService {
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
+        pmtctVisit.setPmtctCycleId(pmtctVisitRequestDto.getPmtctCycleId());
         pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
         pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
@@ -197,6 +199,7 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setVisitStatus(pmtctVisit.getVisitStatus());
         pmtctVisitResponseDto.setTransferTo(pmtctVisit.getTransferTo());
         pmtctVisitResponseDto.setNextAppointmentDate(pmtctVisit.getNextAppointmentDate());
+        pmtctVisitResponseDto.setPmtctCycleId(pmtctVisit.getPmtctCycleId());
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();

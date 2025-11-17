@@ -5,14 +5,27 @@ import lombok.RequiredArgsConstructor;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.patient.domain.dto.PageDTO;
+import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
+//import org.lamisplus.modules.pmtct.projection.PatientPerson;
+import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
+
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
+import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +38,9 @@ public class PmtctHtsService {
     private final PersonRepository personRepository;
     private final PmtctHtsRepository pmtctHtsRepository;
     private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
+    private final PersonService personService;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
+    private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
 
 
     public PmtctHtsReponseDTO save(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
@@ -261,6 +277,130 @@ public class PmtctHtsService {
                     .message("Test result is indeterminate")
                     .build();
         }
+    }
+
+    public PersonMetaDataDto getActiveOnPmtctHts(String searchValue, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            User user = currentUser.get();
+            currentOrganisationUnitId = user.getCurrentOrganisationUnitId();
+        }
+
+        Page<PatientPerson> persons = null;
+        if ((searchValue == null) || (searchValue.equals("*"))) {
+            persons = pmtctHtsRepository.getActiveOnPmtctHts(0, currentOrganisationUnitId, paging);
+        } else {
+            searchValue = searchValue.replaceAll("\\s", "");
+            searchValue = searchValue.replaceAll(",", "");
+            String queryParam = "%" + searchValue + "%";
+            persons = pmtctHtsRepository.getActiveOnPmtctHtsBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+        }
+
+        List<PatientPerson> personList = persons.getContent();
+        ArrayList<PmtctHtsReponseDTO> htsResponseDtos = new ArrayList<>();
+        personList.forEach(person -> {
+            PmtctHtsReponseDTO htsResponseDto = getPmtctHtsRespondDtoFromPerson(person);
+            htsResponseDtos.add(htsResponseDto);
+        });
+
+        PageDTO pageDTO = personService.generatePagination(persons);
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords((int) persons.getTotalElements());
+        personMetaDataDto.setPageSize(pageDTO.getPageSize());
+        personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
+        personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
+        personMetaDataDto.setRecords(htsResponseDtos);
+        return personMetaDataDto;
+    }
+
+    private PmtctHtsReponseDTO getPmtctHtsRespondDtoFromPerson(PatientPerson person) {
+        System.out.println(person);
+        PmtctHtsReponseDTO htsResponseDto = new PmtctHtsReponseDTO();
+
+        // Set basic person information
+        htsResponseDto.setPersonUuid(person.getPersonUuid());
+        htsResponseDto.setPersonId(person.getPersonId());
+        htsResponseDto.setHospitalNumber(person.getHospitalNumber());
+        htsResponseDto.setAge(calculateAge(person.getDateOfBirth()));
+        htsResponseDto.setSex(person.getSex());
+        htsResponseDto.setDateOfBirth(person.getDateOfBirth());
+        htsResponseDto.setPregnancyCount(person.getPregnancyCount());
+        htsResponseDto.setFullName(person.getFullName());
+
+        // Get latest pregnancy cycle ID and use it to fetch HTS and enrollment data
+        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
+
+        if (latestCycle.isPresent()) {
+            Long cycleId = latestCycle.get().getId();
+            htsResponseDto.setPmtctCycleId(cycleId);
+
+            // Get HTS record for the latest cycle
+            Optional<PmtctHts> pmtctHtsOptional = pmtctHtsRepository.findByPmtctCycleIdAndArchived(cycleId, 0L);
+
+            if (pmtctHtsOptional.isPresent()) {
+                PmtctHts pmtctHts = pmtctHtsOptional.get();
+                htsResponseDto.setId(pmtctHts.getId());
+                htsResponseDto.setUuid(pmtctHts.getUuid());
+                htsResponseDto.setDateOfHivTest(pmtctHts.getDateOfHivTest());
+                htsResponseDto.setTestEntryPoint(pmtctHts.getTestEntryPoint());
+                htsResponseDto.setTestSetting(pmtctHts.getTestSetting());
+                htsResponseDto.setInitialHivTest(pmtctHts.getInitialHivTest());
+                htsResponseDto.setConfirmatoryHivTest(pmtctHts.getConfirmatoryHivTest());
+                htsResponseDto.setStageOfPregnancy(pmtctHts.getStageOfPregnancy());
+                htsResponseDto.setHepatitisB(pmtctHts.getHepatitisB());
+                htsResponseDto.setHepatitisC(pmtctHts.getHepatitisC());
+                htsResponseDto.setTestingType(pmtctHts.getTestingType());
+                htsResponseDto.setSyphilis(pmtctHts.getSyphilis());
+                htsResponseDto.setRetesting(pmtctHts.getRetesting());
+                htsResponseDto.setFinalResult(pmtctHts.getFinalResult());
+            }
+
+            // Use cycle ID to get enrollment data for the latest pregnancy cycle
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+
+            if (enrollment.isPresent()) {
+                PMTCTEnrollment enrollmentData = enrollment.get();
+                htsResponseDto.setPmtctRegStatus(true);
+                htsResponseDto.setAncNo(enrollmentData.getAncNo());
+                htsResponseDto.setArtStartDate(enrollmentData.getArtStartDate());
+                htsResponseDto.setEntryPoint(enrollmentData.getEntryPoint());
+                htsResponseDto.setTbStatus(enrollmentData.getTbStatus());
+                // Set hivStatus from enrollment - this takes priority over finalResult
+                if (enrollmentData.getHivStatus() != null) {
+                    htsResponseDto.setHivStatus(enrollmentData.getHivStatus());
+                } else if (htsResponseDto.getFinalResult() != null) {
+                    // Fallback to finalResult from HTS if enrollment hivStatus is null
+                    htsResponseDto.setHivStatus(htsResponseDto.getFinalResult());
+                }
+            } else {
+                // No enrollment found for the latest cycle
+                htsResponseDto.setPmtctRegStatus(false);
+                // If we have HTS data but no enrollment, use finalResult for hivStatus
+                if (htsResponseDto.getFinalResult() != null) {
+                    htsResponseDto.setHivStatus(htsResponseDto.getFinalResult());
+                }
+            }
+        } else {
+            // No pregnancy cycle found
+            htsResponseDto.setPmtctRegStatus(false);
+        }
+
+        return htsResponseDto;
+    }
+
+    private Integer calculateAge(LocalDate dateOfBirth) {
+        if (dateOfBirth == null) {
+            return 0;
+        }
+        LocalDate currentDate = LocalDate.now();
+        int age = currentDate.getYear() - dateOfBirth.getYear();
+        if (currentDate.getMonthValue() < dateOfBirth.getMonthValue() ||
+                (currentDate.getMonthValue() == dateOfBirth.getMonthValue() && currentDate.getDayOfMonth() < dateOfBirth.getDayOfMonth())) {
+            age--;
+        }
+        return age;
     }
 }
 

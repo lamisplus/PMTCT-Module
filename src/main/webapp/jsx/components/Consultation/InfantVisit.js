@@ -213,6 +213,9 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     dateOfCtx: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -224,6 +227,9 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -240,6 +246,9 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -251,6 +260,9 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     uuid: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    motherPersonUuid: props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid,
   });
 
   //Vital signs clinical decision support

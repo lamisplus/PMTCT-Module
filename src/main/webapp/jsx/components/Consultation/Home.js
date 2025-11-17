@@ -113,8 +113,12 @@ const ClinicVisit = (props) => {
     transferTo: "",
     visitStatus: "",
     timeOfViralLoad: "",
+    pmtctCycleId: props?.latestPmtctCycle?.id,
   });
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
+
+
+
   const getDateOfDelivery = () => {
     axios
       .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
@@ -190,7 +194,10 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setObjValues(response.data);
+        setObjValues({
+          ...response.data,
+          pmtctCycleId: response.data.pmtctCycleId || props?.latestPmtctCycle?.id
+        });
         DsdModelType(response.data.dsdModel);
       })
       .catch((error) => {

@@ -34,5 +34,6 @@ public class InfantPCRTestDto implements Serializable
     private String  uniqueUuid;
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
+    private String motherPersonUuid;
 
 }

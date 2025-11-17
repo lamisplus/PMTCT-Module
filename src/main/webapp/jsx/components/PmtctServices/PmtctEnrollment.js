@@ -130,10 +130,13 @@ const getInitialHivStatus = () => {
     'Negative': 'Negative',
 
   };
-  return statusMap[props.lastestConfirmatoryTest] || 
-         patientObj?.hivStatus || 
-         patientObj?.staticHivStatus || 
-         "";
+  return (
+    statusMap[props.lastestConfirmatoryTest] ||
+    patientObj?.hivStatus ||
+    patientObj?.staticHivStatus ||
+    props?.patientObj?.dynamicHivStatus ||
+    ""
+  );
 };
 
 const [enroll, setEnrollDto] = useState({
@@ -238,6 +241,62 @@ console.log('fddd', enroll.hivStatus)
     }
 
   };
+
+    const createCycle = async () => {
+      let payload2 = {
+        personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+        maternalOutcome: "",
+        entryPoint: locationState.entrypointValue,
+        hivStatus: patientObj?.dynamicHivStatus,
+        pregnancyOutcome: "",
+        numberOfInfants: 0,
+        pmtctStatus: "INACTIVE",
+      };
+  
+      try {
+  
+       const response = await axios.post(
+         `${baseUrl}pmtct/anc/pregnancy-cycle`,
+         payload2,
+         {
+           headers: { Authorization: `Bearer ${token}` },
+         }
+       );
+        if (response?.data) {
+          return {
+            status: true,
+            response: response.data,
+          };
+        } else {
+          toast.error("Failed to create new PMTCT cycle: no data returned");
+          return {
+            status: false,
+            response: null,
+          };      
+       }
+  
+      } catch (e) {
+        console.log(e)
+        toast.error(
+          `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
+        );
+          return {
+            status: false,
+            response: null,
+          }; 
+      }
+    };
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
    GET_CODESETS();
     checkTimingOfART(0)
@@ -328,7 +387,14 @@ console.log('fddd', enroll.hivStatus)
 
   }
 
-
+const isHivStatusDisabled = () => {
+  return (
+    disableHIVStatus ||
+    props.lastestConfirmatoryTest ||
+    patientObj?.ancNo ||
+    props?.patientObj?.dynamicHivStatus
+  );
+};
 
     // BATCH API
    const GET_CODESETS = () => {
@@ -632,12 +698,34 @@ return dateOfDelivery.diff(lmp, 'weeks')
   };
 
   /**** Submit Button Processing  */
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     enroll.motherArtInitiationTime = infantMotherArtDto.motherArtInitiationTime;
     enroll.regimenTypeId = infantMotherArtDto.regimenTypeId;
     enroll.regimenId = infantMotherArtDto.regimenId;
     enroll.ga = enroll.gaweeks;
+
+    let pmtctCycleId;
+    // Create cycle if needed
+    if (
+      props.onEnrollPatient &&
+      locationState?.entrypointValue &&
+      locationState?.entrypointValue !== "PMTCT_ENTRY_POINT_ANC" &&
+      !props?.hasPmtctHtsRecord
+    ) {
+      const checkIfCycleIsCreated = await createCycle();
+      enroll.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
+      pmtctCycleId = checkIfCycleIsCreated?.response?.id;
+
+      if (!checkIfCycleIsCreated?.status) {
+        toast.error("Failed to create cycle", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+        return; // Exit if cycle creation fails
+      }
+    } else {
+      enroll.pmtctCycleId = props?.latestPmtctCycle?.id;
+    }
 
     if (validate()) {
       setSaving(true);
@@ -680,7 +768,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
           personUuid: props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : locationState.patientObj.uuid,
-          pmtctCycleId: props?.latestPmtctCycle?.id,
+          pmtctCycleId: pmtctCycleId || props?.latestPmtctCycle?.id,
         };
 
         axios
@@ -736,45 +824,42 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
               <h3 className="mb-3">
                 <span>Point of Entry: </span>
-               
+
                 {entryValueDisplay.display}
               </h3>
+<div className="form-group mb-3 col-md-4">
+  <FormGroup>
+    <Label>
+      HIV Status <span style={{ color: "red" }}> *</span>
+    </Label>
 
+    <InputGroup>
+      <Input
+        type="select"
+        name="hivStatus"
+        id="hivStatus"
+        value={enroll.hivStatus}
+        onChange={handleInputChangeEnrollmentDto}
+        disabled={isHivStatusDisabled()}
+      >
+        <option value="">Select</option>
+        <option value="Positive">Positive</option>
+        <option value="Negative">Negative</option>
+      </Input>
+    </InputGroup>
 
-               <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    HIV Status <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="hivStatus"
-                      id="hivStatus"
-                      // disableHIVStatus
-                      disabled={disableHIVStatus ? true :props.lastestConfirmatoryTest? true: patientObj.ancNo? true : false}
+    {errors.hivStatus && (
+      <span className={classes.error}>{errors.hivStatus}</span>
+    )}
 
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.hivStatus}
-                    >
-                      <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                      {/* <option value="Unknown">Unknown</option> */}
-                    </Input>
-                  </InputGroup>
-                  {errors.hivStatus !== "" ? (
-                    <span className={classes.error}>{errors.hivStatus}</span>
-                  ) : (
-                    ""
-                  )}
-                  {enroll.hivStatus == "Positive" && (
-                    <div className="mt-3 ">
-                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
-                    </div>
-                  )}
-                </FormGroup>
-              </div>
+    {enroll.hivStatus === "Positive" && (
+      <div className="mt-3">
+        <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+      </div>
+    )}
+  </FormGroup>
+</div>
+
 
               {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">
@@ -808,13 +893,21 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"                  
-                      onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
                       name="pmtctEnrollmentDate"
                       id="pmtctEnrollmentDate"
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.pmtctEnrollmentDate}
-                      min={patientObj.ancNo? props.patientObj.firstAncDate: props?.newRegDate? props?.newRegDate: ""}
+                      min={
+                        patientObj.ancNo
+                          ? props.patientObj.firstAncDate
+                          : props?.newRegDate
+                          ? props?.newRegDate
+                          : ""
+                      }
                       max={moment(new Date()).format("YYYY-MM-DD")}
                       disabled={disabledField}
                     />
@@ -829,69 +922,65 @@ return dateOfDelivery.diff(lmp, 'weeks')
                 </FormGroup>
               </div>
 
-           
-                  
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Date Of Last Menstrual Period
-                          <span style={{ color: "red" }}>*</span>{" "}
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="date"    
-                                onKeyPress={(e)=>{e.preventDefault()}}
-                            name="lmp"
-                            id="lmp"
-                            onChange={handleInputChangeEnrollmentDto}
-                            value={
-                              enroll.lmp
-                            }
-                            max={enroll.pmtctEnrollmentDate? enroll.pmtctEnrollmentDate: moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={props?.ancEntryType}
-                          />
-                        </InputGroup>
-                        {errors.lmp !== "" ? (
-                          <span className={classes.error}>{errors.lmp}</span>
-                        ) : (
-                          ""
-                        )}
-                        {enroll.gaweeks === 0 ? (
-                          <span className={classes.error}>Invalid date </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Gestational Age (Weeks){" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="number"
-                            name="gaweeks"
-                            id="gaweeks"
-                            onChange={handleInputChangeEnrollmentDto}
-                            value={
-                               enroll.gaweeks
-                            }
-                            disabled
-                          />
-                        </InputGroup>
-                        {errors.gaweeks !== "" ? (
-                          <span className={classes.error}>
-                            {errors.gaweeks}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                  
-               
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Date Of Last Menstrual Period
+                    <span style={{ color: "red" }}>*</span>{" "}
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
+                      name="lmp"
+                      id="lmp"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.lmp}
+                      max={
+                        enroll.pmtctEnrollmentDate
+                          ? enroll.pmtctEnrollmentDate
+                          : moment(new Date()).format("YYYY-MM-DD")
+                      }
+                      disabled={props?.ancEntryType}
+                    />
+                  </InputGroup>
+                  {errors.lmp !== "" ? (
+                    <span className={classes.error}>{errors.lmp}</span>
+                  ) : (
+                    ""
+                  )}
+                  {enroll.gaweeks === 0 ? (
+                    <span className={classes.error}>Invalid date </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    Gestational Age (Weeks){" "}
+                    <span style={{ color: "red" }}> *</span>
+                  </Label>
+                  <InputGroup>
+                    <Input
+                      type="number"
+                      name="gaweeks"
+                      id="gaweeks"
+                      onChange={handleInputChangeEnrollmentDto}
+                      value={enroll.gaweeks}
+                      disabled
+                    />
+                  </InputGroup>
+                  {errors.gaweeks !== "" ? (
+                    <span className={classes.error}>{errors.gaweeks}</span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
 
               {/* <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -943,7 +1032,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   )}
                 </FormGroup>
               </div>
-      
+
               <div className="form-group mb-3 col-md-4">
                 {/* Post-Partum */}
                 <FormGroup>
@@ -984,14 +1073,16 @@ return dateOfDelivery.diff(lmp, 'weeks')
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
                       name="artStartDate"
                       id="artStartDate"
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.artStartDate}
                       max={maxARTDate}
                       min={minARTDate}
-
                       disabled={disabledField}
                     />
                   </InputGroup>
@@ -1224,67 +1315,72 @@ return dateOfDelivery.diff(lmp, 'weeks')
                 </FormGroup>
               </div>
 
-
-
-              { entryValueDisplay.code  === "PMTCT_ENTRY_POINT_ANC" &&      <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                  Expected date of delivery
-                  
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"            
-                      onKeyPress={(e)=>{e.preventDefault()}}
-                      name="expectedDeliveryDate"
-                      id="expectedDeliveryDate"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.expectedDeliveryDate}
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      min={props?.ancEntryType
-                        ? props?.patientObj?.lmp
-                        : enroll.lmp}
-                      disabled={true}
-                    />
-                  </InputGroup>
-                
-                </FormGroup>
-              </div>}
-              { entryValueDisplay.code !== "PMTCT_ENTRY_POINT_ANC" &&    <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                  Date of Delivery
-                  
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"            
-                      onKeyPress={(e)=>{e.preventDefault()}}
-                      name="dateOfDelivery"
-                      id="dateOfDelivery"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.dateOfDelivery}
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      min={props?.ancEntryType
-                        ? props?.patientObj?.lmp
-                        : enroll.lmp}
-                      disabled={disabledField}
-                    />
-                  </InputGroup>
-                  {errors.artStartDate !== "" ? (
-                    <span className={classes.error}>{errors.artStartDate}</span>
-                  ) : (
-                    ""
-                  )}
-                  {enroll.gaweeks === 0  && enroll.lmp  === "" ? (
-                          <span className={classes.error}>Last menstrual period date is empty </span>
-                        ) : (
-                          ""
-                        )}
-                </FormGroup>
-              </div>}
-
-            
+              {entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC" && (
+                <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <Label>Expected date of delivery</Label>
+                    <InputGroup>
+                      <Input
+                        type="date"
+                        onKeyPress={(e) => {
+                          e.preventDefault();
+                        }}
+                        name="expectedDeliveryDate"
+                        id="expectedDeliveryDate"
+                        onChange={handleInputChangeEnrollmentDto}
+                        value={enroll.expectedDeliveryDate}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        min={
+                          props?.ancEntryType
+                            ? props?.patientObj?.lmp
+                            : enroll.lmp
+                        }
+                        disabled={true}
+                      />
+                    </InputGroup>
+                  </FormGroup>
+                </div>
+              )}
+              {entryValueDisplay.code !== "PMTCT_ENTRY_POINT_ANC" && (
+                <div className="form-group mb-3 col-md-4">
+                  <FormGroup>
+                    <Label>Date of Delivery</Label>
+                    <InputGroup>
+                      <Input
+                        type="date"
+                        onKeyPress={(e) => {
+                          e.preventDefault();
+                        }}
+                        name="dateOfDelivery"
+                        id="dateOfDelivery"
+                        onChange={handleInputChangeEnrollmentDto}
+                        value={enroll.dateOfDelivery}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        min={
+                          props?.ancEntryType
+                            ? props?.patientObj?.lmp
+                            : enroll.lmp
+                        }
+                        disabled={disabledField}
+                      />
+                    </InputGroup>
+                    {errors.artStartDate !== "" ? (
+                      <span className={classes.error}>
+                        {errors.artStartDate}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                    {enroll.gaweeks === 0 && enroll.lmp === "" ? (
+                      <span className={classes.error}>
+                        Last menstrual period date is empty{" "}
+                      </span>
+                    ) : (
+                      ""
+                    )}
+                  </FormGroup>
+                </div>
+              )}
             </div>
             <div>
               {" "}
@@ -1308,7 +1404,8 @@ return dateOfDelivery.diff(lmp, 'weeks')
             {console.log("props", props)}
             {props.hideUpdateButton && (
               <>
-                {props.activeContent && props.activeContent.actionType === "update"  ? (
+                {props.activeContent &&
+                props.activeContent.actionType === "update" ? (
                   <>
                     <MatButton
                       type="submit"

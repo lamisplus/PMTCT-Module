@@ -21,6 +21,7 @@ public class InfantMotherArtDto implements Serializable
     private String  uniqueUuid;
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
+    private String motherPersonUuid;
 
 
 

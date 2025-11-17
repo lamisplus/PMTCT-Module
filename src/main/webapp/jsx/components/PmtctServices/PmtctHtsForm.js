@@ -129,7 +129,15 @@ const PmtctHtsForm = (props) => {
     stageOfPregnancy: "",
     id: "",
   });
-
+  const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
+    personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+    maternalOutcome: "",
+    entryPoint: locationState.entrypointValue,
+    hivStatus: patientObj?.dynamicHivStatus || "",
+    pregnancyOutcome: "",
+    numberOfInfants: 0,
+    pmtctStatus: "INACTIVE",
+  });
   const [dateOfHivTestExist, setDateOfHivTestExist] = useState(false);
 
   const [checkingForTheDate, setCheckingForTheDate] = useState(false);
@@ -998,11 +1006,59 @@ const PmtctHtsForm = (props) => {
     });
   }
 
+
+    const createCycle = async () => {
+      let payload2 = {
+        personUuid: props.personUuid,
+        maternalOutcome: "",
+        entryPoint: locationState.entrypointValue,
+        hivStatus: payload.finalResult,
+        pregnancyOutcome: "",
+        numberOfInfants: 0,
+        pmtctStatus: "INACTIVE",
+      };
+  
+      try {
+  
+       const response = await axios.post(
+         `${baseUrl}pmtct/anc/pregnancy-cycle`,
+         payload2,
+         {
+           headers: { Authorization: `Bearer ${token}` },
+         }
+       );
+        if (response?.data) {
+          return {
+            status: true,
+            response: response.data,
+          };
+        } else {
+          toast.error("Failed to create new PMTCT cycle: no data returned");
+          return {
+            status: false,
+            response: null,
+          };      
+       }
+  
+      } catch (e) {
+        console.log(e)
+        toast.error(
+          `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
+        );
+          return {
+            status: false,
+            response: null,
+          }; 
+      }
+    };
+
+
   /**** Submit Button Processing  */
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prepare payload
     payload.initialHivTest = initialHivTest;
     payload.confirmatoryHivTest = confirmatoryHivTest;
     payload.tieBreaker = tieBreaker;
@@ -1011,87 +1067,118 @@ const PmtctHtsForm = (props) => {
     payload.tieBreaker2 = tieBreaker2;
     payload.finalResult = finalResult;
 
-    let finalAnswer = validate();
+    // Validation checks
+    const isFormValid =
+      validate() &&
+      !checkingForTheDate &&
+      validateHIVRetest.isValid &&
+      validateAncEnrollment.isValid;
 
-    if (validate() && !checkingForTheDate && validateHIVRetest.isValid && validateAncEnrollment.isValid) {
-      setSaving(true);
-      if (props.activeContent && props.activeContent.actionType === "update") {
-        axios
-          .put(
-            `${baseUrl}pmtct/anc/update-pmtct-hts-enrollment/${props.activeContent.id}`,
-            payload,
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
-          .then((response) => {
-            setSaving(false);
-            toast.success("Record updated successful", {
-              position: toast.POSITION.TOP_RIGHT,
-            });
-            props.setActiveContent({
-              ...props.activeContent,
-              route: "recent-history",
-            });
-          })
-          .catch((error) => {
-            setSaving(false);
-            toast.error("Something went wrong", {
-              position: toast.POSITION.TOP_RIGHT,
-            });
-          });
-      } else {
-            payload.pmtctCycleId = props?.latestPmtctCycle?.id;
-
-        axios
-          .post(`${baseUrl}pmtct/anc/pmtct-hts-enrollment`, payload, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((response) => {
-            setSaving(false);
-            toast.success("Enrollment save successful", {
-              position: toast.POSITION.TOP_RIGHT,
-            });
-            if (props.handleRoute && props.onEnrollPatient) {
-              let data = {
-                ...props?.patientObj,
-                id: props?.patientObj.id,
-                entryPoint: props.entrypointValue,
-
-                hospitalNumber:
-                  props?.patientObj?.identifier?.identifier[0]?.value,
-                fullName: props?.patientObj?.surname,
-                age: props?.patientAge,
-                hivStatus: props?.patientObj?.dynamicHivStatus,
-                ancNo: props?.patientObj?.ancNo,
-                personUuid: props.personUuid,
-              };
-              props.handleRoute(data);
-            } else {
-              props.setActiveContent({
-                ...props.activeContent,
-                route: "recent-history",
-              });
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-            setSaving(false);
-            toast.error("Something went wrong", {
-              position: toast.POSITION.TOP_RIGHT,
-            });
-          });
+    // Show validation errors if any
+    if (!isFormValid) {
+      if (!validateHIVRetest.isValid) {
+        toast.error(validateHIVRetest.message, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
       }
+
+      if (!validateAncEnrollment.isValid) {
+        toast.error(validateAncEnrollment.message, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+
+      if (!validate()) {
+        toast.error("Please fill all required fields", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+
+      return; // Exit early if validation fails
     }
 
-    if (!validateHIVRetest.isValid) {
-      toast.error(validateHIVRetest.message, {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+    
+    // Create cycle if needed
+    if (
+      props.onEnrollPatient &&
+      locationState?.entrypointValue &&
+      (locationState?.entrypointValue !== "PMTCT_ENTRY_POINT_ANC") &&
+        !props?.hasPmtctHtsRecord
+    ) {
+      const checkIfCycleIsCreated = await createCycle();
+      payload.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
+
+      if (!checkIfCycleIsCreated?.status) {
+        toast.error("Failed to create cycle", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+        return; // Exit if cycle creation fails
+      }
+    } else {
+      payload.pmtctCycleId = props?.latestPmtctCycle?.id;
     }
 
-    if (!validateAncEnrollment.isValid) {
-      toast.error(validateAncEnrollment.message, {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+
+    // Process the enrollment
+    setSaving(true);
+
+    try {
+      const isUpdate = props.activeContent?.actionType === "update";
+      let response;
+
+      if (isUpdate) {
+        // Update existing enrollment
+        response = await axios.put(
+          `${baseUrl}pmtct/anc/update-pmtct-hts-enrollment/${props.activeContent.id}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        toast.success("Record updated successfully", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } else {
+        // Create new enrollment
+        response = await axios.post(
+          `${baseUrl}pmtct/anc/pmtct-hts-enrollment`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        toast.success("Enrollment saved successfully", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+
+      // Handle post-submission routing
+      if (!isUpdate && props.handleRoute && props.onEnrollPatient) {
+        const data = {
+          ...props?.patientObj,
+          id: props?.patientObj.id,
+          entryPoint: props.entrypointValue,
+          hospitalNumber: props?.patientObj?.identifier?.identifier[0]?.value,
+          fullName: props?.patientObj?.surname,
+          age: props?.patientAge,
+          hivStatus: props?.patientObj?.dynamicHivStatus,
+          ancNo: props?.patientObj?.ancNo,
+          personUuid: props.personUuid,
+        };
+        props.handleRoute(data);
+      } else {
+        props.setActiveContent({
+          ...props.activeContent,
+          route: "recent-history",
+        });
+      }
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Something went wrong. Please try again.",
+        { position: toast.POSITION.TOP_RIGHT }
+      );
+    } finally {
+      setSaving(false);
     }
   };
 

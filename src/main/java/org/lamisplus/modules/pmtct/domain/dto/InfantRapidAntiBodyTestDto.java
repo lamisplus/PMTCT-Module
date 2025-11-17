@@ -22,4 +22,5 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String uuid;
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
+    private String motherPersonUuid;
 }

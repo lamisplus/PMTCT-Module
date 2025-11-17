@@ -10,6 +10,7 @@ import PmtctEntryPoint from "./PmtctServices/PmtctEntryPoint";
 import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
 import CheckedInPatient from "./Patient/CheckedInPatient";
+import ActivePmtctHtsPatients from "./Patient/ActivePmtctHtsPatientList";
 import { usePermissions } from "../../hooks/usePermissions";
 
 //import PageTitle from "./../layouts/PageTitle";
@@ -40,7 +41,6 @@ const Home = (props) => {
         </ol>
       </div>
 
-
       <br />
       <br />
       <Row>
@@ -56,22 +56,24 @@ const Home = (props) => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3"
                 >
-
                   {/* {hasRDErole ?     */}
-                  
+
                   <Tab eventKey="home" title="Find Patients">
                     <NotEnrollPatients />
                   </Tab>
                   {/* // :         */}
 
-                 {!hasStrictylyRDE &&  <Tab eventKey="checked-in" title="Checked In Patients">                   
-                    <CheckedInPatient
-                    
-                    />
-                       </Tab> }
-                {/* //  } */}
-              
-               
+                  {!hasStrictylyRDE && (
+                    <Tab eventKey="checked-in" title="Checked In Patients">
+                      <CheckedInPatient />
+                    </Tab>
+                  )}
+                  {/* //  } */}
+                  
+                  <Tab eventKey="pmtct-hts" title="PMTCT HTS Patients">
+                    <ActivePmtctHtsPatients />
+                  </Tab>
+
                   <Tab eventKey="anc" title="ANC Patients">
                     <ANCPatients />
                   </Tab>
@@ -79,7 +81,6 @@ const Home = (props) => {
                   <Tab eventKey="pmtct" title="General PMTCT Patients">
                     <PmtctPatients />
                   </Tab>
-               
                 </Tabs>
               </div>
             </Card.Body>

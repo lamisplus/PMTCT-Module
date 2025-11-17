@@ -27,6 +27,12 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 
     Optional<ANC> findANCByPersonUuidAndArchived(String personUuid, Long archived);
 
+    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findLatestANCByPersonUuidAndArchived(String personUuid, Long archived);
+
+    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = ?3 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findANCByPersonUuidAndCycleIdAndArchived(String personUuid, Long pmtctCycleId, Long archived);
+
     Optional<ANC> findByHospitalNumber(String hospitalNumber);
 
     @Query(value = "SELECT count(*) FROM pmtct_anc pa", nativeQuery = true)

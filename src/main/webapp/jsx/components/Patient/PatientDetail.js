@@ -307,6 +307,7 @@ function PatientCard(props) {
                   : patientObj.uuid
               }
               latestPmtctCycle={latestPmtctCycle}
+              hasPmtctHtsRecord={"omit"}
             />
           )}
 
@@ -324,6 +325,8 @@ function PatientCard(props) {
               lastestConfirmatoryTest={lastestConfirmatoryTest}
               showLastHivTestMessage={false}
               latestPmtctCycle={latestPmtctCycle}
+              onEnrollPatient={false}
+              hasPmtctHtsRecord={"omit"}
             />
           )}
 
