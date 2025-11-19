@@ -54,6 +54,19 @@ public class ANCAcivityTracker {
         return deliveryDate;
     }
 
+    private LocalDate getDeliveryDateByPersonUuid (String personUuid, Long pmtctCycleId)
+    {
+        LocalDate deliveryDate = LocalDate.now();
+        try{
+            Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+            if (delivery.isPresent()) {
+                deliveryDate = delivery.get().getDateOfDelivery();
+            }
+        }catch (Exception e){}
+
+        return deliveryDate;
+    }
+
     public List<ActivityTracker> getANCActivities(String ancNo)
     {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
@@ -401,6 +414,144 @@ public class ANCAcivityTracker {
 
     }
 
+    public List<ActivityTracker> getAllActivities(String personUuid, Long pmtctCycleId) {
+        ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
+
+        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPersonUuidAndCycleId(personUuid, pmtctCycleId);
+        if(!(infantVisits.isEmpty()) ){
+            infantVisits.forEach(infantVisit -> {
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                activityTracker.setActivityName("Infant Visit");
+                activityTracker.setPath("pmtct_infant_visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(infantVisit.getId());
+                activityTracker.setActivityDate(infantVisit.getVisitDate());
+                activityTrackers.add(activityTracker);
+            });
+        }
+
+        LocalDate deliveryDate = this.getDeliveryDateByPersonUuid(personUuid, pmtctCycleId);
+        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPersonUuidAndCycleId(personUuid, pmtctCycleId, deliveryDate);
+        if (!(pmtctVisits1.isEmpty()))
+        {
+            pmtctVisits1.forEach(pmtctVisit ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                System.out.println(pmtctVisit);
+                activityTracker.setActivityName("PMTCT Visit");
+                activityTracker.setPath("anc-mother-visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctVisit.getId());
+                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
+                activityTrackers.add(activityTracker);
+            } );
+
+        }
+
+        List<Infant> infantList = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+
+        if(!(infantList.isEmpty())){
+            infantList.forEach(infant-> {
+                ActivityTracker activityTracker = new ActivityTracker();
+                activityTracker.setActivityName("Add Infant");
+                activityTracker.setPath("pmtct_infant_information");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(infant.getId());
+                activityTracker.setActivityDate(infant.getDateOfDelivery());
+                activityTrackers.add(activityTracker);
+            });
+        }
+
+        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        if (deliveries.isPresent())
+        {
+            ActivityTracker activityTracker = new ActivityTracker();
+            activityTracker.setActivityName("Labour and Delivery");
+            activityTracker.setPath("anc-delivery");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setRecordId(deliveries.get().getId());
+            activityTracker.setActivityDate(deliveries.get().getDateOfDelivery());
+            activityTrackers.add(activityTracker);
+        }
+
+        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPersonUuidAndCycleId(personUuid, pmtctCycleId, deliveryDate);
+        if (!(pmtctVisits.isEmpty()))
+        {
+            pmtctVisits.forEach(pmtctVisit ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                activityTracker.setActivityName("PMTCT Visit");
+                activityTracker.setPath("anc-mother-visit");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctVisit.getId());
+                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
+                activityTrackers.add(activityTracker);
+            } );
+        }
+        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        if (pmtctEnrollments.isPresent())
+        {
+            ActivityTracker activityTracker = new ActivityTracker();
+            activityTracker.setActivityName("PMTCT Enrollment");
+            activityTracker.setPath("pmtct-enrollment");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setRecordId(pmtctEnrollments.get().getId());
+            activityTracker.setActivityDate(pmtctEnrollments.get().getPmtctEnrollmentDate());
+            activityTrackers.add(activityTracker);
+        }
+
+        Optional<ANC> ancs = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L);
+        if (ancs.isPresent())
+        {
+            ActivityTracker activityTracker = new ActivityTracker();
+            activityTracker.setActivityName("ANC Enrollment");
+            activityTracker.setPath("anc-enrollment");
+            activityTracker.setEditable(true);
+            activityTracker.setDeletable(true);
+            activityTracker.setViewable(true);
+            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
+            activityTracker.setRecordId(ancs.get().getId());
+            activityTrackers.add(activityTracker);
+        }
+
+
+        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuidAndPmtctCycleIdAndUnarchived(personUuid, pmtctCycleId);
+        if (!(pmtctHtsRecord.isEmpty()))
+        {
+            pmtctHtsRecord.forEach(pmtctHtsRec ->{
+                ActivityTracker activityTracker = new ActivityTracker();
+
+                activityTracker.setActivityName(pmtctHtsRec.getTestingType());
+                activityTracker.setPath("pmtct-hts");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(pmtctHtsRec.getId());
+                activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
+                activityTrackers.add(activityTracker);
+            } );
+        }
+
+
+
+
+        return activityTrackers;
+
+    }
+
     public SummaryChart getPmtctSummaryChart(String personUuid) {
         SummaryChart summaryChart = new SummaryChart();
         summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPersonUuid(personUuid));
@@ -409,6 +560,26 @@ public class ANCAcivityTracker {
             summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
             summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
             summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPersonUuid(personUuid));
+
+        }
+        else
+        {
+            summaryChart.setChildAlive(0);
+            summaryChart.setChildDead(0);
+            summaryChart.setChildVisit(0);
+
+        }
+        return summaryChart;
+    }
+
+    public SummaryChart getPmtctSummaryChart(String personUuid, Long pmtctCycleId) {
+        SummaryChart summaryChart = new SummaryChart();
+        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPersonUuidAndCycleId(personUuid, pmtctCycleId));
+        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        if (delivery.isPresent()){
+            summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
+            summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
+            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPersonUuidAndCycleId(personUuid, pmtctCycleId));
 
         }
         else

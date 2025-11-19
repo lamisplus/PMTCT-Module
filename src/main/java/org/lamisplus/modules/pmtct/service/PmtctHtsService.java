@@ -193,8 +193,22 @@ public class PmtctHtsService {
         return convertEntitytoRespondDto(entity);
     }
 
+    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String personUuid, Long pmtctCycleId) {
+        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentByIdAndCycleId(personUuid, pmtctCycleId);
+
+        if (entity == null) {
+            return null;
+        }
+
+        return convertEntitytoRespondDto(entity);
+    }
+
     public  String  getLatestConfirmatoryResult(String personUuid) {
         return pmtctHtsRepository.findLatestFinalResult(personUuid).orElse("");
+    }
+
+    public  String  getLatestConfirmatoryResult(String personUuid, Long pmtctCycleId) {
+        return pmtctHtsRepository.findLatestFinalResultByPersonUuidAndCycleId(personUuid, pmtctCycleId).orElse("");
     }
 
 
@@ -207,6 +221,36 @@ public class PmtctHtsService {
     public HivRetestStatusResponse getHivRetestStatus(String personUuid) {
 
         List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultList(personUuid);
+
+        if (results.isEmpty()) {
+            return HivRetestStatusResponse.builder()
+                    .status("No Test Result")
+                    .testResult(null)
+                    .testDate(null)
+                    .seroconverted(false)
+                    .remainedHivNegative(false)
+                    .message("No HIV test record found for this patient")
+                    .build();
+        }
+
+        Object[] result = results.get(0);
+        String testResult = null;
+        String testDate = null;
+
+        // Safely access array elements
+        if (result != null && result.length > 0) {
+            testResult = result[0] != null ? result[0].toString().toLowerCase() : null;
+        }
+        if (result != null && result.length > 1) {
+            testDate = result[1] != null ? result[1].toString() : null;
+        }
+
+        return determineStatus(testResult, testDate);
+    }
+
+    public HivRetestStatusResponse getHivRetestStatus(String personUuid, Long pmtctCycleId) {
+
+        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultListByPersonUuidAndCycleId(personUuid, pmtctCycleId);
 
         if (results.isEmpty()) {
             return HivRetestStatusResponse.builder()

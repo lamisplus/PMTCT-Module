@@ -48,14 +48,23 @@ const RecentHistory = (props) => {
     InfantInfo();
     RecentActivities();
     SummaryChart();
-  }, [props.patientObj.id]);
+  }, [props.patientObj.id, props.selectedCycleId]);
   ///GET LIST OF Infants
 
   const InfantInfo = () => {
-    if (props.patientObj.ancNo) {
+
+      const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid || props.patientObj.uuid;
+      // Use selectedCycleId if available, otherwise use latestPmtctCycle
+      const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+
+      if (!pmtctCycleId) {
+        console.error("pmtctCycleId is required");
+        return;
+      }
+
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-infant-by-ancno?ancNo=${props.patientObj.ancNo}`,
+          `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
@@ -65,48 +74,40 @@ const RecentHistory = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-    } else {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-              ? props.patientObj.personUuid
-              : props.patientObj.uuid
-          }`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-          setInfants(response.data);
-        })
+    
+  };
 
-        .catch((error) => {
-          //console.log(error);
-        });
+  // Function to check if pmtct_enrollment exists in activities
+  const checkForPmtctEnrollment = (activities) => {
+    if (!activities || !Array.isArray(activities)) {
+      return;
+    }
+
+    // Check if any activity has type "pmtct_enrollment"
+    const hasPmtctEnrollment = activities.some(
+      (activity) => activity.type === "pmtct_enrollment"
+    );
+
+    // If pmtct_enrollment is found and setIsOnPMTCT prop is provided, call it
+    if (hasPmtctEnrollment && props.setIsOnPMTCT) {
+      props.setIsOnPMTCT(true);
     }
   };
 
   const RecentActivities = () => {
-    // if patient has ANC No
-    // if (props.patientObj.ancNo) {
-    //   axios
-    //     .get(`${baseUrl}${props.patientObj.ancNo}`, {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     })
-    //     .then((response) => {
-    //       setRecentActivities(response.data);
-    //     })
-    //     .catch((error) => {
-    //     });
-    // } else {
+
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    // Use selectedCycleId if available, otherwise use latestPmtctCycle
+    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+
+    if (!pmtctCycleId) {
+      console.error("pmtctCycleId is required");
+      return;
+    }
+
     axios
       .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${
-          props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : props.patientObj.personUuid
-        }`,
+        `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -114,6 +115,9 @@ const RecentHistory = (props) => {
       .then((response) => {
         console.log(response.data);
         setRecentActivities(response.data);
+
+        // Check if pmtct_enrollment exists in activities
+        checkForPmtctEnrollment(response.data);
       })
       .catch((error) => {
         //console.log(error);
@@ -121,41 +125,28 @@ const RecentHistory = (props) => {
     // }
   };
   const SummaryChart = () => {
-    // if patient has ANC No
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    // Use selectedCycleId if available, otherwise use latestPmtctCycle
+    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
 
-    if (props.patientObj.ancNo) {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-summary-chart?ancNo=${props.patientObj.ancNo}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setSummaryChart(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
-    } else {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-          }`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setSummaryChart(response.data);
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
+    if (!pmtctCycleId) {
+      console.error("pmtctCycleId is required");
+      return;
     }
+
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setSummaryChart(response.data);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
   };
   const ActivityName = (name) => {
     if (name === "pmtct-enrollment") {
@@ -453,7 +444,7 @@ const RecentHistory = (props) => {
                   defaultActiveKey="0"
                 >
                   <>
-                    {recentActivities.length >0 &&
+                    {recentActivities.length > 0 &&
                       recentActivities.map((data, i) => (
                         <div className="accordion-item" key={i}>
                           <Accordion.Toggle
@@ -724,7 +715,9 @@ const RecentHistory = (props) => {
                                       <strong className="text-warning">
                                         Gender
                                         <br />
-                                        {obj.sex === "SEX_FEMALE"? "Female" : "Male"}
+                                        {obj.sex === "SEX_FEMALE"
+                                          ? "Female"
+                                          : "Male"}
                                       </strong>
                                     </span>
                                   </li>
@@ -744,12 +737,21 @@ const RecentHistory = (props) => {
         ) : (
           ""
         )}
-   
+
         {/* props.patientObj.dynamicHivStatus === "Unknown" || */}
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">
             <div className="card-body">
-              {props.checkForRetesting && !recentActivities.some(activity => activity.path === "pmtct-hts") ? (
+              {props.checkForRetesting &&
+              !recentActivities.some(
+                (activity) => activity.path === "pmtct-hts"
+              ) &&
+              (!props.patientObj.dynamicHivStatus ||
+                props.patientObj.dynamicHivStatus === "") &&
+              (!props.patientObj.staticHivStatus ||
+                props.patientObj.staticHivStatus === "") &&
+              (!props.patientObj.hivStatus ||
+                props.patientObj.hivStatus === "") ? (
                 <b>Patient has no HTS record. Please refer for testing...</b>
               ) : (
                 ""

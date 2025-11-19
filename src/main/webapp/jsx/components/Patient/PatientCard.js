@@ -117,25 +117,30 @@ const [expandedIndex, setExpandedIndex] = useState(false);
   };
 
 const getHivRetestStatus = async () => {
-      const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
 
-  try {
-    const response = await axios.get(
-      `${baseUrl}pmtct/anc/get-hiv-retest-status?personUuid=${personUuid}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-    
-     setRetestStatus(response.data);
-    
+        if(props.latestPmtctCycle.id){
+            const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+
+        try {
+          let url = `${baseUrl}pmtct/anc/get-hiv-retest-status?personUuid=${personUuid}&pmtctCycleId=${props.latestPmtctCycle.id}`;
+
+        
+
+          const response = await axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          setRetestStatus(response.data);
 
 
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching HIV retest status:", error);
-    toast.error("Failed to load HIV retest status");
-  }
+
+          return response.data;
+        } catch (error) {
+          console.error("Error fetching HIV retest status:", error);
+          toast.error("Failed to load HIV retest status");
+        }
+        }
+
 };
 
    
@@ -162,11 +167,12 @@ const getHivRetestStatus = async () => {
   }, [props.activeContent]);
     
   const getLatestConfirmatoryResult = async() => {
-    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    if(props.latestPmtctCycle?.id){
+      const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
 
     await axios
       .get(
-        `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}&pmtctCycleId=${props.latestPmtctCycle.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -184,6 +190,7 @@ const getHivRetestStatus = async () => {
       .catch((error) => {
         console.error("Error fetching confirmatory result:", error);
       });
+    }
   };
 
   //Get list of KP
@@ -245,30 +252,44 @@ const getMaternalOutcome = async () => {
 
 
  const getHETInfantStatus = () => {
-    axios
-      .get(`${baseUrl}pmtct/anc/check-for-infant-pcr-alert/${props.patientObj.person_uuid?  props.patientObj.person_uuid : props.patientObj.personUuid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        if (response.data) {
-          setInfantHeiPcr(response.data)
-          let heiInfant=  response.data.filter((each)=>{
-                return each.alertMessage 
-
+    
+    if ( props.latestPmtctCycle?.id) {
+        const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+        const pmtctCycleId = props.latestPmtctCycle?.id;
+          axios
+            .get(
+              `${baseUrl}pmtct/anc/check-for-infant-pcr-alert/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            )
+            .then((response) => {
+              if (response.data) {
+                setInfantHeiPcr(response.data);
+                let heiInfant = response.data.filter((each) => {
+                  return each.alertMessage;
+                });
+                setInfantHeiPcrAlert(heiInfant);
+              }
             })
-        setInfantHeiPcrAlert(heiInfant)
-        }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+            .catch((error) => {
+              //console.log(error);
+            });   
+           }
+
+ 
   };
   ///GET LIST OF Patients
   async function PatientCurrentStatus() {
     axios
-      .get(`${baseUrl}hiv/status/patient-current/${patientObj.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}hiv/status/patient-current/${
+          patientObj.id ? patientObj.id : patientObj.personId
+        }`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
         setHivStatus(response.data);
       })

@@ -31,8 +31,15 @@ function SubMenu(props) {
   const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
   const [allPmtctCycleRecord, setAllPmtctCycleRecord] = useState([]);
 
+  // Use selectedCycleId from props if available, otherwise use local state
+  const selectedCycleId = props.selectedCycleId !== undefined && props.selectedCycleId !== null
+    ? props.selectedCycleId
+    : (allPmtctCycleRecord.length > 0 ? allPmtctCycleRecord[0].id : null);
 
-  const [isOnPMTCT, setIsOnPMTCT] = useState(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
+
+  // Use isOnPMTCT from props if provided, otherwise use local state
+  const isOnPMTCT = props.isOnPMTCT !== undefined ? props.isOnPMTCT : (props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct);
+  const setIsOnPMTCT = props.setIsOnPMTCT || (() => {});
 
 
 
@@ -51,6 +58,18 @@ function SubMenu(props) {
     [hasPermission, hasRDErole]
   );
 
+  // Function to handle cycle selection (both default and onChange)
+  const handleCycleChange = (cycleId) => {
+    console.log('Selected cycle ID:', cycleId);
+
+    // Fetch latest confirmatory result for the selected cycle
+    getLatestConfirmatoryResult(cycleId);
+
+    // Pass the selected cycle to parent component
+    if (props.onCycleChange) {
+      props.onCycleChange(cycleId);
+    }
+  };
 
       const getAllPmtctCycle = async () => {
         const personUuid = patientObj.person_uuid
@@ -58,13 +77,21 @@ function SubMenu(props) {
           : patientObj.personUuid
           ? patientObj.personUuid
           : patientObj.uuid;
-  
+
         await axios
           .get(`${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
             setAllPmtctCycleRecord(response.data);
+            // Set the first cycle as default if available and no cycle is currently selected
+            if (response.data && response.data.length > 0) {
+              const firstCycleId = response.data[0].id;
+              // Only set default if parent hasn't provided a selectedCycleId
+              if (props.selectedCycleId === undefined || props.selectedCycleId === null) {
+                handleCycleChange(firstCycleId);
+              }
+            }
           })
           .catch((error) => {
             toast.error(error?.message);
@@ -97,17 +124,23 @@ function SubMenu(props) {
 
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
-
-    setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct)
+    // Only update if setIsOnPMTCT is passed from parent
+    if (props.setIsOnPMTCT) {
+      props.setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct);
+    }
   }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus]);
 
 
   //Get list of RegimenLine
   const Observation = () => {
     axios
-      .get(`${baseUrl}observation/person/${props.patientObj.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}observation/person/${
+          props.patientObj.id ? props.patientObj.id : props.patientObj.personId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
         const observation = response.data;
         const mental = observation.filter((x) => x.type === "mental health");
@@ -164,24 +197,37 @@ function SubMenu(props) {
   //
 
   
-  const getLatestConfirmatoryResult = async() => {
-    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+  const getLatestConfirmatoryResult = async(pmtctCycleId) => {
+    let thePmtctCycleId = pmtctCycleId || props.latestPmtctCycle?.id;
+    if (thePmtctCycleId) {
+      const personUuid =
+        props.patientObj.person_uuid || props.patientObj.personUuid;
 
-    await axios
-      .get(
-        `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}`,
-        {
+
+
+      const url = `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}&pmtctCycleId=${thePmtctCycleId}`;
+
+      await axios
+        .get(url, {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        setPatientStatus(response.data? response.data: props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+        })
+        .then((response) => {
+          setPatientStatus(
+            response.data
+              ? response.data
+              : props?.patientObj?.staticHivStatus
+              ? props?.patientObj?.staticHivStatus
+              : props?.patientObj?.hivStatus
+              ? props?.patientObj?.hivStatus
+              : props.patientObj.dynamicHivStatus
+          );
           showRetestingMenu(response.data);
-
-      })
-      .catch((error) => {
-        console.error("Error fetching confirmatory result:", error);
-      });
+        })
+        .catch((error) => {
+          console.error("Error fetching confirmatory result:", error);
+        });
+    }
+  
   };
 const showRetestingMenu = (patientHivStatus) => {
 
@@ -236,89 +282,98 @@ const showRetestingMenu = (patientHivStatus) => {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-
-        {showRetesting && retestingStatus=== "pmtct-hts" && <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>  PMTCT HTS  </Menu.Item>}
-       
-  
-
+        {showRetesting && retestingStatus === "pmtct-hts" && (
+          <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>
+            {" "}
+            PMTCT HTS{" "}
+          </Menu.Item>
+        )}
 
         {["Positive", "reactive"].includes(patientStatus?.trim()) && (
           <>
-           
-
             {isOnPMTCT !== true ? (
               <>
-              <>
-                {permissions.genAndPmtct &&<Menu.Item onClick={() => loadAncPnc()}>
-                  PMTCT Enrollment
-                </Menu.Item>}
-              </>
+                <>
+                  {permissions.genAndPmtct && (
+                    <Menu.Item onClick={() => loadAncPnc()}>
+                      PMTCT Enrollment
+                    </Menu.Item>
+                  )}
+                </>
               </>
             ) : (
               <>
-              {closeCycle &&  <>
-               <Menu.Item onClick={() => onClickConsultation()}>
-                  Follow Up Visit
-                </Menu.Item>
-
-                {!deliveryStatus  && (
-                    <Menu.Item onClick={() => loadLabourDelivery()}>
-                      Labour and Delivery
+                {closeCycle && (
+                  <>
+                    <Menu.Item onClick={() => onClickConsultation()}>
+                      Follow Up Visit
                     </Menu.Item>
-                  )}
-                {patientObj?.ancNo && (
-                  <Menu.Item onClick={() => onClickPartner()}>
-                    {" "}
-                    Partners
-                  </Menu.Item>
+
+                    {!deliveryStatus && (
+                      <Menu.Item onClick={() => loadLabourDelivery()}>
+                        Labour and Delivery
+                      </Menu.Item>
+                    )}
+                    {patientObj?.ancNo && (
+                      <Menu.Item onClick={() => onClickPartner()}>
+                        {" "}
+                        Partners
+                      </Menu.Item>
+                    )}
+                    {/* )} */}
+                    <Menu.Item onClick={() => onClickInfant()}>
+                      {" "}
+                      Infant Information
+                    </Menu.Item>
+                  </>
                 )}
-                {/* )} */}
-                <Menu.Item onClick={() => onClickInfant()}>
-                  {" "}
-                  Infant Information
-                </Menu.Item>
-              
-              
-              </>  }
-               
               </>
             )}
           </>
         )}
-        {showRetesting && retestingStatus === "retesting" && <Menu.Item onClick={() => onClickPmtctHts("retesting")}>Retesting  </Menu.Item>}
-
-   
+        {showRetesting && retestingStatus === "retesting" && (
+          <Menu.Item onClick={() => onClickPmtctHts("retesting")}>
+            Retesting{" "}
+          </Menu.Item>
+        )}
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
 
-        <Menu.Menu position="right" style={{ marginLeft: 'auto' }}>
+        <Menu.Menu position="right" style={{ marginLeft: "auto" }}>
           {allPmtctCycleRecord && allPmtctCycleRecord.length > 0 && (
-            <Dropdown item text="Pregnancy Cycle" style={{ borderLeft: '2px solid rgba(255,255,255,0.3)', paddingLeft: '15px' }}>
+            <Dropdown
+              item
+              text={`Pregnancy Cycle ${
+                selectedCycleId
+                  ? allPmtctCycleRecord?.length - ( allPmtctCycleRecord.findIndex(
+                      (c) => c.id === selectedCycleId
+                    ))
+                  : 1
+              }`}
+              style={{
+                borderLeft: "2px solid rgba(255,255,255,0.3)",
+                paddingLeft: "15px",
+              }}
+            >
               <Dropdown.Menu>
-                <Dropdown.Header>Select Pregnancy Cycle</Dropdown.Header>
                 <Dropdown.Divider />
                 {allPmtctCycleRecord.map((cycle, index) => (
                   <Dropdown.Item
                     key={cycle.id}
-                    onClick={() => {
-                      // You can add logic here to handle cycle selection
-                      console.log('Selected cycle:', cycle);
-                    }}
+                    value={cycle.id}
+                    active={selectedCycleId === cycle.id}
+                    onClick={() => handleCycleChange(cycle.id)}
                   >
                     <div>
-                      <strong>Cycle {index + 1}</strong>
-                      <br />
-                      <small>Status: {cycle.pmtctStatus || 'N/A'}</small>
-                      <br />
-                      <small>
-                        Created: {cycle.createdDate ? new Date(cycle.createdDate).toLocaleDateString() : 'N/A'}
-                      </small>
+                      <strong>
+                        Cycle {allPmtctCycleRecord.length - index}
+                      </strong>
                     </div>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
             </Dropdown>
-          )} 
+          )}
         </Menu.Menu>
       </Menu>
     </div>

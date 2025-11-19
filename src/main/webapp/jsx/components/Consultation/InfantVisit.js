@@ -374,15 +374,14 @@ const ClinicVisit = (props) => {
     }
   };
   const filterOutTheChosenChildForView = (child) => {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
-          props.patientObj.person_uuid
+    let personUuid= props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : props.patientObj.personUuid
             ? props.patientObj.personUuid
             : props.patientObj.uuid
-        }`,
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${props?.latestPmtctCycle?.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -394,8 +393,11 @@ const ClinicVisit = (props) => {
         let weeks = calculateAgeInWeek(resultInfo[0].dateOfDelivery);
 
         calculateAgeAtTestMonth(weeks);
-        getLatestPCR(resultInfo[0].hospitalNumber)
-        getLatestRapidTest(resultInfo[0].hospitalNumber, resultInfo[0].personUuid)
+        getLatestPCR(resultInfo[0].hospitalNumber);
+        getLatestRapidTest(
+          resultInfo[0].hospitalNumber,
+          resultInfo[0].personUuid
+        );
         setChoosenInfant(resultInfo[0]);
       })
 
@@ -670,15 +672,14 @@ const ClinicVisit = (props) => {
   };
   ///GET LIST OF Infants
   const InfantInfo = () => {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
-          props.patientObj.person_uuid
+    let personUuid= props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : props.patientObj.personUuid
             ? props.patientObj.personUuid
             : props.patientObj.uuid
-        }`,
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${props?.latestPmtctCycle.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -766,7 +767,7 @@ const ClinicVisit = (props) => {
           })
           .then((response) => {
             setLatestRapidTest(response.data)
-            if(response.data){
+            if(response?.data?.id){
 
               setInfantRapidTestDTO({...response.data})
               setDisableRapidField(true)
@@ -999,6 +1000,7 @@ const ClinicVisit = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("validate()", validate());
     if (validate()) {
       setSaving(true);
       objValues.infantMotherArtDto = infantMotherArtDto;

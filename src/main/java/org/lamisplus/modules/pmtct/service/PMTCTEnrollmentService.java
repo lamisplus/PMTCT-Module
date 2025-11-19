@@ -323,8 +323,9 @@ private DeliveryRepository deliveryRepository;
 
 
 
-           PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
-           if(pmtct != null) {
+           Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.findLatestByPersonUuidAndArchived(pmtctEnrollment.getPersonUuid(), Long.valueOf(0L));
+           if(pmtctOptional.isPresent()) {
+               PMTCTEnrollment pmtct = pmtctOptional.get();
                pmtctEnrollmentRespondDto.setHospitalNumber(pmtct.getHospitalNumber());
                pmtctEnrollmentRespondDto.setFullName(getFullName(pmtct.getPersonUuid()));
                pmtctEnrollmentRespondDto.setAge(calculateAge(pmtct.getPersonUuid()));
@@ -395,8 +396,8 @@ private DeliveryRepository deliveryRepository;
 
     @SneakyThrows
     public PMTCTEnrollmentRespondDto getSinglePmtctEnrollmentByPersonUuid(String id) {
-        return convertEntitytoRespondDto(this.pmtctEnrollmentReporsitory.findPMTCTEnrollmentByPersonUuid(id));
-
+        Optional<PMTCTEnrollment> enrollment = this.pmtctEnrollmentReporsitory.findLatestPMTCTEnrollmentByPersonUuid(id);
+        return enrollment.map(this::convertEntitytoRespondDto).orElse(null);
     }
     @SneakyThrows
     public PMTCTEnrollmentRespondDto getSinglePmtctEnrollmentByAncNo(String ancNo) {
@@ -417,7 +418,7 @@ private DeliveryRepository deliveryRepository;
 
     public void  updateDateOfDeliveryFromDelivery(String personUuid, String deliveryDate, Integer ga)
     {
-        Optional <PMTCTEnrollment> pmtctEnrollment = Optional.ofNullable(this.pmtctEnrollmentReporsitory.findPMTCTEnrollmentByPersonUuid(personUuid));
+        Optional <PMTCTEnrollment> pmtctEnrollment = this.pmtctEnrollmentReporsitory.findLatestPMTCTEnrollmentByPersonUuid(personUuid);
         if(pmtctEnrollment.isPresent())
         {
             PMTCTEnrollment pmtctEnrollment1 = pmtctEnrollment.get();
@@ -614,14 +615,44 @@ private DeliveryRepository deliveryRepository;
             htsClientResponse.setStatus(false);
 
             return htsClientResponse;
+        }
     }
 
+    public PMTCTValidationDto getPMTCTValidationDates(String personUuid) {
+        PMTCTValidationDto validationDto = new PMTCTValidationDto();
 
+        // Get the latest PMTCT enrollment date
+        try {
+            LocalDate latestEnrollmentDate = pmtctEnrollmentReporsitory.getLatestPmtctEnrollmentDate(personUuid);
+            if (latestEnrollmentDate != null) {
+                validationDto.setHasPreviousEnrollment(true);
+                validationDto.setPreviousEnrollmentDate(latestEnrollmentDate);
+            } else {
+                validationDto.setHasPreviousEnrollment(false);
+                validationDto.setPreviousEnrollmentDate(null);
+            }
+        } catch (Exception e) {
+            validationDto.setHasPreviousEnrollment(false);
+            validationDto.setPreviousEnrollmentDate(null);
+        }
 
+        // Get the latest delivery date
+        try {
+            LocalDate latestDeliveryDate = deliveryRepository.getLatestDeliveryDate(personUuid);
+            if (latestDeliveryDate != null) {
+                validationDto.setHasPreviousDelivery(true);
+                validationDto.setPreviousDeliveryDate(latestDeliveryDate);
+            } else {
+                validationDto.setHasPreviousDelivery(false);
+                validationDto.setPreviousDeliveryDate(null);
+            }
+        } catch (Exception e) {
+            validationDto.setHasPreviousDelivery(false);
+            validationDto.setPreviousDeliveryDate(null);
+        }
 
-}
-
-
+        return validationDto;
+    }
 
     public List<InfantPCRAlert>  checkHEIPrompt(String personUuid) {
         // Get all infants for the patient
@@ -631,6 +662,36 @@ private DeliveryRepository deliveryRepository;
         // Check if infants exist
         if (allInfant == null || allInfant.isEmpty()) {
             return Collections.emptyList();
+        }
+
+        List<InfantPCRAlert>  infantsResult = new ArrayList<>();
+        // Process each infant
+        for (Infant infant : allInfant) {
+            try {
+                InfantPCRAlert infantRes = new InfantPCRAlert();
+
+                InfantPCRAlert infantResult = processInfant(infant, infantRes);
+                if (infantResult != null) {
+                    infantsResult.add(infantResult);
+                }
+            } catch (Exception e) {
+                // Log error but continue processing other infants
+                System.err.println("Error processing infant: " + infant.getHospitalNumber() + " - " + e.getMessage());
+            }
+        }
+
+
+        return infantsResult;
+    }
+
+    public List<InfantPCRAlert>  checkHEIPrompt(String personUuid, Long pmtctCycleId) {
+        // Get all infants for the patient by cycle
+        List<Infant> allInfant = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+
+
+        // Check if infants exist
+        if (allInfant == null || allInfant.isEmpty()) {
+
         }
 
         List<InfantPCRAlert>  infantsResult = new ArrayList<>();

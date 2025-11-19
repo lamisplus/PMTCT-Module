@@ -44,6 +44,9 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
     @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid=?1 ", nativeQuery = true)
     List<Infant> getAllInfantByPersonUuid(String personUuid);
 
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid=?1 AND pmtct_cycle_id=?2 ", nativeQuery = true)
+    List<Infant> getAllInfantByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
+
 
 
 

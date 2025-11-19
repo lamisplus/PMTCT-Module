@@ -1,0 +1,17 @@
+package org.lamisplus.modules.pmtct.domain.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class EnrollmentValidationDto {
+    private boolean canEnrollDirectly;
+    private boolean requiresConfirmation;
+    private String message;
+    private String lastMaternalOutcome;
+    private Boolean isClosed;
+    private Long lastCycleId;
+}

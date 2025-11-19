@@ -843,58 +843,79 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
         if (infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null) {
             Optional<InfantVisit> infantVisitOptional = this.infantVisitRepository.findById(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId());
-            infantVisitOptional.ifPresent(this.infantVisitRepository::delete);
+            infantVisitOptional.ifPresent(infantVisit -> {
+                infantVisit.setArchived(1L);
+                this.infantVisitRepository.save(infantVisit);
+            });
         }
 
-        // Handling DELETE for InfantArv
+        // Handling soft DELETE for InfantArv
         Optional<InfantArv> infantArvOptional;
         if (infantVisitationConsolidatedDto.getInfantArvDto() != null && infantVisitationConsolidatedDto.getInfantArvDto().getUniqueUuid() != null && StringUtils.hasText(infantVisitationConsolidatedDto.getInfantArvDto().getUniqueUuid())) {
             infantArvOptional = this.infantArvRepository.findByUniqueUuid(infantVisitationConsolidatedDto.getInfantArvDto().getUniqueUuid());
         } else {
             infantArvOptional = this.infantArvRepository.getByInfantHospitalNumberAndVisitDate(infantHospitalNumber, visitDate);
         }
-        infantArvOptional.ifPresent(this.infantArvRepository::delete);
+        infantArvOptional.ifPresent(infantArv -> {
+            infantArv.setArchived(1L);
+            this.infantArvRepository.save(infantArv);
+        });
 
 
-        // Handling DELETE for InfantMotherArt
+        // Handling soft DELETE for InfantMotherArt
         Optional<InfantMotherArt> infantMotherArtOptional;
         if (infantVisitationConsolidatedDto.getInfantMotherArtDto() != null && infantVisitationConsolidatedDto.getInfantMotherArtDto().getUniqueUuid() != null && StringUtils.hasText(infantVisitationConsolidatedDto.getInfantMotherArtDto().getUniqueUuid())) {
             infantMotherArtOptional = this.infantMotherArtRepository.findByUniqueUuid(infantVisitationConsolidatedDto.getInfantMotherArtDto().getUniqueUuid());
         } else {
             infantMotherArtOptional = this.infantMotherArtRepository.findByAncNumberAndVisitDate(ancNumber, visitDate);
         }
-        infantMotherArtOptional.ifPresent(this.infantMotherArtRepository::delete);
+        infantMotherArtOptional.ifPresent(infantMotherArt -> {
+            infantMotherArt.setArchived(1L);
+            this.infantMotherArtRepository.save(infantMotherArt);
+        });
 
 
-        // Handling DELETE for InfantPCRTest
+        // Handling soft DELETE for InfantPCRTest
         Optional<InfantPCRTest> infantPCRTestOptional;
         if (infantVisitationConsolidatedDto.getInfantPCRTestDto() != null && infantVisitationConsolidatedDto.getInfantPCRTestDto().getUniqueUuid() != null && StringUtils.hasText(infantVisitationConsolidatedDto.getInfantPCRTestDto().getUniqueUuid())) {
             infantPCRTestOptional = this.infantPCRTestRepository.findByUniqueUuid(infantVisitationConsolidatedDto.getInfantPCRTestDto().getUniqueUuid());
         } else {
             infantPCRTestOptional = this.infantPCRTestRepository.findByInfantHospitalNumberAndVisitDate(infantHospitalNumber, visitDate);
         }
-        infantPCRTestOptional.ifPresent(this.infantPCRTestRepository::delete);
+        infantPCRTestOptional.ifPresent(infantPCRTest -> {
+            infantPCRTest.setArchived(1L);
+            this.infantPCRTestRepository.save(infantPCRTest);
+        });
 
 
 
-        // Handling DELETE for InfantRapidTest
+        // Handling soft DELETE for InfantRapidTest
         Optional<InfantRapidAntiBodyTest> infantRapidOptional;
         if (infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto() != null && infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().getUniqueUuid() != null && StringUtils.hasText(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().getUniqueUuid())) {
             infantRapidOptional = this.infantRapidTestRepository.findByUniqueUuid(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().getUniqueUuid());
         } else {
             infantRapidOptional = this.infantRapidTestRepository.findById(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().getId());
         }
-        infantRapidOptional.ifPresent(this.infantRapidTestRepository::delete);
+        infantRapidOptional.ifPresent(infantRapidTest -> {
+            infantRapidTest.setArchived(1L);
+            this.infantRapidTestRepository.save(infantRapidTest);
+        });
     }
 
     public void deleteInfantArv(Long id){
         Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
-        infantArvOptional.ifPresent(infantArvRepository::delete);
+        infantArvOptional.ifPresent(infantArv -> {
+            infantArv.setArchived(1L);
+            infantArvRepository.save(infantArv);
+        });
     }
 
     public void deleteInfantPCRTestDt(Long id){
-        Optional<InfantPCRTest> infantArvOptional = this.infantPCRTestRepository.findById(id);
-        infantArvOptional.ifPresent(infantPCRTestRepository::delete);
+        Optional<InfantPCRTest> infantPCRTestOptional = this.infantPCRTestRepository.findById(id);
+        infantPCRTestOptional.ifPresent(infantPCRTest -> {
+            infantPCRTest.setArchived(1L);
+            infantPCRTestRepository.save(infantPCRTest);
+        });
     }
 
 

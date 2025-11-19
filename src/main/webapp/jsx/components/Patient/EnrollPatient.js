@@ -228,21 +228,87 @@ const UserRegistration = (props) => {
   const toggle = () => setOpen(!open);
 
   const [sourceOfReferral, setSourceOfReferral] = useState([]);
+  const [minAncDates, setMinAncDates] = useState({
+    minFirstAncDate: null,
+    minLmp: null,
+  });
+  const [showEnrollmentConfirmation, setShowEnrollmentConfirmation] = useState(false);
+  const [enrollmentValidation, setEnrollmentValidation] = useState(null);
+  const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
 
-  const getLastPmtctHtsRecord = (personUuid) => {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}`,
+  const validateEnrollment = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/validate-enrollment?personUuid=${personUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .then((response) => {
-        if (response.data) {
-          setLastPmtctHtsRecord(response.data);
+      );
+
+      if (response.data) {
+        setEnrollmentValidation(response.data);
+
+        if (response.data.canEnrollDirectly) {
+          // Allow direct enrollment
+          setCanProceedWithEnrollment(true);
+          setShowEnrollmentConfirmation(false);
+        } else if (response.data.requiresConfirmation) {
+          // Show confirmation dialog
+          setShowEnrollmentConfirmation(true);
+          setCanProceedWithEnrollment(false);
         }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+      }
+    } catch (error) {
+      console.log("Error validating enrollment:", error);
+      // On error, allow enrollment to proceed
+      setCanProceedWithEnrollment(true);
+    }
+  };
+
+  const checkANCEnrollment = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/check-anc-enrollment?personUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data && response.data.hasAncEnrollment) {
+        // Set minimum dates if patient has previous ANC enrollment
+        setMinAncDates({
+          minFirstAncDate: response.data.firstAncDate,
+          minLmp: response.data.lmp,
+        });
+      }
+    } catch (error) {
+      console.log("Error checking ANC enrollment:", error);
+    }
+  };
+
+  const getLastPmtctHtsRecord = async (personUuid) => {
+    try {
+      // First, get the latest pregnancy cycle
+      const cyclesResponse = await axios.get(
+        `${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!cyclesResponse.data || cyclesResponse.data.length === 0) {
+        console.log("No pregnancy cycles found for this patient");
+        return;
+      }
+
+      const latestCycleId = cyclesResponse.data[0].id;
+
+      // Then get the latest HTS record for that cycle
+      const htsResponse = await axios.get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${latestCycleId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (htsResponse.data) {
+        setLastPmtctHtsRecord(htsResponse.data);
+      }
+    } catch (error) {
+      //console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -252,6 +318,8 @@ const UserRegistration = (props) => {
 
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
+      checkANCEnrollment(patientObj?.uuid);
+      validateEnrollment(patientObj?.uuid);
 
       if (patientObj?.identifier) {
         const identifiers = patientObj.identifier;
@@ -654,6 +722,13 @@ const UserRegistration = (props) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if enrollment is allowed
+    if (!canProceedWithEnrollment) {
+      toast.error("Enrollment not allowed. Please confirm enrollment first.");
+      return;
+    }
+
     console.log("validate()", validate(), errors);
     setSaving(true);
 
@@ -686,7 +761,10 @@ const UserRegistration = (props) => {
           history.push({
             pathname: "/patient-history",
             state: {
-              patientObj: response.data,
+              patientObj: {
+                ...response.data,
+                pmtctCycleId: checkIfCycleIsCreated?.response?.id,
+              },
               postValue: locationState.postValue,
               entrypointValue: locationState.entrypointValue,
             },
@@ -740,6 +818,38 @@ const UserRegistration = (props) => {
         </ol>
       </div>
       <ToastContainer autoClose={3000} hideProgressBar />
+
+      {/* Enrollment Confirmation Modal */}
+      <Modal show={showEnrollmentConfirmation} onHide={() => {}} backdrop="static">
+        <Modal.Header>
+          <Modal.Title>Confirm Enrollment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{enrollmentValidation?.message}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowEnrollmentConfirmation(false);
+              setCanProceedWithEnrollment(false);
+              history.push("/");
+            }}
+          >
+            No
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setShowEnrollmentConfirmation(false);
+              setCanProceedWithEnrollment(true);
+            }}
+          >
+            Yes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Card className={classes.root}>
         <CardContent>
           <Link
@@ -1006,7 +1116,11 @@ const UserRegistration = (props) => {
                               id="firstAncDate"
                               onChange={handleInputChange}
                               value={objValues.firstAncDate}
-                              min={patientObj.dateOfRegistration}
+                              min={
+                                minAncDates.minFirstAncDate
+                                  ? minAncDates.minFirstAncDate
+                                  : patientObj.dateOfRegistration
+                              }
                               max={moment(new Date()).format("YYYY-MM-DD")}
                             />
                           </InputGroup>
@@ -1098,6 +1212,11 @@ const UserRegistration = (props) => {
                               id="lmp"
                               onChange={handleInputChange}
                               value={objValues.lmp}
+                              min={
+                                minAncDates.minLmp
+                                  ? minAncDates.minLmp
+                                  : undefined
+                              }
                               max={
                                 objValues.firstAncDate
                                   ? objValues.firstAncDate

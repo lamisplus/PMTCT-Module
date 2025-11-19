@@ -13,11 +13,13 @@ import org.lamisplus.modules.pmtct.domain.dto.DeliveryResponseDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Delivery;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctPregnancyCycle;
 import org.lamisplus.modules.pmtct.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,10 +44,17 @@ public class DeliveryService
     private ANCService ancService;
     @Autowired
     private InfantRepository infantRepository;
+    @Autowired
+    private PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
     ObjectMapper mapper = new ObjectMapper();
 
     public DeliveryResponseDto save(DeliveryRequestDto deliveryRequestDto) {
-        return convertEntitytoRespondDto(converRequestDtotoEntity(deliveryRequestDto));
+        Delivery savedDelivery = converRequestDtotoEntity(deliveryRequestDto);
+
+        // Update pregnancy cycle after successful delivery save
+        updatePregnancyCycle(deliveryRequestDto);
+
+        return convertEntitytoRespondDto(savedDelivery);
     }
 
     public Delivery converRequestDtotoEntity(DeliveryRequestDto deliveryRequestDto) {
@@ -87,10 +96,11 @@ public class DeliveryService
         }
         delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
 
-        PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
+        Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.findLatestByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
 
-        if(pmtct != null) {
+        if(pmtctOptional.isPresent()) {
+            PMTCTEnrollment pmtct = pmtctOptional.get();
             delivery.setHospitalNumber(pmtct.getHospitalNumber());
             delivery.setFacilityId(pmtct.getFacilityId());
         } else if (anc != null) {
@@ -275,6 +285,9 @@ public class DeliveryService
 
 
             this.deliveryRepository.save(delivery);
+
+            // Update pregnancy cycle after successful delivery update
+            updatePregnancyCycle(deliveryRequestDto);
         }
         return deliveryRequestDto;
     }
@@ -284,12 +297,71 @@ public class DeliveryService
         this.deliveryRepository.delete(existingDelivery);
     }
 
-    public Delivery getSingleDeliveryWithUuid(String personUuid) {
-        Delivery deliveryOptional= deliveryRepository.getDeliveryByPersonUuid(personUuid);
+    public Delivery getSingleDeliveryWithUuid(String personUuid, Long pmtctCycleId) {
+        Delivery deliveryOptional= deliveryRepository.getDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
         Delivery delivery = new Delivery();
         if (deliveryOptional != null) {
             delivery =  deliveryOptional;
         }
         return delivery;
+    }
+
+    /**
+     * Updates the pregnancy cycle with delivery information
+     * - maternal_outcome is updated from maternalOutcome
+     * - pregnancy_outcome is updated from childStatus
+     * - number_of_infants is updated from numberOfInfantsAlive
+     * - is_closed is set to true if maternal outcome is DEAD, LOST_TO_FOLLOW_UP, or TRANSFERRED_OUT
+     */
+    private void updatePregnancyCycle(DeliveryRequestDto deliveryRequestDto) {
+        if (deliveryRequestDto.getPmtctCycleId() == null) {
+            // If no pmtctCycleId, we cannot update the pregnancy cycle
+            return;
+        }
+
+        try {
+            Optional<PmtctPregnancyCycle> cycleOptional = pmtctPregnancyCycleRepository.findById(deliveryRequestDto.getPmtctCycleId());
+
+            if (cycleOptional.isPresent()) {
+                PmtctPregnancyCycle cycle = cycleOptional.get();
+
+                // Update maternal_outcome with maternalOutcome from delivery
+                if (deliveryRequestDto.getMaternalOutcome() != null) {
+                    cycle.setMaternalOutcome(deliveryRequestDto.getMaternalOutcome());
+
+                    // Check if maternal outcome requires closing the pregnancy cycle
+                    String maternalOutcome = deliveryRequestDto.getMaternalOutcome().trim().toUpperCase();
+                    if (maternalOutcome.equals("MATERNAL_OUTCOME_DEAD") ||
+                        maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP") ||
+                        maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP") ||
+                        maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT")) {
+                        cycle.setIsClosed(true);
+                    }
+                }
+
+                // Update pregnancy_outcome with childStatus from delivery
+                if (deliveryRequestDto.getChildStatus() != null) {
+                    cycle.setPregnancyOutcome(deliveryRequestDto.getChildStatus());
+                }
+
+                // Update number_of_infants with numberOfInfantsAlive from delivery
+                if (deliveryRequestDto.getNumberOfInfantsAlive() != null) {
+                    cycle.setNumberOfInfants(deliveryRequestDto.getNumberOfInfantsAlive());
+                }
+
+                // Update last modified information
+                Optional<User> currentUser = this.userService.getUserWithRoles();
+                if (currentUser.isPresent()) {
+                    cycle.setLastModifiedBy(currentUser.get().getUserName());
+                }
+                cycle.setLastModifiedDate(LocalDateTime.now());
+
+                // Save the updated pregnancy cycle
+                pmtctPregnancyCycleRepository.save(cycle);
+            }
+        } catch (Exception e) {
+            // Log the error but don't fail the delivery save
+            System.err.println("Error updating pregnancy cycle: " + e.getMessage());
+        }
     }
 }

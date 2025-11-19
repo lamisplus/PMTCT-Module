@@ -311,9 +311,16 @@ const PmtctHtsForm = (props) => {
   //get the person last record on PMTCT HTS if exist
 
   const getLastPmtctHtsRecord = (personUuid) => {
+    const pmtctCycleId = props.latestPmtctCycle?.id;
+
+    if (!pmtctCycleId) {
+      console.error("pmtctCycleId is required");
+      return;
+    }
+
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}`,
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {

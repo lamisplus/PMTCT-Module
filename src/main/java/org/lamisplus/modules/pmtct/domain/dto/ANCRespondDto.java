@@ -44,25 +44,15 @@ public class ANCRespondDto implements Serializable {
     private Long personId;
     private String staticHivStatus;
     private String dynamicHivStatus;
-    private String testedSyphilis;
-    private String testResultSyphilis;
     private String treatedSyphilis;
     private String referredSyphilisTreatment;
     private PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto;
     private LocalDate artStartDate;
     private String previouslyKnownHivStatus;
     private String currentlyOnArt;
-    private LocalDate  dateOfHepatitisB;
-    private String  hepatitisB;
-    private String testedHepatitisB;
     private String treatedHepatitisB;
-    private String referredHepatitisB;
 
-    private LocalDate  dateOfHepatitisC;
-    private String  hepatitisC;
-    private String testedHepatitisC;
     private String treatedHepatitisC;
-    private String referredHepatitisC;
     private String facilityEnrolledIn;
     private Long pmtctCycleId;
     private Long pregnancyCount;

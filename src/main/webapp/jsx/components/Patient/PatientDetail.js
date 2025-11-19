@@ -72,7 +72,18 @@ function PatientCard(props) {
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
   const [checkForRetesting, setCheckForRetesting] = useState(true);
-  const [latestPmtctCycle, setLatestPmtctCycle] = useState({});
+  const [isOnPMTCT, setIsOnPMTCT] = useState(false);
+
+   const patientObj =
+    history.location && history.location.state
+      ? history.location.state.patientObj
+      : {};
+  
+      console.log("patientObj", patientObj);
+  const [latestPmtctCycle, setLatestPmtctCycle] = useState({
+    id: patientObj.pmtctCycleId,
+  });
+  const [selectedCycleId, setSelectedCycleId] = useState(null);
 
   const [activeContent, setActiveContent] = useState({
     route: "recent-history",
@@ -83,12 +94,14 @@ function PatientCard(props) {
   });
 
   const { classes } = props;
-  const patientObj =
-    history.location && history.location.state
-      ? history.location.state.patientObj
-      : {};
 
- 
+  // Handler for cycle selection changes
+  const handleCycleChange = (cycleId) => {
+    setSelectedCycleId(cycleId);
+    console.log('Cycle changed in PatientDetail:', cycleId);
+  };
+
+
   const getLatestPmtctCycle = async () => {
     const personUuid = patientObj.person_uuid
       ? patientObj.person_uuid
@@ -111,41 +124,44 @@ function PatientCard(props) {
       });
   };
   const RecentActivities = () => {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${
-          patientObj.person_uuid
-            ? patientObj.person_uuid
-            : patientObj.personUuid
-            ? patientObj.personUuid
-            : patientObj.uuid
-        }`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        console.log("response", response);
-        if (response?.data) {
-          const hasDeliveryActivity = response.data.some(
-            (each) => each.activityName == "Labour and Delivery"
-          );
-          setMainDeliveryStatus(hasDeliveryActivity);
-          const hasRetestingActivity = response.data.some(
-            (each) =>
-              (each.activityName &&
-                each.activityName.toUpperCase().includes("RETEzzSTING")) ||
-              (each.activityName &&
-                each.activityName.toUpperCase().includes("PMTCT-HTS"))
-          );
-          setCheckForRetesting(hasRetestingActivity ? false : true);
-        } else {
-          setDeliveryInfo({});
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching recent activities:", error);
-      });
+    if (patientObj.pmtctCycleId) {
+      const personUuid = patientObj.person_uuid
+        ? patientObj.person_uuid
+        : patientObj.personUuid
+        ? patientObj.personUuid
+        : patientObj.uuid;
+      const pmtctCycleId = props.latestPmtctCycle?.id;
+      axios
+        .get(
+          `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${patientObj.pmtctCycleId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((response) => {
+          console.log("response", response);
+          if (response?.data) {
+            const hasDeliveryActivity = response.data.some(
+              (each) => each.activityName == "Labour and Delivery"
+            );
+            setMainDeliveryStatus(hasDeliveryActivity);
+            const hasRetestingActivity = response.data.some(
+              (each) =>
+                (each.activityName &&
+                  each.activityName.toUpperCase().includes("RETEzzSTING")) ||
+                (each.activityName &&
+                  each.activityName.toUpperCase().includes("PMTCT-HTS"))
+            );
+            setCheckForRetesting(hasRetestingActivity ? false : true);
+          } else {
+            setDeliveryInfo({});
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching recent activities:", error);
+        });
+    }
+ 
   };
 
   const getLatestMaternalOutcome = async () => {
@@ -196,9 +212,9 @@ function PatientCard(props) {
     GET_CODESETS();
     RecentActivities();
     getLatestMaternalOutcome();
-
+    let patientId=patientObj?.id||patientObj?.personId
     axios
-      .get(`${baseUrl}patient/${patientObj?.id}`, {
+      .get(`${baseUrl}patient/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -244,6 +260,7 @@ function PatientCard(props) {
             maternalOutcome={maternalOutcome}
             setLatestHivStatus={setLatestHivStatus}
             latestPmtctCycle={latestPmtctCycle}
+            selectedCycleId={selectedCycleId}
           />
 
           {/* Patient Dashboard menu */}
@@ -257,6 +274,11 @@ function PatientCard(props) {
             activeContent={activeContent}
             mainDeliveryStatus={mainDeliveryStatus}
             maternalOutcome={maternalOutcome}
+            isOnPMTCT={isOnPMTCT}
+            setIsOnPMTCT={setIsOnPMTCT}
+            latestPmtctCycle={latestPmtctCycle}
+            selectedCycleId={selectedCycleId}
+            onCycleChange={handleCycleChange}
           />
           <br />
 
@@ -276,6 +298,8 @@ function PatientCard(props) {
                   : patientObj.entryPoint
               }
               latestPmtctCycle={latestPmtctCycle}
+              setIsOnPMTCT={setIsOnPMTCT}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -286,6 +310,7 @@ function PatientCard(props) {
               activeContent={activeContent}
               maternalOutcome={maternalOutcome}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -308,6 +333,7 @@ function PatientCard(props) {
               }
               latestPmtctCycle={latestPmtctCycle}
               hasPmtctHtsRecord={"omit"}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -327,6 +353,7 @@ function PatientCard(props) {
               latestPmtctCycle={latestPmtctCycle}
               onEnrollPatient={false}
               hasPmtctHtsRecord={"omit"}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -336,6 +363,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -345,6 +373,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -355,6 +384,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -365,6 +395,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -375,6 +406,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -385,6 +417,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -394,6 +427,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 
@@ -403,6 +437,7 @@ function PatientCard(props) {
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
         </CardContent>

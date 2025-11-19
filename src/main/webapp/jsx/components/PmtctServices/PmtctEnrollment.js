@@ -8,6 +8,10 @@ import {
   Input,
   InputGroup,
   InputGroupText,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "reactstrap";
 import { Label as FormLabelName } from "reactstrap";
 import MatButton from "@material-ui/core/Button";
@@ -120,6 +124,11 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
   const [maxARTDate, setMaxARTDate]=useState(moment(new Date()).format("YYYY-MM-DD"));
   const [minARTDate, setMinARTDate]=useState("");
+  const [minPmtctEnrollmentDate, setMinPmtctEnrollmentDate] = useState(null);
+  const [minDeliveryDate, setMinDeliveryDate] = useState(null);
+  const [showEnrollmentConfirmation, setShowEnrollmentConfirmation] = useState(false);
+  const [enrollmentValidation, setEnrollmentValidation] = useState(null);
+  const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
 
 // Extract hivStatus calculation outside
 const getInitialHivStatus = () => {
@@ -297,6 +306,53 @@ console.log('fddd', enroll.hivStatus)
 
 
 
+  const validateEnrollment = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/validate-enrollment?personUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data) {
+        setEnrollmentValidation(response.data);
+
+        if (response.data.canEnrollDirectly) {
+          // Allow direct enrollment
+          setCanProceedWithEnrollment(true);
+          setShowEnrollmentConfirmation(false);
+        } else if (response.data.requiresConfirmation) {
+          // Show confirmation dialog
+          setShowEnrollmentConfirmation(true);
+          setCanProceedWithEnrollment(false);
+        }
+      }
+    } catch (error) {
+      console.log("Error validating enrollment:", error);
+      // On error, allow enrollment to proceed
+      setCanProceedWithEnrollment(true);
+    }
+  };
+
+  const checkPMTCTValidationDates = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/check-pmtct-validation-dates?personUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data) {
+        if (response.data.hasPreviousEnrollment && response.data.previousEnrollmentDate) {
+          setMinPmtctEnrollmentDate(response.data.previousEnrollmentDate);
+        }
+        if (response.data.hasPreviousDelivery && response.data.previousDeliveryDate) {
+          setMinDeliveryDate(response.data.previousDeliveryDate);
+        }
+      }
+    } catch (error) {
+      console.log("Error checking PMTCT validation dates:", error);
+    }
+  };
+
   useEffect(() => {
    GET_CODESETS();
     checkTimingOfART(0)
@@ -306,6 +362,13 @@ console.log('fddd', enroll.hivStatus)
     if (props?.patientObj.id) {
       getARTStartDate();
       // getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
+    }
+
+    // Check validation dates for PMTCT enrollment and delivery
+    const personUuid = props?.patientObj?.uuid || props?.patientObj?.person_uuid || locationState?.patientObj?.uuid || locationState?.patientObj?.person_uuid;
+    if (personUuid) {
+      checkPMTCTValidationDates(personUuid);
+      validateEnrollment(personUuid);
     }
     if (
       props.activeContent.id &&
@@ -361,10 +424,10 @@ console.log('fddd', enroll.hivStatus)
   }, [allNewEntryPoint]);
 
   useEffect(() => {
-    if (props.getPMTCTInfo) {
+    if (props.getPMTCTInfo && canProceedWithEnrollment) {
       props.getPMTCTInfo(enroll);
     }
-  }, [enroll]);
+  }, [enroll, canProceedWithEnrollment]);
 
 
     useEffect(() => {
@@ -803,6 +866,39 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
   return (
     <div>
+      {/* Enrollment Confirmation Modal */}
+      <Modal isOpen={showEnrollmentConfirmation} toggle={() => {}} backdrop="static">
+        <ModalHeader>Confirm Enrollment</ModalHeader>
+        <ModalBody>
+          <p>{enrollmentValidation?.message}</p>
+        </ModalBody>
+        <ModalFooter>
+          <MatButton
+            variant="contained"
+            color="default"
+            onClick={() => {
+              setShowEnrollmentConfirmation(false);
+              setCanProceedWithEnrollment(false);
+              if (props.setActiveContent) {
+                props.setActiveContent({ ...props.activeContent, route: "recent-history" });
+              }
+            }}
+          >
+            No
+          </MatButton>
+          <MatButton
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setShowEnrollmentConfirmation(false);
+              setCanProceedWithEnrollment(true);
+            }}
+          >
+            Yes
+          </MatButton>
+        </ModalFooter>
+      </Modal>
+
       <Card className={classes.root}>
         <CardBody>
           <form>
@@ -902,7 +998,9 @@ return dateOfDelivery.diff(lmp, 'weeks')
                       onChange={handleInputChangeEnrollmentDto}
                       value={enroll.pmtctEnrollmentDate}
                       min={
-                        patientObj.ancNo
+                        minPmtctEnrollmentDate
+                          ? minPmtctEnrollmentDate
+                          : patientObj.ancNo
                           ? props.patientObj.firstAncDate
                           : props?.newRegDate
                           ? props?.newRegDate
@@ -1357,7 +1455,9 @@ return dateOfDelivery.diff(lmp, 'weeks')
                         value={enroll.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         min={
-                          props?.ancEntryType
+                          minDeliveryDate
+                            ? minDeliveryDate
+                            : props?.ancEntryType
                             ? props?.patientObj?.lmp
                             : enroll.lmp
                         }

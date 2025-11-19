@@ -3,6 +3,7 @@ package org.lamisplus.modules.pmtct.service;
 import lombok.RequiredArgsConstructor;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.pmtct.domain.dto.EnrollmentValidationDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleResponseDto;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctPregnancyCycle;
@@ -11,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,7 +83,79 @@ public class PmtctPregnancyCycleService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    /**
+     * Validates if a patient can enroll in a new ANC/PMTCT cycle
+     * Checks the last pregnancy cycle's maternal outcome and closure status
+     */
+    public EnrollmentValidationDto validateEnrollment(String personUuid) {
+        EnrollmentValidationDto validation = new EnrollmentValidationDto();
 
+        // Get the latest pregnancy cycle
+        Optional<PmtctPregnancyCycle> latestCycleOptional = pregnancyCycleRepository.findLatestByPersonUuid(personUuid);
 
+        // If no previous cycle exists, allow enrollment directly
+        if (!latestCycleOptional.isPresent()) {
+            validation.setCanEnrollDirectly(true);
+            validation.setRequiresConfirmation(false);
+            validation.setMessage("No previous pregnancy cycle found. Patient can enroll.");
+            return validation;
+        }
+
+        PmtctPregnancyCycle latestCycle = latestCycleOptional.get();
+        validation.setLastCycleId(latestCycle.getId());
+        validation.setIsClosed(latestCycle.getIsClosed());
+        validation.setLastMaternalOutcome(latestCycle.getMaternalOutcome());
+
+        // List of negative outcomes that allow direct enrollment
+        List<String> negativeOutcomes = Arrays.asList(
+            "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
+            "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
+            "MATERNAL_OUTCOME_DEAD",
+            "MATERNAL_OUTCOME_TRANSFERRED_OUT",
+            "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)",
+            "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_NEW_PREGNANCY",
+            "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"
+        );
+
+        String maternalOutcome = latestCycle.getMaternalOutcome() != null
+            ? latestCycle.getMaternalOutcome().trim().toUpperCase()
+            : "";
+        Boolean isClosed = latestCycle.getIsClosed() != null ? latestCycle.getIsClosed() : false;
+
+        // Check if cycle is closed
+        if (isClosed) {
+            // If closed and has negative outcome, allow direct enrollment
+            if (negativeOutcomes.stream().anyMatch(outcome -> outcome.equalsIgnoreCase(maternalOutcome))) {
+                validation.setCanEnrollDirectly(true);
+                validation.setRequiresConfirmation(false);
+                validation.setMessage("Previous cycle closed with negative outcome. Patient can enroll in new cycle.");
+            } else {
+                // If closed but outcome is not negative (e.g., ALIVE), require confirmation
+                validation.setCanEnrollDirectly(false);
+                validation.setRequiresConfirmation(true);
+                validation.setMessage("PMTCT Client still active. Do you want to document another enrolment?");
+            }
+        } else {
+            // Cycle is not closed
+            if (negativeOutcomes.stream().anyMatch(outcome -> outcome.equalsIgnoreCase(maternalOutcome))) {
+                // Has negative outcome but not closed - allow direct enrollment
+                validation.setCanEnrollDirectly(true);
+                validation.setRequiresConfirmation(false);
+                validation.setMessage("Previous cycle has negative outcome. Patient can enroll in new cycle.");
+            } else if ("MATERNAL_OUTCOME_ALIVE".equalsIgnoreCase(maternalOutcome)) {
+                // Client is alive and cycle is not closed - require confirmation
+                validation.setCanEnrollDirectly(false);
+                validation.setRequiresConfirmation(true);
+                validation.setMessage("PMTCT Client still active. Do you want to document another enrolment?");
+            } else {
+                // No maternal outcome or other outcome - require confirmation
+                validation.setCanEnrollDirectly(false);
+                validation.setRequiresConfirmation(true);
+                validation.setMessage("PMTCT Client still active. Do you want to document another enrolment?");
+            }
+        }
+
+        return validation;
+    }
 
 }

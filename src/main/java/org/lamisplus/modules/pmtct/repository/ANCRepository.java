@@ -97,6 +97,11 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
+                            "  AND pa.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
                             "WHERE ( " +
                             "   pp.first_name ILIKE ?1 OR " +
@@ -111,9 +116,14 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
                             "ORDER BY pa.id DESC",
             countQuery =
-                    "SELECT COUNT(*) " +
+                    "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
+                            "  AND pa.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "WHERE ( " +
                             "   pp.first_name ILIKE ?1 OR " +
                             "   pp.surname ILIKE ?1 OR " +
@@ -156,6 +166,11 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
+                            "  AND pa.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
@@ -163,9 +178,14 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
                             "ORDER BY pa.id DESC",
             countQuery =
-                    "SELECT COUNT(*) " +
+                    "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
+                            "  AND pa.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +

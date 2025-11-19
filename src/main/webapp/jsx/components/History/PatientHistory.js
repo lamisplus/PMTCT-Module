@@ -85,13 +85,14 @@ const PatientnHistory = (props) => {
     //     .catch((error) => {
     //     });
     // } else {
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${
-          props.patientObj.person_uuid
+
+      let personUuid=props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : props.patientObj.personUuid
-        }`,
+      // ${personUuid}?pmtctCycleId=${pmtctCycleId}
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

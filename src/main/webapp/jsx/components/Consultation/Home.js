@@ -217,12 +217,19 @@ const ClinicVisit = (props) => {
       async function getGa() {
         const dateOfViralLoad = e.target.value;
         //?ancNo=001&visitDate=2023-02-01
+        const pmtctCycleId = props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+
+        if (!pmtctCycleId) {
+          console.error('pmtctCycleId is required for gestational age calculation');
+          return;
+        }
+
         const response = await axios.get(
           `${baseUrl}pmtct/anc/calculate-ga-from-person?personUuid=${
             props.patientObj.person_uuid
               ? props.patientObj.person_uuid
               : props.patientObj.personUuid
-          }&visitDate=${dateOfViralLoad}`,
+          }&visitDate=${dateOfViralLoad}&pmtctCycleId=${pmtctCycleId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

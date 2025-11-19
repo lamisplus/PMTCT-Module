@@ -163,6 +163,22 @@ private final   InfantRapidTestRepository rapidTestRepository;
 
     }
 
+    public List<InfantDto> getSingleInfantByPersonUUID(String personUuid, Long pmtctCycleId) {
+
+        List<InfantDto> infantDtoList = new ArrayList<>();
+
+        List<Infant> infantList = findAllInfantByMotherPersonUuid(personUuid, pmtctCycleId);
+        for (Infant infant : infantList) {
+
+            if (ObjectUtils.isNotEmpty(infant)) {
+                infantDtoList.add(buildInfantDTO(infant, personUuid));
+            }
+
+        }
+        return infantDtoList;
+
+    }
+
     public InfantDto buildInfantDTO(Infant infant, String personUuid){
         return InfantDto.builder()
                 .dateOfDelivery(infant.getDateOfDelivery())
@@ -188,6 +204,14 @@ private final   InfantRapidTestRepository rapidTestRepository;
 
     public List<Infant> findAllInfantByMotherPersonUuid(String personUuid) {
         List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
+        if (CollectionUtils.isEmpty(infantList)) {
+           return new ArrayList<>();
+        }
+        return infantList;
+    }
+
+    public List<Infant> findAllInfantByMotherPersonUuid(String personUuid, Long pmtctCycleId) {
+        List<Infant> infantList = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
         if (CollectionUtils.isEmpty(infantList)) {
            return new ArrayList<>();
         }
@@ -317,12 +341,14 @@ private final   InfantRapidTestRepository rapidTestRepository;
 
     public void deleteInfant(Long id) {
         Infant exist = this.getSingleInfant(id);
-        this.infantRepository.delete(exist);
+        // Soft delete: set archived to 1 instead of physical deletion
+        exist.setArchived(1L);
+        this.infantRepository.save(exist);
 
-        //delete InfantARV
+        //soft delete InfantARV
         infantVisitService.deleteInfantArv(id);
 
-        //delete InfantPCR
+        //soft delete InfantPCR
         infantVisitService.deleteInfantPCRTestDt(id);
     }
 

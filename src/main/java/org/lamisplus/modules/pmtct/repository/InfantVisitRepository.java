@@ -24,9 +24,15 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
     @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_person_uuid = ?1", nativeQuery = true)
     Integer getChildVisitsWithPersonUuid(String personUuid);
 
+    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_person_uuid = ?1 AND pmtct_cycle_id = ?2", nativeQuery = true)
+    Integer getChildVisitsWithPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
+
     List<InfantVisit> getInfantVisitsByAncNumber(String ancNO);
 
     List<InfantVisit> getInfantVisitsByMotherPersonUuid(String motherPersonUuid);
+
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid=?1 AND pmtct_cycle_id=?2", nativeQuery = true)
+    List<InfantVisit> getInfantVisitsByMotherPersonUuidAndCycleId(String motherPersonUuid, Long pmtctCycleId);
 
       @Query(value = "SELECT visit_date FROM pmtct_infant_visit WHERE infant_hospital_number=?1 ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)
     LocalDate getLatestInfantVisitDate(String infantHospitalNo);

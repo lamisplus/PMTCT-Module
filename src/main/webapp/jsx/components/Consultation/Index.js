@@ -31,32 +31,14 @@ const ClinicVisitPage = (props) => {
 
 
   const DeliveryInfo = () => {
-    // if (props.patientObj.ancNo) {
-    //   axios
-    //     .get(`${baseUrl}pmtct/anc/view-delivery2?ancNo= ${props.patientObj.ancNo}`, {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     })
-    //     .then((response) => {
-    //       // console.log(response.data);
-    //       setAliveChild(
-    //         response.data && response.data.numberOfInfantsAlive
-    //           ? response.data.numberOfInfantsAlive
-    //           : 0
-    //       );
-    //     })
-    //     .catch((error) => {
-    //       //console.log(error);
-    //     });
-    // } else {
+    let personUuid = props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid
+      ? props.patientObj.personUuid
+      : props.patientObj.uuid;
       axios
         .get(
-          `${baseUrl}pmtct/anc/view-delivery-with-uuid/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-              ? props.patientObj.personUuid
-              : props.patientObj.uuid
-          }`,
+          `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle.id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -128,7 +110,6 @@ const ClinicVisitPage = (props) => {
                       </p>
                     )}
                   </Tab>
-
                   {aliveChild !== 0 &&
                     aliveChild > 0 &&
                     permissions.genPermission && (

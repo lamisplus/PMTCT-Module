@@ -91,18 +91,16 @@ const InfantInformation = (props) => {
   };
 
   const InfantInfoByUuid = () => {
-
-
-    setLoading(true);
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${
-          props.patientObj.person_uuid
+    let personUuid = props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : props.patientObj.personUuid
             ? props.patientObj.personUuid
             : props.patientObj.uuid
-        }`,
+
+    setLoading(true);
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${props?.latestPmtctCycle?.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
@@ -112,15 +110,18 @@ const InfantInformation = (props) => {
 
       .catch((error) => {
         console.log("the errr", error);
-
       });
   };
   ///GET Delivery Object
   const DeliveryInfo = () => {
     setLoading(true);
-    if (props.patientObj.ancNo) {
+   let personUuid =props.patientObj.person_uuid
+              ? props.patientObj.person_uuid
+              : props.patientObj.personUuid
+              ? props.patientObj.personUuid
+              : props.patientObj.uuid
       axios
-        .get(`${baseUrl}pmtct/anc/view-delivery2?ancNo=${props.patientObj.ancNo}`, {
+        .get(`${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle?.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -136,34 +137,7 @@ const InfantInformation = (props) => {
         .catch((error) => {
           //console.log(error);
         });
-    } else {
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/view-delivery-with-uuid/${
-            props.patientObj.person_uuid
-              ? props.patientObj.person_uuid
-              : props.patientObj.personUuid
-              ? props.patientObj.personUuid
-              : props.patientObj.uuid
-          }`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          setLoading(false);
-          setDelivery(response.data.dateOfDelivery);
-          setAliveChild(
-            response.data && response.data.numberOfInfantsAlive
-              ? response.data.numberOfInfantsAlive
-              : 0
-          );
-        })
-
-        .catch((error) => {
-          //console.log(error);
-        });
-    }
+    
   };
 
   const LoadPage = (obj, actionType) => {

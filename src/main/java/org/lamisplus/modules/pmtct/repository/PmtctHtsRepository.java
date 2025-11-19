@@ -22,13 +22,22 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
     @Query(value = "SELECT * FROM pmtct_hts where person_uuid=?1 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
     List<PmtctHts> findByPersonUuidAndUnarchived(String personUuid);
 
+    @Query(value = "SELECT * FROM pmtct_hts where person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
+    List<PmtctHts> findByPersonUuidAndPmtctCycleIdAndUnarchived(String personUuid, Long pmtctCycleId);
+
 
 
     @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where person_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
     Optional<String> findLatestFinalResult(String personUuid);
 
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
+    Optional<String> findLatestFinalResultByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
+
     @Query(value = "SELECT * FROM pmtct_hts WHERE person_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
     PmtctHts findLatestPMTCTHTSEnrollmentById(String personUuid);
+
+    @Query(value = "SELECT * FROM pmtct_hts WHERE person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    PmtctHts findLatestPMTCTHTSEnrollmentByIdAndCycleId(String personUuid, Long pmtctCycleId);
 
     @Query(value = "SELECT * FROM pmtct_hts WHERE pmtct_cycle_id = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<PmtctHts> findByPmtctCycleIdAndArchived(Long pmtctCycleId, Long archived);
@@ -39,6 +48,9 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
 
     @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE person_uuid =?1 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
     List<Object[]> findLatestHivTestResultList(String personUuid);
+
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE person_uuid =?1 AND pmtct_cycle_id =?2 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    List<Object[]> findLatestHivTestResultListByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
 
 
     @Query(
