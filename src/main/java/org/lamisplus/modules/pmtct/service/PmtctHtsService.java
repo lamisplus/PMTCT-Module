@@ -74,6 +74,10 @@ public class PmtctHtsService {
     }
 
     public PmtctHts converRequestDtotoEntity(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         PmtctHts pmtctHts = new PmtctHts();
         pmtctHts.setDateOfHivTest(pmtctHtsRequestDTO.getDateOfHivTest());
         pmtctHts.setTestEntryPoint(pmtctHtsRequestDTO.getTestEntryPoint());
@@ -95,6 +99,11 @@ public class PmtctHtsService {
         pmtctHts.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
+        pmtctHts.setFacilityId(facilityId);
+        pmtctHts.setCreatedBy(user.getUserName());
+        pmtctHts.setLastModifiedBy(user.getUserName());
+        pmtctHts.setCreatedDate(java.time.LocalDateTime.now());
+        pmtctHts.setLastModifiedDate(java.time.LocalDateTime.now());
 
         return this.pmtctHtsRepository.save(pmtctHts);
     }
@@ -104,7 +113,8 @@ public class PmtctHtsService {
 
     public PmtctHtsRequestDTO updatePmtctHts(Long id, PmtctHtsRequestDTO pmtctHtsRequestDTO)
     {
-
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
 
         Optional <PmtctHts> pmtctHtsEnrollment = this.pmtctHtsRepository.findById(id);
         if(pmtctHtsEnrollment.isPresent())
@@ -126,10 +136,8 @@ public class PmtctHtsService {
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
-
-
-
-
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
+            pmtctEnrollment1.setLastModifiedDate(java.time.LocalDateTime.now());
 
             this.pmtctHtsRepository.save(pmtctEnrollment1);
 

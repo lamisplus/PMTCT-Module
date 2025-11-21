@@ -8,6 +8,7 @@ import org.springframework.data.domain.Persistable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -28,6 +29,12 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     private String  uuid;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
+    private Integer archived;
+    private Long facilityId;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
+    private String lastModifiedBy;
 
 
     @Override

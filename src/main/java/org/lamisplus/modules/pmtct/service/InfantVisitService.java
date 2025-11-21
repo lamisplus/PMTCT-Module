@@ -54,6 +54,10 @@ public class InfantVisitService
 
 
     public InfantRapidAntiBodyTest converRequestDtotoEntity(InfantRapidAntiBodyTestDto infantRapidDto) {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         InfantRapidAntiBodyTest infantRapid  = new InfantRapidAntiBodyTest();
         infantRapid.setRapidTestType(infantRapidDto.getRapidTestType());
         infantRapid.setAncNumber(infantRapidDto.getAncNumber());
@@ -62,12 +66,22 @@ public class InfantVisitService
         infantRapid.setResult(infantRapidDto.getResult());
         infantRapid.setUuid(UUID.randomUUID().toString());
         infantRapid.setUniqueUuid(infantRapidDto.getUniqueUuid());
+        infantRapid.setArchived(0);
+        infantRapid.setFacilityId(facilityId);
+        infantRapid.setCreatedBy(user.getUserName());
+        infantRapid.setLastModifiedBy(user.getUserName());
+        infantRapid.setCreatedDate(java.time.LocalDateTime.now());
+        infantRapid.setLastModifiedDate(java.time.LocalDateTime.now());
 
         return this.infantRapidTestRepository.save(infantRapid);
     }
 
 
     public InfantArv converRequestDtotoEntity(InfantArvDto infantArvDto) {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         InfantArv infantArv = new InfantArv();
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
@@ -84,9 +98,19 @@ public class InfantVisitService
         infantArv.setAgeAtCtx(infantArvDto.getAgeAtCtx());
         infantArv.setDateOfArv(infantArvDto.getDateOfArv());
         infantArv.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
+        infantArv.setArchived(0);
+        infantArv.setFacilityId(facilityId);
+        infantArv.setCreatedBy(user.getUserName());
+        infantArv.setLastModifiedBy(user.getUserName());
+        infantArv.setCreatedDate(java.time.LocalDateTime.now());
+        infantArv.setLastModifiedDate(java.time.LocalDateTime.now());
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         InfantPCRTest infantPCRTest = new InfantPCRTest();
         infantPCRTest.setInfantHospitalNumber(infantPCRTestDto.getInfantHospitalNumber());
         infantPCRTest.setAgeAtTest(infantPCRTestDto.getAgeAtTest());
@@ -101,10 +125,20 @@ public class InfantVisitService
         infantPCRTest.setDateSampleCollected(infantPCRTestDto.getDateSampleCollected());
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
+        infantPCRTest.setArchived(0);
+        infantPCRTest.setFacilityId(facilityId);
+        infantPCRTest.setCreatedBy(user.getUserName());
+        infantPCRTest.setLastModifiedBy(user.getUserName());
+        infantPCRTest.setCreatedDate(java.time.LocalDateTime.now());
+        infantPCRTest.setLastModifiedDate(java.time.LocalDateTime.now());
 
         return this.infantPCRTestRepository.save(infantPCRTest);
     }
     public InfantVisit converRequestDtotoEntity(InfantVisitRequestDto infantVisitRequestDto) {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         InfantVisit infantVisit = new InfantVisit();
 
         infantVisit.setVisitDate(infantVisitRequestDto.getVisitDate());
@@ -115,6 +149,11 @@ public class InfantVisitService
         infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
+        infantVisit.setFacilityId(facilityId);
+        infantVisit.setCreatedBy(user.getUserName());
+        infantVisit.setLastModifiedBy(user.getUserName());
+        infantVisit.setCreatedDate(java.time.LocalDateTime.now());
+        infantVisit.setLastModifiedDate(java.time.LocalDateTime.now());
 
         try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
@@ -133,6 +172,7 @@ public class InfantVisitService
         //infantVisit.setAgeAtCtx(infantVisitRequestDto.getAgeAtCtx());
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
+        infantVisit.setArchived(0);
 
         return this.infantVisitRepository.save(infantVisit);
         // return this.infantVisitRepository.save(infantVisit);
@@ -247,6 +287,10 @@ public class InfantVisitService
         return converRequestDtotoEntity(infantMotherArtDto);
     }
     public InfantMotherArt converRequestDtotoEntity(InfantMotherArtDto infantMotherArtDto) {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         InfantMotherArt infantMotherArt = new InfantMotherArt();
         infantMotherArt.setAncNumber(infantMotherArtDto.getAncNumber());
         infantMotherArt.setUuid(UUID.randomUUID().toString());
@@ -255,6 +299,12 @@ public class InfantVisitService
         infantMotherArt.setRegimenTypeId(infantMotherArtDto.getRegimenTypeId());
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
+        infantMotherArt.setArchived(0);
+        infantMotherArt.setFacilityId(facilityId);
+        infantMotherArt.setCreatedBy(user.getUserName());
+        infantMotherArt.setLastModifiedBy(user.getUserName());
+        infantMotherArt.setCreatedDate(java.time.LocalDateTime.now());
+        infantMotherArt.setLastModifiedDate(java.time.LocalDateTime.now());
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
 
@@ -708,7 +758,10 @@ public class InfantVisitService
 
         if (infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId() != null) {
             Optional<InfantVisit> infantVisitOptional = this.infantVisitRepository.findById(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getId());
-            infantVisitOptional.ifPresent(this.infantVisitRepository::delete);
+            infantVisitOptional.ifPresent(visit -> {
+                visit.setArchived(1);
+                this.infantVisitRepository.save(visit);
+            });
         }
 
         // Handling DELETE for InfantArv
@@ -718,7 +771,10 @@ public class InfantVisitService
         } else {
             infantArvOptional = this.infantArvRepository.getByInfantHospitalNumberAndVisitDate(infantHospitalNumber, visitDate);
         }
-        infantArvOptional.ifPresent(this.infantArvRepository::delete);
+        infantArvOptional.ifPresent(arv -> {
+            arv.setArchived(1);
+            this.infantArvRepository.save(arv);
+        });
 
 
         // Handling DELETE for InfantMotherArt
@@ -728,7 +784,10 @@ public class InfantVisitService
         } else {
             infantMotherArtOptional = this.infantMotherArtRepository.findByAncNumberAndVisitDate(ancNumber, visitDate);
         }
-        infantMotherArtOptional.ifPresent(this.infantMotherArtRepository::delete);
+        infantMotherArtOptional.ifPresent(art -> {
+            art.setArchived(1);
+            this.infantMotherArtRepository.save(art);
+        });
 
 
         // Handling DELETE for InfantPCRTest
@@ -738,7 +797,10 @@ public class InfantVisitService
         } else {
             infantPCRTestOptional = this.infantPCRTestRepository.findByInfantHospitalNumberAndVisitDate(infantHospitalNumber, visitDate);
         }
-        infantPCRTestOptional.ifPresent(this.infantPCRTestRepository::delete);
+        infantPCRTestOptional.ifPresent(pcr -> {
+            pcr.setArchived(1);
+            this.infantPCRTestRepository.save(pcr);
+        });
 
 
 
@@ -749,17 +811,26 @@ public class InfantVisitService
         } else {
             infantRapidOptional = this.infantRapidTestRepository.findById(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().getId());
         }
-        infantRapidOptional.ifPresent(this.infantRapidTestRepository::delete);
+        infantRapidOptional.ifPresent(rapid -> {
+            rapid.setArchived(1);
+            this.infantRapidTestRepository.save(rapid);
+        });
     }
 
     public void deleteInfantArv(Long id){
         Optional<InfantArv> infantArvOptional = this.infantArvRepository.findById(id);
-        infantArvOptional.ifPresent(infantArvRepository::delete);
+        infantArvOptional.ifPresent(arv -> {
+            arv.setArchived(1);
+            this.infantArvRepository.save(arv);
+        });
     }
 
     public void deleteInfantPCRTestDt(Long id){
         Optional<InfantPCRTest> infantArvOptional = this.infantPCRTestRepository.findById(id);
-        infantArvOptional.ifPresent(infantPCRTestRepository::delete);
+        infantArvOptional.ifPresent(pcr -> {
+            pcr.setArchived(1);
+            this.infantPCRTestRepository.save(pcr);
+        });
     }
 
 

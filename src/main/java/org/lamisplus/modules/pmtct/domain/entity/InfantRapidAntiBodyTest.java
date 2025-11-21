@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "pmtct_infant_rapid_antibody",  schema = "public")
@@ -28,4 +29,10 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String  uniqueUuid;
     @Column(name = "uuid")
     private String uuid;
+    private Integer archived;
+    private Long facilityId;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
+    private String lastModifiedBy;
 }

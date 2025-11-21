@@ -9,6 +9,7 @@ import org.springframework.data.domain.Persistable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "pmtct_mother_visitation",  schema = "public")
@@ -42,6 +43,12 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String visitStatus;
     private String transferTo;
     private LocalDate nextAppointmentDate;
+    private Integer archived;
+    private Long facilityId;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
+    private String lastModifiedBy;
 
 
 

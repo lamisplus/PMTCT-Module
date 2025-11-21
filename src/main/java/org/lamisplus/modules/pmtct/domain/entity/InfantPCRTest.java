@@ -7,6 +7,7 @@ import org.springframework.data.domain.Persistable;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "pmtct_infant_pcr",  schema = "public")
 @Data
@@ -30,6 +31,12 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private String uuid;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
+    private Integer archived;
+    private Long facilityId;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
+    private String lastModifiedBy;
 
     @Override
     public boolean isNew() {

@@ -47,6 +47,9 @@ public class PmtctVisitService {
     }
 
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
@@ -54,6 +57,10 @@ public class PmtctVisitService {
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(UUID.randomUUID().toString());
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setCreatedBy(user.getUserName());
+        pmtctVisit.setLastModifiedBy(user.getUserName());
+        pmtctVisit.setCreatedDate(java.time.LocalDateTime.now());
+        pmtctVisit.setLastModifiedDate(java.time.LocalDateTime.now());
         pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
         pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
         pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
@@ -73,6 +80,7 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        pmtctVisit.setArchived(0);
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -85,6 +93,7 @@ public class PmtctVisitService {
                 Person person = persons.get();
                 pmtctVisit.setHospitalNumber(person.getHospitalNumber());
                 pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                pmtctVisit.setFacilityId(person.getFacilityId());
                 //System.out.println("visitStatus = " + visitStatus);
                 if (visitStatus != null) {
                     System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
@@ -109,8 +118,16 @@ public class PmtctVisitService {
     }
 
     public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         PmtctVisit pmtctVisit = new PmtctVisit();
         pmtctVisit.setId(id);
+        pmtctVisit.setCreatedBy(existingVisit.getCreatedBy());
+        pmtctVisit.setCreatedDate(existingVisit.getCreatedDate());
+        pmtctVisit.setLastModifiedBy(user.getUserName());
+        pmtctVisit.setLastModifiedDate(java.time.LocalDateTime.now());
+        pmtctVisit.setFacilityId(existingVisit.getFacilityId());
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
@@ -137,6 +154,7 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        pmtctVisit.setArchived(0);
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -149,6 +167,7 @@ public class PmtctVisitService {
                 Person person = persons.get();
                 pmtctVisit.setHospitalNumber(person.getHospitalNumber());
                 pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                pmtctVisit.setFacilityId(person.getFacilityId());
                 //System.out.println("visitStatus = " + visitStatus);
                 if (visitStatus != null) {
                     System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
@@ -306,7 +325,8 @@ public class PmtctVisitService {
 
     public void deleteMotherVisit(Long id) {
         PmtctVisit exist = this.getSinglePmtctVisit(id);
-        this.pmtctVisitRepository.delete(exist);
+        exist.setArchived(1);
+        this.pmtctVisitRepository.save(exist);
     }
 
 
