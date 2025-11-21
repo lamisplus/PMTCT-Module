@@ -492,10 +492,11 @@ private DeliveryRepository deliveryRepository;
 
     public void deletePMTCT(Long id) {
         PMTCTEnrollment existingPMTCTEnrollment = this.getSinglePmtctEnrollment(id);
-        this.pmtctEnrollmentReporsitory.delete(existingPMTCTEnrollment);
+        existingPMTCTEnrollment.setArchived(1L);
+        this.pmtctEnrollmentReporsitory.save(existingPMTCTEnrollment);
     }
-    public String getDeliveryDate(String personUuid) {
-      String deliveryDate =  pmtctEnrollmentReporsitory.getDateOfDelivery(personUuid);
+    public String getDeliveryDate(String personUuid, Long pmtctCycleId) {
+      String deliveryDate =  pmtctEnrollmentReporsitory.getDateOfDelivery(personUuid, pmtctCycleId);
 
         if(deliveryDate != ""){
          return deliveryDate;

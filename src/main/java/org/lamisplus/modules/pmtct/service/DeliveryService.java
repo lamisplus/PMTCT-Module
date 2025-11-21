@@ -294,7 +294,8 @@ public class DeliveryService
 
     public void deleteDelivery(Long id) {
         Delivery existingDelivery = getSingleDelivery(id);
-        this.deliveryRepository.delete(existingDelivery);
+        existingDelivery.setArchived(1L);
+        this.deliveryRepository.save(existingDelivery);
     }
 
     public Delivery getSingleDeliveryWithUuid(String personUuid, Long pmtctCycleId) {

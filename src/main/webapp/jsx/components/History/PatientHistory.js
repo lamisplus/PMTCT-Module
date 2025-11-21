@@ -65,9 +65,13 @@ const PatientnHistory = (props) => {
   const [record, setRecord] = useState(null);
   const toggle = () => setOpen(!open);
   let notToBeUpdated = ["pmtct_infant_information"];
+
+  // Get pmtctCycleId from props
+  const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+
   useEffect(() => {
     PatientHistory();
-  }, [props.patientObj.id]);
+  }, [props.patientObj.id, pmtctCycleId]);
   ///GET LIST OF Patients
   const PatientHistory = () => {
     setLoading(true);

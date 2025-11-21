@@ -211,8 +211,8 @@ public class PMTCTController {
 
 
     @GetMapping(value = "get-delivery-date/{personUuid}")
-    public ResponseEntity<String> getDeliveryDate(@PathVariable("personUuid") String personUuid) {
-        return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(personUuid));
+    public ResponseEntity<String> getDeliveryDate(@PathVariable("personUuid") String personUuid, @RequestParam("pmtctCycleId") Long pmtctCycleId) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(personUuid, pmtctCycleId));
     }
 
 
@@ -706,6 +706,14 @@ public class PMTCTController {
 
         EnrollmentValidationDto response = pmtctPregnancyCycleService.validateEnrollment(personUuid);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "is-infant-visit-date-exists")
+    public ResponseEntity<Boolean> isInfantVisitDateExists(
+            @RequestParam String hospitalNumber,
+            @RequestParam LocalDate visitDate) {
+        boolean exists = infantVisitService.isInfantVisitDateExists(hospitalNumber, visitDate);
+        return ResponseEntity.ok(exists);
     }
 
 }

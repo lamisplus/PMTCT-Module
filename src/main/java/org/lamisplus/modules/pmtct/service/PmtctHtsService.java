@@ -92,6 +92,11 @@ public class PmtctHtsService {
 
     public PmtctHts converRequestDtotoEntity(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
         PmtctHts pmtctHts = new PmtctHts();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        pmtctHts.setFacilityId(facilityId);
         pmtctHts.setDateOfHivTest(pmtctHtsRequestDTO.getDateOfHivTest());
         pmtctHts.setTestEntryPoint(pmtctHtsRequestDTO.getTestEntryPoint());
         pmtctHts.setTestSetting(pmtctHtsRequestDTO.getTestSetting());
@@ -113,6 +118,8 @@ public class PmtctHtsService {
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
         pmtctHts.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
+        pmtctHts.setCreatedBy(user.getUserName());
+        pmtctHts.setLastModifiedBy(user.getUserName());
 
         PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
 
@@ -135,6 +142,9 @@ public class PmtctHtsService {
         if(pmtctHtsEnrollment.isPresent())
         {
             PmtctHts pmtctEnrollment1 = pmtctHtsEnrollment.get();
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = currentUser.get();
+
             pmtctEnrollment1.setDateOfHivTest(pmtctHtsRequestDTO.getDateOfHivTest());
             pmtctEnrollment1.setTestEntryPoint(pmtctHtsRequestDTO.getTestEntryPoint());
             pmtctEnrollment1.setTestSetting(pmtctHtsRequestDTO.getTestSetting());
@@ -150,6 +160,7 @@ public class PmtctHtsService {
             pmtctEnrollment1.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
             pmtctEnrollment1.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
 

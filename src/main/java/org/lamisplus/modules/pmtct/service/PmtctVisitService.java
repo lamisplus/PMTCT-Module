@@ -48,12 +48,19 @@ public class PmtctVisitService {
 
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         PmtctVisit pmtctVisit = new PmtctVisit();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        pmtctVisit.setFacilityId(facilityId);
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(UUID.randomUUID().toString());
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setCreatedBy(user.getUserName());
+        pmtctVisit.setLastModifiedBy(user.getUserName());
         pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
         pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
         pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
@@ -76,9 +83,9 @@ public class PmtctVisitService {
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
-            Long facilityId = user.getCurrentOrganisationUnitId();
+//            Optional<User> currentUser = this.userService.getUserWithRoles();
+//            User user = (User) currentUser.get();
+//            Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
             System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
             Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
@@ -111,7 +118,11 @@ public class PmtctVisitService {
 
     public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
         PmtctVisit pmtctVisit = new PmtctVisit();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         pmtctVisit.setId(id);
+        pmtctVisit.setFacilityId(existingVisit.getFacilityId());
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
@@ -119,6 +130,9 @@ public class PmtctVisitService {
         pmtctVisit.setUuid(existingVisit.getUuid());
         pmtctVisit.setPersonUuid(existingVisit.getUuid());
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setCreatedBy(existingVisit.getCreatedBy());
+        pmtctVisit.setCreatedDate(existingVisit.getCreatedDate());
+        pmtctVisit.setLastModifiedBy(user.getUserName());
         pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
         pmtctVisit.setFpMethod(pmtctVisitRequestDto.getFpMethod());
         pmtctVisit.setDateOfViralLoad(pmtctVisitRequestDto.getDateOfViralLoad());
@@ -141,8 +155,8 @@ public class PmtctVisitService {
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
+//            Optional<User> currentUser = this.userService.getUserWithRoles();
+//            User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
             System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
@@ -309,7 +323,8 @@ public class PmtctVisitService {
 
     public void deleteMotherVisit(Long id) {
         PmtctVisit exist = this.getSinglePmtctVisit(id);
-        this.pmtctVisitRepository.delete(exist);
+        exist.setArchived(1L);
+        this.pmtctVisitRepository.save(exist);
     }
 
 

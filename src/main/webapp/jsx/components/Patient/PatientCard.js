@@ -86,8 +86,14 @@ function PatientCard(props) {
   );
   
   const [showHighRisKInfant, setShowHighRisKInfant] = useState(false);
-  const [confirmStatus, setConfirmStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
-
+  const [confirmStatus, setConfirmStatus] = useState(
+    props?.patientObj?.finalResult ||
+    props?.patientObj?.staticHivStatus ||
+    props?.patientObj?.hivStatus ||
+    props?.patientObj?.dynamicHivStatus
+  );
+  const [pmtctHtsFinalStatus, setPmtctHtsFinalStatus] = useState(null);
+  const [hasPmtctHtsRecord, setHasPmtctHtsRecord] = useState(false);
 
   const [biometricStatus, setBiometricStatus] = useState(false);
   const [devices, setDevices] = useState([]);
@@ -156,7 +162,7 @@ const getHivRetestStatus = async () => {
 
 
 
-    useEffect(() => {   
+    useEffect(() => {
        getHETInfantStatus();
       getHivRetestStatus()
     getLatestConfirmatoryResult();
@@ -164,7 +170,7 @@ const getHivRetestStatus = async () => {
     // getMaternalOutcome();
 
 
-  }, [props.activeContent]);
+  }, [props.activeContent, props.latestPmtctCycle]);
     
   const getLatestConfirmatoryResult = async() => {
     if(props.latestPmtctCycle?.id){
@@ -179,17 +185,55 @@ const getHivRetestStatus = async () => {
       )
       .then((response) => {
         console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
-        if(response.data){
+        if(response.data !== null && response.data !== undefined && response.data !== ''){
 
           props.setLastestConfirmatoryTest(response.data)
-          setConfirmStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
-          props.setLatestHivStatus(response.data? response.data :props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
+          setConfirmStatus(response.data);
+          props.setLatestHivStatus(response.data);
 
+        } else {
+          // Fallback to other HIV status fields if no confirmatory result
+          const fallbackStatus =
+            props?.patientObj?.finalResult ||
+            props?.patientObj?.staticHivStatus ||
+            props?.patientObj?.hivStatus ||
+            props?.patientObj?.dynamicHivStatus;
+
+          if (fallbackStatus) {
+            setConfirmStatus(fallbackStatus);
+            props.setLatestHivStatus(fallbackStatus);
+          }
         }
       })
       .catch((error) => {
         console.error("Error fetching confirmatory result:", error);
       });
+
+      // Also fetch the full PMTCT HTS record to get finalStatus
+      await getPmtctHtsRecord(personUuid, props.latestPmtctCycle.id);
+    }
+  };
+
+  const getPmtctHtsRecord = async (personUuid, pmtctCycleId) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log("PMTCT_HTS_RECORD", response.data);
+
+      if (response.data && response.data.finalResult) {
+        setPmtctHtsFinalStatus(response.data.finalResult);
+        setHasPmtctHtsRecord(true);
+      } else {
+        setHasPmtctHtsRecord(false);
+      }
+    } catch (error) {
+      console.error("Error fetching PMTCT HTS record:", error);
+      setHasPmtctHtsRecord(false);
     }
   };
 
@@ -504,8 +548,10 @@ const getMaternalOutcome = async () => {
                     
                  
                   <div  style={{display: 'flex', gap: '2px'}}>
-                  {props.patientObj.dynamicHivStatus !== null ||
-                  props.patientObj.staticHivStatus !== null ? (
+                  {(props.patientObj.finalResult ||
+                  props.patientObj.dynamicHivStatus !== null ||
+                  props.patientObj.staticHivStatus !== null ||
+                  confirmStatus) ? (
                     <>
                       <div>
                         <Typography variant="caption">
@@ -521,7 +567,7 @@ const getMaternalOutcome = async () => {
                             <Label.Detail>
 
                             {confirmStatus === 'Unknown'?  'Not Tested' : confirmStatus === 'reactive'? 'Positive' : confirmStatus === 'non-reactive'? 'Negative': confirmStatus}
-                      
+
                             </Label.Detail>
                           </Label>
                         </Typography>

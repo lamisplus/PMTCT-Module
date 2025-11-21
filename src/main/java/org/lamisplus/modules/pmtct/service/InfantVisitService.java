@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
+import org.lamisplus.modules.base.domain.entities.User;
+import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
@@ -29,10 +31,9 @@ public class InfantVisitService
     private  final InfantPCRTestRepository infantPCRTestRepository;
     private final InfantArvRepository infantArvRepository;
     private final DeliveryRepository deliveryRepository;
-private final InfantRapidTestRepository infantRapidTestRepository;
-
-
-    private InfantMotherArtRepository infantMotherArtRepository;
+    private final InfantRapidTestRepository infantRapidTestRepository;
+    private final InfantMotherArtRepository infantMotherArtRepository;
+    private final UserService userService;
 
     public InfantVisitResponseDto save(InfantVisitRequestDto infantVisitRequestDto) {
         return convertEntitytoRespondDto(converRequestDtotoEntity(infantVisitRequestDto));
@@ -55,6 +56,10 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
     public InfantRapidAntiBodyTest converRequestDtotoEntity(InfantRapidAntiBodyTestDto infantRapidDto) {
         InfantRapidAntiBodyTest infantRapid  = new InfantRapidAntiBodyTest();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantRapid.setRapidTestType(infantRapidDto.getRapidTestType());
         infantRapid.setAncNumber(infantRapidDto.getAncNumber());
         infantRapid.setAgeAtTest(infantRapidDto.getAgeAtTest());
@@ -65,12 +70,19 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantRapid.setPmtctCycleId(infantRapidDto.getPmtctCycleId());
         infantRapid.setMotherPersonUuid(infantRapidDto.getMotherPersonUuid());
         infantRapid.setArchived(0L);
+        infantRapid.setFacilityId(facilityId);
+        infantRapid.setCreatedBy(user.getUserName());
+        infantRapid.setLastModifiedBy(user.getUserName());
 
         return this.infantRapidTestRepository.save(infantRapid);
     }
 
     public InfantRapidAntiBodyTest converRequestDtotoEntity(InfantRapidAntiBodyTestDto infantRapidDto, String motherPersonUuid) {
         InfantRapidAntiBodyTest infantRapid  = new InfantRapidAntiBodyTest();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantRapid.setRapidTestType(infantRapidDto.getRapidTestType());
         infantRapid.setAncNumber(infantRapidDto.getAncNumber());
         infantRapid.setAgeAtTest(infantRapidDto.getAgeAtTest());
@@ -81,6 +93,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantRapid.setPmtctCycleId(infantRapidDto.getPmtctCycleId());
         infantRapid.setMotherPersonUuid(motherPersonUuid);
         infantRapid.setArchived(0L);
+        infantRapid.setFacilityId(facilityId);
+        infantRapid.setCreatedBy(user.getUserName());
+        infantRapid.setLastModifiedBy(user.getUserName());
 
         return this.infantRapidTestRepository.save(infantRapid);
     }
@@ -88,6 +103,10 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
     public InfantArv converRequestDtotoEntity(InfantArvDto infantArvDto) {
         InfantArv infantArv = new InfantArv();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
         //infantArv.setUuid(UUID.randomUUID().toString());
@@ -106,12 +125,19 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setPmtctCycleId(infantArvDto.getPmtctCycleId());
         infantArv.setMotherPersonUuid(infantArvDto.getMotherPersonUuid());
         infantArv.setArchived(0L);
+        infantArv.setFacilityId(facilityId);
+        infantArv.setCreatedBy(user.getUserName());
+        infantArv.setLastModifiedBy(user.getUserName());
 
         return this.infantArvRepository.save(infantArv);
     }
 
     public InfantArv converRequestDtotoEntity(InfantArvDto infantArvDto, String motherPersonUuid) {
         InfantArv infantArv = new InfantArv();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
         infantArv.setUuid(infantArvDto.getUuid());
@@ -129,11 +155,18 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantArv.setPmtctCycleId(infantArvDto.getPmtctCycleId());
         infantArv.setMotherPersonUuid(motherPersonUuid);
         infantArv.setArchived(0L);
+        infantArv.setFacilityId(facilityId);
+        infantArv.setCreatedBy(user.getUserName());
+        infantArv.setLastModifiedBy(user.getUserName());
 
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
         InfantPCRTest infantPCRTest = new InfantPCRTest();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantPCRTest.setInfantHospitalNumber(infantPCRTestDto.getInfantHospitalNumber());
         infantPCRTest.setAgeAtTest(infantPCRTestDto.getAgeAtTest());
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
@@ -150,12 +183,19 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setPmtctCycleId(infantPCRTestDto.getPmtctCycleId());
         infantPCRTest.setMotherPersonUuid(infantPCRTestDto.getMotherPersonUuid());
         infantPCRTest.setArchived(0L);
+        infantPCRTest.setFacilityId(facilityId);
+        infantPCRTest.setCreatedBy(user.getUserName());
+        infantPCRTest.setLastModifiedBy(user.getUserName());
 
         return this.infantPCRTestRepository.save(infantPCRTest);
     }
 
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto, String motherPersonUuid) {
         InfantPCRTest infantPCRTest = new InfantPCRTest();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantPCRTest.setInfantHospitalNumber(infantPCRTestDto.getInfantHospitalNumber());
         infantPCRTest.setAgeAtTest(infantPCRTestDto.getAgeAtTest());
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
@@ -171,11 +211,17 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantPCRTest.setPmtctCycleId(infantPCRTestDto.getPmtctCycleId());
         infantPCRTest.setMotherPersonUuid(motherPersonUuid);
         infantPCRTest.setArchived(0L);
+        infantPCRTest.setFacilityId(facilityId);
+        infantPCRTest.setCreatedBy(user.getUserName());
+        infantPCRTest.setLastModifiedBy(user.getUserName());
 
         return this.infantPCRTestRepository.save(infantPCRTest);
     }
     public InfantVisit converRequestDtotoEntity(InfantVisitRequestDto infantVisitRequestDto) {
         InfantVisit infantVisit = new InfantVisit();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
 
         infantVisit.setVisitDate(infantVisitRequestDto.getVisitDate());
         infantVisit.setInfantHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
@@ -185,6 +231,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantVisit.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         infantVisit.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         infantVisit.setMotherPersonUuid(infantVisitRequestDto.getPersonUuid());
+        infantVisit.setFacilityId(facilityId);
+        infantVisit.setCreatedBy(user.getUserName());
+        infantVisit.setLastModifiedBy(user.getUserName());
 
         try{
             Optional<Infant> infants = infantRepository.getInfantByHospitalNumber(infantVisitRequestDto.getInfantHospitalNumber());
@@ -320,6 +369,10 @@ private final InfantRapidTestRepository infantRapidTestRepository;
     }
     public InfantMotherArt converRequestDtotoEntity(InfantMotherArtDto infantMotherArtDto) {
         InfantMotherArt infantMotherArt = new InfantMotherArt();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantMotherArt.setAncNumber(infantMotherArtDto.getAncNumber());
         infantMotherArt.setUuid(UUID.randomUUID().toString());
         infantMotherArt.setVisitDate(infantMotherArtDto.getVisitDate());
@@ -330,11 +383,18 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setPmtctCycleId(infantMotherArtDto.getPmtctCycleId());
         infantMotherArt.setMotherPersonUuid(infantMotherArtDto.getMotherPersonUuid());
         infantMotherArt.setArchived(0L);
+        infantMotherArt.setFacilityId(facilityId);
+        infantMotherArt.setCreatedBy(user.getUserName());
+        infantMotherArt.setLastModifiedBy(user.getUserName());
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
 
     public InfantMotherArt converRequestDtotoEntity(InfantMotherArtDto infantMotherArtDto, String motherPersonUuid) {
         InfantMotherArt infantMotherArt = new InfantMotherArt();
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
         infantMotherArt.setAncNumber(infantMotherArtDto.getAncNumber());
         infantMotherArt.setUuid(UUID.randomUUID().toString());
         infantMotherArt.setVisitDate(infantMotherArtDto.getVisitDate());
@@ -345,6 +405,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         infantMotherArt.setPmtctCycleId(infantMotherArtDto.getPmtctCycleId());
         infantMotherArt.setMotherPersonUuid(motherPersonUuid);
         infantMotherArt.setArchived(0L);
+        infantMotherArt.setFacilityId(facilityId);
+        infantMotherArt.setCreatedBy(user.getUserName());
+        infantMotherArt.setLastModifiedBy(user.getUserName());
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
 
@@ -704,6 +767,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
     public InfantPCRTest updateInfantPCRTest(InfantPCRTestDto dto,Infant infant){
         InfantPCRTest exist = infantPCRTestRepository
                 .findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantPCRTest.class,"InfantPCRTest not found "));
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         exist.setVisitDate(dto.getVisitDate());
         exist.setAgeAtTest(dto.getAgeAtTest());
         exist.setTestType(dto.getTestType());
@@ -713,6 +779,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setDateResultReceivedByCaregiver(dto.getDateResultReceivedByCaregiver());
         exist.setResults(dto.getResults());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setLastModifiedBy(user.getUserName());
         // Set pmtctCycleId from DTO if provided
         if (dto.getPmtctCycleId() != null) {
             exist.setPmtctCycleId(dto.getPmtctCycleId());
@@ -731,12 +798,16 @@ private final InfantRapidTestRepository infantRapidTestRepository;
 
     public InfantRapidAntiBodyTest updateInfantRapidTest(InfantRapidAntiBodyTestDto dto,Infant infant){
         InfantRapidAntiBodyTest exist = infantRapidTestRepository.findByUniqueUuid(dto.getUniqueUuid()).orElseThrow(() -> new EntityNotFoundException(InfantPCRTest.class,"Infant Rapid test not found "));
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         exist.setRapidTestType(dto.getRapidTestType());
         exist.setAncNumber(dto.getAncNumber());
         exist.setAgeAtTest(dto.getAgeAtTest());
         exist.setDateOfTest(dto.getDateOfTest());
         exist.setResult(dto.getResult());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setLastModifiedBy(user.getUserName());
         // Set pmtctCycleId from DTO if provided
         if (dto.getPmtctCycleId() != null) {
             exist.setPmtctCycleId(dto.getPmtctCycleId());
@@ -757,6 +828,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         if (exist == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No Infant found with id " + infantVisitRequestDto.getId());
         }
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         exist.setVisitDate(infantVisitRequestDto.getVisitDate());
         exist.setBodyWeight(infantVisitRequestDto.getBodyWeight());
         exist.setVisitStatus(infantVisitRequestDto.getVisitStatus());
@@ -764,6 +838,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
          exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
+        exist.setLastModifiedBy(user.getUserName());
 //        System.out.println("=================EXIST==========================");
 
 
@@ -785,6 +860,9 @@ private final InfantRapidTestRepository infantRapidTestRepository;
     public InfantArv updateInfantArv(InfantArvDto infantArvDto,Infant infant){
         InfantArv exist = infantArvRepository
                 .findById(infantArvDto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantArv.class,"InfantArv not found "));
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         exist.setVisitDate(infantArvDto.getVisitDate());
         exist.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         exist.setInfantArvType(infantArvDto.getInfantArvType());
@@ -797,6 +875,7 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         exist.setDateOfCtx(infantArvDto.getDateOfCtx());
         exist.setDateOfArv(infantArvDto.getDateOfArv());
         exist.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
+        exist.setLastModifiedBy(user.getUserName());
         // Set pmtctCycleId from DTO if provided
         if (infantArvDto.getPmtctCycleId() != null) {
             exist.setPmtctCycleId(infantArvDto.getPmtctCycleId());
@@ -814,11 +893,15 @@ private final InfantRapidTestRepository infantRapidTestRepository;
     public void updateInfantMotherArt(InfantMotherArtDto dto){
         InfantMotherArt exist = infantMotherArtRepository
                 .findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(InfantMotherArt.class,"InfantMotherArt not found "));
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+
         exist.setVisitDate(dto.getVisitDate());
         exist.setMotherArtInitiationTime(dto.getMotherArtInitiationTime());
         exist.setRegimenTypeId(dto.getRegimenTypeId());
         exist.setRegimenId(dto.getRegimenId());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setLastModifiedBy(user.getUserName());
         // Set pmtctCycleId from DTO if provided
         if (dto.getPmtctCycleId() != null) {
             exist.setPmtctCycleId(dto.getPmtctCycleId());
@@ -935,5 +1018,8 @@ private final InfantRapidTestRepository infantRapidTestRepository;
         return date;
     }
 
+    public boolean isInfantVisitDateExists(String hospitalNumber, LocalDate visitDate) {
+        return infantVisitRepository.existsByInfantHospitalNumberAndVisitDate(hospitalNumber, visitDate);
+    }
 
 }

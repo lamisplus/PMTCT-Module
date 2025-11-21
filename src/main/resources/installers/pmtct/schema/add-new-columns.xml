@@ -1411,6 +1411,19 @@
         </sql>
     </changeSet>
 
+    <!-- Add archived to pmtct_infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-add-archived-infant-visit-009">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="archived" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit
+                ADD COLUMN archived bigint DEFAULT 0;
+        </sql>
+    </changeSet>
+
     <!-- ========================================
          Data Migration: Populate mother_person_uuid
          for existing records
@@ -1888,6 +1901,231 @@
                 RAISE NOTICE '================================================================';
             END $$;
             ]]></sql>
+    </changeSet>
+
+    <!-- ========================================
+         Add archived and audit columns to tables
+         Author: system
+         Date: 2025-11-20
+         ======================================== -->
+
+    <!-- Add archived column to pmtct_delivery -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-archived-delivery-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="archived" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery ADD COLUMN archived bigint DEFAULT 0;
+        </sql>
+    </changeSet>
+
+    <!-- Add archived column to pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-archived-mother-visitation-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="archived" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN archived bigint DEFAULT 0;
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-mother-visitation-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_infant_arv -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-infant-arv-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_arv ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_infant_arv ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_arv ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_infant_mother_art -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-infant-mother-art-005">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_infant_pcr -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-infant-pcr-006">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_infant_rapid_antibody -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-infant-rapid-antibody-007">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-infant-visit-008">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_visit ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_infant_visit ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_infant_visit ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add audit columns to pmtct_hts -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-audit-hts-009">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="created_date" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN created_date TIMESTAMP;
+            ALTER TABLE pmtct_hts ADD COLUMN created_by character varying(255);
+            ALTER TABLE pmtct_hts ADD COLUMN last_modified_date TIMESTAMP;
+            ALTER TABLE pmtct_hts ADD COLUMN last_modified_by character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- ========================================
+         Add facility_id columns to tables
+         Author: system
+         Date: 2025-11-20
+         ======================================== -->
+
+    <!-- Add facility_id to pmtct_infant_arv -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-infant-arv-010">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_infant_mother_art -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-infant-mother-art-011">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_infant_pcr -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-infant-pcr-012">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_infant_rapid_antibody -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-infant-rapid-antibody-013">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-infant-visit-014">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_hts -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-hts-015">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+    <!-- Add facility_id to pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-facility-id-mother-visitation-016">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="facility_id" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN facility_id bigint;
+        </sql>
     </changeSet>
 
 </databaseChangeLog>

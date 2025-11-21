@@ -7,6 +7,7 @@ import org.lamisplus.modules.pmtct.domain.dto.HivTestDto;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "pmtct_hts",  schema = "public")
 @Data
@@ -61,5 +62,10 @@ public class PmtctHts {
     private HivTestDto tieBreaker2;
 
     private Long pmtctCycleId;
+    private Long facilityId;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastModifiedDate;
+    private String lastModifiedBy;
 
 }

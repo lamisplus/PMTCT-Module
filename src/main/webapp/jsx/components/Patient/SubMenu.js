@@ -120,7 +120,7 @@ function SubMenu(props) {
   }, [props]);
 
     useEffect(() => {
-    getLatestConfirmatoryResult();
+    getLatestConfirmatoryResult(selectedCycleId);
 
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
@@ -128,7 +128,7 @@ function SubMenu(props) {
     if (props.setIsOnPMTCT) {
       props.setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct);
     }
-  }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus]);
+  }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus, selectedCycleId]);
 
 
   //Get list of RegimenLine
@@ -345,9 +345,10 @@ const showRetestingMenu = (patientHivStatus) => {
               item
               text={`Pregnancy Cycle ${
                 selectedCycleId
-                  ? allPmtctCycleRecord?.length - ( allPmtctCycleRecord.findIndex(
+                  ? allPmtctCycleRecord?.length -
+                    allPmtctCycleRecord.findIndex(
                       (c) => c.id === selectedCycleId
-                    ))
+                    )
                   : 1
               }`}
               style={{

@@ -319,8 +319,8 @@ public class ANCService {
 
         boolean  hasPmtctRecord = pmtctEnrollmentRepository.checkPatientOnPMTCT(exist.getPersonUuid());
 
-        if(hasPmtctRecord){
-            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPersonUuid());
+//        if(hasPmtctRecord){
+//            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPersonUuid());
 //            LocalDate PmtctEnrollmentDate = pmtctEnrollmentRepository.getPmtctEnrollmentDate(exist.getPersonUuid());
 //
 //            //calculate the GA
@@ -329,8 +329,6 @@ public class ANCService {
 //            pmtctEnrollmentRepository.updateTheGA(gestationalAge, exist.getPersonUuid());
 
 
-
-        }
         try{
             LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 

@@ -96,13 +96,23 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
+                            "INNER JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) * " +
+                            "  FROM pmtct_anc " +
+                            "  WHERE archived = ?2 " +
+                            "  ORDER BY person_uuid, id DESC " +
+                            ") pa ON pp.uuid = pa.person_uuid " +
                             "  AND pa.pmtct_cycle_id = ( " +
                             "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
                             "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
                             "    ORDER BY ppc.id DESC LIMIT 1 " +
                             "  ) " +
-                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "LEFT JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
+                            "  FROM hiv_art_clinical " +
+                            "  WHERE is_commencement = true " +
+                            "  ORDER BY person_uuid, visit_date ASC " +
+                            ") hac ON pp.uuid = hac.person_uuid " +
                             "WHERE ( " +
                             "   pp.first_name ILIKE ?1 OR " +
                             "   pp.surname ILIKE ?1 OR " +
@@ -165,13 +175,23 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
+                            "INNER JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) * " +
+                            "  FROM pmtct_anc " +
+                            "  WHERE archived = ?1 " +
+                            "  ORDER BY person_uuid, id DESC " +
+                            ") pa ON pp.uuid = pa.person_uuid " +
                             "  AND pa.pmtct_cycle_id = ( " +
                             "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
                             "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
                             "    ORDER BY ppc.id DESC LIMIT 1 " +
                             "  ) " +
-                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "LEFT JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
+                            "  FROM hiv_art_clinical " +
+                            "  WHERE is_commencement = true " +
+                            "  ORDER BY person_uuid, visit_date ASC " +
+                            ") hac ON pp.uuid = hac.person_uuid " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +

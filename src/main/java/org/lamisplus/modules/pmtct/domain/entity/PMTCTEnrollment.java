@@ -46,6 +46,12 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String ancNo;
     private Long pmtctCycleId;
 
+    @PrePersist
+    public void prePersist() {
+        if (this.archived == null) {
+            this.archived = 0L;
+        }
+    }
 
     @Override
     public boolean isNew() {

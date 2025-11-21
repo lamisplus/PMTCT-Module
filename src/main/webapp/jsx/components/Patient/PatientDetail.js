@@ -96,9 +96,32 @@ function PatientCard(props) {
   const { classes } = props;
 
   // Handler for cycle selection changes
-  const handleCycleChange = (cycleId) => {
+  const handleCycleChange = async (cycleId) => {
     setSelectedCycleId(cycleId);
     console.log('Cycle changed in PatientDetail:', cycleId);
+
+    // Fetch the selected cycle data
+    const personUuid = patientObj.person_uuid || patientObj.personUuid || patientObj.uuid;
+
+    try {
+      // Get all cycles and find the selected one
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        const selectedCycle = response.data.find(cycle => cycle.id === cycleId);
+        if (selectedCycle) {
+          setLatestPmtctCycle(selectedCycle);
+          console.log('Updated latestPmtctCycle:', selectedCycle);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching cycle data:', error);
+    }
   };
 
 

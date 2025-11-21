@@ -8,10 +8,6 @@ import {
   Input,
   InputGroup,
   InputGroupText,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
 } from "reactstrap";
 import { Label as FormLabelName } from "reactstrap";
 import MatButton from "@material-ui/core/Button";
@@ -126,9 +122,9 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const [minARTDate, setMinARTDate]=useState("");
   const [minPmtctEnrollmentDate, setMinPmtctEnrollmentDate] = useState(null);
   const [minDeliveryDate, setMinDeliveryDate] = useState(null);
-  const [showEnrollmentConfirmation, setShowEnrollmentConfirmation] = useState(false);
-  const [enrollmentValidation, setEnrollmentValidation] = useState(null);
-  const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
+
+  // Get canProceedWithEnrollment from props (controlled by parent)
+  const canProceedWithEnrollment = props.canProceedWithEnrollment ?? true;
 
 // Extract hivStatus calculation outside
 const getInitialHivStatus = () => {
@@ -306,32 +302,6 @@ console.log('fddd', enroll.hivStatus)
 
 
 
-  const validateEnrollment = async (personUuid) => {
-    try {
-      const response = await axios.get(
-        `${baseUrl}pmtct/anc/validate-enrollment?personUuid=${personUuid}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data) {
-        setEnrollmentValidation(response.data);
-
-        if (response.data.canEnrollDirectly) {
-          // Allow direct enrollment
-          setCanProceedWithEnrollment(true);
-          setShowEnrollmentConfirmation(false);
-        } else if (response.data.requiresConfirmation) {
-          // Show confirmation dialog
-          setShowEnrollmentConfirmation(true);
-          setCanProceedWithEnrollment(false);
-        }
-      }
-    } catch (error) {
-      console.log("Error validating enrollment:", error);
-      // On error, allow enrollment to proceed
-      setCanProceedWithEnrollment(true);
-    }
-  };
 
   const checkPMTCTValidationDates = async (personUuid) => {
     try {
@@ -368,7 +338,6 @@ console.log('fddd', enroll.hivStatus)
     const personUuid = props?.patientObj?.uuid || props?.patientObj?.person_uuid || locationState?.patientObj?.uuid || locationState?.patientObj?.person_uuid;
     if (personUuid) {
       checkPMTCTValidationDates(personUuid);
-      validateEnrollment(personUuid);
     }
     if (
       props.activeContent.id &&
@@ -866,38 +835,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
   return (
     <div>
-      {/* Enrollment Confirmation Modal */}
-      <Modal isOpen={showEnrollmentConfirmation} toggle={() => {}} backdrop="static">
-        <ModalHeader>Confirm Enrollment</ModalHeader>
-        <ModalBody>
-          <p>{enrollmentValidation?.message}</p>
-        </ModalBody>
-        <ModalFooter>
-          <MatButton
-            variant="contained"
-            color="default"
-            onClick={() => {
-              setShowEnrollmentConfirmation(false);
-              setCanProceedWithEnrollment(false);
-              if (props.setActiveContent) {
-                props.setActiveContent({ ...props.activeContent, route: "recent-history" });
-              }
-            }}
-          >
-            No
-          </MatButton>
-          <MatButton
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              setShowEnrollmentConfirmation(false);
-              setCanProceedWithEnrollment(true);
-            }}
-          >
-            Yes
-          </MatButton>
-        </ModalFooter>
-      </Modal>
 
       <Card className={classes.root}>
         <CardBody>

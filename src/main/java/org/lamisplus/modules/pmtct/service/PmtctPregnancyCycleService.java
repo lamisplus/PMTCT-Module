@@ -24,7 +24,33 @@ public class PmtctPregnancyCycleService {
     private final PmtctPregnancyCycleRepository pregnancyCycleRepository;
     private final UserService userService;
 
+    private String mapEntryPoint(String entryPoint) {
+        if (entryPoint == null) {
+            return null;
+        }
+
+        switch (entryPoint) {
+            case "PMTCT_ENTRY_POINT_ANC":
+                return "ANC";
+            case "PMTCT_ENTRY_POINT_L&D":
+                return "L&D";
+            case "PMTCT_ENTRY_POINT_POST-PARTUM":
+                return "Post-partum";
+            default:
+                return entryPoint;
+        }
+    }
+
     public PmtctPregnancyCycleResponseDto save(PmtctPregnancyCycleRequestDto requestDto) {
+        // Check if the patient already has an inactive record
+        Optional<PmtctPregnancyCycle> existingInactiveCycle = pregnancyCycleRepository.findInactiveByPersonUuid(requestDto.getPersonUuid());
+
+        if (existingInactiveCycle.isPresent()) {
+            // Return the existing inactive record instead of creating a new one
+            return convertToResponseDto(existingInactiveCycle.get());
+        }
+
+        // No inactive record found, create a new one
         Optional<User> currentUser = userService.getUserWithRoles();
         User user = currentUser.orElseThrow(() -> new RuntimeException("User not found"));
         Long facilityId = user.getCurrentOrganisationUnitId();
@@ -32,7 +58,7 @@ public class PmtctPregnancyCycleService {
         PmtctPregnancyCycle pregnancyCycle = new PmtctPregnancyCycle();
         pregnancyCycle.setPersonUuid(requestDto.getPersonUuid());
         pregnancyCycle.setMaternalOutcome(requestDto.getMaternalOutcome());
-        pregnancyCycle.setEntryPoint(requestDto.getEntryPoint());
+        pregnancyCycle.setEntryPoint(mapEntryPoint(requestDto.getEntryPoint()));
         pregnancyCycle.setHivStatus(requestDto.getHivStatus());
         pregnancyCycle.setPregnancyOutcome(requestDto.getPregnancyOutcome());
         pregnancyCycle.setNumberOfInfants(requestDto.getNumberOfInfants());

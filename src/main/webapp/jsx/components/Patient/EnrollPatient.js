@@ -162,6 +162,7 @@ const UserRegistration = (props) => {
     stageOfPregnancy: "",
     id: "",
   });
+  const [latestPmtctCycle, setLatestPmtctCycle] = useState(null);
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
     personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
     maternalOutcome: "",
@@ -235,8 +236,12 @@ const UserRegistration = (props) => {
   const [showEnrollmentConfirmation, setShowEnrollmentConfirmation] = useState(false);
   const [enrollmentValidation, setEnrollmentValidation] = useState(null);
   const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
+  const [hasValidated, setHasValidated] = useState(false);
 
   const validateEnrollment = async (personUuid) => {
+    // Prevent duplicate validation calls
+    if (hasValidated) return;
+
     try {
       const response = await axios.get(
         `${baseUrl}pmtct/anc/validate-enrollment?personUuid=${personUuid}`,
@@ -245,6 +250,7 @@ const UserRegistration = (props) => {
 
       if (response.data) {
         setEnrollmentValidation(response.data);
+        setHasValidated(true);
 
         if (response.data.canEnrollDirectly) {
           // Allow direct enrollment
@@ -260,6 +266,7 @@ const UserRegistration = (props) => {
       console.log("Error validating enrollment:", error);
       // On error, allow enrollment to proceed
       setCanProceedWithEnrollment(true);
+      setHasValidated(true);
     }
   };
 
@@ -295,11 +302,12 @@ const UserRegistration = (props) => {
         return;
       }
 
-      const latestCycleId = cyclesResponse.data[0].id;
+      const latestCycle = cyclesResponse.data[0];
+      setLatestPmtctCycle(latestCycle);
 
       // Then get the latest HTS record for that cycle
       const htsResponse = await axios.get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${latestCycleId}`,
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${latestCycle.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -319,7 +327,11 @@ const UserRegistration = (props) => {
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
       checkANCEnrollment(patientObj?.uuid);
-      validateEnrollment(patientObj?.uuid);
+
+      // Only validate enrollment if patient is not already enrolled via ANC
+      if (!patientObj?.ancNo) {
+        validateEnrollment(patientObj?.uuid);
+      }
 
       if (patientObj?.identifier) {
         const identifiers = patientObj.identifier;
@@ -1835,6 +1847,8 @@ const UserRegistration = (props) => {
                           : false
                       }
                       lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult}
+                      canProceedWithEnrollment={canProceedWithEnrollment}
+                      latestPmtctCycle={latestPmtctCycle}
                     />
                   ) : (
                     <PmtctHtsForm

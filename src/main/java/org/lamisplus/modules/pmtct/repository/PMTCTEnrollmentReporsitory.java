@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.Query;
 import javax.transaction.Transactional;
 
 public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnrollment, Long> {
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   PMTCTEnrollment findByAncNo(String ancNo);
 
   Optional  <PMTCTEnrollment> getByAncNo(String ancNo);
@@ -316,8 +317,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
           "AND p.uuid = ?2 ORDER BY h.date_created DESC LIMIT 1 ")
   String getHtsClientHivStatus(String hospitalNumber, String personUuid);
 
-  @Query(value = "select date_of_delivery from pmtct_enrollment where person_uuid =?1", nativeQuery = true)
-  String getDateOfDelivery(String personUuid);
+  @Query(value = "select date_of_delivery from pmtct_enrollment where person_uuid =?1 AND pmtct_cycle_id =?2 AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+  String getDateOfDelivery(String personUuid, Long pmtctCycleId);
 
 
   @Query(value = "SELECT * FROM public.pmtct_enrollment WHERE hiv_status = :hivStatus OR entry_point = :entryPoint", nativeQuery = true)

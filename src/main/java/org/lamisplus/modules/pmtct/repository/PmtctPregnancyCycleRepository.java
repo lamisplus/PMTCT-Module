@@ -20,4 +20,7 @@ public interface PmtctPregnancyCycleRepository extends CommonJpaRepository<Pmtct
 
     @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<PmtctPregnancyCycle> findLatestByPersonUuid(String personUuid);
+
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE person_uuid = ?1 AND pmtct_status = 'INACTIVE' AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<PmtctPregnancyCycle> findInactiveByPersonUuid(String personUuid);
 }
