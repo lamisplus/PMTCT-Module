@@ -248,6 +248,26 @@ console.log('fddd', enroll.hivStatus)
   };
 
     const createCycle = async () => {
+      // If displayed on Patient Card (not enrollment page), don't create cycle
+      if (!props.onEnrollPatient) {
+        return {
+          status: false,
+          response: null,
+        };
+      }
+
+      // Check if there's a latest cycle with INACTIVE status
+      if (props.latestPmtctCycle && props.latestPmtctCycle.pmtctStatus === "INACTIVE") {
+        // Return the existing inactive cycle instead of creating new one
+        return {
+          status: true,
+          response: props.latestPmtctCycle,
+        };
+      }
+
+      // Create new cycle if:
+      // 1. No cycle exists, OR
+      // 2. Last cycle has ACTIVE status
       let payload2 = {
         personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
         maternalOutcome: "",
@@ -257,9 +277,9 @@ console.log('fddd', enroll.hivStatus)
         numberOfInfants: 0,
         pmtctStatus: "INACTIVE",
       };
-  
+
       try {
-  
+
        const response = await axios.post(
          `${baseUrl}pmtct/anc/pregnancy-cycle`,
          payload2,
@@ -277,9 +297,9 @@ console.log('fddd', enroll.hivStatus)
           return {
             status: false,
             response: null,
-          };      
+          };
        }
-  
+
       } catch (e) {
         console.log(e)
         toast.error(
@@ -288,7 +308,7 @@ console.log('fddd', enroll.hivStatus)
           return {
             status: false,
             response: null,
-          }; 
+          };
       }
     };
 

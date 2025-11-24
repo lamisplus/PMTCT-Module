@@ -1864,6 +1864,7 @@ const UserRegistration = (props) => {
                       hasPmtctHtsRecord={
                         lastPmtctHtsRecord?.finalResult ? true : false
                       }
+                      latestPmtctCycle={latestPmtctCycle}
                     />
                   )}
                 </>
