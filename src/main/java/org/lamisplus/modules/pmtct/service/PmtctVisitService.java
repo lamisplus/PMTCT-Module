@@ -83,8 +83,6 @@ public class PmtctVisitService {
         pmtctVisit.setArchived(0);
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
             System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
@@ -157,8 +155,6 @@ public class PmtctVisitService {
         pmtctVisit.setArchived(0);
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
             System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());

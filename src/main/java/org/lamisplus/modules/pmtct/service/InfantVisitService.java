@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
+import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
 import org.lamisplus.modules.pmtct.repository.*;
@@ -30,9 +31,8 @@ public class InfantVisitService
     private final InfantArvRepository infantArvRepository;
     private final DeliveryRepository deliveryRepository;
     private final InfantRapidTestRepository infantRapidTestRepository;
-
-
-    private InfantMotherArtRepository infantMotherArtRepository;
+    private final InfantMotherArtRepository infantMotherArtRepository;
+    private final UserService userService;
 
     public InfantVisitResponseDto save(InfantVisitRequestDto infantVisitRequestDto) {
         return convertEntitytoRespondDto(converRequestDtotoEntity(infantVisitRequestDto));
