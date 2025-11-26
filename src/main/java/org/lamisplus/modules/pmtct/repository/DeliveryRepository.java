@@ -15,13 +15,16 @@ public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
 
     Delivery getDeliveryByAncNo(String ancNo);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByPersonUuid(String personUuid);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
 
 
     Optional<Delivery> findDeliveryByPersonUuid(String personUuid);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
 
     Optional<Delivery> findDeliveryByAncNo(String ancNo);

@@ -121,7 +121,13 @@ function SubMenu(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult(selectedCycleId);
-
+      console.log(
+        "props.mainDeliveryStatus ",
+        props,
+        props.mainDeliveryStatus,
+        patientObj,
+        patientObj.deliveryStatus
+      );
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
     // Only update if setIsOnPMTCT is passed from parent

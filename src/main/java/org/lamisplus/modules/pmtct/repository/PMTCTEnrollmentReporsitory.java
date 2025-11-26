@@ -22,13 +22,17 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   PMTCTEnrollment findByAncNo(String ancNo);
 
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional  <PMTCTEnrollment> getByAncNo(String ancNo);
 
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> getByPersonUuid(String personUuid);
 
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> getByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
 
 
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   PMTCTEnrollment findByPersonUuidAndArchived(String personUuid, Long archived);
 
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
@@ -45,7 +49,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   @Query(
           value =
-                  "SELECT " +
+                  "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
                           "  pa.anc_no AS ancNo, " +
@@ -69,7 +73,12 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
                           "  ), 0) AS pregnancyCount " +
                           "FROM patient_person pp " +
-                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "INNER JOIN ( " +
+                          "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                          "  FROM pmtct_enrollment " +
+                          "  WHERE archived = 0 " +
+                          "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
+                          ") pa ON pp.uuid = pa.person_uuid " +
                           "  AND pa.pmtct_cycle_id = ( " +
                           "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
                           "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
@@ -79,7 +88,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "  AND pp.facility_id = ?2 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
                           "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                          "ORDER BY pa.id DESC",
+                          "ORDER BY pp.uuid, pa.id DESC",
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
@@ -100,7 +109,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   @Query(
           value =
-                  "SELECT " +
+                  "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
                           "  pa.anc_no AS ancNo, " +
@@ -124,7 +133,12 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
                           "  ), 0) AS pregnancyCount " +
                           "FROM patient_person pp " +
-                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.person_uuid AND pa.archived = 0 " +
+                          "INNER JOIN ( " +
+                          "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                          "  FROM pmtct_enrollment " +
+                          "  WHERE archived = 0 " +
+                          "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
+                          ") pa ON pp.uuid = pa.person_uuid " +
                           "  AND pa.pmtct_cycle_id = ( " +
                           "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
                           "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = 0 " +
@@ -141,7 +155,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "AND pp.facility_id = ?3 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                          "ORDER BY pa.id DESC",
+                          "ORDER BY pp.uuid, pa.id DESC",
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
@@ -389,14 +403,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
 
 
-  @Query(value = "select art_start_time from pmtct_enrollment WHERE person_uuid = ?1 LIMIT 1", nativeQuery = true)
-  String getMotherARTInitial (String personUuid);
+  @Query(value = "select art_start_time from pmtct_enrollment WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  String getMotherARTInitial (String personUuid, Long pmtctCycleId);
 
-    @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE person_uuid =?1 ", nativeQuery = true)
-    String checkRuptureMembraneAt4hrs (String personUuid);
+    @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE person_uuid =?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    String checkRuptureMembraneAt4hrs (String personUuid, Long pmtctCycleId);
 
-    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE uuid =?1  OR unique_uuid = ?1  ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    String getNVPandAZT (String personUuid);
+    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE (uuid =?1 OR unique_uuid = ?1) AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    String getNVPandAZT (String personUuid, Long pmtctCycleId);
 
     @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)
     String getMotherVL (String personUuid);

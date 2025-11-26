@@ -118,8 +118,6 @@ public class PmtctHtsService {
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
         pmtctHts.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
-        pmtctHts.setCreatedBy(user.getUserName());
-        pmtctHts.setLastModifiedBy(user.getUserName());
 
         PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
 
@@ -160,7 +158,6 @@ public class PmtctHtsService {
             pmtctEnrollment1.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
-            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
             pmtctEnrollment1.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
 

@@ -562,6 +562,12 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(personUuid, pmtctCycleId));
     }
 
+    @GetMapping(value = "get-latest-pmtct-hts-by-person-uuid/{personUuid}")
+    public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSByPersonUuid(
+            @PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(personUuid));
+    }
+
     @PutMapping(value = "update-pmtct-hts-enrollment/{id}")
     public ResponseEntity<?> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
         if (pmtctHtsRequestDTO.getPmtctCycleId() == null) {
@@ -604,9 +610,11 @@ public class PMTCTController {
 
 
     @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
-    public boolean checkForInfantRiskStatus(@PathVariable String personUuid) {
+    public boolean checkForInfantRiskStatus(
+            @PathVariable String personUuid,
+            @RequestParam Long pmtctCycleId) {
 
-        return ancService.isInfantRisk(personUuid);
+        return ancService.isInfantRisk(personUuid, pmtctCycleId);
     }
 
 
@@ -714,6 +722,22 @@ public class PMTCTController {
             @RequestParam LocalDate visitDate) {
         boolean exists = infantVisitService.isInfantVisitDateExists(hospitalNumber, visitDate);
         return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping(value = "get-historical-hiv-status")
+    public ResponseEntity<String> getHistoricalHivStatus(@RequestParam String personUuid) {
+        if (personUuid == null || personUuid.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("person_uuid is required");
+        }
+
+        String hivStatus = pmtctPregnancyCycleService.getHistoricalHivStatus(personUuid);
+
+        if (hivStatus == null) {
+            return ResponseEntity.ok("");
+        }
+
+        return ResponseEntity.ok(hivStatus);
     }
 
 }

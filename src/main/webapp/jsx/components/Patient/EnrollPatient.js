@@ -252,12 +252,26 @@ const UserRegistration = (props) => {
         setEnrollmentValidation(response.data);
         setHasValidated(true);
 
-        if (response.data.canEnrollDirectly) {
-          // Allow direct enrollment
+        // List of negative outcomes that should NOT show the modal
+        const negativeOutcomes = [
+          "MATERNAL_OUTCOME_DEAD",
+          "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
+          "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
+          "MATERNAL_OUTCOME_TRANSFERRED_OUT"
+        ];
+
+        // Check if the last maternal outcome is a negative outcome
+        const lastOutcome = response.data.lastMaternalOutcome?.trim().toUpperCase() || "";
+        const isNegativeOutcome = negativeOutcomes.some(
+          outcome => outcome.toUpperCase() === lastOutcome
+        );
+
+        if (isNegativeOutcome || response.data.canEnrollDirectly) {
+          // Allow direct enrollment without showing modal
           setCanProceedWithEnrollment(true);
           setShowEnrollmentConfirmation(false);
         } else if (response.data.requiresConfirmation) {
-          // Show confirmation dialog
+          // Show confirmation dialog only if not a negative outcome
           setShowEnrollmentConfirmation(true);
           setCanProceedWithEnrollment(false);
         }
@@ -291,31 +305,56 @@ const UserRegistration = (props) => {
 
   const getLastPmtctHtsRecord = async (personUuid) => {
     try {
-      // First, get the latest pregnancy cycle
-      const cyclesResponse = await axios.get(
-        `${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (!cyclesResponse.data || cyclesResponse.data.length === 0) {
-        console.log("No pregnancy cycles found for this patient");
-        return;
-      }
-
-      const latestCycle = cyclesResponse.data[0];
-      setLatestPmtctCycle(latestCycle);
-
-      // Then get the latest HTS record for that cycle
+      // Get the latest HTS record by person_uuid only
       const htsResponse = await axios.get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${latestCycle.id}`,
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-by-person-uuid/${personUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (htsResponse.data) {
         setLastPmtctHtsRecord(htsResponse.data);
       }
+
+      // Also get the latest pregnancy cycle if needed
+      const cyclesResponse = await axios.get(
+        `${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (cyclesResponse.data && cyclesResponse.data.length > 0) {
+        const latestCycle = cyclesResponse.data[0];
+        setLatestPmtctCycle(latestCycle);
+      }
     } catch (error) {
-      //console.log(error);
+      console.log("Error fetching PMTCT HTS record:", error);
+    }
+  };
+
+  const getHistoricalHivStatus = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/get-historical-hiv-status`,
+        {
+          params: { personUuid },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data && response.data === "POSITIVE") {
+        // Auto-populate HIV status fields
+        setObjValues((prev) => ({
+          ...prev,
+          staticHivStatus: "Positive",
+          previouslyKnownHivStatus: "Yes",
+        }));
+        setDisableHIVStatus(true);
+        toast.info("Patient has a previous HIV positive record. HIV status auto-populated.", {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.log("Error fetching historical HIV status:", error);
     }
   };
 
@@ -327,6 +366,7 @@ const UserRegistration = (props) => {
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
       checkANCEnrollment(patientObj?.uuid);
+      getHistoricalHivStatus(patientObj?.uuid);
 
       // Only validate enrollment if patient is not already enrolled via ANC
       if (!patientObj?.ancNo) {
@@ -832,7 +872,11 @@ const UserRegistration = (props) => {
       <ToastContainer autoClose={3000} hideProgressBar />
 
       {/* Enrollment Confirmation Modal */}
-      <Modal show={showEnrollmentConfirmation} onHide={() => {}} backdrop="static">
+      <Modal
+        show={showEnrollmentConfirmation}
+        onHide={() => {}}
+        backdrop="static"
+      >
         <Modal.Header>
           <Modal.Title>Confirm Enrollment</Modal.Title>
         </Modal.Header>
@@ -1825,6 +1869,7 @@ const UserRegistration = (props) => {
               ) : (
                 <>
                   {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
+                  {console.log("lastPmtctHtsRecord", lastPmtctHtsRecord)}
                   {patientObj.dynamicHivStatus === "Positive" ||
                   lastPmtctHtsRecord?.finalResult === "Positive" ? (
                     <PmtctEnrollment

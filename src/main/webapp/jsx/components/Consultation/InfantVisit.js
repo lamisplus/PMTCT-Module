@@ -1000,7 +1000,7 @@ const ClinicVisit = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("validate()", validate());
+    console.log("validate()", validate(), errors);
     if (validate()) {
       setSaving(true);
       objValues.infantMotherArtDto = infantMotherArtDto;

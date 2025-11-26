@@ -15,11 +15,15 @@ import javax.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 @TypeDefs({@TypeDef(
         name = "string-array",
         typeClass = StringArrayType.class
@@ -50,15 +54,20 @@ public class PMTCTTransactionalEntity implements Serializable, Persistable<Long>
     private String ancNo;
     @Column(name = "created_date", updatable = false)
     @CreatedDate
-    private LocalDateTime createdDate = LocalDateTime.now();
+    private LocalDateTime createdDate;
+
     @JsonIgnore
     @Column(name = "created_by", updatable = false)
+    @CreatedBy
     private String createdBy;
+
     @Column(name = "last_modified_date")
     @LastModifiedDate
-    private LocalDateTime lastModifiedDate = LocalDateTime.now();
+    private LocalDateTime lastModifiedDate;
+
     @Column(name = "last_modified_by")
     @JsonIgnore
+    @LastModifiedBy
     private String lastModifiedBy;
     private Long facilityId;
 

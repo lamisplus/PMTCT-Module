@@ -14,17 +14,24 @@ import java.util.Optional;
 
 @Repository
 public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
+    @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     ANC findByAncNoAndArchived(String ancNo, Long archived);
 
+    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> findANCByPersonUuid(String PersonUuid);
+
+    @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> getByAncNoAndArchived(String ancNo, Long archived);
 
+    @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> getByAncNo(String ancNo);
 
     List<ANC> findByArchived(Long archived);
 
+    @Query(value = "SELECT * FROM pmtct_anc WHERE hospital_number = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> findByHospitalNumberAndArchived(String hospitalNumber, Long archived);
 
+    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> findANCByPersonUuidAndArchived(String personUuid, Long archived);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
@@ -75,7 +82,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 //    )
     @Query(
             value =
-                    "SELECT " +
+                    "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
                             "  pp.uuid AS personUuid, " +
@@ -97,10 +104,10 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid) * " +
+                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
                             "  FROM pmtct_anc " +
                             "  WHERE archived = ?2 " +
-                            "  ORDER BY person_uuid, id DESC " +
+                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
                             ") pa ON pp.uuid = pa.person_uuid " +
                             "  AND pa.pmtct_cycle_id = ( " +
                             "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
@@ -124,7 +131,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "AND pp.facility_id = ?3 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
                             "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                            "ORDER BY pa.id DESC",
+                            "ORDER BY pp.uuid, pa.id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
@@ -155,7 +162,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 //            nativeQuery = true
     @Query(
             value =
-                    "SELECT " +
+                    "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
                             "  pp.uuid AS personUuid, " +
@@ -176,10 +183,10 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid) * " +
+                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
                             "  FROM pmtct_anc " +
                             "  WHERE archived = ?1 " +
-                            "  ORDER BY person_uuid, id DESC " +
+                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
                             ") pa ON pp.uuid = pa.person_uuid " +
                             "  AND pa.pmtct_cycle_id = ( " +
                             "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
@@ -196,7 +203,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
                             "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                            "ORDER BY pa.id DESC",
+                            "ORDER BY pp.uuid, pa.id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +

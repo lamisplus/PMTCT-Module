@@ -75,8 +75,23 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                             "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?1 " +
-                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "INNER JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  FROM pmtct_hts " +
+                            "  WHERE archived = ?1 " +
+                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
+                            ") ph ON pp.uuid = ph.person_uuid " +
+                            "  AND ph.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
+                            "LEFT JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
+                            "  FROM hiv_art_clinical " +
+                            "  WHERE is_commencement = true " +
+                            "  ORDER BY person_uuid, visit_date ASC " +
+                            ") hac ON pp.uuid = hac.person_uuid " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
@@ -86,6 +101,11 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?1 " +
+                            "  AND ph.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
@@ -117,8 +137,23 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                             "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?2 " +
-                            "LEFT JOIN hiv_art_clinical hac ON pp.uuid = hac.person_uuid AND hac.is_commencement = true " +
+                            "INNER JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  FROM pmtct_hts " +
+                            "  WHERE archived = ?2 " +
+                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
+                            ") ph ON pp.uuid = ph.person_uuid " +
+                            "  AND ph.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
+                            "LEFT JOIN ( " +
+                            "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
+                            "  FROM hiv_art_clinical " +
+                            "  WHERE is_commencement = true " +
+                            "  ORDER BY person_uuid, visit_date ASC " +
+                            ") hac ON pp.uuid = hac.person_uuid " +
                             "WHERE (" +
                             "   pp.first_name ILIKE ?1 OR " +
                             "   pp.surname ILIKE ?1 OR " +
@@ -135,6 +170,11 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
                             "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?2 " +
+                            "  AND ph.pmtct_cycle_id = ( " +
+                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ) " +
                             "WHERE (" +
                             "   pp.first_name ILIKE ?1 OR " +
                             "   pp.surname ILIKE ?1 OR " +

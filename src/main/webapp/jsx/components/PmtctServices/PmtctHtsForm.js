@@ -313,35 +313,64 @@ const PmtctHtsForm = (props) => {
   const getLastPmtctHtsRecord = (personUuid) => {
     const pmtctCycleId = props.latestPmtctCycle?.id;
 
-    if (!pmtctCycleId) {
-      console.error("pmtctCycleId is required");
-      return;
+    if (pmtctCycleId) {
+       axios
+         .get(
+           `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
+           { headers: { Authorization: `Bearer ${token}` } }
+         )
+         .then((response) => {
+           if (response.data) {
+             setLastPmtctHtsRecord(response.data);
+             if (
+               props.onEnrollPatient &&
+               response?.data?.id &&
+               response?.data?.finalResult === "Negative"
+             ) {
+               toast.info("Last HIV test was " + response?.data?.finalResult, {
+                 position: toast.POSITION.TOP_RIGHT,
+               });
+             }
+           }
+         })
+         .catch((error) => {
+           //console.log(error);
+         });
     }
 
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .then((response) => {
-        if (response.data) {
-          setLastPmtctHtsRecord(response.data);
-          if (
-            props.onEnrollPatient &&
-            response?.data?.id &&
-            response?.data?.finalResult === "Negative"
-          ) {
-            toast.info("Last HIV test was " + response?.data?.finalResult, {
-              position: toast.POSITION.TOP_RIGHT,
-            });
-          }
-        }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
+  
   };
 
+
+
+  const getLastPmtctHtsByPersonUuid= () => {
+    const pmtctCycleId = props.latestPmtctCycle?.id;
+
+    if (pmtctCycleId) {
+      axios
+        .get(
+          `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        .then((response) => {
+          if (response.data) {
+            setLastPmtctHtsRecord(response.data);
+            if (
+              props.onEnrollPatient &&
+              response?.data?.id &&
+              response?.data?.finalResult === "Negative"
+            ) {
+              toast.info("Last HIV test was " + response?.data?.finalResult, {
+                position: toast.POSITION.TOP_RIGHT,
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          //console.log(error);
+        });
+    }
+  };
   function calculateGestationalAge2(dateOfHivTest) {
     let lmpDate = props?.patientObj?.lmp;
 
@@ -1016,25 +1045,8 @@ const PmtctHtsForm = (props) => {
 
     const createCycle = async () => {
       // If displayed on Patient Card (not enrollment page), don't create cycle
-      if (!props.onEnrollPatient) {
-        return {
-          status: false,
-          response: null,
-        };
-      }
-
-      // Check if there's a latest cycle with INACTIVE status
-      if (props.latestPmtctCycle && props.latestPmtctCycle.pmtctStatus === "INACTIVE") {
-        // Return the existing inactive cycle instead of creating new one
-        return {
-          status: true,
-          response: props.latestPmtctCycle,
-        };
-      }
-
-      // Create new cycle if:
-      // 1. No cycle exists, OR
-      // 2. Last cycle has ACTIVE status
+      if (props.onEnrollPatient) {
+              
       let payload2 = {
         personUuid: props.personUuid,
         maternalOutcome: "",
@@ -1046,14 +1058,13 @@ const PmtctHtsForm = (props) => {
       };
 
       try {
-
-       const response = await axios.post(
-         `${baseUrl}pmtct/anc/pregnancy-cycle`,
-         payload2,
-         {
-           headers: { Authorization: `Bearer ${token}` },
-         }
-       );
+        const response = await axios.post(
+          `${baseUrl}pmtct/anc/pregnancy-cycle`,
+          payload2,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (response?.data) {
           return {
             status: true,
@@ -1065,18 +1076,20 @@ const PmtctHtsForm = (props) => {
             status: false,
             response: null,
           };
-       }
-
+        }
       } catch (e) {
-        console.log(e)
+        console.log(e);
         toast.error(
           `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
         );
-          return {
-            status: false,
-            response: null,
-          };
+        return {
+          status: false,
+          response: null,
+        };
       }
+      }
+
+  
     };
 
 
@@ -1127,10 +1140,7 @@ const PmtctHtsForm = (props) => {
     
     // Create cycle if needed
     if (
-      props.onEnrollPatient &&
-      locationState?.entrypointValue &&
-      (locationState?.entrypointValue !== "PMTCT_ENTRY_POINT_ANC") &&
-        !props?.hasPmtctHtsRecord
+      props.onEnrollPatient 
     ) {
       const checkIfCycleIsCreated = await createCycle();
       payload.pmtctCycleId = checkIfCycleIsCreated?.response?.id;

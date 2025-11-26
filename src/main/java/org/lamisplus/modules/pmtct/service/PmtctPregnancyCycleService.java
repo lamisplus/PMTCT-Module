@@ -6,7 +6,13 @@ import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.pmtct.domain.dto.EnrollmentValidationDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleResponseDto;
+import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
+import org.lamisplus.modules.pmtct.domain.entity.PmtctHts;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctPregnancyCycle;
+import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -23,6 +29,9 @@ public class PmtctPregnancyCycleService {
 
     private final PmtctPregnancyCycleRepository pregnancyCycleRepository;
     private final UserService userService;
+    private final ANCRepository ancRepository;
+    private final PmtctHtsRepository pmtctHtsRepository;
+    private final PMTCTEnrollmentReporsitory pmtctEnrollmentRepository;
 
     private String mapEntryPoint(String entryPoint) {
         if (entryPoint == null) {
@@ -101,6 +110,25 @@ public class PmtctPregnancyCycleService {
             pregnancyCycleRepository.save(cycle);
         }
     }
+
+    public void updateMaternalOutcome(Long cycleId, String maternalOutcome) {
+        if (cycleId == null || maternalOutcome == null) {
+            return;
+        }
+
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
+        if (cycleOptional.isPresent()) {
+            PmtctPregnancyCycle cycle = cycleOptional.get();
+            cycle.setMaternalOutcome(maternalOutcome);
+            cycle.setLastModifiedDate(LocalDateTime.now());
+
+            Optional<User> currentUser = userService.getUserWithRoles();
+            currentUser.ifPresent(user -> cycle.setLastModifiedBy(user.getUserName()));
+
+            pregnancyCycleRepository.save(cycle);
+        }
+    }
+
 
     public List<PmtctPregnancyCycleResponseDto> getAllCyclesByPersonUuid(String personUuid) {
         List<PmtctPregnancyCycle> cycles = pregnancyCycleRepository.findAllByPersonUuid(personUuid);
@@ -182,6 +210,80 @@ public class PmtctPregnancyCycleService {
         }
 
         return validation;
+    }
+
+    /**
+     * Checks if a patient has ever been HIV positive in any ANC, HTS, or Enrollment record
+     * This method is called by the frontend to auto-populate HIV status
+     * @param personUuid The patient's UUID
+     * @return The HIV status ("POSITIVE" or null)
+     */
+    public String getHistoricalHivStatus(String personUuid) {
+        if (personUuid == null || personUuid.isEmpty()) {
+            return null;
+        }
+
+        Optional<User> currentUser = userService.getUserWithRoles();
+        if (!currentUser.isPresent()) {
+            return null;
+        }
+        Long facilityId = currentUser.get().getCurrentOrganisationUnitId();
+
+        // Check PMTCT HTS records for positive result
+        List<PmtctHts> htsRecords = pmtctHtsRepository.findAll();
+        for (PmtctHts hts : htsRecords) {
+            if (personUuid.equals(hts.getPersonUuid()) &&
+                hts.getArchived() != null && hts.getArchived() == 0L &&
+                facilityId.equals(hts.getFacilityId())) {
+                String finalResult = hts.getFinalResult();
+                if (isPositiveResult(finalResult)) {
+                    return "POSITIVE";
+                }
+            }
+        }
+
+        // Check PMTCT Enrollment records for positive HIV status
+        List<PMTCTEnrollment> enrollments = pmtctEnrollmentRepository.findAll();
+        for (PMTCTEnrollment enrollment : enrollments) {
+            if (personUuid.equals(enrollment.getPersonUuid()) &&
+                enrollment.getArchived() != null && enrollment.getArchived() == 0L &&
+                facilityId.equals(enrollment.getFacilityId())) {
+                String hivStatus = enrollment.getHivStatus();
+                if (isPositiveResult(hivStatus)) {
+                    return "POSITIVE";
+                }
+            }
+        }
+
+        // Check ANC records for positive HIV status
+        Optional<ANC> ancOptional = ancRepository.findLatestANCByPersonUuidAndArchived(personUuid, 0L);
+        if (ancOptional.isPresent()) {
+            ANC anc = ancOptional.get();
+            if (facilityId.equals(anc.getFacilityId())) {
+                String staticHivStatus = anc.getStaticHivStatus();
+                String previouslyKnownStatus = anc.getPreviouslyKnownHivStatus();
+
+                if (isPositiveResult(staticHivStatus) || isPositiveResult(previouslyKnownStatus)) {
+                    return "POSITIVE";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Helper method to check if a result indicates HIV positive
+     */
+    private boolean isPositiveResult(String result) {
+        if (result == null || result.isEmpty()) {
+            return false;
+        }
+
+        String normalizedResult = result.trim().toUpperCase();
+        return normalizedResult.contains("POSITIVE") ||
+               normalizedResult.contains("REACTIVE") ||
+               normalizedResult.equals("HIV_STATUS_POSITIVE");
     }
 
 }

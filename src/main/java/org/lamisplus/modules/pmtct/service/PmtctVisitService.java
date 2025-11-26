@@ -35,6 +35,7 @@ public class PmtctVisitService {
     private final UserService userService;
     ObjectMapper mapper = new ObjectMapper();
     private final InfantPCRTestRepository infantPCRTestRepository;
+    private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
     public PmtctVisitResponseDto save(PmtctVisitRequestDto pmtctVisitRequestDto) {
         return convertEntitytoRespondDto(converRequestDtotoEntity(pmtctVisitRequestDto));
@@ -113,7 +114,17 @@ public class PmtctVisitService {
             }
         } catch (Exception e) { e.printStackTrace(); }
 
-        return this.pmtctVisitRepository.save(pmtctVisit);
+        PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
+
+        // Update maternal_outcome in pregnancy cycle if maternalOutcome is provided
+        if (savedVisit.getMaternalOutcome() != null && savedVisit.getPmtctCycleId() != null) {
+            pmtctPregnancyCycleService.updateMaternalOutcome(
+                savedVisit.getPmtctCycleId(),
+                savedVisit.getMaternalOutcome()
+            );
+        }
+
+        return savedVisit;
     }
 
     public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
@@ -185,7 +196,17 @@ public class PmtctVisitService {
             }
         } catch (Exception e) { e.printStackTrace(); }
 
-        return this.pmtctVisitRepository.save(pmtctVisit);
+        PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
+
+        // Update maternal_outcome in pregnancy cycle if maternalOutcome is provided
+        if (savedVisit.getMaternalOutcome() != null && savedVisit.getPmtctCycleId() != null) {
+            pmtctPregnancyCycleService.updateMaternalOutcome(
+                savedVisit.getPmtctCycleId(),
+                savedVisit.getMaternalOutcome()
+            );
+        }
+
+        return savedVisit;
     }
 
 

@@ -276,14 +276,21 @@ const getMaternalOutcome = async () => {
 };
 
    const getHighRiskInfantStatus = () => {
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    const pmtctCycleId = props.latestPmtctCycle?.id;
+
+    if (!pmtctCycleId) {
+      return; // Don't call if no cycle ID available
+    }
+
     axios
-      .get(`${baseUrl}pmtct/anc/check-for-infant-high-risk/${props.patientObj.person_uuid?  props.patientObj.person_uuid : props.patientObj.personUuid}`, {
+      .get(`${baseUrl}pmtct/anc/check-for-infant-high-risk/${personUuid}?pmtctCycleId=${pmtctCycleId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
         if (response.data) {
           setShowHighRisKInfant(response.data)
-      
+
         }else{
         setShowHighRisKInfant(false)
 

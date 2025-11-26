@@ -1910,7 +1910,7 @@
          ======================================== -->
 
     <!-- Add archived column to pmtct_delivery -->
-    <changeSet failOnError="false" author="system" id="2025-11-20-add-archived-delivery-001">
+    <changeSet failOnError="false" author="system" id="2025-11-20-add-archived-delivery-001" >
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="pmtct_delivery" columnName="archived" />
@@ -2125,6 +2125,20 @@
         </preConditions>
         <sql>
             ALTER TABLE pmtct_mother_visitation ADD COLUMN facility_id bigint;
+        </sql>
+    </changeSet>
+
+
+    <!-- Add archived to pmtct_infant_information -->
+    <changeSet failOnError="false" author="Ganiyat" id="2025-11-24-add-archived-infant-information-0122">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="archived" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD COLUMN archived bigint DEFAULT 0;
         </sql>
     </changeSet>
 

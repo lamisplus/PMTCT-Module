@@ -248,26 +248,10 @@ console.log('fddd', enroll.hivStatus)
   };
 
     const createCycle = async () => {
-      // If displayed on Patient Card (not enrollment page), don't create cycle
-      if (!props.onEnrollPatient) {
-        return {
-          status: false,
-          response: null,
-        };
-      }
 
-      // Check if there's a latest cycle with INACTIVE status
-      if (props.latestPmtctCycle && props.latestPmtctCycle.pmtctStatus === "INACTIVE") {
-        // Return the existing inactive cycle instead of creating new one
-        return {
-          status: true,
-          response: props.latestPmtctCycle,
-        };
-      }
+      console.log("createCycle", props);
+   if (props.onEnrollPatient) {
 
-      // Create new cycle if:
-      // 1. No cycle exists, OR
-      // 2. Last cycle has ACTIVE status
       let payload2 = {
         personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
         maternalOutcome: "",
@@ -277,16 +261,14 @@ console.log('fddd', enroll.hivStatus)
         numberOfInfants: 0,
         pmtctStatus: "INACTIVE",
       };
-
       try {
-
-       const response = await axios.post(
-         `${baseUrl}pmtct/anc/pregnancy-cycle`,
-         payload2,
-         {
-           headers: { Authorization: `Bearer ${token}` },
-         }
-       );
+        const response = await axios.post(
+          `${baseUrl}pmtct/anc/pregnancy-cycle`,
+          payload2,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (response?.data) {
           return {
             status: true,
@@ -298,18 +280,21 @@ console.log('fddd', enroll.hivStatus)
             status: false,
             response: null,
           };
-       }
-
+        }
       } catch (e) {
-        console.log(e)
+        console.log(e);
         toast.error(
           `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
         );
-          return {
-            status: false,
-            response: null,
-          };
+        return {
+          status: false,
+          response: null,
+        };
       }
+
+   }
+   
+
     };
 
 
@@ -343,6 +328,32 @@ console.log('fddd', enroll.hivStatus)
     }
   };
 
+  const getHistoricalHivStatus = async (personUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/get-historical-hiv-status`,
+        {
+          params: { personUuid },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data && response.data === "POSITIVE") {
+        // Auto-populate HIV status field
+        setEnrollDto((prev) => ({
+          ...prev,
+          hivStatus: "Positive",
+        }));
+        toast.info("Patient has a previous HIV positive record. HIV status auto-populated.", {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.log("Error fetching historical HIV status:", error);
+    }
+  };
+
   useEffect(() => {
    GET_CODESETS();
     checkTimingOfART(0)
@@ -358,6 +369,7 @@ console.log('fddd', enroll.hivStatus)
     const personUuid = props?.patientObj?.uuid || props?.patientObj?.person_uuid || locationState?.patientObj?.uuid || locationState?.patientObj?.person_uuid;
     if (personUuid) {
       checkPMTCTValidationDates(personUuid);
+      getHistoricalHivStatus(personUuid);
     }
     if (
       props.activeContent.id &&
@@ -760,10 +772,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
     let pmtctCycleId;
     // Create cycle if needed
     if (
-      props.onEnrollPatient &&
-      locationState?.entrypointValue &&
-      locationState?.entrypointValue !== "PMTCT_ENTRY_POINT_ANC" &&
-      !props?.hasPmtctHtsRecord
+      props.onEnrollPatient
     ) {
       const checkIfCycleIsCreated = await createCycle();
       enroll.pmtctCycleId = checkIfCycleIsCreated?.response?.id;

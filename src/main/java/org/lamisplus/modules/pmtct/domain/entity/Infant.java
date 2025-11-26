@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.Entity;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -29,4 +30,11 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private String ctxStatus;
     private Long pmtctCycleId;
     private Long archived;
-   }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.archived == null) {
+            this.archived = 0L;
+        }
+    }
+}

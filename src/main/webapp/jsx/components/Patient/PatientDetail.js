@@ -70,16 +70,16 @@ function PatientCard(props) {
   const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState("");
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
-  const [mainDeliveryStatus, setMainDeliveryStatus] = useState(true);
+  const [mainDeliveryStatus, setMainDeliveryStatus] = useState(false);
   const [checkForRetesting, setCheckForRetesting] = useState(true);
   const [isOnPMTCT, setIsOnPMTCT] = useState(false);
 
-   const patientObj =
+  const patientObj =
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
-  
-      console.log("patientObj", patientObj);
+
+  console.log("patientObj", patientObj);
   const [latestPmtctCycle, setLatestPmtctCycle] = useState({
     id: patientObj.pmtctCycleId,
   });
@@ -98,10 +98,11 @@ function PatientCard(props) {
   // Handler for cycle selection changes
   const handleCycleChange = async (cycleId) => {
     setSelectedCycleId(cycleId);
-    console.log('Cycle changed in PatientDetail:', cycleId);
+    console.log("Cycle changed in PatientDetail:", cycleId);
 
     // Fetch the selected cycle data
-    const personUuid = patientObj.person_uuid || patientObj.personUuid || patientObj.uuid;
+    const personUuid =
+      patientObj.person_uuid || patientObj.personUuid || patientObj.uuid;
 
     try {
       // Get all cycles and find the selected one
@@ -113,17 +114,21 @@ function PatientCard(props) {
       );
 
       if (response.data && response.data.length > 0) {
-        const selectedCycle = response.data.find(cycle => cycle.id === cycleId);
+        const selectedCycle = response.data.find(
+          (cycle) => cycle.id === cycleId
+        );
         if (selectedCycle) {
           setLatestPmtctCycle(selectedCycle);
-          console.log('Updated latestPmtctCycle:', selectedCycle);
+          console.log("Updated latestPmtctCycle:", selectedCycle);
         }
       }
+
+      // Fetch activities for the selected cycle
+      RecentActivities(cycleId);
     } catch (error) {
-      console.error('Error fetching cycle data:', error);
+      console.error("Error fetching cycle data:", error);
     }
   };
-
 
   const getLatestPmtctCycle = async () => {
     const personUuid = patientObj.person_uuid
@@ -146,17 +151,20 @@ function PatientCard(props) {
         toast.error(error?.message);
       });
   };
-  const RecentActivities = () => {
-    if (patientObj.pmtctCycleId) {
-      const personUuid = patientObj.person_uuid
-        ? patientObj.person_uuid
-        : patientObj.personUuid
-        ? patientObj.personUuid
-        : patientObj.uuid;
-      const pmtctCycleId = props.latestPmtctCycle?.id;
+  const RecentActivities = (cycleIdToUse) => {
+    const personUuid = patientObj.person_uuid
+      ? patientObj.person_uuid
+      : patientObj.personUuid
+      ? patientObj.personUuid
+      : patientObj.uuid;
+
+    // Use the provided cycleId, or fall back to selectedCycleId, latestPmtctCycle, or patientObj
+    const pmtctCycleId = cycleIdToUse || selectedCycleId || latestPmtctCycle?.id || patientObj.pmtctCycleId;
+
+    if (pmtctCycleId) {
       axios
         .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${patientObj.pmtctCycleId}`,
+          `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -171,7 +179,7 @@ function PatientCard(props) {
             const hasRetestingActivity = response.data.some(
               (each) =>
                 (each.activityName &&
-                  each.activityName.toUpperCase().includes("RETEzzSTING")) ||
+                  each.activityName.toUpperCase().includes("RETESTING")) ||
                 (each.activityName &&
                   each.activityName.toUpperCase().includes("PMTCT-HTS"))
             );
@@ -184,7 +192,6 @@ function PatientCard(props) {
           console.error("Error fetching recent activities:", error);
         });
     }
- 
   };
 
   const getLatestMaternalOutcome = async () => {
@@ -235,7 +242,7 @@ function PatientCard(props) {
     GET_CODESETS();
     RecentActivities();
     getLatestMaternalOutcome();
-    let patientId=patientObj?.id||patientObj?.personId
+    let patientId = patientObj?.id || patientObj?.personId;
     axios
       .get(`${baseUrl}patient/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -250,11 +257,13 @@ function PatientCard(props) {
     POINT_ENTRY_PMTCT();
     getLatestPmtctCycle();
   }, []);
+  ////
 
   useEffect(() => {
     getLatestMaternalOutcome();
     getLatestPmtctCycle();
-  }, [activeContent]);
+    RecentActivities(selectedCycleId);
+  }, [activeContent, selectedCycleId]);
 
   return (
     <div className={classes.root}>
