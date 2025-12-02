@@ -212,13 +212,14 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "pp.full_name AS fullName, " +
                         "pp.hospital_number AS hospitalNumber, " +
                         "COUNT(DISTINCT ppc.id) AS pregnancyCount, " +
-                        "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment " +
-
+                        "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
+                        "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
+                        "WHERE person_uuid = pp.uuid AND archived = ?2 " +
+                        "ORDER BY id DESC LIMIT 1) AS maternalOutcome " +
                         "FROM patient_person pp " +
                         "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?2 " +
                         "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?2 " +
                         "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
-
                         "WHERE pp.archived = ?2 " +
                         "AND pp.facility_id = ?3 " +
                         "AND UPPER(pp.sex) = 'FEMALE' " +
@@ -230,7 +231,6 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "  pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
                         "  pp.hospital_number ILIKE CONCAT('%', ?1, '%')" +
                         ") " +
-
                         "GROUP BY " +
                         "pp.id, pp.active, pp.deceased_date_time, pp.deceased, " +
                         "pp.date_of_registration, pp.identifier, pp.education, " +
@@ -240,6 +240,23 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "pp.nin_number, pp.date_of_birth, pp.uuid, pp.sex, " +
                         "pp.first_name, pp.surname, pp.other_name, pp.full_name, pp.hospital_number " +
                         "ORDER BY pp.id DESC",
+        countQuery =
+                "SELECT COUNT(DISTINCT pp.uuid) " +
+                        "FROM patient_person pp " +
+                        "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?2 " +
+                        "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?2 " +
+                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                        "WHERE pp.archived = ?2 " +
+                        "AND pp.facility_id = ?3 " +
+                        "AND UPPER(pp.sex) = 'FEMALE' " +
+                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                        "AND (" +
+                        "  pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.other_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
+                        "  pp.hospital_number ILIKE CONCAT('%', ?1, '%')" +
+                        ")",
         nativeQuery = true
 )
 Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
@@ -274,7 +291,10 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "pp.full_name AS fullName, " +
                           "pp.hospital_number AS hospitalNumber, " +
                           "COUNT(DISTINCT ppc.id) AS pregnancyCount, " +
-                          "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment " +
+                          "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
+                          "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
+                          "WHERE person_uuid = pp.uuid AND archived = ?1 " +
+                          "ORDER BY id DESC LIMIT 1) AS maternalOutcome " +
                           "FROM patient_person pp " +
                           "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?1 " +
                           "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?1 " +
@@ -292,6 +312,16 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "pp.nin_number, pp.date_of_birth, pp.uuid, pp.sex, " +
                           "pp.first_name, pp.surname, pp.other_name, pp.full_name, pp.hospital_number " +
                           "ORDER BY pp.id DESC",
+          countQuery =
+                  "SELECT COUNT(DISTINCT pp.uuid) " +
+                          "FROM patient_person pp " +
+                          "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?1 " +
+                          "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?1 " +
+                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                          "WHERE pp.archived = ?1 " +
+                          "AND pp.facility_id = ?2 " +
+                          "AND UPPER(pp.sex) = 'FEMALE' " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5",
           nativeQuery = true
   )
   Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);

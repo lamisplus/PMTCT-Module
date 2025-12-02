@@ -66,6 +66,29 @@ const Patients = (props) => {
   const [showPPI, setShowPPI] = useState(true);
   const [modalShow, setModalShow] = useState(false);
   const [info, setInfo] = useState({});
+  const [maternalOutcomeOptions, setMaternalOutcomeOptions] = useState(JSON.parse(localStorage.getItem("maternalOutcome")));
+
+
+  // Define negative maternal outcomes that should disable enrollment
+  const negativeOutcomes = [
+    "MATERNAL_OUTCOME_DEAD",
+    "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
+    "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
+    "MATERNAL_OUTCOME_TRANSFERRED_OUT"
+  ];
+
+  // Helper function to check if maternal outcome is negative
+  const isNegativeOutcome = (maternalOutcome) => {
+    if (!maternalOutcome) return false;
+    return negativeOutcomes.includes(maternalOutcome);
+  };
+
+  // Helper function to convert maternal outcome code to display value
+  const getMaternalOutcomeDisplay = (code) => {
+    if (!code) return "";
+    const option = maternalOutcomeOptions.find((item) => item.code === code);
+    return option ? option.display : code;
+  };
 
   const calculate_age = (dob) => {
     var today = new Date();
@@ -117,7 +140,12 @@ const Patients = (props) => {
           },
           { title: "Sex", field: "gender", filtering: false },
           { title: "Age", field: "age", filtering: false },
-          { title: "Pregnancy Count", field: "pregnancy_count", filtering: false },
+          {
+            title: "Pregnancy Count",
+            field: "pregnancy_count",
+            filtering: false,
+          },
+          { title: "Status", field: "status", filtering: false },
           //{ title: "Enrollment Status", field: "v_status", filtering: false },
           //{ title: "ART Number", field: "v_status", filtering: false },
           // { title: "ART Status", field: "status", filtering: false },
@@ -160,15 +188,20 @@ const Patients = (props) => {
                             moment(row.dateOfBirth).format("DD-MM-YYYY")
                           ),
                     pregnancy_count: row.pregnancyCount || 0,
+                    status: getMaternalOutcomeDisplay(row.maternalOutcome),
 
                     //status: (<Label color="blue" size="mini">{row.currentStatus}</Label>),
                     //enroll-patient
                     actions: (
                       <div
                         onClick={(e) => {
-                          setModalShow(true);
-                          setInfo({ patientId: row.id, patientObj: row });
+                          if (!isNegativeOutcome(row.maternalOutcome)) {
+                            setModalShow(true);
+                            setInfo({ patientId: row.id, patientObj: row });
+                          }
                         }}
+                        style={{ cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer' }}
+                        title={isNegativeOutcome(row.maternalOutcome) ? `Patient is ${getMaternalOutcomeDisplay(row.maternalOutcome)}` : ''}
                       >
                         {/* <Link
                                                 to={{
@@ -180,32 +213,44 @@ const Patients = (props) => {
                           variant="contained"
                           aria-label="split button"
                           style={{
-                            backgroundColor: "rgb(153, 46, 98)",
+                            backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
                             height: "30px",
                             width: "215px",
+                            opacity: isNegativeOutcome(row.maternalOutcome) ? 0.6 : 1,
                           }}
                           size="large"
+                          disabled={isNegativeOutcome(row.maternalOutcome)}
                         >
                           <Button
                             color="primary"
                             size="small"
                             aria-label="select merge strategy"
                             aria-haspopup="menu"
-                            style={{ backgroundColor: "rgb(153, 46, 98)" }}
+                            style={{
+                              backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
+                              cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer'
+                            }}
+                            disabled={isNegativeOutcome(row.maternalOutcome)}
                           >
                             <TiArrowForward />
                           </Button>
                           <Button
-                            style={{ backgroundColor: "rgb(153, 46, 98)" }}
+                            style={{
+                              backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
+                              cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer'
+                            }}
+                            disabled={isNegativeOutcome(row.maternalOutcome)}
                           >
                             <span
                               style={{
                                 fontSize: "12px",
-                                color: "#fff",
+                                color: isNegativeOutcome(row.maternalOutcome) ? "#888" : "#fff",
                                 fontWeight: "bolder",
                               }}
                             >
-                              {row.hasExistingEnrollment ? "Re-enroll Patient" : "Enroll Patient"}
+                              {row.hasExistingEnrollment
+                                ? "Re-enroll Patient"
+                                : "Enroll Patient"}
                             </span>
                           </Button>
                         </ButtonGroup>

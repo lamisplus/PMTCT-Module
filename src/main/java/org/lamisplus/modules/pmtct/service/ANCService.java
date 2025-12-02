@@ -596,6 +596,7 @@ public class ANCService {
         personResponseDto.setUuid(person.getUuid());
         personResponseDto.setPregnancyCount(person.getPregnancyCount());
         personResponseDto.setHasExistingEnrollment(person.getHasExistingEnrollment());
+        personResponseDto.setMaternalOutcome(person.getMaternalOutcome());
         String hivStatus = "Unknown";
         try {
             hivStatus = this.getDynamicHivStatus(person.getUuid());

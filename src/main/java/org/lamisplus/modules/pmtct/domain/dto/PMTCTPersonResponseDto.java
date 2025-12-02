@@ -11,4 +11,5 @@ import org.lamisplus.modules.patient.domain.dto.PersonResponseDto;
 public class PMTCTPersonResponseDto extends PersonResponseDto {
     private Boolean hasExistingEnrollment;
     private Long pregnancyCount;
+    private String maternalOutcome;
 }
