@@ -77,6 +77,7 @@ public class InfantService {
         infant.setDefaultDays(0);
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
+        infant.setArchived(0);
         Infant result = infantRepository.save(infant);
 
         // Declare variables outside the if blocks
@@ -300,7 +301,8 @@ public class InfantService {
 
     public void deleteInfant(Long id) {
         Infant exist = this.getSingleInfant(id);
-        this.infantRepository.delete(exist);
+        exist.setArchived(1);
+        this.infantRepository.save(exist);
 
         //delete InfantARV
         infantVisitService.deleteInfantArv(id);

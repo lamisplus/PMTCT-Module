@@ -1540,4 +1540,16 @@
         </sql>
     </changeSet>
 
+    <!-- Add archived column to pmtct_infant_information -->
+    <changeSet failOnError="false" author="system" id="2025-12-03-add-archived-infant-information-017">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="archived" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information ADD COLUMN archived integer DEFAULT 0;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
