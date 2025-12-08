@@ -1469,42 +1469,70 @@ public class ANCService {
     }
 
     public boolean isInfantRisk(String personUuid, Long pmtctCycleId) {
-        boolean highRiskInfant = false;
+        List<InfantPCRAlert> highRiskInfants = getHighRiskInfantDetails(personUuid, pmtctCycleId);
+        return !highRiskInfants.isEmpty();
+    }
+
+    public List<InfantPCRAlert> getHighRiskInfantDetails(String personUuid, Long pmtctCycleId) {
+        List<InfantPCRAlert> highRiskInfants = new ArrayList<>();
 
         // Validate pmtctCycleId
         if (pmtctCycleId == null) {
-            return false;
+            return highRiskInfants;
         }
+
+        // Get all infants for this mother and cycle
+        List<Infant> infants = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+
+        if (infants == null || infants.isEmpty()) {
+            return highRiskInfants;
+        }
+
+        // Check high-risk criteria
+        List<String> highRiskReasons = new ArrayList<>();
 
         // Mother enrolled on ART after 36 weeks gestation or postpartum or at L&D
         String motherTimeOfART = pmtctEnrollmentRepository.getMotherARTInitial(personUuid, pmtctCycleId);
-        if (motherTimeOfART != null && ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART) ||
-                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)".equals(motherTimeOfART) ||
-                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART))) {
-            highRiskInfant = true;
+        if (motherTimeOfART != null) {
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART)) {
+                highRiskReasons.add("Mother enrolled on ART after 36 weeks gestation");
+            }
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)".equals(motherTimeOfART)) {
+                highRiskReasons.add("Mother initiated ART post-partum");
+            }
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART)) {
+                highRiskReasons.add("Mother initiated ART at Labour & Delivery");
+            }
         }
 
         // Rupture of membranes < 4hrs before delivery
         String rupOfMembrane = pmtctEnrollmentRepository.checkRuptureMembraneAt4hrs(personUuid, pmtctCycleId);
         if (rupOfMembrane != null && "ROM_DELIVERY_INTERVAL_<4HRS".equals(rupOfMembrane)) {
-            highRiskInfant = true;
+            highRiskReasons.add("Rupture of Membrane < 4 hours before delivery");
         }
 
         // NVP + AZT selected as ARV prophylaxis for infant
         String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(personUuid, pmtctCycleId);
-
         if (nvpAndAZT != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
-            highRiskInfant = true;
+            highRiskReasons.add("NVP+AZT selected as ARV prophylaxis");
         }
 
-//         Check if mother VL > 1000 copies/mL
-//         String maternalVL = pmtctEnrollmentRepository.getMotherVL(personUuid);
-//            Long maternalVLS = Long.parseLong(maternalVL.trim());
-//         if (maternalVLS != null && maternalVLS > 1000.0) {
-//             highRiskInfant = true;
-//         }
+        // If there are high-risk reasons, add all infants to the list
+        if (!highRiskReasons.isEmpty()) {
+            for (Infant infant : infants) {
+                InfantPCRAlert alert = new InfantPCRAlert();
+                alert.setInfantHospitalNo(infant.getHospitalNumber());
+                alert.setDeliveryDate(infant.getDateOfDelivery());
 
-        return highRiskInfant;
+                // Build alert message from reasons
+                String alertMessage = String.join(", ", highRiskReasons);
+                alert.setAlertMessage(alertMessage);
+
+                highRiskInfants.add(alert);
+            }
+        }
+
+        return highRiskInfants;
     }
 
     public ANCEnrollmentCheckDto checkANCEnrollmentByPersonUuid(String personUuid) {

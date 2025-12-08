@@ -413,7 +413,7 @@ const UserRegistration = (props) => {
   const GET_CODESETS = () => {
     GET_CODESETS_IN_BATCH(
       "ENROLLMENT_SETTING",
-      "TEST_SETTING_CPMTCT",
+      "COMMUNITY_PMTCT",
       "SEX",
       "PREGANACY_STATUS",
       "SOURCE_REFERRAL_PMTCT"
