@@ -557,9 +557,8 @@ public class PMTCTController {
 
 
     @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
-    public boolean checkForInfantRiskStatus(@PathVariable String personUuid) {
-
-        return ancService.isInfantRisk(personUuid);
+    public List<InfantHighRiskAlert> checkForInfantRiskStatus(@PathVariable String personUuid) {
+        return ancService.getHighRiskInfants(personUuid);
     }
 
 

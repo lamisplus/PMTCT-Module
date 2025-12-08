@@ -31,5 +31,6 @@ public class InfantPCRTestDto implements Serializable
     private String results;
     private String uuid;
     private String  uniqueUuid;
+    private String motherPersonUuid;
 
 }

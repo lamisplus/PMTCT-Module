@@ -113,6 +113,7 @@ public class InfantService {
         infantArvDto.setUuid(infant.getMotherPersonUuid());
         infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
         infantArvDto.setAncNumber(infant.getAncNo());
+        infantArvDto.setMotherPersonUuid(infant.getMotherPersonUuid());
 //        }
         return infantVisitService.save(infantArvDto);
     }
@@ -124,6 +125,7 @@ public class InfantService {
         infantPCRTestDto.setAncNumber(infant.getAncNo());
         infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
         infantPCRTestDto.setVisitDate(LocalDate.now());
+        infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
 //        }
         return infantVisitService.save(infantPCRTestDto);
     }
@@ -215,6 +217,7 @@ public class InfantService {
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
         infant.setMotherPersonUuid(infantDto.getPersonUuid());
+        infant.setArchived(0);
 
         Infant result =  infantRepository.save(infant);
 

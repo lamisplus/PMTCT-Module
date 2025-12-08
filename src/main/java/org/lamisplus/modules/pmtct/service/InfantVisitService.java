@@ -67,6 +67,7 @@ public class InfantVisitService
         infantRapid.setUuid(UUID.randomUUID().toString());
         infantRapid.setUniqueUuid(infantRapidDto.getUniqueUuid());
         infantRapid.setArchived(0);
+        infantRapid.setMotherPersonUuid(infantRapidDto.getMotherPersonUuid());
         infantRapid.setFacilityId(facilityId);
         infantRapid.setCreatedBy(user.getUserName());
         infantRapid.setLastModifiedBy(user.getUserName());
@@ -99,6 +100,7 @@ public class InfantVisitService
         infantArv.setDateOfArv(infantArvDto.getDateOfArv());
         infantArv.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
         infantArv.setArchived(0);
+        infantArv.setMotherPersonUuid(infantArvDto.getMotherPersonUuid());
         infantArv.setFacilityId(facilityId);
         infantArv.setCreatedBy(user.getUserName());
         infantArv.setLastModifiedBy(user.getUserName());
@@ -126,6 +128,7 @@ public class InfantVisitService
         infantPCRTest.setDateSampleSent(infantPCRTestDto.getDateSampleSent());
         infantPCRTest.setUniqueUuid(infantPCRTestDto.getUniqueUuid());
         infantPCRTest.setArchived(0);
+        infantPCRTest.setMotherPersonUuid(infantPCRTestDto.getMotherPersonUuid());
         infantPCRTest.setFacilityId(facilityId);
         infantPCRTest.setCreatedBy(user.getUserName());
         infantPCRTest.setLastModifiedBy(user.getUserName());
@@ -300,6 +303,7 @@ public class InfantVisitService
         infantMotherArt.setRegimenId(infantMotherArtDto.getRegimenId());
         infantMotherArt.setUniqueUuid(infantMotherArtDto.getUniqueUuid());
         infantMotherArt.setArchived(0);
+        infantMotherArt.setMotherPersonUuid(infantMotherArtDto.getMotherPersonUuid());
         infantMotherArt.setFacilityId(facilityId);
         infantMotherArt.setCreatedBy(user.getUserName());
         infantMotherArt.setLastModifiedBy(user.getUserName());
@@ -341,11 +345,14 @@ public class InfantVisitService
         System.out.println("test case" + " " + infantVisitResponseDto.getUniqueUuid());
 
 
+        String motherPersonUuid = infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPersonUuid();
+
         if ((infantVisitationConsolidatedDto.getInfantMotherArtDto().getMotherArtInitiationTime()!= null))
         {
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setMotherPersonUuid(motherPersonUuid);
 
             this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         }
@@ -355,6 +362,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantArvDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+            infantVisitationConsolidatedDto.getInfantArvDto().setMotherPersonUuid(motherPersonUuid);
 
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
@@ -364,6 +372,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setAncNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getAncNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setMotherPersonUuid(motherPersonUuid);
 
             this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
         }
@@ -372,6 +381,7 @@ public class InfantVisitService
 //            InfantRapidAntiBodyTest infantRapidAntiBodyTest = convertDtoToEntity(infantRapidAntiBodyTestDto);
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setAncNumber(infantVisitResponseDto.getAncNumber());
+            infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setMotherPersonUuid(motherPersonUuid);
 //            infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantRapidAntiBodyTestDto);
 
             this.save(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto());

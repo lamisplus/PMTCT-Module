@@ -300,19 +300,29 @@ const LabourinfantInfo = (props) => {
       let result =calculateAgeAtCTX(e.target.value)
 
       setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , ageAtCtx:  result })
-  
+
     }else if(e.target.name === "dateOfArv"){
 
       let result =calculateArvProphylaxis(e.target.value)
 
       setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , infantArvTime:  result })
-  
+
     }else if(e.target.name ===  "infantArvType"){
 
       setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
 
       setErrors({ ...errors, [e.target.name]: "", dateOfArv: "" });
 
+    }else if(e.target.name === "ageAtCtx"){
+      // Auto-populate dateOfCtx when ageAtCtx >= 2 months is selected
+      if(e.target.value === "AGE_CTX_INITIATION_≥_2__MONTHS"){
+        const deliveryDate = moment(infantInfo.dateOfDelivery ? infantInfo.dateOfDelivery : newDateOfDelivery);
+        const calculatedDateOfCtx = deliveryDate.add(2, 'months').format("YYYY-MM-DD");
+        setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value, dateOfCtx: calculatedDateOfCtx });
+        setInfantInfo({ ...infantInfo, ctxStatus: "YES" });
+      } else {
+        setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
+      }
     }else{
       setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
 
@@ -981,7 +991,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                         <option value="select">Select </option>
                         {agectx.map((value, index) => (
                           <option key={index} value={value.code}>
-                            {value.display}
+                            {value.code === "AGE_CTX_INITIATION_≥_2__MONTHS" ? "2" : value.display}
                           </option>
                         ))}
                       </Input>

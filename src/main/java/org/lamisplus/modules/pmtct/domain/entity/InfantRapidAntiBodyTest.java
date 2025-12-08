@@ -30,6 +30,7 @@ public class InfantRapidAntiBodyTest implements Serializable {
     @Column(name = "uuid")
     private String uuid;
     private Integer archived;
+    private String motherPersonUuid;
     private Long facilityId;
     private LocalDateTime createdDate;
     private String createdBy;

@@ -236,15 +236,21 @@ const UserRegistration = (props) => {
 
      const GET_CODESETS = () => {
   
-     GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
-          console.log("GET_CODESETS_IN_BATCH", response)
-        setANCSetting(response.data.ENROLLMENT_SETTING || []);
-         setCommunitySetting(response.data.COMMUNITY_PMTCT);
-         getSex(response.data.SEX)
-         setPregnancyStatus(response.data.PREGANACY_STATUS);
-          setGenders(response.data.SEX);
-          setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT)
-     })
+     GET_CODESETS_IN_BATCH(
+       "ENROLLMENT_SETTING",
+       "COMMUNITY_PMTCT",
+       "SEX",
+       "PREGANACY_STATUS",
+       "SOURCE_REFERRAL_PMTCT"
+     ).then((response) => {
+       console.log("GET_CODESETS_IN_BATCH", response);
+       setANCSetting(response.data.ENROLLMENT_SETTING || []);
+       setCommunitySetting(response.data.COMMUNITY_PMTCT);
+       getSex(response.data.SEX);
+       setPregnancyStatus(response.data.PREGANACY_STATUS);
+       setGenders(response.data.SEX);
+       setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT);
+     });
       
     };
 

@@ -161,4 +161,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)
   String getMotherVL (String personUuid);
 
+  @Query(value = "SELECT infant_arv_type FROM pmtct_infant_arv WHERE infant_hospital_number = ?1 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  String getInfantArvTypeByHospitalNumber(String infantHospitalNumber);
+
 }

@@ -85,7 +85,7 @@ function PatientCard(props) {
     props?.patientObj?.biometricStatus
   );
   
-  const [showHighRisKInfant, setShowHighRisKInfant] = useState(false);
+  const [highRiskInfants, setHighRiskInfants] = useState([]);
   const [confirmStatus, setConfirmStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props?.patientObj?.dynamicHivStatus);
 
 
@@ -111,9 +111,14 @@ function PatientCard(props) {
 let alerts =[{infantName: 'ade', infantHospitalNo: 'dgd', expectedPCR: 'ffd'}]
 
 const [expandedIndex, setExpandedIndex] = useState(false);
+const [expandedHighRisk, setExpandedHighRisk] = useState(false);
 
   const handleClick = () => {
     setExpandedIndex(!expandedIndex);
+  };
+
+  const handleHighRiskClick = () => {
+    setExpandedHighRisk(!expandedHighRisk);
   };
 
 const getHivRetestStatus = async () => {
@@ -228,16 +233,14 @@ const getMaternalOutcome = async () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        if (response.data) {
-          setShowHighRisKInfant(response.data)
-      
-        }else{
-        setShowHighRisKInfant(false)
-
+        if (response.data && Array.isArray(response.data)) {
+          setHighRiskInfants(response.data);
+        } else {
+          setHighRiskInfants([]);
         }
       })
       .catch((error) => {
-        //console.log(error);
+        setHighRiskInfants([]);
       });
   };
 
@@ -507,17 +510,52 @@ const getMaternalOutcome = async () => {
                   ) : (
                     <></>
                   )}
-                 {showHighRisKInfant &&  <div>
-                        <Typography variant="caption">
-                          <Label
-                            color={ "red"}
-                            size={"mini"}
+                 {highRiskInfants && highRiskInfants.length > 0 && (
+                  <div>
+                    <Typography variant="caption">
+                      <List sx={{
+                        maxWidth: '180px',
+                        width: 'fit-content',
+                        maxHeight: '200px',
+                        bgcolor: '#db2828',
+                        padding: '0px',
+                        borderRadius: '4px',
+                        color: 'white',
+                        fontSize: '9px',
+                        border: '1px solid #e0e0e0'
+                      }}>
+                        <ListItem sx={{ padding: '0px' }}>
+                          <ListItemButton
+                            onClick={() => handleHighRiskClick()}
+                            sx={{
+                              padding: '0px',
+                              fontSize: '9px',
+                            }}
                           >
-                            Infant high risk                  
-      
-                          </Label>
-                        </Typography>
-                      </div>}
+                            <Label color={'red'} style={{ padding: '2px 4px' }}>
+                              <span style={{fontSize: '9px'}}>High Risk Infants ({highRiskInfants.length})</span>
+                            </Label>
+                            {expandedHighRisk ? <ExpandMore /> : <ExpandLess />}
+                          </ListItemButton>
+                        </ListItem>
+
+                        {highRiskInfants.map((infant, index) => (
+                          <React.Fragment key={index}>
+                            <Collapse in={expandedHighRisk} timeout="auto" unmountOnExit>
+                              <Box sx={{ pl: 0.5, pr: 0.5, pb: 0.5, pt: 0, fontSize: '9px' }}>
+                                <Typography variant="body2" gutterBottom>
+                                  <span style={{fontSize: '9px'}}>
+                                    <strong>{infant.infantHospitalNo}:</strong> {infant.highRiskReasons && infant.highRiskReasons.join(', ')}
+                                  </span>
+                                </Typography>
+                              </Box>
+                            </Collapse>
+                          </React.Fragment>
+                        ))}
+                      </List>
+                    </Typography>
+                  </div>
+                )}
                   
                   
                   </div>

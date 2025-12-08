@@ -1552,4 +1552,214 @@
         </sql>
     </changeSet>
 
+    <!-- ========================================
+        Add mother_person_uuid and archived columns
+        to infant-related tables
+        ======================================== -->
+
+    <!-- Add mother_person_uuid to pmtct_infant_arv -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-add-mother-uuid-infant-arv-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_arv
+                ADD CONSTRAINT pmtct_infant_arv_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+
+    <!-- Add mother_person_uuid to pmtct_infant_mother_art -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-add-mother-uuid-infant-mother-art-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_mother_art
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_mother_art
+                ADD CONSTRAINT pmtct_infant_mother_art_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+
+
+    <!-- Add mother_person_uuid to pmtct_infant_pcr -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-add-mother-uuid-infant-pcr-005">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_pcr
+                ADD CONSTRAINT pmtct_infant_pcr_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+
+
+    <!-- Add mother_person_uuid to pmtct_infant_rapid_antibody -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-add-mother-uuid-infant-rapid-antibody-007">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_person_uuid" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_rapid_antibody
+                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+
+            ALTER TABLE pmtct_infant_rapid_antibody
+                ADD CONSTRAINT pmtct_infant_rapid_antibody_mother_person_uuid_fk
+                    FOREIGN KEY (mother_person_uuid) REFERENCES patient_person (uuid);
+        </sql>
+    </changeSet>
+
+
+
+
+    <!-- ========================================
+             Data Migration: Populate mother_person_uuid
+             for existing records
+             ======================================== -->
+
+    <!-- Migrate pmtct_infant_arv: Case 1 - Using unique_uuid to join with infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-arv-mother-uuid-001">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_arv" columnName="unique_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_arv records where unique_uuid is available</comment>
+        <sql>
+            UPDATE pmtct_infant_arv ia
+            SET mother_person_uuid = iv.mother_person_uuid
+                FROM pmtct_infant_visit iv
+            WHERE ia.unique_uuid = iv.unique_uuid
+              AND ia.unique_uuid IS NOT NULL
+              AND ia.unique_uuid != ''
+              AND iv.mother_person_uuid IS NOT NULL
+              AND ia.mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_infant_arv: Case 2 - Using uuid column when unique_uuid is not provided -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-arv-mother-uuid-002">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_arv" columnName="uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_arv records where unique_uuid is NOT available, using uuid column</comment>
+        <sql>
+            UPDATE pmtct_infant_arv
+            SET mother_person_uuid = uuid
+            WHERE (unique_uuid IS NULL OR unique_uuid = '')
+              AND uuid IS NOT NULL
+              AND mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_infant_pcr: Case 1 - Using unique_uuid to join with infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-pcr-mother-uuid-003">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="unique_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_pcr records where unique_uuid is available</comment>
+        <sql>
+            UPDATE pmtct_infant_pcr ip
+            SET mother_person_uuid = iv.mother_person_uuid
+                FROM pmtct_infant_visit iv
+            WHERE ip.unique_uuid = iv.unique_uuid
+              AND ip.unique_uuid IS NOT NULL
+              AND ip.unique_uuid != ''
+              AND iv.mother_person_uuid IS NOT NULL
+              AND ip.mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_infant_pcr: Case 2 - Using uuid column when unique_uuid is not provided -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-pcr-mother-uuid-004">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_pcr records where unique_uuid is NOT available, using uuid column</comment>
+        <sql>
+            UPDATE pmtct_infant_pcr
+            SET mother_person_uuid = uuid
+            WHERE (unique_uuid IS NULL OR unique_uuid = '')
+              AND uuid IS NOT NULL
+              AND mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_infant_mother_art: Using unique_uuid to join with infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-mother-art-uuid-005">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="unique_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_mother_art records using unique_uuid</comment>
+        <sql>
+            UPDATE pmtct_infant_mother_art ima
+            SET mother_person_uuid = iv.mother_person_uuid
+                FROM pmtct_infant_visit iv
+            WHERE ima.unique_uuid = iv.unique_uuid
+              AND ima.unique_uuid IS NOT NULL
+              AND ima.unique_uuid != ''
+              AND iv.mother_person_uuid IS NOT NULL
+              AND ima.mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_infant_rapid_antibody: Using unique_uuid to join with infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-11-06-migrate-infant-rapid-antibody-uuid-006">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="unique_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+            </and>
+        </preConditions>
+        <comment>Populate mother_person_uuid for pmtct_infant_rapid_antibody records using unique_uuid</comment>
+        <sql>
+            UPDATE pmtct_infant_rapid_antibody ira
+            SET mother_person_uuid = iv.mother_person_uuid
+                FROM pmtct_infant_visit iv
+            WHERE ira.unique_uuid = iv.unique_uuid
+              AND ira.unique_uuid IS NOT NULL
+              AND ira.unique_uuid != ''
+              AND iv.mother_person_uuid IS NOT NULL
+              AND ira.mother_person_uuid IS NULL;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

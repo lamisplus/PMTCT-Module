@@ -283,14 +283,20 @@ const getLastPmtctHtsRecord = (personUuid) => {
    // BATCH API
  const GET_CODESETS = () => {
 
-   GET_CODESETS_IN_BATCH("ENROLLMENT_SETTING", "TEST_SETTING_CPMTCT", "SEX", "PREGANACY_STATUS", "SOURCE_REFERRAL_PMTCT").then((response)=>{
-      setANCSetting(response.data.ENROLLMENT_SETTING);
-       setCommunitySetting(response.data.COMMUNITY_PMTCT);
-       getSex(response.data.SEX)
-       setPregnancyStatus(response.data.PREGANACY_STATUS);
-        setGenders(response.data.SEX);
-        setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT)
-   })
+   GET_CODESETS_IN_BATCH(
+     "ENROLLMENT_SETTING",
+     "COMMUNITY_PMTCT",
+     "SEX",
+     "PREGANACY_STATUS",
+     "SOURCE_REFERRAL_PMTCT"
+   ).then((response) => {
+     setANCSetting(response.data.ENROLLMENT_SETTING);
+     setCommunitySetting(response.data.COMMUNITY_PMTCT);
+     getSex(response.data.SEX);
+     setPregnancyStatus(response.data.PREGANACY_STATUS);
+     setGenders(response.data.SEX);
+     setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT);
+   });
   
   };
 
@@ -604,8 +610,8 @@ const getLastPmtctHtsRecord = (personUuid) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("validate()", validate(), errors)
-    setSaving(true)
     if (validate()) {
+      setSaving(true);
       // ANC ENTRY POINT
       if (locationState.showANC) {
         try {

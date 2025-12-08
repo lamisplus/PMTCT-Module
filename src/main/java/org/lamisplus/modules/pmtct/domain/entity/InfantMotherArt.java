@@ -30,6 +30,7 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
     private Integer archived;
+    private String motherPersonUuid;
     private Long facilityId;
     private LocalDateTime createdDate;
     private String createdBy;

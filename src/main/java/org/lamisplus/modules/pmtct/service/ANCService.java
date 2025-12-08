@@ -1386,37 +1386,80 @@ public class ANCService {
     }
 
     public boolean isInfantRisk(String personUuid) {
-        boolean highRiskInfant = false;
+        List<InfantHighRiskAlert> highRiskInfants = getHighRiskInfants(personUuid);
+        return !highRiskInfants.isEmpty();
+    }
+
+    public List<InfantHighRiskAlert> getHighRiskInfants(String personUuid) {
+        List<InfantHighRiskAlert> highRiskInfants = new ArrayList<>();
+
+        // Get all infants for this mother
+        List<Infant> infants = infantRepository.findInfantByMotherPersonUuid(personUuid);
+
+        if (infants == null || infants.isEmpty()) {
+            return highRiskInfants;
+        }
+
+        // Check mother-level high risk criteria
+        List<String> motherLevelReasons = new ArrayList<>();
 
         // Mother enrolled on ART after 36 weeks gestation or postpartum or at L&D
         String motherTimeOfART = pmtctEnrollmentRepository.getMotherARTInitial(personUuid);
-        if (motherTimeOfART != null && ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART) ||
-                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)".equals(motherTimeOfART) ||
-                "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART))) {
-            highRiskInfant = true;
+        if (motherTimeOfART != null) {
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART)) {
+                motherLevelReasons.add("Mother enrolled on ART after 36 weeks gestation");
+            }
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)".equals(motherTimeOfART)) {
+                motherLevelReasons.add("Mother initiated ART postpartum");
+            }
+            if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D".equals(motherTimeOfART)) {
+                motherLevelReasons.add("Mother initiated ART at Labour/Delivery");
+            }
         }
 
         // Rupture of membranes < 4hrs before delivery
         String rupOfMembrane = pmtctEnrollmentRepository.checkRuptureMembraneAt4hrs(personUuid);
         if (rupOfMembrane != null && "ROM_DELIVERY_INTERVAL_<4HRS".equals(rupOfMembrane)) {
-            highRiskInfant = true;
+            motherLevelReasons.add("Rupture of Membrane < 4 hours before delivery");
         }
 
-        // NVP + AZT selected as ARV prophylaxis for infant
-        String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(personUuid);
-
-        if (nvpAndAZT != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
-            highRiskInfant = true;
+        // Check if mother VL >= 1000 copies/mL
+        String maternalVL = pmtctEnrollmentRepository.getMotherVL(personUuid);
+        if (maternalVL != null && !maternalVL.trim().isEmpty()) {
+            try {
+                Long maternalVLS = Long.parseLong(maternalVL.trim());
+                if (maternalVLS >= 1000) {
+                    motherLevelReasons.add("Mother's viral load >= 1000 copies/mL");
+                }
+            } catch (NumberFormatException e) {
+                // Ignore parsing errors
+            }
         }
 
-//         Check if mother VL > 1000 copies/mL
-//         String maternalVL = pmtctEnrollmentRepository.getMotherVL(personUuid);
-//            Long maternalVLS = Long.parseLong(maternalVL.trim());
-//         if (maternalVLS != null && maternalVLS > 1000.0) {
-//             highRiskInfant = true;
-//         }
+        // For each infant, check infant-specific criteria and combine with mother-level reasons
+        for (Infant infant : infants) {
+            List<String> infantReasons = new ArrayList<>(motherLevelReasons);
 
-        return highRiskInfant;
+            // Check NVP + AZT selected as ARV prophylaxis for this specific infant
+            String infantArvType = pmtctEnrollmentRepository.getInfantArvTypeByHospitalNumber(infant.getHospitalNumber());
+            if (infantArvType != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(infantArvType)) {
+                infantReasons.add("NVP+AZT selected as ARV prophylaxis");
+            }
+
+            // If there are any high-risk reasons, add the infant to the list
+            if (!infantReasons.isEmpty()) {
+                String infantName = getFullName(infant.getFirstName(), infant.getMiddleName(), infant.getSurname());
+                InfantHighRiskAlert alert = InfantHighRiskAlert.builder()
+                        .infantHospitalNo(infant.getHospitalNumber())
+                        .infantName(infantName)
+                        .dateOfDelivery(infant.getDateOfDelivery())
+                        .highRiskReasons(infantReasons)
+                        .build();
+                highRiskInfants.add(alert);
+            }
+        }
+
+        return highRiskInfants;
     }
 }
 

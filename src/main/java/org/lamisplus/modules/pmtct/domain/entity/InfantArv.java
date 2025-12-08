@@ -40,6 +40,7 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private Long infantId;
     private String otherProphylaxisType;
     private Integer archived;
+    private String motherPersonUuid;
     private Long facilityId;
     private LocalDateTime createdDate;
     private String createdBy;
