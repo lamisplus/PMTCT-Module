@@ -27,6 +27,47 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
     padding: "1.25rem 1.875rem",
   };
 
+  const [statistics, setStatistics] = useState({
+    totalPatients: 0,
+    ancPatients: 0,
+    pmtctPatients: 0,
+    pmtctViralLoadNumerator: 0,
+    pmtctViralLoadDenominator: 0,
+    pmtctViralLoadUptakePercentage: 0,
+    viralSuppressionNumerator: 0,
+    viralSuppressionDenominator: 0,
+    viralSuppressionPercentage: 0,
+    unsuppressedQ1: 0,
+    unsuppressedQ2: 0,
+    unsuppressedQ3: 0,
+    unsuppressedQ4: 0,
+    unsuppressedTotal: 0,
+    // PMTCT Exit Tracked - Mothers
+    pmtctExitActiveInCohort: 0,
+    pmtctExitTransferredOut: 0,
+    pmtctExitTransferredToAnotherPMTCT: 0,
+    pmtctExitTransitionedToART: 0,
+    pmtctExitLostToFollowUp: 0,
+    pmtctExitDead: 0,
+    pmtctExitDenominator: 0,
+    // Mothers LTFU
+    mothersLTFUNumerator: 0,
+    mothersLTFUDenominator: 0,
+    mothersLTFUPercentage: 0,
+    // Deliveries Recorded
+    deliveriesQ1: 0,
+    deliveriesQ2: 0,
+    deliveriesQ3: 0,
+    deliveriesQ4: 0,
+    deliveriesTotal: 0,
+    // HEI Linked
+    heiLinkedQ1: 0,
+    heiLinkedQ2: 0,
+    heiLinkedQ3: 0,
+    heiLinkedQ4: 0,
+    heiLinkedTotal: 0,
+  });
+
   const [dashboardData, setDashboardData] = useState({
     motherStatistics: {
       totalFemalePatients: 0,
@@ -105,59 +146,15 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
       setLoading(true);
       setError(null);
 
-      // Fetch data from existing endpoints
-      const [
-        allFemalesResponse,
-        ancPatientsResponse,
-        pmtctResponse,
-        infantsResponse,
-      ] = await Promise.all([
-        axios.get(`${baseUrl}pmtct/anc/pmtct-from-person`, {
-          params: { searchParam: "*", pageNo: 0, pageSize: 10 },
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${baseUrl}pmtct/anc/all-active-anc`, {
-          params: { searchParam: "*", pageNo: 0, pageSize: 10 },
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${baseUrl}pmtct/anc/all-active-pmtct`, {
-          params: { searchParam: "*", pageNo: 0, pageSize: 10 },
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${baseUrl}pmtct/anc/all-infants`, {
-          params: { pageNo: 0, pageSize: 10000 },
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      // Extract data
-      const allFemalesData = allFemalesResponse.data?.records || [];
-      const ancData = ancPatientsResponse.data?.records || [];
-      const pmtctData = pmtctResponse.data?.records || [];
-      const infantsData = infantsResponse.data?.records || [];
-
-      // Calculate statistics from the data
-      const motherStats = calculateMotherStatistics(
-        allFemalesData,
-        ancData,
-        pmtctData
-      );
-      const pmtctStats = calculatePMTCTIndicators(pmtctData);
-      const infantStats = calculateInfantStatistics(infantsData);
-      const vlMetrics = calculateViralLoadMetrics(pmtctData);
-      const motherExitStats = calculateMotherExitMetrics(pmtctData);
-      const deliveryStats = calculateDeliveryMetrics(pmtctData);
-      const infantMetricsStats = calculateInfantMetrics(infantsData);
-
-      setDashboardData({
-        motherStatistics: motherStats,
-        pmtctIndicators: pmtctStats,
-        infantStatistics: infantStats,
-        viralLoadMetrics: vlMetrics,
-        motherExitMetrics: motherExitStats,
-        deliveryMetrics: deliveryStats,
-        infantMetrics: infantMetricsStats,
+      // Fetch statistics from the endpoint
+      const statisticsResponse = await axios.get(`${baseUrl}pmtct/anc/statistics`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Set statistics from the endpoint
+      if (statisticsResponse.data) {
+        setStatistics(statisticsResponse.data);
+      }
 
       setLoading(false);
     } catch (err) {
@@ -524,9 +521,9 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Pie chart for PMTCT Viral Load Uptake
   const getViralLoadUptakeChartOptions = () => {
-    const { mothersOnARTWithVL, mothersOnARTTotal, viralLoadUptakePercentage } =
-      dashboardData.viralLoadMetrics;
-    const withoutVL = mothersOnARTTotal - mothersOnARTWithVL;
+    const numerator = statistics.pmtctViralLoadNumerator || 0;
+    const denominator = statistics.pmtctViralLoadDenominator || 0;
+    const withoutVL = denominator - numerator;
 
     return {
       chart: {
@@ -534,6 +531,9 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
       },
       title: {
         text: "PMTCT Viral Load Uptake",
+      },
+      subtitle: {
+        text: `${statistics.pmtctViralLoadUptakePercentage || 0}% (${numerator}/${denominator})`,
       },
       tooltip: {
         pointFormat: "<b>{point.y}</b> ({point.percentage:.1f}%)",
@@ -555,12 +555,12 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
           data: [
             {
               name: "With Viral Load",
-              y: mothersOnARTWithVL,
+              y: numerator,
               color: "#28a745",
             },
             {
               name: "Without Viral Load",
-              y: withoutVL,
+              y: withoutVL > 0 ? withoutVL : 0,
               color: "#dc3545",
             },
           ],
@@ -574,9 +574,9 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Pie chart for Viral Suppression
   const getViralSuppressionChartOptions = () => {
-    const { suppressedCount, mothersOnARTWithVL, suppressionPercentage } =
-      dashboardData.viralLoadMetrics;
-    const notSuppressed = mothersOnARTWithVL - suppressedCount;
+    const numerator = statistics.viralSuppressionNumerator || 0;
+    const denominator = statistics.viralSuppressionDenominator || 0;
+    const notSuppressed = denominator - numerator;
 
     return {
       chart: {
@@ -584,6 +584,9 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
       },
       title: {
         text: "Viral Suppression",
+      },
+      subtitle: {
+        text: `${statistics.viralSuppressionPercentage || 0}% (${numerator}/${denominator})`,
       },
       tooltip: {
         pointFormat: "<b>{point.y}</b> ({point.percentage:.1f}%)",
@@ -605,12 +608,12 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
           data: [
             {
               name: "Suppressed (<1000 c/ml)",
-              y: suppressedCount,
+              y: numerator,
               color: "#28a745",
             },
             {
               name: "Not Suppressed (>=1000 c/ml)",
-              y: notSuppressed,
+              y: notSuppressed > 0 ? notSuppressed : 0,
               color: "#ffc107",
             },
           ],
@@ -624,13 +627,18 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Bar chart for Unsuppressed (by quarters)
   const getUnsuppressedChartOptions = () => {
-    const { unsuppressedByQuarter } = dashboardData.viralLoadMetrics;
-    const categories = unsuppressedByQuarter.map((q) => q.quarter);
-    const data = unsuppressedByQuarter.map((q) => q.count);
+    const categories = ["Q1 (Oct-Dec)", "Q2 (Jan-Mar)", "Q3 (Apr-Jun)", "Q4 (Jul-Sep)"];
+    const data = [
+      statistics.unsuppressedQ1 || 0,
+      statistics.unsuppressedQ2 || 0,
+      statistics.unsuppressedQ3 || 0,
+      statistics.unsuppressedQ4 || 0,
+    ];
 
     return {
       chart: { type: "column" },
       title: { text: "Unsuppressed" },
+      subtitle: { text: `Total: ${statistics.unsuppressedTotal || 0}` },
       xAxis: { categories, title: { text: "Quarter" } },
       yAxis: { title: { text: "Count" }, allowDecimals: false },
       series: [{ name: "Unsuppressed (>=1000 c/ml)", data, color: "#dc3545" }],
@@ -638,66 +646,56 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
     };
   };
 
-  // Pie chart for PMTCT Exit Tracked - Mothers
+  // Bar chart for PMTCT Exit Tracked - Mothers
   const getMotherExitChartOptions = () => {
-    const {
-      activeInPMTCT,
-      transferredOut,
-      transferredToAnotherPMTCT,
-      transitionedToART,
-      lostToFollowUp,
-      dead,
-    } = dashboardData.motherExitMetrics;
+    const categories = [
+      "Active in PMTCT",
+      "Transferred Out",
+      "To Another PMTCT",
+      "Transitioned to ART",
+      "Lost to Follow-up",
+      "Dead"
+    ];
+    const data = [
+      statistics.pmtctExitActiveInCohort || 0,
+      statistics.pmtctExitTransferredOut || 0,
+      statistics.pmtctExitTransferredToAnotherPMTCT || 0,
+      statistics.pmtctExitTransitionedToART || 0,
+      statistics.pmtctExitLostToFollowUp || 0,
+      statistics.pmtctExitDead || 0,
+    ];
 
     return {
-      chart: { type: "pie" },
+      chart: { type: "column" },
       title: { text: "PMTCT Exit Tracked - Mothers" },
-      tooltip: { pointFormat: "<b>{point.y}</b> ({point.percentage:.1f}%)" },
+      subtitle: { text: `Total on PMTCT (>24 months): ${statistics.pmtctExitDenominator || 0}` },
+      xAxis: { categories, title: { text: "Exit Status" } },
+      yAxis: { title: { text: "Count" }, allowDecimals: false },
       plotOptions: {
-        pie: {
-          allowPointSelect: true,
-          cursor: "pointer",
-          dataLabels: {
-            enabled: true,
-            format: "<b>{point.name}</b>: {point.percentage:.1f}%",
-          },
+        column: {
+          colorByPoint: true,
+          colors: ["#28a745", "#17a2b8", "#007bff", "#6c757d", "#ffc107", "#dc3545"],
         },
       },
-      series: [
-        {
-          name: "Mothers",
-          colorByPoint: true,
-          data: [
-            { name: "Active in PMTCT", y: activeInPMTCT, color: "#28a745" },
-            { name: "Transferred Out", y: transferredOut, color: "#17a2b8" },
-            {
-              name: "Transferred to Another PMTCT",
-              y: transferredToAnotherPMTCT,
-              color: "#007bff",
-            },
-            {
-              name: "Transitioned to ART Clinic",
-              y: transitionedToART,
-              color: "#6c757d",
-            },
-            { name: "Lost to Follow-up", y: lostToFollowUp, color: "#ffc107" },
-            { name: "Dead", y: dead, color: "#dc3545" },
-          ],
-        },
-      ],
+      series: [{ name: "Mothers", data, showInLegend: false }],
       credits: { enabled: false },
     };
   };
 
   // Bar chart for Deliveries Recorded (by quarters)
   const getDeliveriesChartOptions = () => {
-    const { deliveriesByQuarter } = dashboardData.deliveryMetrics;
-    const categories = deliveriesByQuarter.map((q) => q.quarter);
-    const data = deliveriesByQuarter.map((q) => q.count);
+    const categories = ["Q1 (Oct-Dec)", "Q2 (Jan-Mar)", "Q3 (Apr-Jun)", "Q4 (Jul-Sep)"];
+    const data = [
+      statistics.deliveriesQ1 || 0,
+      statistics.deliveriesQ2 || 0,
+      statistics.deliveriesQ3 || 0,
+      statistics.deliveriesQ4 || 0,
+    ];
 
     return {
       chart: { type: "column" },
       title: { text: "Deliveries Recorded" },
+      subtitle: { text: `Total: ${statistics.deliveriesTotal || 0}` },
       xAxis: { categories, title: { text: "Quarter" } },
       yAxis: { title: { text: "Count" }, allowDecimals: false },
       series: [{ name: "Deliveries", data, color: "#007bff" }],
@@ -707,13 +705,18 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Bar chart for HEI Linked (by quarters)
   const getHEILinkedChartOptions = () => {
-    const { heiLinkedByQuarter } = dashboardData.infantMetrics;
-    const categories = heiLinkedByQuarter.map((q) => q.quarter);
-    const data = heiLinkedByQuarter.map((q) => q.count);
+    const categories = ["Q1 (Oct-Dec)", "Q2 (Jan-Mar)", "Q3 (Apr-Jun)", "Q4 (Jul-Sep)"];
+    const data = [
+      statistics.heiLinkedQ1 || 0,
+      statistics.heiLinkedQ2 || 0,
+      statistics.heiLinkedQ3 || 0,
+      statistics.heiLinkedQ4 || 0,
+    ];
 
     return {
       chart: { type: "column" },
       title: { text: "HEI Linked" },
+      subtitle: { text: `Total: ${statistics.heiLinkedTotal || 0}` },
       xAxis: { categories, title: { text: "Quarter" } },
       yAxis: { title: { text: "Count" }, allowDecimals: false },
       series: [{ name: "HEI Linked to Mothers", data, color: "#28a745" }],
@@ -842,21 +845,39 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
                   <StatWidget
                     icon="fa fa-female"
                     label="TOTAL PATIENTS"
-                    value={dashboardData.motherStatistics.totalFemalePatients}
+                    value={statistics.totalPatients}
                     color="primary"
                   />
                   <StatWidget
                     icon="fa fa-user-md"
                     label="ANC PATIENTS"
-                    value={dashboardData.motherStatistics.totalANCPatients}
+                    value={statistics.ancPatients}
                     color="info"
                   />
                   <StatWidget
                     icon="fa fa-heartbeat"
                     label="PMTCT PATIENTS"
-                    value={dashboardData.motherStatistics.totalPMTCTPatients}
+                    value={statistics.pmtctPatients}
                     color="success"
                   />
+                    <StatWidget
+                      icon="fa fa-user-times"
+                      label="MOTHERS LTFU"
+                      value={`${statistics.mothersLTFUNumerator || 0} (${statistics.mothersLTFUPercentage || 0}%)`}
+                      color="danger"
+                    />
+                    <StatWidget
+                      icon="fa fa-baby"
+                      label="DELIVERIES"
+                      value={statistics.deliveriesTotal || 0}
+                      color="info"
+                    />
+                  {/* <StatWidget
+                    icon="fa fa-flask"
+                    label="PMTCT VL UPTAKE"
+                    value={`${statistics.pmtctViralLoadUptakePercentage}%`}
+                    color="warning"
+                  /> */}
                   {/* <StatWidget
                     icon="fa fa-users"
                     label="TOTAL MOTHERS ENROLLED"
@@ -963,14 +984,7 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
                     </div>
                   </Col>
                 </Row>
-                <Row>
-                  <StatWidget
-                    icon="fa fa-user-times"
-                    label="MOTHERS LTFU"
-                    value={dashboardData.motherExitMetrics.lostToFollowUp}
-                    color="danger"
-                  />
-                </Row>
+
                 <br />
               </Card.Body>
             </Card>

@@ -445,4 +445,307 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)
     String getMotherVL (String personUuid);
 
+    // Statistics queries
+
+    // Total female patients >= 5 years
+    @Query(value = "SELECT COUNT(DISTINCT pp.uuid) FROM patient_person pp " +
+            "WHERE pp.archived = 0 " +
+            "AND pp.facility_id = ?1 " +
+            "AND UPPER(pp.sex) = 'FEMALE' " +
+            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5", nativeQuery = true)
+    Long getTotalFemalePatients(Long facilityId);
+
+    // Total ANC patients with enrollment date not blank
+    @Query(value = "SELECT COUNT(DISTINCT pa.person_uuid) FROM pmtct_anc pa " +
+            "WHERE pa.archived = 0 " +
+            "AND pa.facility_id = ?1 " +
+            "AND pa.first_anc_date IS NOT NULL", nativeQuery = true)
+    Long getTotalANCPatients(Long facilityId);
+
+    // Total PMTCT patients with enrollment date not blank
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL", nativeQuery = true)
+    Long getTotalPMTCTPatients(Long facilityId);
+
+    // PMTCT Viral Load Numerator: HIV+ pregnant women on ART with VL result documented
+    // Date of Viral load >= Date of PMTCT Enrollment
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date", nativeQuery = true)
+    Long getPMTCTViralLoadNumerator(Long facilityId);
+
+    // PMTCT Viral Load Denominator: HIV+ pregnant women enrolled on ART
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN hiv_art_clinical hac ON hac.person_uuid = pe.person_uuid " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND hac.archived = 0", nativeQuery = true)
+    Long getPMTCTViralLoadDenominator(Long facilityId);
+
+    // Viral Suppression Numerator: HIV+ pregnant women on ART with VL result < 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) < 1000", nativeQuery = true)
+    Long getViralSuppressionNumerator(Long facilityId);
+
+    // Unsuppressed Total: HIV+ pregnant women on ART with VL result >= 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) >= 1000", nativeQuery = true)
+    Long getUnsuppressedTotal(Long facilityId);
+
+    // Unsuppressed Q1 (Oct-Dec): HIV+ pregnant women on ART with VL result >= 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (10, 11, 12)", nativeQuery = true)
+    Long getUnsuppressedQ1(Long facilityId);
+
+    // Unsuppressed Q2 (Jan-Mar): HIV+ pregnant women on ART with VL result >= 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (1, 2, 3)", nativeQuery = true)
+    Long getUnsuppressedQ2(Long facilityId);
+
+    // Unsuppressed Q3 (Apr-Jun): HIV+ pregnant women on ART with VL result >= 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (4, 5, 6)", nativeQuery = true)
+    Long getUnsuppressedQ3(Long facilityId);
+
+    // Unsuppressed Q4 (Jul-Sep): HIV+ pregnant women on ART with VL result >= 1000 c/ml
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.person_uuid " +
+            "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND lt.lab_test_id = 16 " +
+            "AND lr.result_reported IS NOT NULL " +
+            "AND lr.date_result_reported IS NOT NULL " +
+            "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
+            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (7, 8, 9)", nativeQuery = true)
+    Long getUnsuppressedQ4(Long facilityId);
+
+    // PMTCT Exit Tracked - Active in PMTCT Cohort (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%ACTIVE%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitActiveInCohort(Long facilityId);
+
+    // PMTCT Exit Tracked - Transferred Out (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%TRANSFERRED OUT%' " +
+            "AND UPPER(ppc.maternal_outcome) NOT LIKE '%ANOTHER PMTCT%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitTransferredOut(Long facilityId);
+
+    // PMTCT Exit Tracked - Transferred to another PMTCT cohort (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%ANOTHER PMTCT%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitTransferredToAnotherPMTCT(Long facilityId);
+
+    // PMTCT Exit Tracked - Transitioned to ART clinic (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%TRANSITIONED%ART%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitTransitionedToART(Long facilityId);
+
+    // PMTCT Exit Tracked - Lost to follow-up (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%LOST%FOLLOW%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitLostToFollowUp(Long facilityId);
+
+    // PMTCT Exit Tracked - Dead (latest cycle, enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "INNER JOIN pmtct_enrollment pe ON pe.person_uuid = ppc.person_uuid AND pe.pmtct_cycle_id = ppc.id " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%DEAD%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0) " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitDead(Long facilityId);
+
+    // PMTCT Exit Denominator - Total on PMTCT (enrollment > 24 months)
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL " +
+            "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
+    Long getPmtctExitDenominator(Long facilityId);
+
+    // Mothers LTFU Numerator - HIV+ pregnant women with LTFU status (latest cycle)
+    @Query(value = "SELECT COUNT(DISTINCT ppc.person_uuid) FROM pmtct_pregnancy_cycle ppc " +
+            "WHERE ppc.archived = 0 " +
+            "AND ppc.facility_id = ?1 " +
+            "AND UPPER(ppc.maternal_outcome) LIKE '%LOST%FOLLOW%' " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.person_uuid = ppc.person_uuid AND ppc2.archived = 0)", nativeQuery = true)
+    Long getMothersLTFUNumerator(Long facilityId);
+
+    // Mothers LTFU Denominator - HIV+ pregnant women on ART and PMTCT
+    @Query(value = "SELECT COUNT(DISTINCT pe.person_uuid) FROM pmtct_enrollment pe " +
+            "INNER JOIN hiv_art_clinical hac ON hac.person_uuid = pe.person_uuid AND hac.archived = 0 " +
+            "WHERE pe.archived = 0 " +
+            "AND pe.facility_id = ?1 " +
+            "AND pe.pmtct_enrollment_date IS NOT NULL", nativeQuery = true)
+    Long getMothersLTFUDenominator(Long facilityId);
+
+    // Deliveries Total - date_of_delivery is not blank
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL", nativeQuery = true)
+    Long getDeliveriesTotal(Long facilityId);
+
+    // Deliveries Q1 (Oct-Dec)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (10, 11, 12)", nativeQuery = true)
+    Long getDeliveriesQ1(Long facilityId);
+
+    // Deliveries Q2 (Jan-Mar)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (1, 2, 3)", nativeQuery = true)
+    Long getDeliveriesQ2(Long facilityId);
+
+    // Deliveries Q3 (Apr-Jun)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (4, 5, 6)", nativeQuery = true)
+    Long getDeliveriesQ3(Long facilityId);
+
+    // Deliveries Q4 (Jul-Sep)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (7, 8, 9)", nativeQuery = true)
+    Long getDeliveriesQ4(Long facilityId);
+
+    // HEI Linked Total - live births (number_of_infants_alive - number_of_infants_dead >= 1)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1", nativeQuery = true)
+    Long getHEILinkedTotal(Long facilityId);
+
+    // HEI Linked Q1 (Oct-Dec)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (10, 11, 12)", nativeQuery = true)
+    Long getHEILinkedQ1(Long facilityId);
+
+    // HEI Linked Q2 (Jan-Mar)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (1, 2, 3)", nativeQuery = true)
+    Long getHEILinkedQ2(Long facilityId);
+
+    // HEI Linked Q3 (Apr-Jun)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (4, 5, 6)", nativeQuery = true)
+    Long getHEILinkedQ3(Long facilityId);
+
+    // HEI Linked Q4 (Jul-Sep)
+    @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
+            "WHERE pd.archived = 0 " +
+            "AND pd.facility_id = ?1 " +
+            "AND pd.date_of_delivery IS NOT NULL " +
+            "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
+            "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (7, 8, 9)", nativeQuery = true)
+    Long getHEILinkedQ4(Long facilityId);
+
 }

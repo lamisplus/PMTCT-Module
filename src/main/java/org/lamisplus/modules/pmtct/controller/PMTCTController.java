@@ -740,4 +740,10 @@ public class PMTCTController {
         return ResponseEntity.ok(hivStatus);
     }
 
+    @GetMapping(value = "statistics")
+    public ResponseEntity<PMTCTStatisticsDto> getPMTCTStatistics() {
+        PMTCTStatisticsDto statistics = ancService.getPMTCTStatistics();
+        return ResponseEntity.ok(statistics);
+    }
+
 }

@@ -1556,5 +1556,175 @@ public class ANCService {
 
         return response;
     }
+
+    public PMTCTStatisticsDto getPMTCTStatistics() {
+        Optional<org.lamisplus.modules.base.domain.entities.User> currentUser = this.userService.getUserWithRoles();
+        org.lamisplus.modules.base.domain.entities.User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        // Get total female patients >= 5 years
+        Long totalPatients = pmtctEnrollmentRepository.getTotalFemalePatients(facilityId);
+        if (totalPatients == null) totalPatients = 0L;
+
+        // Get total ANC patients with enrollment date
+        Long ancPatients = pmtctEnrollmentRepository.getTotalANCPatients(facilityId);
+        if (ancPatients == null) ancPatients = 0L;
+
+        // Get total PMTCT patients with enrollment date
+        Long pmtctPatients = pmtctEnrollmentRepository.getTotalPMTCTPatients(facilityId);
+        if (pmtctPatients == null) pmtctPatients = 0L;
+
+        // Get PMTCT Viral Load numerator and denominator
+        Long vlNumerator = pmtctEnrollmentRepository.getPMTCTViralLoadNumerator(facilityId);
+        if (vlNumerator == null) vlNumerator = 0L;
+
+        Long vlDenominator = pmtctEnrollmentRepository.getPMTCTViralLoadDenominator(facilityId);
+        if (vlDenominator == null) vlDenominator = 0L;
+
+        // Calculate VL uptake percentage
+        Double vlPercentage = 0.0;
+        if (vlDenominator > 0) {
+            vlPercentage = (vlNumerator.doubleValue() / vlDenominator.doubleValue()) * 100;
+            vlPercentage = Math.round(vlPercentage * 100.0) / 100.0;
+        }
+
+        // Get Viral Suppression numerator (VL < 1000)
+        Long suppressionNumerator = pmtctEnrollmentRepository.getViralSuppressionNumerator(facilityId);
+        if (suppressionNumerator == null) suppressionNumerator = 0L;
+
+        // Viral Suppression denominator is the same as VL uptake numerator (patients with VL result)
+        Long suppressionDenominator = vlNumerator;
+
+        // Calculate Viral Suppression percentage
+        Double suppressionPercentage = 0.0;
+        if (suppressionDenominator > 0) {
+            suppressionPercentage = (suppressionNumerator.doubleValue() / suppressionDenominator.doubleValue()) * 100;
+            suppressionPercentage = Math.round(suppressionPercentage * 100.0) / 100.0;
+        }
+
+        // Get Unsuppressed counts by quarters
+        Long unsuppressedQ1 = pmtctEnrollmentRepository.getUnsuppressedQ1(facilityId);
+        if (unsuppressedQ1 == null) unsuppressedQ1 = 0L;
+
+        Long unsuppressedQ2 = pmtctEnrollmentRepository.getUnsuppressedQ2(facilityId);
+        if (unsuppressedQ2 == null) unsuppressedQ2 = 0L;
+
+        Long unsuppressedQ3 = pmtctEnrollmentRepository.getUnsuppressedQ3(facilityId);
+        if (unsuppressedQ3 == null) unsuppressedQ3 = 0L;
+
+        Long unsuppressedQ4 = pmtctEnrollmentRepository.getUnsuppressedQ4(facilityId);
+        if (unsuppressedQ4 == null) unsuppressedQ4 = 0L;
+
+        Long unsuppressedTotal = pmtctEnrollmentRepository.getUnsuppressedTotal(facilityId);
+        if (unsuppressedTotal == null) unsuppressedTotal = 0L;
+
+        // PMTCT Exit Tracked - Mothers (from pmtct_pregnancy_cycle.maternal_outcome)
+        Long pmtctExitActiveInCohort = pmtctEnrollmentRepository.getPmtctExitActiveInCohort(facilityId);
+        if (pmtctExitActiveInCohort == null) pmtctExitActiveInCohort = 0L;
+
+        Long pmtctExitTransferredOut = pmtctEnrollmentRepository.getPmtctExitTransferredOut(facilityId);
+        if (pmtctExitTransferredOut == null) pmtctExitTransferredOut = 0L;
+
+        Long pmtctExitTransferredToAnotherPMTCT = pmtctEnrollmentRepository.getPmtctExitTransferredToAnotherPMTCT(facilityId);
+        if (pmtctExitTransferredToAnotherPMTCT == null) pmtctExitTransferredToAnotherPMTCT = 0L;
+
+        Long pmtctExitTransitionedToART = pmtctEnrollmentRepository.getPmtctExitTransitionedToART(facilityId);
+        if (pmtctExitTransitionedToART == null) pmtctExitTransitionedToART = 0L;
+
+        Long pmtctExitLostToFollowUp = pmtctEnrollmentRepository.getPmtctExitLostToFollowUp(facilityId);
+        if (pmtctExitLostToFollowUp == null) pmtctExitLostToFollowUp = 0L;
+
+        Long pmtctExitDead = pmtctEnrollmentRepository.getPmtctExitDead(facilityId);
+        if (pmtctExitDead == null) pmtctExitDead = 0L;
+
+        Long pmtctExitDenominator = pmtctEnrollmentRepository.getPmtctExitDenominator(facilityId);
+        if (pmtctExitDenominator == null) pmtctExitDenominator = 0L;
+
+        // Mothers LTFU
+        Long mothersLTFUNumerator = pmtctEnrollmentRepository.getMothersLTFUNumerator(facilityId);
+        if (mothersLTFUNumerator == null) mothersLTFUNumerator = 0L;
+
+        Long mothersLTFUDenominator = pmtctEnrollmentRepository.getMothersLTFUDenominator(facilityId);
+        if (mothersLTFUDenominator == null) mothersLTFUDenominator = 0L;
+
+        Double mothersLTFUPercentage = 0.0;
+        if (mothersLTFUDenominator > 0) {
+            mothersLTFUPercentage = (mothersLTFUNumerator.doubleValue() / mothersLTFUDenominator.doubleValue()) * 100;
+            mothersLTFUPercentage = Math.round(mothersLTFUPercentage * 100.0) / 100.0;
+        }
+
+        // Deliveries Recorded by quarters
+        Long deliveriesQ1 = pmtctEnrollmentRepository.getDeliveriesQ1(facilityId);
+        if (deliveriesQ1 == null) deliveriesQ1 = 0L;
+
+        Long deliveriesQ2 = pmtctEnrollmentRepository.getDeliveriesQ2(facilityId);
+        if (deliveriesQ2 == null) deliveriesQ2 = 0L;
+
+        Long deliveriesQ3 = pmtctEnrollmentRepository.getDeliveriesQ3(facilityId);
+        if (deliveriesQ3 == null) deliveriesQ3 = 0L;
+
+        Long deliveriesQ4 = pmtctEnrollmentRepository.getDeliveriesQ4(facilityId);
+        if (deliveriesQ4 == null) deliveriesQ4 = 0L;
+
+        Long deliveriesTotal = pmtctEnrollmentRepository.getDeliveriesTotal(facilityId);
+        if (deliveriesTotal == null) deliveriesTotal = 0L;
+
+        // HEI Linked by quarters
+        Long heiLinkedQ1 = pmtctEnrollmentRepository.getHEILinkedQ1(facilityId);
+        if (heiLinkedQ1 == null) heiLinkedQ1 = 0L;
+
+        Long heiLinkedQ2 = pmtctEnrollmentRepository.getHEILinkedQ2(facilityId);
+        if (heiLinkedQ2 == null) heiLinkedQ2 = 0L;
+
+        Long heiLinkedQ3 = pmtctEnrollmentRepository.getHEILinkedQ3(facilityId);
+        if (heiLinkedQ3 == null) heiLinkedQ3 = 0L;
+
+        Long heiLinkedQ4 = pmtctEnrollmentRepository.getHEILinkedQ4(facilityId);
+        if (heiLinkedQ4 == null) heiLinkedQ4 = 0L;
+
+        Long heiLinkedTotal = pmtctEnrollmentRepository.getHEILinkedTotal(facilityId);
+        if (heiLinkedTotal == null) heiLinkedTotal = 0L;
+
+        return PMTCTStatisticsDto.builder()
+                .totalPatients(totalPatients)
+                .ancPatients(ancPatients)
+                .pmtctPatients(pmtctPatients)
+                .pmtctViralLoadNumerator(vlNumerator)
+                .pmtctViralLoadDenominator(vlDenominator)
+                .pmtctViralLoadUptakePercentage(vlPercentage)
+                .viralSuppressionNumerator(suppressionNumerator)
+                .viralSuppressionDenominator(suppressionDenominator)
+                .viralSuppressionPercentage(suppressionPercentage)
+                .unsuppressedQ1(unsuppressedQ1)
+                .unsuppressedQ2(unsuppressedQ2)
+                .unsuppressedQ3(unsuppressedQ3)
+                .unsuppressedQ4(unsuppressedQ4)
+                .unsuppressedTotal(unsuppressedTotal)
+                // PMTCT Exit Tracked
+                .pmtctExitActiveInCohort(pmtctExitActiveInCohort)
+                .pmtctExitTransferredOut(pmtctExitTransferredOut)
+                .pmtctExitTransferredToAnotherPMTCT(pmtctExitTransferredToAnotherPMTCT)
+                .pmtctExitTransitionedToART(pmtctExitTransitionedToART)
+                .pmtctExitLostToFollowUp(pmtctExitLostToFollowUp)
+                .pmtctExitDead(pmtctExitDead)
+                .pmtctExitDenominator(pmtctExitDenominator)
+                // Mothers LTFU
+                .mothersLTFUNumerator(mothersLTFUNumerator)
+                .mothersLTFUDenominator(mothersLTFUDenominator)
+                .mothersLTFUPercentage(mothersLTFUPercentage)
+                // Deliveries Recorded
+                .deliveriesQ1(deliveriesQ1)
+                .deliveriesQ2(deliveriesQ2)
+                .deliveriesQ3(deliveriesQ3)
+                .deliveriesQ4(deliveriesQ4)
+                .deliveriesTotal(deliveriesTotal)
+                // HEI Linked
+                .heiLinkedQ1(heiLinkedQ1)
+                .heiLinkedQ2(heiLinkedQ2)
+                .heiLinkedQ3(heiLinkedQ3)
+                .heiLinkedQ4(heiLinkedQ4)
+                .heiLinkedTotal(heiLinkedTotal)
+                .build();
+    }
 }
 
