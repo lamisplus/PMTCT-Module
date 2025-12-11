@@ -14,6 +14,8 @@ import java.time.LocalDate;
 @Builder
 public class InfantVisitRequestDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private LocalDate visitDate;
     private String infantHospitalNumber;

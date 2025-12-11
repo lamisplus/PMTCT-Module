@@ -137,6 +137,7 @@ const LabourDelivery = (props) => {
       ? props.patientObj.personUuid
       : props.patientObj.uuid,
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    source: "WEB",
   });
   useEffect(() => {
       GET_CODESETS()

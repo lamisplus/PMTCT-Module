@@ -794,7 +794,7 @@ const UserRegistration = (props) => {
           objValues.entryPoint = locationState.entrypointValue;
           objValues.person_uuid = patientObj.uuid || patientObj?.personUuid;
           objValues.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
-
+          objValues.source = "WEB";
           let url = "";
           if (locationState.showANC) {
             // ANC ENTRY POINT

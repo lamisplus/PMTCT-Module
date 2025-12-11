@@ -85,5 +85,6 @@ public class PmtctHts {
     @Column(name = "last_modified_by")
     @LastModifiedBy
     private String lastModifiedBy;
+    private String source;
 
 }

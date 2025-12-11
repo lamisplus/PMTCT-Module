@@ -130,6 +130,7 @@ private DeliveryRepository deliveryRepository;
             throw new IllegalArgumentException("pmtctCycleId is required for PMTCT enrollment");
         }
         pmtctEnrollment.setPmtctCycleId(pmtctEnrollmentRequestDto.getPmtctCycleId());
+        pmtctEnrollment.setSource(pmtctEnrollmentRequestDto.getSource());
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         PMTCTEnrollment savedEnrollment = (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
@@ -456,6 +457,7 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
+            pmtctEnrollment1.setSource(pmtctEnrollmentRequestDto.getSource());
 
             // Update lastModifiedBy with current user
             pmtctEnrollment1.setLastModifiedBy(user.getUserName());

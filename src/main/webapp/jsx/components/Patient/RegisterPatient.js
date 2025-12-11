@@ -973,6 +973,7 @@ const UserRegistration = (props) => {
 
             //
             objValues.person_uuid = retrievedPatient.personUuid;
+            objValues.source = "WEB";
 
             const response = await axios.post(
               `${baseUrl}pmtct/anc/anc-enrollement`,
@@ -1106,6 +1107,7 @@ const UserRegistration = (props) => {
                 ? locationState.entrypointValue
                 : props.entrypointValue,
               personUuid: retrievedPatient.personUuid,
+              source: "WEB",
             };
             const response = await axios.post(
               `${baseUrl}pmtct/anc/pmtct-enrollment`,

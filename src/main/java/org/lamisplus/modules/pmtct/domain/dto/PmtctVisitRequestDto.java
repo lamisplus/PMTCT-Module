@@ -19,6 +19,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PmtctVisitRequestDto implements Serializable {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String enteryPoint;

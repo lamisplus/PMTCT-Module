@@ -57,7 +57,7 @@ public class PMTCTController {
 //    }
 
     @PostMapping(value = "anc-new-registration")
-    public ResponseEntity<ANCRespondDto> newANCRegistration(@RequestBody ANCWithPersonRequestDto ancWithPersonRequestDto) {
+    public ResponseEntity<ANCRespondDto> newANCRegistration(@Valid @RequestBody ANCWithPersonRequestDto ancWithPersonRequestDto) {
         // this.ancService.ANCEnrollement(ancEnrollementRequestDto);
         return ResponseEntity.ok(ancService.newANCRegistration(ancWithPersonRequestDto));
     }
@@ -125,7 +125,7 @@ public class PMTCTController {
 //    }
 //
     @PostMapping(value = "/pmtct-enrollment")
-    public PMTCTEnrollmentRespondDto pmtctEnrollment(@RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+    public PMTCTEnrollmentRespondDto pmtctEnrollment(@Valid @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
         return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
     }
 
@@ -175,7 +175,7 @@ public class PMTCTController {
 //    }
 
     @PostMapping(value = "/pmtct-delivery")
-    public DeliveryResponseDto createPmtctDelivery(@RequestBody DeliveryRequestDto deliveryRequestDto) {
+    public DeliveryResponseDto createPmtctDelivery(@Valid @RequestBody DeliveryRequestDto deliveryRequestDto) {
         return this.deliveryService.save(deliveryRequestDto);
     }
 //
@@ -269,7 +269,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "add-infants")
-    public ResponseEntity<InfantDtoResponse> AddInfants(@RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoResponse> AddInfants(@Valid @RequestBody InfantDto infantDto) {
         return ResponseEntity.ok(infantService.save(infantDto));
     }
 
@@ -324,7 +324,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-visitations")
-    public ResponseEntity<InfantVisitResponseDto> InfantVisitation(@RequestBody InfantVisitRequestDto infantVisitRequestDto) {
+    public ResponseEntity<InfantVisitResponseDto> InfantVisitation(@Valid @RequestBody InfantVisitRequestDto infantVisitRequestDto) {
         return ResponseEntity.ok(infantVisitService.save(infantVisitRequestDto));
     }
 
@@ -339,7 +339,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-pcr-test")
-    public ResponseEntity<InfantPCRTest> InfantPCRTest(@RequestBody InfantPCRTestDto infantPCRTestDto) {
+    public ResponseEntity<InfantPCRTest> InfantPCRTest(@Valid @RequestBody InfantPCRTestDto infantPCRTestDto) {
         return ResponseEntity.ok(infantVisitService.save(infantPCRTestDto));
     }
 
@@ -354,7 +354,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-arv")
-    public ResponseEntity<InfantArv> InfantPCRTest(@RequestBody InfantArvDto infantArvDto) {
+    public ResponseEntity<InfantArv> InfantPCRTest(@Valid @RequestBody InfantArvDto infantArvDto) {
         return ResponseEntity.ok(infantVisitService.save(infantArvDto));
     }
 
@@ -369,7 +369,7 @@ public class PMTCTController {
     }
 
     @PostMapping(value = "infant-mother-art")
-    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@RequestBody InfantMotherArtDto infantMotherArtDto) {
+    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@Valid @RequestBody InfantMotherArtDto infantMotherArtDto) {
         return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
     }
 
@@ -386,7 +386,7 @@ public class PMTCTController {
 //    , @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto
 
     @PostMapping(value = "infant-visit-consolidated")
-    public ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
+    public ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@Valid @RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         if (infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null)
             this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());
         return ResponseEntity.ok(infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto()));

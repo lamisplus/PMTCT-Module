@@ -830,6 +830,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
             ? props.patientObj.person_uuid
             : locationState.patientObj.uuid,
           pmtctCycleId: pmtctCycleId || props?.latestPmtctCycle?.id,
+          source: "WEB",
         };
 
         axios

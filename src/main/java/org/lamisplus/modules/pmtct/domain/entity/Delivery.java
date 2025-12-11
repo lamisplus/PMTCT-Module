@@ -39,6 +39,7 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String placeOfDelivery;
     private Long pmtctCycleId;
     private Long archived;
+    private String source;
 
     @PrePersist
     public void prePersist() {

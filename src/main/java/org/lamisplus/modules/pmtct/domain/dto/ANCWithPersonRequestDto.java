@@ -9,12 +9,15 @@ import org.lamisplus.modules.pmtct.domain.entity.enums.TreatedForSyphilis;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
 @Data
 public class ANCWithPersonRequestDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String ancSetting;

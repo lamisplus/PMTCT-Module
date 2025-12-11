@@ -37,6 +37,7 @@ public class InfantVisit implements Serializable, Persistable<Long> {
     private String createdBy;
     private LocalDateTime lastModifiedDate;
     private String lastModifiedBy;
+    private String source;
 
     @PrePersist
     public void prePersist() {

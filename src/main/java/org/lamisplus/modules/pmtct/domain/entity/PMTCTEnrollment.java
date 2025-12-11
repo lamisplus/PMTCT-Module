@@ -45,6 +45,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String expectedDeliveryDate;
     private String ancNo;
     private Long pmtctCycleId;
+    private String source;
 
     @PrePersist
     public void prePersist() {

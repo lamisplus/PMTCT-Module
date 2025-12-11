@@ -70,6 +70,7 @@ public class PMTCTTransactionalEntity implements Serializable, Persistable<Long>
     @LastModifiedBy
     private String lastModifiedBy;
     private Long facilityId;
+    private String source;
 
     @Override
     public boolean isNew() {

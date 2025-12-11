@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 @Data
 public class InfantPCRTestDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     @CreatedDate
     private LocalDate visitDate = LocalDate.now();

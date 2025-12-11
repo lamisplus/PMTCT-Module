@@ -66,6 +66,7 @@ public class InfantArv implements Serializable, Persistable<Long> {
     @Column(name = "last_modified_by")
     @LastModifiedBy
     private String lastModifiedBy;
+    private String source;
 
     @PrePersist
     public void prePersist() {

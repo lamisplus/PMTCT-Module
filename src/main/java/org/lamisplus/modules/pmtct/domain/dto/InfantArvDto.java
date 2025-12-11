@@ -11,6 +11,8 @@ import java.io.Serializable;
 @Data
 public class InfantArvDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private Long infantId;
 

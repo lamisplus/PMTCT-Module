@@ -84,6 +84,8 @@ private final   InfantRapidTestRepository rapidTestRepository;
         }
         infant.setPmtctCycleId(infantDto.getPmtctCycleId());
 
+        infant.setArchived(0);
+        infant.setSource(infantDto.getSource());
         Infant result = infantRepository.save(infant);
 
         // Declare variables outside the if blocks
@@ -121,6 +123,8 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantArvDto.setAncNumber(infant.getAncNo());
             infantArvDto.setPmtctCycleId(infant.getPmtctCycleId());
             infantArvDto.setMotherPersonUuid(infant.getMotherPersonUuid());
+            infantArvDto.setSource(infant.getSource());
+
 //        }
         return infantVisitService.save(infantArvDto);
     }
@@ -134,6 +138,8 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantPCRTestDto.setVisitDate(LocalDate.now());
             infantPCRTestDto.setPmtctCycleId(infant.getPmtctCycleId());
             infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
+             infantPCRTestDto.setSource(infant.getSource());
+
 //        }
         return infantVisitService.save(infantPCRTestDto);
     }
@@ -250,6 +256,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
          infant.setBodyWeight(infantDto.getBodyWeight());
          infant.setCtxStatus(infantDto.getCtxStatus());
          infant.setMotherPersonUuid(infantDto.getPersonUuid());
+        infant.setSource(infantDto.getSource());
 
          // Update pmtctCycleId if provided
          if (infantDto.getPmtctCycleId() != null) {
@@ -274,6 +281,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
     private InfantArv updateInfantArvDto(InfantDto infantDto, Infant infant) {
         InfantArv infantArv = null;
         if (infantDto.getInfantArvDto().getId() != null) {
+            infantDto.getInfantArvDto().setSource(infantDto.getSource());
             infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto(),infant);
         }
         return infantArv;
@@ -282,6 +290,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
     private InfantPCRTest updateInfantPCRTest(InfantDto infantDto,Infant infant) {
         InfantPCRTest infantPCRTest = null;
         if (infantDto.getInfantPCRTestDto().getId() != null) {
+            infantDto.getInfantPCRTestDto().setSource(infantDto.getSource());
             infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(),infant);
         }
         return infantPCRTest;

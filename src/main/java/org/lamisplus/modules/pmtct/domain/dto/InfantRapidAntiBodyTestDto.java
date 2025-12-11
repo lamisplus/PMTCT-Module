@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class InfantRapidAntiBodyTestDto implements Serializable  {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id ;
     private String rapidTestType;
     private String ancNumber;

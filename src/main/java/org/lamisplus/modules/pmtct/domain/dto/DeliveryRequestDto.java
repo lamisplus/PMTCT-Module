@@ -8,6 +8,8 @@ import java.time.LocalDate;
 
 @Data
 public class DeliveryRequestDto implements Serializable {
+    @NotNull(message = "Source is required")
+    private String source;
     private String ancNo;
     private LocalDate dateOfDelivery;
     private String bookingStatus;

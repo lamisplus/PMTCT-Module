@@ -10,6 +10,8 @@ import java.time.LocalDate;
 @Builder
 public class InfantDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private LocalDate dateOfDelivery;
     private String firstName;
     private String middleName;

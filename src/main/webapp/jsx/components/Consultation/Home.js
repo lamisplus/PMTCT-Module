@@ -114,6 +114,7 @@ const ClinicVisit = (props) => {
     visitStatus: "",
     timeOfViralLoad: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
+    source: "WEB",
   });
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
 

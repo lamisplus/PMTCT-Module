@@ -82,6 +82,8 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        pmtctVisit.setArchived(0);
+        pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
 //            Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -164,6 +166,8 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
+        pmtctVisit.setArchived(0);
+        pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
 //            Optional<User> currentUser = this.userService.getUserWithRoles();

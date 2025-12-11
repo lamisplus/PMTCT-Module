@@ -1,4 +1,3 @@
-package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -841,6 +840,7 @@ public class ANCService {
             anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
             anc.setPmtctCycleId(ancEnrollementRequestDto.getPmtctCycleId());
+            anc.setSource(ancEnrollementRequestDto.getSource());
 
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
@@ -963,6 +963,7 @@ public class ANCService {
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancWithPersonRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
+            anc.setSource(ancWithPersonRequestDto.getSource());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
 

@@ -2142,4 +2142,158 @@
         </sql>
     </changeSet>
 
+    <!-- ========================================
+         Add source column to all PMTCT tables
+         to differentiate records from WEB vs MOBILE
+         Author: system
+         Date: 2025-12-10
+         ======================================== -->
+
+    <!-- Add source column to pmtct_anc -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-anc-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_delivery -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-delivery-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-enrollment-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_hts -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-hts-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_arv -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-arv-005">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_arv" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_information -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-information-006">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_mother_art -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-mother-art-007">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_mother_art" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_mother_art ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_pcr -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-pcr-008">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_pcr" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_rapid_antibody -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-rapid-antibody-009">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_infant_visit -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-infant-visit-010">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_visit" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-mother-visitation-011">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="source" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
+    <!-- Add source column to pmtct_pregnancy_cycle (if it exists) -->
+    <changeSet failOnError="false" author="system" id="2025-12-10-add-source-pmtct-pregnancy-cycle-012">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="pmtct_pregnancy_cycle" />
+                <not>
+                    <columnExists tableName="pmtct_pregnancy_cycle" columnName="source" />
+                </not>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_pregnancy_cycle ADD COLUMN source character varying(50);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

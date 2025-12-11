@@ -29,7 +29,8 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private Double bodyWeight;
     private String ctxStatus;
     private Long pmtctCycleId;
-    private Long archived;
+    private Integer archived;
+    private String source;
 
     @PrePersist
     public void prePersist() {
@@ -38,3 +39,5 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
         }
     }
 }
+   
+   

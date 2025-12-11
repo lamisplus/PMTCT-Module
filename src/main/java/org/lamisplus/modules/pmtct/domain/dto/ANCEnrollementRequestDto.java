@@ -13,6 +13,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class ANCEnrollementRequestDto{
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String ancSetting;

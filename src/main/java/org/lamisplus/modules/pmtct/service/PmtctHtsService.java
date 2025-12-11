@@ -118,6 +118,12 @@ public class PmtctHtsService {
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
         pmtctHts.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
+        pmtctHts.setFacilityId(facilityId);
+        pmtctHts.setCreatedBy(user.getUserName());
+        pmtctHts.setLastModifiedBy(user.getUserName());
+        pmtctHts.setCreatedDate(java.time.LocalDateTime.now());
+        pmtctHts.setLastModifiedDate(java.time.LocalDateTime.now());
+        pmtctHts.setSource(pmtctHtsRequestDTO.getSource());
 
         PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
 
@@ -164,6 +170,9 @@ public class PmtctHtsService {
 
 
 
+            pmtctEnrollment1.setSource(pmtctHtsRequestDTO.getSource());
+            pmtctEnrollment1.setLastModifiedBy(user.getUserName());
+            pmtctEnrollment1.setLastModifiedDate(java.time.LocalDateTime.now());
 
             this.pmtctHtsRepository.save(pmtctEnrollment1);
 

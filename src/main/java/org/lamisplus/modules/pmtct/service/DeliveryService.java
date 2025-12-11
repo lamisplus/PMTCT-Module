@@ -95,6 +95,7 @@ public class DeliveryService
             throw new IllegalArgumentException("pmtctCycleId is required for delivery");
         }
         delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+        delivery.setSource(deliveryRequestDto.getSource());
 
         Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.findLatestByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
@@ -276,6 +277,7 @@ public class DeliveryService
                 delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
             }
 
+            delivery.setSource(deliveryRequestDto.getSource());
             //check if the chld has been created
 
             boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());

@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Data
 public class ANCRequestDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String ancSetting;

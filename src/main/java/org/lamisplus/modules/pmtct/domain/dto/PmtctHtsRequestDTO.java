@@ -12,7 +12,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class PmtctHtsRequestDTO {
-
+    @NotNull(message = "Source is required")
+    private String source;
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
     private String testSetting;

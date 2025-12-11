@@ -56,6 +56,7 @@ public class InfantRapidAntiBodyTest implements Serializable {
     @Column(name = "last_modified_by")
     @LastModifiedBy
     private String lastModifiedBy;
+    private String source;
 
     @PrePersist
     public void prePersist() {
