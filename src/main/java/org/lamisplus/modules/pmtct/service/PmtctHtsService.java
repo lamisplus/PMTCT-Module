@@ -104,6 +104,7 @@ public class PmtctHtsService {
         pmtctHts.setLastModifiedBy(user.getUserName());
         pmtctHts.setCreatedDate(java.time.LocalDateTime.now());
         pmtctHts.setLastModifiedDate(java.time.LocalDateTime.now());
+        pmtctHts.setSource(pmtctHtsRequestDTO.getSource());
 
         return this.pmtctHtsRepository.save(pmtctHts);
     }
@@ -136,6 +137,7 @@ public class PmtctHtsService {
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
+            pmtctEnrollment1.setSource(pmtctHtsRequestDTO.getSource());
             pmtctEnrollment1.setLastModifiedBy(user.getUserName());
             pmtctEnrollment1.setLastModifiedDate(java.time.LocalDateTime.now());
 

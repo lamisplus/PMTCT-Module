@@ -618,6 +618,7 @@ const getLastPmtctHtsRecord = (personUuid) => {
           objValues.entryPoint = locationState.entrypointValue;
 
           objValues.person_uuid = patientObj.uuid? patientObj.uuid: patientObj?.personUuid;
+          objValues.source = "WEB";
           const response = await axios.post(
             `${baseUrl}pmtct/anc/anc-enrollement`,
             objValues,
@@ -675,6 +676,7 @@ const getLastPmtctHtsRecord = (personUuid) => {
         // LD AND POSTPARTUM ENTRY POINT
         try {
           objValues.person_uuid = patientObj.uuid;
+          objValues.source = "WEB";
           const response = await axios.post(
             `${baseUrl}pmtct/anc/pmtct-enrollment`,
             objValues,

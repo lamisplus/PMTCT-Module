@@ -834,6 +834,7 @@ public class ANCService {
             anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
+            anc.setSource(ancEnrollementRequestDto.getSource());
 
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
@@ -950,6 +951,7 @@ public class ANCService {
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancWithPersonRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
+            anc.setSource(ancWithPersonRequestDto.getSource());
             try{
                 LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
 

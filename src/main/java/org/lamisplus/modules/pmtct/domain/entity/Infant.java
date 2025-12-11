@@ -28,4 +28,5 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private Double bodyWeight;
     private String ctxStatus;
     private Integer archived;
+    private String source;
    }

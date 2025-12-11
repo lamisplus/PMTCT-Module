@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 @Data
@@ -11,7 +12,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class PmtctHtsRequestDTO {
-
+    @NotNull(message = "Source is required")
+    private String source;
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
     private String testSetting;

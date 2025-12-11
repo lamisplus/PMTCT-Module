@@ -7,6 +7,7 @@
  import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
  import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
 
+ import javax.validation.constraints.NotNull;
  import java.io.Serializable;
  import java.time.LocalDate;
 
@@ -16,6 +17,8 @@
 
  public class PMTCTEnrollmentRequestDto implements Serializable
  {
+     @NotNull(message = "Source is required")
+     private String source;
      private Long id;
      private String ancNo;
      private LocalDate pmtctEnrollmentDate;

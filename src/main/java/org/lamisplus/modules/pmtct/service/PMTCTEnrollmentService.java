@@ -129,6 +129,7 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
         pmtctEnrollment.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
         pmtctEnrollment.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
+        pmtctEnrollment.setSource(pmtctEnrollmentRequestDto.getSource());
 //     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         return (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
@@ -453,6 +454,7 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
+            pmtctEnrollment1.setSource(pmtctEnrollmentRequestDto.getSource());
 
 
 

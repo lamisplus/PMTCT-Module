@@ -6,11 +6,13 @@ import java.time.LocalDate;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 
-
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 @Data
 public class InfantArvDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private Long infantId;
 

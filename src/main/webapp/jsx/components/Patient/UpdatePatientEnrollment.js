@@ -560,6 +560,7 @@ const UserRegistration = (props) => {
     if (validate()) {
       try {
         objValues.person_uuid = patientObj.uuid;
+        objValues.source = "WEB";
         const response = await axios.put(
           `${baseUrl}pmtct/anc/update-anc/${recordId}`,
           objValues,

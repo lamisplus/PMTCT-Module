@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -12,6 +13,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class ANCEnrollementRequestDto{
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String ancSetting;

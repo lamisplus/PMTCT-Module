@@ -37,6 +37,8 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private Integer numberOfInfantsDead;
     private String personUuid;
     private String placeOfDelivery;
+    private Long archived;
+    private String source;
 
     @Override
     public boolean isNew() {

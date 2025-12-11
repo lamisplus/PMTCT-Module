@@ -78,6 +78,7 @@ public class InfantService {
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
         infant.setArchived(0);
+        infant.setSource(infantDto.getSource());
         Infant result = infantRepository.save(infant);
 
         // Declare variables outside the if blocks
@@ -114,6 +115,7 @@ public class InfantService {
         infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
         infantArvDto.setAncNumber(infant.getAncNo());
         infantArvDto.setMotherPersonUuid(infant.getMotherPersonUuid());
+        infantArvDto.setSource(infant.getSource());
 //        }
         return infantVisitService.save(infantArvDto);
     }
@@ -126,6 +128,7 @@ public class InfantService {
         infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
         infantPCRTestDto.setVisitDate(LocalDate.now());
         infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
+        infantPCRTestDto.setSource(infant.getSource());
 //        }
         return infantVisitService.save(infantPCRTestDto);
     }
@@ -218,6 +221,7 @@ public class InfantService {
         infant.setCtxStatus(infantDto.getCtxStatus());
         infant.setMotherPersonUuid(infantDto.getPersonUuid());
         infant.setArchived(0);
+        infant.setSource(infantDto.getSource());
 
         Infant result =  infantRepository.save(infant);
 
@@ -237,6 +241,7 @@ public class InfantService {
     private InfantArv updateInfantArvDto(InfantDto infantDto, Infant infant) {
         InfantArv infantArv = null;
         if (infantDto.getInfantArvDto().getId() != null) {
+            infantDto.getInfantArvDto().setSource(infantDto.getSource());
             infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto(),infant);
         }
         return infantArv;
@@ -245,6 +250,7 @@ public class InfantService {
     private InfantPCRTest updateInfantPCRTest(InfantDto infantDto,Infant infant) {
         InfantPCRTest infantPCRTest = null;
         if (infantDto.getInfantPCRTestDto().getId() != null) {
+            infantDto.getInfantPCRTestDto().setSource(infantDto.getSource());
             infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(),infant);
         }
         return infantPCRTest;

@@ -113,6 +113,7 @@ const ClinicVisit = (props) => {
     transferTo: "",
     visitStatus: "",
     timeOfViralLoad: "",
+    source: "WEB",
   });
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
   const getDateOfDelivery = () => {

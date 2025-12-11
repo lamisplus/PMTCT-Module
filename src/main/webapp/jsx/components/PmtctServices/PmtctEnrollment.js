@@ -678,6 +678,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
           personUuid: props.patientObj.person_uuid
             ? props.patientObj.person_uuid
             : locationState.patientObj.uuid,
+          source: "WEB",
         };
 
         axios

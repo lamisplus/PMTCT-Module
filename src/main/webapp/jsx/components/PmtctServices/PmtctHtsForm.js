@@ -193,6 +193,7 @@ const PmtctHtsForm = (props) => {
     personUuid: props.personUuid,
     ancNo: props?.patientObj?.ancNo,
     finalResult: "",
+    source: "WEB",
   });
 
   const handleInitialInputChange = (e) => {

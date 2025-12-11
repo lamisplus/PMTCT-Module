@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 
 @NoArgsConstructor
 @Data
 public class InfantRapidAntiBodyTestDto implements Serializable  {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id ;
     private String rapidTestType;
     private String ancNumber;

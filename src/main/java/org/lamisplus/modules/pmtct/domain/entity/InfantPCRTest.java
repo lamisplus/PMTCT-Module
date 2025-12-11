@@ -38,6 +38,7 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
     private String createdBy;
     private LocalDateTime lastModifiedDate;
     private String lastModifiedBy;
+    private String source;
 
     @Override
     public boolean isNew() {

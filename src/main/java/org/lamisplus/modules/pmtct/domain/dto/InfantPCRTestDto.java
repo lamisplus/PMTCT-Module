@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 @Data
 public class InfantPCRTestDto implements Serializable
 {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     @CreatedDate
     private LocalDate visitDate = LocalDate.now();

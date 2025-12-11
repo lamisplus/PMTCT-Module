@@ -36,4 +36,5 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String createdBy;
     private LocalDateTime lastModifiedDate;
     private String lastModifiedBy;
+    private String source;
 }

@@ -73,6 +73,7 @@ public class InfantVisitService
         infantRapid.setLastModifiedBy(user.getUserName());
         infantRapid.setCreatedDate(java.time.LocalDateTime.now());
         infantRapid.setLastModifiedDate(java.time.LocalDateTime.now());
+        infantRapid.setSource(infantRapidDto.getSource());
 
         return this.infantRapidTestRepository.save(infantRapid);
     }
@@ -106,6 +107,7 @@ public class InfantVisitService
         infantArv.setLastModifiedBy(user.getUserName());
         infantArv.setCreatedDate(java.time.LocalDateTime.now());
         infantArv.setLastModifiedDate(java.time.LocalDateTime.now());
+        infantArv.setSource(infantArvDto.getSource());
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
@@ -134,6 +136,7 @@ public class InfantVisitService
         infantPCRTest.setLastModifiedBy(user.getUserName());
         infantPCRTest.setCreatedDate(java.time.LocalDateTime.now());
         infantPCRTest.setLastModifiedDate(java.time.LocalDateTime.now());
+        infantPCRTest.setSource(infantPCRTestDto.getSource());
 
         return this.infantPCRTestRepository.save(infantPCRTest);
     }
@@ -176,6 +179,7 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
         infantVisit.setArchived(0);
+        infantVisit.setSource(infantVisitRequestDto.getSource());
 
         return this.infantVisitRepository.save(infantVisit);
         // return this.infantVisitRepository.save(infantVisit);
@@ -309,6 +313,7 @@ public class InfantVisitService
         infantMotherArt.setLastModifiedBy(user.getUserName());
         infantMotherArt.setCreatedDate(java.time.LocalDateTime.now());
         infantMotherArt.setLastModifiedDate(java.time.LocalDateTime.now());
+        infantMotherArt.setSource(infantMotherArtDto.getSource());
         return this.infantMotherArtRepository.save(infantMotherArt);
     }
 
@@ -340,6 +345,7 @@ public class InfantVisitService
     public InfantVisitationConsolidatedDto saveConsolidation (InfantVisitationConsolidatedDto infantVisitationConsolidatedDto, InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto)
     {
         infantVisitationConsolidatedDto.getInfantVisitRequestDto().setUniqueUuid(UUID.randomUUID().toString());
+        infantVisitationConsolidatedDto.getInfantVisitRequestDto().setSource(infantVisitationConsolidatedDto.getSource());
 
         InfantVisitResponseDto infantVisitResponseDto =  this.save(infantVisitationConsolidatedDto.getInfantVisitRequestDto());
         System.out.println("test case" + " " + infantVisitResponseDto.getUniqueUuid());
@@ -353,6 +359,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
             infantVisitationConsolidatedDto.getInfantMotherArtDto().setMotherPersonUuid(motherPersonUuid);
+            infantVisitationConsolidatedDto.getInfantMotherArtDto().setSource(infantVisitationConsolidatedDto.getSource());
 
             this.save(infantVisitationConsolidatedDto.getInfantMotherArtDto());
         }
@@ -363,6 +370,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantArvDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantArvDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
             infantVisitationConsolidatedDto.getInfantArvDto().setMotherPersonUuid(motherPersonUuid);
+            infantVisitationConsolidatedDto.getInfantArvDto().setSource(infantVisitationConsolidatedDto.getSource());
 
             this.save(infantVisitationConsolidatedDto.getInfantArvDto());
         }
@@ -373,6 +381,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setVisitDate(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getVisitDate());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setInfantHospitalNumber(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber());
             infantVisitationConsolidatedDto.getInfantPCRTestDto().setMotherPersonUuid(motherPersonUuid);
+            infantVisitationConsolidatedDto.getInfantPCRTestDto().setSource(infantVisitationConsolidatedDto.getSource());
 
             this.save(infantVisitationConsolidatedDto.getInfantPCRTestDto());
         }
@@ -382,6 +391,7 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setUniqueUuid(infantVisitResponseDto.getUniqueUuid());
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setAncNumber(infantVisitResponseDto.getAncNumber());
             infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setMotherPersonUuid(motherPersonUuid);
+            infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto().setSource(infantVisitationConsolidatedDto.getSource());
 //            infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantRapidAntiBodyTestDto);
 
             this.save(infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto());
@@ -675,6 +685,7 @@ public class InfantVisitService
         exist.setResults(dto.getResults());
 //        exist.setUuid(infant.getMotherPersonUuid());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setSource(dto.getSource());
 
         return this.infantPCRTestRepository.save(exist);
     }
@@ -689,6 +700,7 @@ public class InfantVisitService
         exist.setDateOfTest(dto.getDateOfTest());
         exist.setResult(dto.getResult());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setSource(dto.getSource());
 
         return this.infantRapidTestRepository.save(exist);
     }
@@ -706,6 +718,7 @@ public class InfantVisitService
         exist.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
         exist.setCtxStatus(infantVisitRequestDto.getCtxStatus());
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
+        exist.setSource(infantVisitRequestDto.getSource());
 //        System.out.println("=================EXIST==========================");
 
 
@@ -740,6 +753,7 @@ public class InfantVisitService
         exist.setDateOfCtx(infantArvDto.getDateOfCtx());
         exist.setDateOfArv(infantArvDto.getDateOfArv());
         exist.setOtherProphylaxisType(infantArvDto.getOtherProphylaxisType());
+        exist.setSource(infantArvDto.getSource());
         return  this.infantArvRepository.save(exist);
     }
 
@@ -752,6 +766,7 @@ public class InfantVisitService
         exist.setRegimenTypeId(dto.getRegimenTypeId());
         exist.setRegimenId(dto.getRegimenId());
         exist.setUniqueUuid(dto.getUniqueUuid());
+        exist.setSource(dto.getSource());
         this.infantMotherArtRepository.save(exist);
     }
 

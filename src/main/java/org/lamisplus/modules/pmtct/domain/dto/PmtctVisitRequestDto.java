@@ -11,6 +11,7 @@ import org.lamisplus.modules.patient.domain.dto.ContactPointDto;
 import org.lamisplus.modules.patient.domain.dto.IdentifierDto;
 
 import javax.persistence.Column;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +19,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PmtctVisitRequestDto implements Serializable {
+    @NotNull(message = "Source is required")
+    private String source;
     private Long id;
     private String ancNo;
     private String enteryPoint;

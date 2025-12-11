@@ -81,6 +81,7 @@ public class PmtctVisitService {
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         pmtctVisit.setArchived(0);
+        pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Long facilityId = user.getCurrentOrganisationUnitId();
@@ -153,6 +154,7 @@ public class PmtctVisitService {
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         pmtctVisit.setArchived(0);
+        pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Long facilityId = user.getCurrentOrganisationUnitId();

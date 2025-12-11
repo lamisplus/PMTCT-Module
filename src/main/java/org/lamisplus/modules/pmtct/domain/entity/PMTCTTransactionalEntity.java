@@ -61,6 +61,7 @@ public class PMTCTTransactionalEntity implements Serializable, Persistable<Long>
     @JsonIgnore
     private String lastModifiedBy;
     private Long facilityId;
+    private String source;
 
     @Override
     public boolean isNew() {

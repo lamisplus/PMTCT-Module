@@ -80,6 +80,7 @@ public class DeliveryService
         delivery.setLastModifiedBy(user.getUserName());
         delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
         delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+        delivery.setSource(deliveryRequestDto.getSource());
         PMTCTEnrollment pmtct = this.pmtctEnrollmentReporsitory.findByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
         ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
 
@@ -252,6 +253,7 @@ public class DeliveryService
             delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
             delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+            delivery.setSource(deliveryRequestDto.getSource());
             //check if the chld has been created
 
             boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());
