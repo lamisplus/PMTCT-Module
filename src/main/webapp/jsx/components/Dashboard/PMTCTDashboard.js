@@ -66,6 +66,17 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
     heiLinkedQ3: 0,
     heiLinkedQ4: 0,
     heiLinkedTotal: 0,
+    // Infant Testing Statistics
+    infantTested: 0,
+    infantPositiveNumerator: 0,
+    infantPositiveDenominator: 0,
+    infantNegativeNumerator: 0,
+    infantNegativeDenominator: 0,
+    // PMTCT Exit Tracked - Infants
+    infantExitHivPositive: 0,
+    infantExitHivNegative: 0,
+    infantExitHivUnknown: 0,
+    infantExitDenominator: 0,
   });
 
   const [dashboardData, setDashboardData] = useState({
@@ -726,17 +737,29 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Stacked Bar Chart for Positive and Negative Infants
   const getInfantTestResultsChartOptions = () => {
-    const { positiveInfants, negativeInfants } = dashboardData.infantMetrics;
+    const positiveNumerator = statistics.infantPositiveNumerator || 0;
+    const negativenumerator = statistics.infantNegativeNumerator || 0;
+    const totalTested = statistics.infantTested || 0;
+
+    const positivePercentage = totalTested > 0 ? ((positiveNumerator / totalTested) * 100).toFixed(1) : 0;
+    const negativePercentage = totalTested > 0 ? ((negativenumerator / totalTested) * 100).toFixed(1) : 0;
 
     return {
       chart: { type: "bar" },
       title: { text: "Infant Test Results" },
+      subtitle: { text: `Total Infants Tested: ${totalTested}` },
       xAxis: { categories: ["Test Results"] },
       yAxis: { title: { text: "Count" }, allowDecimals: false },
-      plotOptions: { series: { stacking: "normal" } },
+      plotOptions: { series: { stacking: "normal", dataLabels: { enabled: true } } },
+      tooltip: {
+        formatter: function() {
+          const percentage = this.series.name === "Positive" ? positivePercentage : negativePercentage;
+          return `<b>${this.series.name}</b>: ${this.y} (${percentage}%)`;
+        }
+      },
       series: [
-        { name: "Positive", data: [positiveInfants], color: "#dc3545" },
-        { name: "Negative", data: [negativeInfants], color: "#28a745" },
+        { name: "Positive", data: [positiveNumerator], color: "#dc3545" },
+        { name: "Negative", data: [negativenumerator], color: "#28a745" },
       ],
       credits: { enabled: false },
     };
@@ -744,12 +767,15 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
   // Pie chart for PMTCT Exit Tracked - Infants
   const getInfantExitChartOptions = () => {
-    const { hivPositive, hivNegative, hivUnknown } =
-      dashboardData.infantMetrics.exitTracking;
+    const hivPositive = statistics.infantExitHivPositive || 0;
+    const hivNegative = statistics.infantExitHivNegative || 0;
+    const hivUnknown = statistics.infantExitHivUnknown || 0;
+    const totalInfants = statistics.infantExitDenominator || 0;
 
     return {
       chart: { type: "pie" },
-      title: { text: "PMTCT Exit Tracked - Infants" },
+      title: { text: "PMTCT Exit Tracked - Infants (Outcome at 18 Months)" },
+      subtitle: { text: `Total HEI Exposed Infants Registered: ${totalInfants}` },
       tooltip: { pointFormat: "<b>{point.y}</b> ({point.percentage:.1f}%)" },
       plotOptions: {
         pie: {
@@ -757,7 +783,7 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
           cursor: "pointer",
           dataLabels: {
             enabled: true,
-            format: "<b>{point.name}</b>: {point.percentage:.1f}%",
+            format: "<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)",
           },
         },
       },
@@ -871,6 +897,12 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
                       label="DELIVERIES"
                       value={statistics.deliveriesTotal || 0}
                       color="info"
+                    />
+                    <StatWidget
+                      icon="fa fa-vial"
+                      label="INFANTS TESTED"
+                      value={statistics.infantTested || 0}
+                      color="warning"
                     />
                   {/* <StatWidget
                     icon="fa fa-flask"

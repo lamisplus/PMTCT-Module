@@ -84,7 +84,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
         }
         infant.setPmtctCycleId(infantDto.getPmtctCycleId());
 
-        infant.setArchived(0);
+        infant.setArchived(0L);
         infant.setSource(infantDto.getSource());
         Infant result = infantRepository.save(infant);
 

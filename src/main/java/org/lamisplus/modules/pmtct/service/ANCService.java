@@ -1,3 +1,4 @@
+package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1686,6 +1687,29 @@ public class ANCService {
         Long heiLinkedTotal = pmtctEnrollmentRepository.getHEILinkedTotal(facilityId);
         if (heiLinkedTotal == null) heiLinkedTotal = 0L;
 
+        // Infant Testing Statistics
+        Long infantTested = pmtctEnrollmentRepository.getInfantTested(facilityId);
+        if (infantTested == null) infantTested = 0L;
+
+        Long infantPositive = pmtctEnrollmentRepository.getInfantPositive(facilityId);
+        if (infantPositive == null) infantPositive = 0L;
+
+        Long infantNegative = pmtctEnrollmentRepository.getInfantNegative(facilityId);
+        if (infantNegative == null) infantNegative = 0L;
+
+        // PMTCT Exit Tracked - Infants (Infant Outcome at 18 months)
+        Long infantExitHivPositive = pmtctEnrollmentRepository.getInfantExitHivPositive(facilityId);
+        if (infantExitHivPositive == null) infantExitHivPositive = 0L;
+
+        Long infantExitHivNegative = pmtctEnrollmentRepository.getInfantExitHivNegative(facilityId);
+        if (infantExitHivNegative == null) infantExitHivNegative = 0L;
+
+        Long infantExitHivUnknown = pmtctEnrollmentRepository.getInfantExitHivUnknown(facilityId);
+        if (infantExitHivUnknown == null) infantExitHivUnknown = 0L;
+
+        Long infantExitDenominator = pmtctEnrollmentRepository.getInfantExitDenominator(facilityId);
+        if (infantExitDenominator == null) infantExitDenominator = 0L;
+
         return PMTCTStatisticsDto.builder()
                 .totalPatients(totalPatients)
                 .ancPatients(ancPatients)
@@ -1725,6 +1749,17 @@ public class ANCService {
                 .heiLinkedQ3(heiLinkedQ3)
                 .heiLinkedQ4(heiLinkedQ4)
                 .heiLinkedTotal(heiLinkedTotal)
+                // Infant Testing Statistics
+                .infantTested(infantTested)
+                .infantPositiveNumerator(infantPositive)
+                .infantPositiveDenominator(infantTested)
+                .infantNegativeNumerator(infantNegative)
+                .infantNegativeDenominator(infantTested)
+                // PMTCT Exit Tracked - Infants
+                .infantExitHivPositive(infantExitHivPositive)
+                .infantExitHivNegative(infantExitHivNegative)
+                .infantExitHivUnknown(infantExitHivUnknown)
+                .infantExitDenominator(infantExitDenominator)
                 .build();
     }
 }

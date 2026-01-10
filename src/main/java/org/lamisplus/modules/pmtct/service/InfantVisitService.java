@@ -258,7 +258,7 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
         infantVisit.setPmtctCycleId(infantVisitRequestDto.getPmtctCycleId());
-        infantVisit.setArchived(0);
+        infantVisit.setArchived(0L);
         infantVisit.setSource(infantVisitRequestDto.getSource());
 
         return this.infantVisitRepository.save(infantVisit);

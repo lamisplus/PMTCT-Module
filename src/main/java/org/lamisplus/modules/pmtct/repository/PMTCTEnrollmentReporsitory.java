@@ -748,4 +748,101 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (7, 8, 9)", nativeQuery = true)
     Long getHEILinkedQ4(Long facilityId);
 
+    // Infant Tested: Count distinct infants tested (PCR or Rapid Antibody)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
+            "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
+            "WHERE archived = 0 " +
+            "AND facility_id = ?1 " +
+            "AND infant_hospital_number IS NOT NULL " +
+            "AND infant_hospital_number != '' " +
+            "UNION " +
+            "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
+            "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
+            "WHERE ra.archived = 0 " +
+            "AND ra.facility_id = ?1 " +
+            "AND iv.infant_hospital_number IS NOT NULL " +
+            "AND iv.infant_hospital_number != '' " +
+            ") AS all_infants", nativeQuery = true)
+    Long getInfantTested(Long facilityId);
+
+    // Infant Positive: Count distinct infants with positive results (case-sensitive)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
+            "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
+            "WHERE archived = 0 " +
+            "AND facility_id = ?1 " +
+            "AND infant_hospital_number IS NOT NULL " +
+            "AND infant_hospital_number != '' " +
+            "AND results = 'positive' " +
+            "UNION " +
+            "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
+            "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
+            "WHERE ra.archived = 0 " +
+            "AND ra.facility_id = ?1 " +
+            "AND iv.infant_hospital_number IS NOT NULL " +
+            "AND iv.infant_hospital_number != '' " +
+            "AND ra.result = 'positive' " +
+            ") AS positive_infants", nativeQuery = true)
+    Long getInfantPositive(Long facilityId);
+
+    // Infant Negative: Count distinct infants with negative results (case-sensitive)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
+            "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
+            "WHERE archived = 0 " +
+            "AND facility_id = ?1 " +
+            "AND infant_hospital_number IS NOT NULL " +
+            "AND infant_hospital_number != '' " +
+            "AND results = 'negative' " +
+            "UNION " +
+            "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
+            "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
+            "WHERE ra.archived = 0 " +
+            "AND ra.facility_id = ?1 " +
+            "AND iv.infant_hospital_number IS NOT NULL " +
+            "AND iv.infant_hospital_number != '' " +
+            "AND ra.result = 'negative' " +
+            ") AS negative_infants", nativeQuery = true)
+    Long getInfantNegative(Long facilityId);
+
+    // PMTCT Exit Tracked - Infants: HIV-positive at 18 months (from latest cycle)
+    @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
+            "WHERE i.archived = 0 " +
+            "AND i.facility_id = ?1 " +
+            "AND UPPER(i.infant_outcome_at18_months) LIKE '%POSITIVE%' " +
+            "AND i.pmtct_cycle_id = ( " +
+            "    SELECT MAX(ppc.id) FROM pmtct_pregnancy_cycle ppc " +
+            "    WHERE ppc.person_uuid = i.mother_person_uuid " +
+            "    AND ppc.archived = 0 " +
+            ")", nativeQuery = true)
+    Long getInfantExitHivPositive(Long facilityId);
+
+    // PMTCT Exit Tracked - Infants: HIV-negative at 18 months (from latest cycle)
+    @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
+            "WHERE i.archived = 0 " +
+            "AND i.facility_id = ?1 " +
+            "AND UPPER(i.infant_outcome_at18_months) LIKE '%NEGATIVE%' " +
+            "AND i.pmtct_cycle_id = ( " +
+            "    SELECT MAX(ppc.id) FROM pmtct_pregnancy_cycle ppc " +
+            "    WHERE ppc.person_uuid = i.mother_person_uuid " +
+            "    AND ppc.archived = 0 " +
+            ")", nativeQuery = true)
+    Long getInfantExitHivNegative(Long facilityId);
+
+    // PMTCT Exit Tracked - Infants: HIV status unknown at 18 months (from latest cycle)
+    @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
+            "WHERE i.archived = 0 " +
+            "AND i.facility_id = ?1 " +
+            "AND UPPER(i.infant_outcome_at18_months) LIKE '%UNKNOWN%' " +
+            "AND i.pmtct_cycle_id = ( " +
+            "    SELECT MAX(ppc.id) FROM pmtct_pregnancy_cycle ppc " +
+            "    WHERE ppc.person_uuid = i.mother_person_uuid " +
+            "    AND ppc.archived = 0 " +
+            ")", nativeQuery = true)
+    Long getInfantExitHivUnknown(Long facilityId);
+
+    // PMTCT Exit Tracked - Infants: Total HEI exposed infants registered (denominator)
+    @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
+            "WHERE i.archived = 0 " +
+            "AND i.facility_id = ?1", nativeQuery = true)
+    Long getInfantExitDenominator(Long facilityId);
+
 }

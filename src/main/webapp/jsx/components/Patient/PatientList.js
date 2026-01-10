@@ -66,7 +66,10 @@ const Patients = (props) => {
   const [showPPI, setShowPPI] = useState(true);
   const [modalShow, setModalShow] = useState(false);
   const [info, setInfo] = useState({});
-  const [maternalOutcomeOptions, setMaternalOutcomeOptions] = useState(JSON.parse(localStorage.getItem("maternalOutcome")));
+  const [maternalOutcomeOptions, setMaternalOutcomeOptions] = useState(() => {
+    const stored = localStorage.getItem("maternalOutcome");
+    return stored ? JSON.parse(stored) : [];
+  });
 
 
   // Define negative maternal outcomes that should disable enrollment
@@ -86,6 +89,7 @@ const Patients = (props) => {
   // Helper function to convert maternal outcome code to display value
   const getMaternalOutcomeDisplay = (code) => {
     if (!code) return "";
+    if (!maternalOutcomeOptions || !Array.isArray(maternalOutcomeOptions)) return code;
     const option = maternalOutcomeOptions.find((item) => item.code === code);
     return option ? option.display : code;
   };

@@ -82,7 +82,7 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
-        pmtctVisit.setArchived(0);
+        pmtctVisit.setArchived(0L);
         pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
@@ -166,7 +166,7 @@ public class PmtctVisitService {
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
-        pmtctVisit.setArchived(0);
+        pmtctVisit.setArchived(0L);
         pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {

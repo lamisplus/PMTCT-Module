@@ -10,7 +10,9 @@ export const useCheckedInPatientData = (baseUrl, token) => {
       });
 
       const data = response.data;
-      const Code = data?.find(
+      // Ensure data is an array before using .find()
+      const dataArray = Array.isArray(data) ? data : [];
+      const Code = dataArray.find(
         (item) => item.moduleServiceName.toUpperCase() === "PMTCT"
       )?.moduleServiceCode;
 

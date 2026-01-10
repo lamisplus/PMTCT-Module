@@ -31,22 +31,29 @@ const PmtctEntryPoint = (props) => {
     );
 
 
-  const POINT_ENTRY_PMTCT = () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    setKey("home");
+
+    // Modified POINT_ENTRY_PMTCT to use isMounted flag
     axios
       .get(`${baseUrl}application-codesets/v2/PMTCT_ENTRY_POINT`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setentryPoint(response.data);
+        if (isMounted) {
+          setentryPoint(response.data);
+        }
       })
-      .catch((error) => {
-        //console.log(error);
+      .catch(() => {
+        // Silently handle errors
       });
-  };
 
-  useEffect(() => {
-    setKey("home");
-    POINT_ENTRY_PMTCT();
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

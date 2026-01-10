@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, memo, useRef } from "react";
 import MaterialTable from "material-table";
 import axios from "axios";
 import PmtctEntryPoint from "../PmtctServices/PmtctEntryPoint";
@@ -113,6 +113,8 @@ const CheckedInPatients = (props) => {
   const [tableRefreshTrigger, setTableRefreshTrigger] = useState(0);
   const [modalShow, setModalShow] = useState(false);
   const [info, setInfo] = useState({});
+  const isMountedRef = useRef(true);
+  const clientRef = useRef(null);
 
   const permissions = useMemo(
     () => ({
@@ -122,8 +124,23 @@ const CheckedInPatients = (props) => {
     [hasAnyPermission, hasRDErole]
   );
 
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      // Disconnect WebSocket on unmount
+      if (clientRef.current) {
+        try {
+          clientRef.current.disconnect();
+        } catch (error) {
+          // Silently handle disconnect errors
+        }
+      }
+    };
+  }, []);
+
   const onMessageReceived = (msg) => {
-    if (msg && msg?.toLowerCase()?.includes("check")) {
+    if (msg && msg?.toLowerCase()?.includes("check") && isMountedRef.current) {
       // Trigger table refresh by updating the refresh trigger state
       setTableRefreshTrigger((prev) => prev + 1);
     }
@@ -174,13 +191,12 @@ const CheckedInPatients = (props) => {
         title: "Actions",
         field: "actions",
         render: (rowData) => {
-          const isEnrolled = rowData.isEnrolled;
-      console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData.isOnAnc)
+          console.log("rowData",permissions.canSeeEnrollButton, rowData.isOnPmtct, rowData.isOnAnc)
           return (
             <div>
      { permissions.allpermission &&  rowData.isOnPmtct ?
       <div
-            onClick={(e) => {
+            onClick={() => {
               setInfo({ patientId: rowData.id, patientObj: rowData });
             }}
           >
@@ -224,9 +240,9 @@ const CheckedInPatients = (props) => {
               </Button>
             </ButtonGroup>
             </Link>
-      </div> : permissions.allpermission &&  rowData.isOnAnc? 
+      </div> : permissions.allpermission &&  rowData.isOnAnc?
       <div
-            onClick={(e) => {
+            onClick={() => {
               setInfo({ patientId: rowData.id, patientObj: rowData });
             }}
           >
@@ -272,7 +288,7 @@ const CheckedInPatients = (props) => {
             </Link>
       </div>:permissions.allpermission?
        <div
-            onClick={(e) => {
+            onClick={() => {
               setModalShow(true);
               setInfo({ patientId: rowData.id, patientObj: rowData });
             }}
@@ -356,8 +372,9 @@ const CheckedInPatients = (props) => {
         url={wsUrl}
         topics={["/topic/checking-in-out-process"]}
         onMessage={onMessageReceived}
+        ref={clientRef}
         debug={true}
-      /> 
+      />
       <Card>
         <CardBody>
           <CustomTable

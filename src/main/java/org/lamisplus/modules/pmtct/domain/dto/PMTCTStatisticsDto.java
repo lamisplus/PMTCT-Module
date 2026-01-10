@@ -58,4 +58,17 @@ public class PMTCTStatisticsDto {
     private Long heiLinkedQ3; // Apr-Jun
     private Long heiLinkedQ4; // Jul-Sep
     private Long heiLinkedTotal;
+
+    // Infant Testing Statistics
+    private Long infantTested; // Number of HEI-exposed infants whose samples were taken for DNA-PCR or Rapid antibody tests
+    private Long infantPositiveNumerator; // Number of infants with positive results
+    private Long infantPositiveDenominator; // Total infants tested (same as infantTested)
+    private Long infantNegativeNumerator; // Number of infants with negative results
+    private Long infantNegativeDenominator; // Total infants tested (same as infantTested)
+
+    // PMTCT Exit Tracked - Infants (Infant Outcome at 18 months from latest cycle)
+    private Long infantExitHivPositive; // Infants with HIV-positive status at 18 months
+    private Long infantExitHivNegative; // Infants with HIV-negative status at 18 months
+    private Long infantExitHivUnknown; // Infants with HIV status unknown at 18 months
+    private Long infantExitDenominator; // Total HEI exposed infants registered
 }
