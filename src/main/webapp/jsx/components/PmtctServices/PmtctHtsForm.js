@@ -1056,6 +1056,7 @@ const PmtctHtsForm = (props) => {
         pregnancyOutcome: "",
         numberOfInfants: 0,
         pmtctStatus: "INACTIVE",
+        source: "WEB",
       };
 
       try {
@@ -1487,10 +1488,10 @@ const PmtctHtsForm = (props) => {
                         value={confirmatoryHivTest.dateOfTest}
                         onChange={handleConfirmatoryInputChange}
                         min={
-                          patientObj.ancNo
-                            ? props?.patientObj?.firstAncDate
-                            : payload.dateOfHivTest
+                          payload.dateOfHivTest
                             ? payload.dateOfHivTest
+                            : props?.patientObj?.firstAncDate
+                            ? props?.patientObj?.firstAncDate
                             : ""
                         }
                         max={moment(new Date()).format("YYYY-MM-DD")}

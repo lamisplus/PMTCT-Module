@@ -42,5 +42,6 @@ public class PmtctHtsReponseDTO {
     private String entryPoint;
     private LocalDate artStartDate;
     private String tbStatus;
+    private LocalDate pmtctEnrollmentDate;
 
 }

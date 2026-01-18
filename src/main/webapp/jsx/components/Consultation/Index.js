@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect, useMemo} from "react";
+import React, { useState, Fragment, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
 import ConsultationPage from "./Home";
@@ -13,66 +13,66 @@ const divStyle = {
 };
 
 const ClinicVisitPage = (props) => {
-    const { hasPermission, hasRDErole } = usePermissions();
-  
+  const { hasPermission, hasRDErole } = usePermissions();
+
   const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
   const [aliveChild, setAliveChild] = useState(0);
   const [showMaternalVisit, setShowMaternalVisit] = useState(true);
 
-
   const permissions = useMemo(
     () => ({
-      canSeeChildFollowUp: hasPermission("child_follow_up_register" ),
-        genPermission: hasRDErole   ||  hasPermission("child_follow_up_register") }),
-    [hasPermission, hasRDErole]
+      canSeeChildFollowUp: hasPermission("child_follow_up_register"),
+      genPermission: hasRDErole || hasPermission("child_follow_up_register"),
+    }),
+    [hasPermission, hasRDErole],
   );
-
-
 
   const DeliveryInfo = () => {
     let personUuid = props.patientObj.person_uuid
       ? props.patientObj.person_uuid
       : props.patientObj.personUuid
-      ? props.patientObj.personUuid
-      : props.patientObj.uuid;
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          // console.log(response.data);
-          setAliveChild(
-            response.data && response.data.numberOfInfantsAlive
-              ? response.data.numberOfInfantsAlive
-              : 0
-          );
-        })
-        .catch((error) => {
-          //console.log(error);
-        });
+        ? props.patientObj.personUuid
+        : props.patientObj.uuid;
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+      .then((response) => {
+        // (response.data);
+        setAliveChild(
+          response.data && response.data.numberOfInfantsAlive
+            ? response.data.numberOfInfantsAlive
+            : 0,
+        );
+      })
+      .catch((error) => {
+        //(error);
+      });
     // }
   };
 
-
-
-  
   useEffect(() => {
     setKey(props.activeContent.activeTab);
-    if(props.activeContent.actionType === "create"){
-        if(props.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||   props.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_OUT" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)" || props.maternalOutcome === "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"){
-            setShowMaternalVisit(false)
-            //  setKey("child")
-        }else{
-            setShowMaternalVisit(true)
-
-        }
-    }else{
-          setShowMaternalVisit(true)
-
+    if (props.activeContent.actionType === "create") {
+      if (
+        props.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||
+        props.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" ||
+        props.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_OUT" ||
+        props.maternalOutcome ===
+          "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)" ||
+        props.maternalOutcome === "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"
+      ) {
+        setShowMaternalVisit(false);
+        //  setKey("child")
+      } else {
+        setShowMaternalVisit(true);
+      }
+    } else {
+      setShowMaternalVisit(true);
     }
 
     DeliveryInfo();

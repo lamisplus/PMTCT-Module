@@ -510,6 +510,10 @@ private DeliveryRepository deliveryRepository;
 
     }
 
+    public LocalDate getInitialVisitDate(String personUuid, Long pmtctCycleId) {
+        return pmtctEnrollmentReporsitory.getInitialVisitDate(personUuid, pmtctCycleId);
+    }
+
     public String getHIVStatus(String hospitalNumber, String personUuid) {
         if (!hospitalNumber.isEmpty()) {
             return pmtctEnrollmentReporsitory.getHtsClientHivStatus(hospitalNumber, personUuid);

@@ -24,6 +24,9 @@ public class PmtctPregnancyCycle {
     @Column(name = "maternal_outcome")
     private String maternalOutcome;
 
+    @Column(name = "visit_status")
+    private String visitStatus;
+
     @Column(name = "entry_point")
     private String entryPoint;
 

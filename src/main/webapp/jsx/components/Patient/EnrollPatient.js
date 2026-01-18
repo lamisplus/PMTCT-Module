@@ -436,6 +436,7 @@ const UserRegistration = (props) => {
       pregnancyOutcome: "",
       numberOfInfants: 0,
       pmtctStatus: "INACTIVE",
+      source: "WEB",
     };
 
     try {
@@ -636,7 +637,7 @@ const UserRegistration = (props) => {
         setObjValues({ ...objValues, [e.target.name]: e.target.value });
       } else {
         // objValues.gaweeks = response;
-        toast.error("Please select a validate date");
+        toast.error("Please select a valid date");
         setObjValues({ ...objValues, [e.target.name]: "" });
       }
     }
@@ -664,7 +665,7 @@ const UserRegistration = (props) => {
         setObjValues({ ...objValues, [e.target.name]: e.target.value });
       } else {
         // objValues.gaweeks = response;
-        toast.error("Please select a validate date");
+        toast.error("Please select a valid date");
         setObjValues({ ...objValues, [e.target.name]: e.target.value });
       }
     }

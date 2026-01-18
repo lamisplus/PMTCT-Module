@@ -129,37 +129,39 @@ const ClinicVisit = (props) => {
   const [infantOutcome, setInfantOutcome] = useState([]);
   const [disabledField, setDisabledField] = useState(false);
   const [objValues, setObjValues] = useState({
+    source: "WEB",
+
     infantVisitRequestDto: "",
     infantArvDto: {
-    ageAtCtx: "" ,
-    ancNumber: "",
-    arvDeliveryPoint: "",
-    infantArvTime: "",
-    infantArvType: "",
-    infantHospitalNumber: "",
-    timingOfAvrWithin72Hours: "",
-    timingOfAvrAfter72Hours: "",
-    otherProphylaxisType: "",
-    id: "",
-    uuid: "",
-    uniqueUuid: "",
-    dateOfCtx: "",
-  },
+      ageAtCtx: "",
+      ancNumber: "",
+      arvDeliveryPoint: "",
+      infantArvTime: "",
+      infantArvType: "",
+      infantHospitalNumber: "",
+      timingOfAvrWithin72Hours: "",
+      timingOfAvrAfter72Hours: "",
+      otherProphylaxisType: "",
+      id: "",
+      uuid: "",
+      uniqueUuid: "",
+      dateOfCtx: "",
+    },
     // infantMotherArtDto: "",
     infantPCRTestDto: {
-    ageAtTest: "",
-    ancNumber: '',
-    dateResultReceivedAtFacility: "",
-    dateResultReceivedByCaregiver: "",
-    dateSampleCollected: "",
-    dateSampleSent: "",
-    infantHospitalNumber: "",
-    results: "",
-    testType: "",
-    id: "",
-    uuid: "",
-    uniqueUuid: "",
-  },
+      ageAtTest: "",
+      ancNumber: "",
+      dateResultReceivedAtFacility: "",
+      dateResultReceivedByCaregiver: "",
+      dateSampleCollected: "",
+      dateSampleSent: "",
+      infantHospitalNumber: "",
+      results: "",
+      testType: "",
+      id: "",
+      uuid: "",
+      uniqueUuid: "",
+    },
   });
   const [rapidResultMessage, setRapidResultMessage] = useState("Kindly fill ART form");
 
@@ -983,8 +985,14 @@ const ClinicVisit = (props) => {
       ? ""
       : "This field is required";
       infantVisitRequestDto.ctxStatus === "YES" &&   (temp.dateOfCtx =  infantArvDto.dateOfCtx? "" : "This field is required");
-      infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
-      infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+      infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" &&
+        infantArvDto.infantArvType &&
+        infantArvDto.infantArvType !==
+          "" && (
+            (temp.dateOfArv = infantArvDto.dateOfArv
+              ? ""
+              : "This field is required")
+          );
 
 
    infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");

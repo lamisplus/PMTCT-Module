@@ -464,7 +464,7 @@ public class ANCService {
     }
 
     public PersonMetaDataDto getActiveOnANC(String searchValue, int pageNo, int pageSize) {
-        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("personId").descending());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         Long currentOrganisationUnitId = 0L;
         if (currentUser.isPresent()) {
@@ -503,7 +503,7 @@ public class ANCService {
     }
 
     public PersonMetaDataDto getActiveOnPMTCT(String searchValue, int pageNo, int pageSize) {
-        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("personId").descending());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         Long currentOrganisationUnitId = 0L;
         if (currentUser.isPresent()) {
@@ -597,6 +597,7 @@ public class ANCService {
         personResponseDto.setPregnancyCount(person.getPregnancyCount());
         personResponseDto.setHasExistingEnrollment(person.getHasExistingEnrollment());
         personResponseDto.setMaternalOutcome(person.getMaternalOutcome());
+        personResponseDto.setVisitStatus(person.getVisitStatus());
         String hivStatus = "Unknown";
         try {
             hivStatus = this.getDynamicHivStatus(person.getUuid());
@@ -1097,86 +1098,62 @@ public class ANCService {
         ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
         ancRespondDto.setPregnancyCount(person.getPregnancyCount());
 
-        // Get latest pregnancy cycle ID and use it to fetch ANC and enrollment data
-        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
+        // Set ANC-specific fields directly from the query result (latest ANC record for latest pmtctCycleId)
+        ancRespondDto.setId(person.getPersonId());
+        ancRespondDto.setAncNo(person.getAncNo());
+        ancRespondDto.setAncUuid(person.getAncUuid());
+        ancRespondDto.setAncSetting(person.getAncSetting());
+        ancRespondDto.setCommunitySetting(person.getCommunitySetting());
+        ancRespondDto.setCurrentlyOnArt(person.getCurrentlyOnArt());
+        ancRespondDto.setFirstAncDate(person.getFirstAncDate());
+        ancRespondDto.setGAWeeks(person.getGaweeks());
+        ancRespondDto.setGravida(person.getGravida());
+        ancRespondDto.setLMP(person.getLmp());
+        ancRespondDto.setParity(person.getParity());
+        ancRespondDto.setPreviouslyKnownHivStatus(person.getPreviouslyKnownHivStatus());
+        ancRespondDto.setReferredSyphilisTreatment(person.getReferredSyphilisTreatment());
+        ancRespondDto.setStaticHivStatus(person.getStaticHivStatus());
+        ancRespondDto.setArtStartDate(person.getArtStartDate());
 
-        if (latestCycle.isPresent()) {
-            Long cycleId = latestCycle.get().getId();
-            ancRespondDto.setPmtctCycleId(cycleId);
+        // Set pmtctCycleId from the query result
+        Long pmtctCycleId = person.getPmtctCycleId();
+        ancRespondDto.setPmtctCycleId(pmtctCycleId);
 
-            // Use cycle ID to get enrollment data for the latest pregnancy cycle
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+        // Check if person has a valid pmtctCycleId (means they have an active ANC enrollment)
+        if (pmtctCycleId != null) {
+            // Get enrollment data for additional fields not in the ANC query
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(pmtctCycleId, 0L);
 
             if (enrollment.isPresent()) {
                 PMTCTEnrollment enrollmentData = enrollment.get();
 
-                // Set enrollment-related data from the latest cycle
+                // Set enrollment-related data
                 ancRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
                 ancRespondDto.setTbStatus(enrollmentData.getTbStatus());
-                ancRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
                 ancRespondDto.setHivStatus(enrollmentData.getHivStatus());
                 ancRespondDto.setPmtctRegStatus(true);
 
-                // Get the ANC number from enrollment
-                String ancNo = enrollmentData.getAncNo();
-                ancRespondDto.setAncNo(ancNo);
-
-                // Get ANC record for this specific cycle using person_uuid and pmtct_cycle_id
-                Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(person.getPersonUuid(), cycleId, 0L);
-
-                // Fallback: If no ANC found by cycle ID, try by ancNo or get latest by personUuid
-                if (!ancs.isPresent()) {
-                    if (ancNo != null && !ancNo.isEmpty()) {
-                        ancs = ancRepository.getByAncNoAndArchived(ancNo, 0L);
-                    }
-                    // If still not found, get the latest ANC record for this person
-                    if (!ancs.isPresent()) {
-                        ancs = ancRepository.findLatestANCByPersonUuidAndArchived(person.getPersonUuid(), 0L);
-                    }
-                }
-
-                if (ancs.isPresent()) {
-                    ANC anc = ancs.get();
-                    ancRespondDto.setId(anc.getId());
-                    ancRespondDto.setAncUuid(anc.getUuid());
-                    ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
-                    ancRespondDto.setGravida(anc.getGravida());
-                    ancRespondDto.setParity(anc.getParity());
-                    ancRespondDto.setLMP(anc.getLMP());
-                    ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
-                    ancRespondDto.setGAWeeks(anc.getGAWeeks());
-                    ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-                    ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
-                    ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
-                    ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-                    ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
-                    ancRespondDto.setPartnerInformation(anc.getPartnerInformation());
-                    ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
-                    ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
-                    ancRespondDto.setAncSetting(anc.getAncSetting());
-
-                    // Get delivery status for the latest cycle
-                    boolean deliveryStatus = Boolean.FALSE;
-                    try {
-                        deliveryStatus = this.getDeliveryStatus(ancNo);
-                    } catch (Exception e) { }
-                    ancRespondDto.setDeliveryStatus(deliveryStatus);
-                }
-
-                // Get dynamic HIV status for the latest cycle (outside ANC check)
-                String dynamicHivStatus = "Unknown";
+                // Get delivery status for the latest cycle
+                boolean deliveryStatus = Boolean.FALSE;
                 try {
-                    dynamicHivStatus = this.getDynamicHivStatus(person.getPersonUuid());
+                    deliveryStatus = this.getDeliveryStatus(person.getAncNo());
                 } catch (Exception e) { }
-                ancRespondDto.setDynamicHivStatus(dynamicHivStatus);
+                ancRespondDto.setDeliveryStatus(deliveryStatus);
 
                 // Get PMTCT enrollment details for the latest cycle
-                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(ancRespondDto.getAncNo());
+                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(person.getAncNo());
                 ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
             } else {
                 // No enrollment found for the latest cycle
                 ancRespondDto.setPmtctRegStatus(false);
             }
+
+            // Get dynamic HIV status
+            String dynamicHivStatus = "Unknown";
+            try {
+                dynamicHivStatus = this.getDynamicHivStatus(person.getPersonUuid());
+            } catch (Exception e) { }
+            ancRespondDto.setDynamicHivStatus(dynamicHivStatus);
         } else {
             // No pregnancy cycle found
             ancRespondDto.setPmtctRegStatus(false);
@@ -1241,7 +1218,7 @@ public class ANCService {
         existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         existingAnc.setPartnerNotification(anc.getPartnerNotification());
         existingAnc.setPersonUuid(anc.getPersonUuid());
-        existingAnc.setArchived(1L);
+        // existingAnc.setArchived(1L); // Removed: This was auto-archiving ANC records when graduating
         existingAnc.setStatus(visitStatus);
         existingAnc.setStaticHivStatus(anc.getStaticHivStatus());
 
@@ -1323,20 +1300,72 @@ public class ANCService {
 
 
     String getDynamicHivStatus(String personUuid) {
-        String hivStatus = "Unknown";
-        Optional<String> uuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
-        if (uuid.isPresent()) {
-            hivStatus = "Positive";
-        } else {
-            Optional<User> currentUser = this.userService.getUserWithRoles();
-            Optional<HtsClientProjection> htsOptional = ancRepository.
-                    getHtsRecordByPersonsUuidAAndFacilityId(personUuid, currentUser.get()
-                            .getCurrentOrganisationUnitId());
-            HtsClientProjection htsClient = htsOptional.get();
+        List<String> allStatuses = new ArrayList<>();
 
-            hivStatus = htsClient != null ? htsClient.getHivTestResult() : "Negative";
+        // 1. Check hiv_enrollment table - if exists, patient is positive
+        Optional<String> hivEnrollmentUuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
+        if (hivEnrollmentUuid.isPresent()) {
+            allStatuses.add("Positive");
         }
-        return hivStatus;
+
+        // 2. Check hts_client table for hiv_test_result
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            if (currentUser.isPresent()) {
+                Optional<HtsClientProjection> htsOptional = ancRepository
+                        .getHtsRecordByPersonsUuidAAndFacilityId(personUuid, currentUser.get()
+                                .getCurrentOrganisationUnitId());
+                if (htsOptional.isPresent() && htsOptional.get().getHivTestResult() != null) {
+                    allStatuses.add(htsOptional.get().getHivTestResult());
+                }
+            }
+        } catch (Exception e) { }
+
+        // 3. Check pmtct_anc table for static_hiv_status
+        try {
+            Optional<String> ancStaticHivStatus = ancRepository.findStaticHivStatusByPersonUuid(personUuid);
+            if (ancStaticHivStatus.isPresent() && ancStaticHivStatus.get() != null) {
+                allStatuses.add(ancStaticHivStatus.get());
+            }
+        } catch (Exception e) { }
+
+        // 4. Check pmtct_enrollment table for hiv_status
+        try {
+            Optional<String> pmtctEnrollmentHivStatus = pmtctEnrollmentRepository.findHivStatusByPersonUuid(personUuid);
+            if (pmtctEnrollmentHivStatus.isPresent() && pmtctEnrollmentHivStatus.get() != null) {
+                allStatuses.add(pmtctEnrollmentHivStatus.get());
+            }
+        } catch (Exception e) { }
+
+        // Determine final HIV status based on all collected statuses
+        // If any status is positive/reactive, return "Positive"
+        boolean hasPositive = allStatuses.stream()
+                .filter(status -> status != null && !status.isEmpty())
+                .map(String::toLowerCase)
+                .anyMatch(status -> {
+                    // Exclude non-reactive first
+                    if (status.contains("non-reactive") || status.contains("non reactive")) {
+                        return false;
+                    }
+                    return status.contains("positive") || status.contains("reactive");
+                });
+
+        if (hasPositive) {
+            return "Positive";
+        }
+
+        // If no positive but has negative/non-reactive, return "Negative"
+        boolean hasNegative = allStatuses.stream()
+                .filter(status -> status != null && !status.isEmpty())
+                .map(String::toLowerCase)
+                .anyMatch(status -> status.contains("negative") || status.contains("non-reactive") || status.contains("non reactive"));
+
+        if (hasNegative) {
+            return "Negative";
+        }
+
+        // If no records found in any table, return "Unknown"
+        return "Unknown";
     }
 
     boolean getDeliveryStatus(String ancNo) {

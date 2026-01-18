@@ -29,8 +29,8 @@ import "react-widgets/dist/css/react-widgets.css";
 import { useHistory } from "react-router-dom";
 //import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
 import "@reach/menu-button/styles.css";
-import { Modal } from "react-bootstrap";
-import { Dropdown, Button, Menu, Icon } from "semantic-ui-react";
+import { Modal, Dropdown } from "react-bootstrap";
+import { Button, Menu, Icon } from "semantic-ui-react";
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -162,6 +162,19 @@ const PatientnHistory = (props) => {
         activeTab: "home",
         actionType: action,
       });
+    } else if (row.path === "pmtct-hts") {
+      props.setActiveContent({
+        ...props.activeContent,
+        route: "pmtct-hts",
+        id: row.recordId,
+        activeTab: "home",
+        actionType: action,
+      });
+
+      console.log("setPmtctHtsRetestingType", row)
+      if (props.setPmtctHtsRetestingType) {
+        props.setPmtctHtsRetestingType(row?.activityName.toLowerCase())
+      }
     } else {
     }
   };
@@ -353,44 +366,75 @@ const PatientnHistory = (props) => {
             name: row.activityName,
             date: row.activityDate,
             actions: !notToBeUpdated.includes(row.path) ? (
-              <div>
-                <Menu.Menu position="right">
-                  <Menu.Item>
-                    <Button
-                      style={{ backgroundColor: "rgb(153,46,98)" }}
-                      primary
+              <Dropdown className="dropdown">
+                <Dropdown.Toggle
+                  variant=" light"
+                  className="i-false p-0 btn-info sharp"
+                >
+                  <svg
+                    width="18px"
+                    height="18px"
+                    viewBox="0 0 24 24"
+                    version="1.1"
+                  >
+                    <g
+                      stroke="none"
+                      strokeWidth="1"
+                      fill="none"
+                      fillRule="evenodd"
                     >
-                      <Dropdown item text="Action">
-                        <Dropdown.Menu style={{ marginTop: "10px" }}>
-                          {row.viewable && (
-                            <Dropdown.Item
-                              onClick={() => LoadViewPage(row, "view")}
-                            >
-                              {" "}
-                              <Icon name="eye" />
-                              View{" "}
-                            </Dropdown.Item>
-                          )}
-                          {row.viewable && (
-                            <Dropdown.Item
-                              onClick={() => LoadViewPage(row, "update")}
-                            >
-                              <Icon name="edit" />
-                              Edit
-                            </Dropdown.Item>
-                          )}
-                          <Dropdown.Item
-                            onClick={() => LoadModal(row, "delete")}
-                          >
-                            {" "}
-                            <Icon name="trash" /> Delete
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    </Button>
-                  </Menu.Item>
-                </Menu.Menu>
-              </div>
+                      <rect
+                        x="0"
+                        y="0"
+                        width="24"
+                        height="24"
+                      />
+                      <circle
+                        fill="#000000"
+                        cx="5"
+                        cy="12"
+                        r="2"
+                      />
+                      <circle
+                        fill="#000000"
+                        cx="12"
+                        cy="12"
+                        r="2"
+                      />
+                      <circle
+                        fill="#000000"
+                        cx="19"
+                        cy="12"
+                        r="2"
+                      />
+                    </g>
+                  </svg>
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="dropdown-menu">
+                  {row.viewable && (
+                    <Dropdown.Item
+                      className="dropdown-item"
+                      onClick={() => LoadViewPage(row, "view")}
+                    >
+                      View
+                    </Dropdown.Item>
+                  )}
+                  {row.viewable && (
+                    <Dropdown.Item
+                      className="dropdown-item"
+                      onClick={() => LoadViewPage(row, "update")}
+                    >
+                      Update
+                    </Dropdown.Item>
+                  )}
+                  <Dropdown.Item
+                    className="dropdown-item"
+                    onClick={() => LoadModal(row, "delete")}
+                  >
+                    Delete
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             ) : (
               ""
             ),

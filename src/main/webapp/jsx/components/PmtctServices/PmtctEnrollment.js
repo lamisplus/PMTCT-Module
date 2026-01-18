@@ -25,8 +25,6 @@ import { calculateGestationalAge } from "../../utils";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
-
-
 const useStyles = makeStyles((theme) => ({
   card: {
     margin: theme.spacing(20),
@@ -106,7 +104,7 @@ const AncPnc = (props) => {
   const [entryPointValue, setentryPointValue] = useState("");
   const [timeMotherArt, setTimeMotherArt] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
-const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
+  const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -118,52 +116,53 @@ const [autoPostPartumTiming,setAutoPostPartumTiming] = useState(false);
   const [urinalysisList, setUrinalysisList] = useState([]);
   const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
-  const [maxARTDate, setMaxARTDate]=useState(moment(new Date()).format("YYYY-MM-DD"));
-  const [minARTDate, setMinARTDate]=useState("");
+  const [maxARTDate, setMaxARTDate] = useState(
+    moment(new Date()).format("YYYY-MM-DD")
+  );
+  const [minARTDate, setMinARTDate] = useState("");
   const [minPmtctEnrollmentDate, setMinPmtctEnrollmentDate] = useState(null);
   const [minDeliveryDate, setMinDeliveryDate] = useState(null);
 
   // Get canProceedWithEnrollment from props (controlled by parent)
   const canProceedWithEnrollment = props.canProceedWithEnrollment ?? true;
 
-// Extract hivStatus calculation outside
-const getInitialHivStatus = () => {
-  const statusMap = {
-    'reactive': 'Positive',
-    'non-reactive': 'Negative',
-    'Positive': 'Positive',
-    'Negative': 'Negative',
-
+  // Extract hivStatus calculation outside
+  const getInitialHivStatus = () => {
+    const statusMap = {
+      reactive: "Positive",
+      "non-reactive": "Negative",
+      Positive: "Positive",
+      Negative: "Negative",
+    };
+    return (
+      statusMap[props.lastestConfirmatoryTest] ||
+      patientObj?.hivStatus ||
+      patientObj?.staticHivStatus ||
+      props?.patientObj?.dynamicHivStatus ||
+      ""
+    );
   };
-  return (
-    statusMap[props.lastestConfirmatoryTest] ||
-    patientObj?.hivStatus ||
-    patientObj?.staticHivStatus ||
-    props?.patientObj?.dynamicHivStatus ||
-    ""
-  );
-};
 
-const [enroll, setEnrollDto] = useState({
-  hepatitisB: patientObj.hepatitisB || "",
-  urinalysis: patientObj.urinalysis || "",
-  ancNo: patientObj.ancNo || "",
-  pmtctEnrollmentDate: "",
-  dateOfDelivery: "",
-  expectedDeliveryDate: "",
-  entryPoint: entryValueDisplay?.id,
-  ga: "",
-  gravida: props.patientObj.gravida,
-  artStartDate: "",
-  artStartTime: patientObj.artStartTime || "",
-  id: "",
-  timeOfHivDiagnosis: "",
-  tbStatus: "",
-  hivStatus: getInitialHivStatus(),
-  lmp: props?.patientObj?.lmp || "",
-  gaweeks: "",
-  pmtctType: entryValueDisplay.display,
-});
+  const [enroll, setEnrollDto] = useState({
+    hepatitisB: patientObj.hepatitisB || "",
+    urinalysis: patientObj.urinalysis || "",
+    ancNo: patientObj.ancNo || "",
+    pmtctEnrollmentDate: "",
+    dateOfDelivery: "",
+    expectedDeliveryDate: "",
+    entryPoint: entryValueDisplay?.id,
+    ga: "",
+    gravida: props.patientObj.gravida,
+    artStartDate: "",
+    artStartTime: patientObj.artStartTime || "",
+    id: "",
+    timeOfHivDiagnosis: "",
+    tbStatus: "",
+    hivStatus: getInitialHivStatus(),
+    lmp: props?.patientObj?.lmp || "",
+    gaweeks: "",
+    pmtctType: entryValueDisplay.display,
+  });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
@@ -187,7 +186,6 @@ const [enroll, setEnrollDto] = useState({
       });
   };
 
-
   const handleInputChangeInfantMotherArtDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
@@ -207,7 +205,7 @@ const [enroll, setEnrollDto] = useState({
     //setErrors({...temp, [e.target.name]:""})
   };
 
-console.log('fddd', enroll.hivStatus)
+  console.log("fddd", enroll.hivStatus);
   //GET AdultRegimenLine
   const AdultRegimenLine = () => {
     axios
@@ -225,16 +223,12 @@ console.log('fddd', enroll.hivStatus)
       });
   };
 
-
-
   const getPatientEntryType = (id) => {
     if (locationState.entrypointValue) {
       allNewEntryPoint.map((each, i) => {
         if (each.code === locationState.entrypointValue) {
           setEntryValueDisplay(each);
         }
-
-        
       });
     } else if (props.entrypointValue) {
       props.allEntryPoint.map((each, i) => {
@@ -244,14 +238,11 @@ console.log('fddd', enroll.hivStatus)
       });
     } else {
     }
-
   };
 
-    const createCycle = async () => {
-
-      console.log("createCycle", props);
-   if (props.onEnrollPatient) {
-
+  const createCycle = async () => {
+    console.log("createCycle", props);
+    if (props.onEnrollPatient) {
       let payload2 = {
         personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
         maternalOutcome: "",
@@ -260,6 +251,7 @@ console.log('fddd', enroll.hivStatus)
         pregnancyOutcome: "",
         numberOfInfants: 0,
         pmtctStatus: "INACTIVE",
+        source: "WEB",
       };
       try {
         const response = await axios.post(
@@ -291,22 +283,8 @@ console.log('fddd', enroll.hivStatus)
           response: null,
         };
       }
-
-   }
-   
-
-    };
-
-
-
-
-
-
-
-
-
-
-
+    }
+  };
 
   const checkPMTCTValidationDates = async (personUuid) => {
     try {
@@ -316,10 +294,16 @@ console.log('fddd', enroll.hivStatus)
       );
 
       if (response.data) {
-        if (response.data.hasPreviousEnrollment && response.data.previousEnrollmentDate) {
+        if (
+          response.data.hasPreviousEnrollment &&
+          response.data.previousEnrollmentDate
+        ) {
           setMinPmtctEnrollmentDate(response.data.previousEnrollmentDate);
         }
-        if (response.data.hasPreviousDelivery && response.data.previousDeliveryDate) {
+        if (
+          response.data.hasPreviousDelivery &&
+          response.data.previousDeliveryDate
+        ) {
           setMinDeliveryDate(response.data.previousDeliveryDate);
         }
       }
@@ -344,10 +328,13 @@ console.log('fddd', enroll.hivStatus)
           ...prev,
           hivStatus: "Positive",
         }));
-        toast.info("Patient has a previous HIV positive record. HIV status auto-populated.", {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 3000,
-        });
+        toast.info(
+          "Patient has a previous HIV positive record. HIV status auto-populated.",
+          {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+          }
+        );
       }
     } catch (error) {
       console.log("Error fetching historical HIV status:", error);
@@ -355,18 +342,20 @@ console.log('fddd', enroll.hivStatus)
   };
 
   useEffect(() => {
-   GET_CODESETS();
-    checkTimingOfART(0)
+    GET_CODESETS();
+    checkTimingOfART(0);
     AdultRegimenLine();
-;
-
     if (props?.patientObj.id) {
       getARTStartDate();
       // getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
     }
 
     // Check validation dates for PMTCT enrollment and delivery
-    const personUuid = props?.patientObj?.uuid || props?.patientObj?.person_uuid || locationState?.patientObj?.uuid || locationState?.patientObj?.person_uuid;
+    const personUuid =
+      props?.patientObj?.uuid ||
+      props?.patientObj?.person_uuid ||
+      locationState?.patientObj?.uuid ||
+      locationState?.patientObj?.person_uuid;
     if (personUuid) {
       checkPMTCTValidationDates(personUuid);
       getHistoricalHivStatus(personUuid);
@@ -374,23 +363,25 @@ console.log('fddd', enroll.hivStatus)
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null && props?.activeContent?.actionType !== "create"
+      props.activeContent.id !== null &&
+      props?.activeContent?.actionType !== "create"
     ) {
       GetPatientPMTCT(props.activeContent.id);
       setSisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
     }
-    if(!props.activeContent.id && props.htsHivStatus){
-      let result= getInitialHivStatus()
-        setEnrollDto({...enroll, hivStatus: result? result: props.htsHivStatus})
+    if (!props.activeContent.id && props.htsHivStatus) {
+      let result = getInitialHivStatus();
+      setEnrollDto({
+        ...enroll,
+        hivStatus: result ? result : props.htsHivStatus,
+      });
     }
     if (
       props?.patientObj?.person_uuid ||
       locationState?.patientObj?.person_uuid
     ) {
- 
-
       setEnrollDto({
         ...enroll,
         personUuid: locationState.patientObj.person_uuid,
@@ -402,20 +393,11 @@ console.log('fddd', enroll.hivStatus)
       });
     }
 
-
-    if(props.showLastHivTestMessage){
-
-     toast.info("Last HIV test was Positive", {
-      position: toast.POSITION.BOTTOM_CENTER,
-});
-
-
+    if (props.showLastHivTestMessage) {
+      toast.info("Last HIV test was Positive", {
+        position: toast.POSITION.BOTTOM_CENTER,
+      });
     }
-
-
-    
-
-
   }, []);
 
   useEffect(() => {
@@ -430,51 +412,55 @@ console.log('fddd', enroll.hivStatus)
     }
   }, [enroll, canProceedWithEnrollment]);
 
-
-    useEffect(() => {
-      console.log('props.lastestConfirmatoryTest', props.lastestConfirmatoryTest, props.htsHivStatus)
-    if(props.lastestConfirmatoryTest){
-       setEnrollDto({...enroll, hivStatus:  getInitialHivStatus()})
-       
-
+  useEffect(() => {
+    console.log(
+      "props.lastestConfirmatoryTest",
+      props.lastestConfirmatoryTest,
+      props.htsHivStatus
+    );
+    if (props.lastestConfirmatoryTest) {
+      setEnrollDto({ ...enroll, hivStatus: getInitialHivStatus() });
     }
   }, [props.lastestConfirmatoryTest]);
 
-
-  const calculateExpectedDate=(lmp)=>{
-    let LastPeriod = moment(lmp)
-    let expectedDeliveryDate = LastPeriod.add(40, 'weeks')
+  const calculateExpectedDate = (lmp) => {
+    let LastPeriod = moment(lmp);
+    let expectedDeliveryDate = LastPeriod.add(40, "weeks");
     // enroll.expectedDeliveryDate = expectedDeliveryDate.format('YYYY-MM-DD')
-  
+
     // console.log("EED Calculation",LastPeriod, expectedDeliveryDate, expectedDeliveryDate.format('YYYY-MM-DD') )
-    return expectedDeliveryDate.format('YYYY-MM-DD')
+    return expectedDeliveryDate.format("YYYY-MM-DD");
+  };
 
-  }
+  const isHivStatusDisabled = () => {
+    return (
+      disableHIVStatus ||
+      props.lastestConfirmatoryTest ||
+      patientObj?.ancNo ||
+      props?.patientObj?.dynamicHivStatus
+    );
+  };
 
-const isHivStatusDisabled = () => {
-  return (
-    disableHIVStatus ||
-    props.lastestConfirmatoryTest ||
-    patientObj?.ancNo ||
-    props?.patientObj?.dynamicHivStatus
-  );
-};
-
-    // BATCH API
-   const GET_CODESETS = () => {
-  
-     GET_CODESETS_IN_BATCH("TIMING_MOTHERS_ART_INITIATION", "PMTCT_URINALYSIS_RESULT", "TIME_HIV_DIAGNOSIS", "PMTCT_ENTRY_POINT", "POINT_ENTRY_PMTCT","TIMING_MOTHERS_ART_INITIATION", "TB_STATUS").then((response)=>{
-
-        setTimeHivInitiation(response.data.TIMING_MOTHERS_ART_INITIATION);
-        setUrinalysisList(response.data.PMTCT_URINALYSIS_RESULT);
-         setTimeHivDiagnosis(response.data.TIME_HIV_DIAGNOSIS)
-         setAllNewEntryPoint(response.data.PMTCT_ENTRY_POINT);
-         setartStartTime(response.data.TIMING_MOTHERS_ART_INITIATION);
-         setTbStatus(response.data.TB_STATUS);
-
-
-      })}
-      //END OF BATCH API
+  // BATCH API
+  const GET_CODESETS = () => {
+    GET_CODESETS_IN_BATCH(
+      "TIMING_MOTHERS_ART_INITIATION",
+      "PMTCT_URINALYSIS_RESULT",
+      "TIME_HIV_DIAGNOSIS",
+      "PMTCT_ENTRY_POINT",
+      "POINT_ENTRY_PMTCT",
+      "TIMING_MOTHERS_ART_INITIATION",
+      "TB_STATUS"
+    ).then((response) => {
+      setTimeHivInitiation(response.data.TIMING_MOTHERS_ART_INITIATION);
+      setUrinalysisList(response.data.PMTCT_URINALYSIS_RESULT);
+      setTimeHivDiagnosis(response.data.TIME_HIV_DIAGNOSIS);
+      setAllNewEntryPoint(response.data.PMTCT_ENTRY_POINT);
+      setartStartTime(response.data.TIMING_MOTHERS_ART_INITIATION);
+      setTbStatus(response.data.TB_STATUS);
+    });
+  };
+  //END OF BATCH API
 
   const GetPatientPMTCT = (id) => {
     axios
@@ -483,12 +469,9 @@ const isHivStatusDisabled = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-      
-
         setEnrollDto({ ...enroll, ...response.data });
-        if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
-
-          calculateExpectedDate(response.data.lmp)    // this console should be autocalculated by adding 40wks to the "date of the Last Menstrual Period"
+        if (entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC") {
+          calculateExpectedDate(response.data.lmp); // this console should be autocalculated by adding 40wks to the "date of the Last Menstrual Period"
         }
         setInfantMotherArtDto({
           ...infantMotherArtDto,
@@ -504,89 +487,78 @@ const isHivStatusDisabled = () => {
       });
   };
 
-//   public int calculateGaFromPmtct(String personUuid, LocalDate visitDate) {
-//     LocalDate lmp = getLMPFromPMTCT(personUuid);
-//     int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
-//     if (ga < 0) ga = 0;
-//     return ga;
-// }
+  //   public int calculateGaFromPmtct(String personUuid, LocalDate visitDate) {
+  //     LocalDate lmp = getLMPFromPMTCT(personUuid);
+  //     int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
+  //     if (ga < 0) ga = 0;
+  //     return ga;
+  // }
 
-const updateMaxARTDate=(action)=>{
-  if(action === "pp" || action === "ld" ){
-    let MAT = enroll.pmtctEnrollmentDate? enroll.pmtctEnrollmentDate: ""
-    setMinARTDate(MAT)
+  const updateMaxARTDate = (action) => {
+    if (action === "pp" || action === "ld") {
+      let MAT = enroll.pmtctEnrollmentDate ? enroll.pmtctEnrollmentDate : "";
+      setMinARTDate(MAT);
+    } else if (action === "prior") {
+      let MAT = "";
+      setMinARTDate(MAT);
+    } else if (action === "ga") {
+      let MAT = enroll.lmp ? enroll.lmp : "";
 
-  }else if(action === "prior"){
-    let MAT = ""
-    setMinARTDate(MAT)
-
-  }else if(action === "ga"){
-
-    let MAT = enroll.lmp? enroll.lmp: ""
-
-    setMinARTDate(MAT)
-
-  }
-}
-const checkTimingOfART=(ga)=>{ 
-
-  setAutoPostPartumTiming(true)
-   let GA = parseInt(ga)
-
-   if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_POST-PARTUM" || props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"){
-    enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)";
-    updateMaxARTDate("pp")
-   }else if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_L&D" || props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"){
-    enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D";
-    updateMaxARTDate("pp")
-   }else{
-
-    if(GA < 36){
-      enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD";
-      updateMaxARTDate("ga")
-
-
-    }else if(GA >= 36){
-      updateMaxARTDate("ga")
-
-      enroll.artStartTime =  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD";
-
-    }else{
-      updateMaxARTDate("prior")
-
+      setMinARTDate(MAT);
     }
+  };
+  const checkTimingOfART = (ga) => {
+    setAutoPostPartumTiming(true);
+    let GA = parseInt(ga);
 
-   }
+    if (
+      locationState.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM" ||
+      props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"
+    ) {
+      enroll.artStartTime =
+        "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)";
+      updateMaxARTDate("pp");
+    } else if (
+      locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D" ||
+      props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"
+    ) {
+      enroll.artStartTime =
+        "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D";
+      updateMaxARTDate("pp");
+    } else {
+      if (GA < 36) {
+        enroll.artStartTime =
+          "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD";
+        updateMaxARTDate("ga");
+      } else if (GA >= 36) {
+        updateMaxARTDate("ga");
+
+        enroll.artStartTime =
+          "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD";
+      } else {
+        updateMaxARTDate("prior");
+      }
+    }
 
     // if(locationState.entrypointValue  === "PMTCT_ENTRY_POINT_POST-PARTUM" || props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"){
     //   setAutoPostPartumTiming(true)
     // setEnrollDto({...enroll, artStartTime: "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)"})
     // }
+  };
 
-   
+  const calculateGaFromPmtct = (deliveryDate) => {
+    // substract lmp - delivery date
+    let LastPeriod = enroll.lmp;
 
+    let lmp = moment(enroll.lmp);
 
-  }
-
-
-
-const calculateGaFromPmtct=(deliveryDate)=>{
-
-
-// substract lmp - delivery date
-let LastPeriod = enroll.lmp
-
-let lmp = moment(enroll.lmp)
-
-if(LastPeriod){
-  let dateOfDelivery =moment(deliveryDate)
-return dateOfDelivery.diff(lmp, 'weeks')
-}else{
-
-  return 0
-}
-
-}
+    if (LastPeriod) {
+      let dateOfDelivery = moment(deliveryDate);
+      return dateOfDelivery.diff(lmp, "weeks");
+    } else {
+      return 0;
+    }
+  };
   const getARTStartDate = (id) => {
     axios
       .get(
@@ -616,11 +588,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
       });
   };
 
-
-
-
-
-
   const handleInputChangeEnrollmentDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
 
@@ -628,105 +595,116 @@ return dateOfDelivery.diff(lmp, 'weeks')
     // artStartTime
     if (e.target.name === "artStartTime" && e.target.value !== "") {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-   
+
       setInfantMotherArtDto({
         ...infantMotherArtDto,
         motherArtInitiationTime: e.target.value,
       });
 
-     if(e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)" || e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D"){
-        updateMaxARTDate("pp")
-      }else if(e.target.value ==="TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD" || e.target.value ===  "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD"){
-        updateMaxARTDate("ga")
-
-      }else{
-        updateMaxARTDate("prior")
-
+      if (
+        e.target.value ===
+          "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)" ||
+        e.target.value === "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D"
+      ) {
+        updateMaxARTDate("pp");
+      } else if (
+        e.target.value ===
+          "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD" ||
+        e.target.value ===
+          "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_<_36_WEEKS_GESTATION_PERIOD"
+      ) {
+        updateMaxARTDate("ga");
+      } else {
+        updateMaxARTDate("prior");
       }
-      
-    }else if(e.target.name === "hivStatus" ){
-          if(e.target.value !== "Positive" ){
-                  toast.error("Cannot enroll negative client on PMTCT");
-          }
-        
-      }else
-    if (e.target.name === "lmp" && e.target.value !== "") {
-
-      let response =   calculateGestationalAge(enroll.pmtctEnrollmentDate, e.target.value)
+    } else if (e.target.name === "hivStatus") {
+      if (e.target.value !== "Positive") {
+        toast.error("Cannot enroll negative client on PMTCT");
+      }
+    } else if (e.target.name === "lmp" && e.target.value !== "") {
+      let response = calculateGestationalAge(
+        enroll.pmtctEnrollmentDate,
+        e.target.value
+      );
 
       if (response > 0) {
         enroll.gaweeks = response;
-        setEnrollDto({ ...enroll, [e.target.name]: e.target.value,dateOfDelivery: ""  });
+        setEnrollDto({
+          ...enroll,
+          [e.target.name]: e.target.value,
+          dateOfDelivery: "",
+        });
       } else {
         // enroll.gaweeks = response;
-        toast.error("Please select a validate date");
-         setEnrollDto({ ...enroll, [e.target.name]: "",dateOfDelivery: ""  });
-      
+        toast.error("Please select a valid date");
+        setEnrollDto({ ...enroll, [e.target.name]: "", dateOfDelivery: "" });
       }
 
       // }
       // getGa();
-    }else
-    if (e.target.name === "pmtctEnrollmentDate" && e.target.value !== "" && enroll.lmp !== "" ) {
-
-    let response =   calculateGestationalAge( e.target.value,  enroll.lmp )
+    } else if (
+      e.target.name === "pmtctEnrollmentDate" &&
+      e.target.value !== "" &&
+      enroll.lmp !== ""
+    ) {
+      let response = calculateGestationalAge(e.target.value, enroll.lmp);
       if (response > 0) {
-        checkTimingOfART(response)
+        checkTimingOfART(response);
 
         enroll.gaweeks = response;
       } else {
         // enroll.gaweeks = response;
-        toast.error("Please select a validate date");
+        toast.error("Please select a valid date");
         // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
       }
-      if(entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC"){
-       let EDD = calculateExpectedDate(enroll.lmp) 
-        setEnrollDto({ ...enroll, [e.target.name]: e.target.value, expectedDeliveryDate:  EDD });
-
-      }else{
-        setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
-
-
+      if (entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC") {
+        let EDD = calculateExpectedDate(enroll.lmp);
+        setEnrollDto({
+          ...enroll,
+          [e.target.name]: e.target.value,
+          expectedDeliveryDate: EDD,
+        });
+      } else {
+        setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
       }
-        
-    
-    }else
-    if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
- 
-        let Ga =  calculateGaFromPmtct(e.target.value)
-     
-     if (Ga > 0) {
-      enroll.gaweeks = Ga;
-      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-    } else {
-      enroll.gaweeks = Ga;
-      toast.error("Please select a validate date");
-      setEnrollDto({ ...enroll, [e.target.name]: e.target.value , gaweeks: ""});
-    }
-      
-     
-    }else{
-      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+    } else if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
+      let Ga = calculateGaFromPmtct(e.target.value);
 
+      if (Ga > 0) {
+        enroll.gaweeks = Ga;
+        setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+      } else {
+        enroll.gaweeks = Ga;
+        toast.error("Please select a valid date");
+        setEnrollDto({
+          ...enroll,
+          [e.target.name]: e.target.value,
+          gaweeks: "",
+        });
+      }
+    } else {
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
     }
   };
   const getHIVStatus = (hospitalNumber, uuid) => {
     axios
-  .get(`${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
-
-        if(response.data){
-          setEnrollDto({...enroll, hivStatus: response.data})
-          setDisableHIVStatus(true)
+        if (response.data) {
+          setEnrollDto({ ...enroll, hivStatus: response.data });
+          setDisableHIVStatus(true);
         }
       })
       .catch((error) => {
         //console.log(error);
       });
   };
-            console.log("patientObj", patientObj);
+  console.log("patientObj", patientObj);
 
   //FORM VALIDATION
   const validate = () => {
@@ -740,20 +718,21 @@ return dateOfDelivery.diff(lmp, 'weeks')
     temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis
       ? ""
       : "This field is required";
-      temp.gaweeks = enroll.gaweeks
-      ? ""
-      : "This field is required";
+    temp.gaweeks = enroll.gaweeks ? "" : "This field is required";
     temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
       ? ""
       : "This field is required";
     temp.artStartDate = enroll.artStartDate ? "" : "This field is required";
     temp.artStartTime = enroll.artStartTime ? "" : "This field is required";
     temp.tbStatus = enroll.tbStatus ? "" : "This field is required";
-    temp.hivStatus = enroll.hivStatus? "" : "This field is required";
+    temp.hivStatus = enroll.hivStatus ? "" : "This field is required";
 
     //  enroll.hivStatus === "Positive"
 
-      temp.hivStatus = enroll.hivStatus === "Positive"? "" : "Cannot enroll negative client on PMTCT";
+    temp.hivStatus =
+      enroll.hivStatus === "Positive"
+        ? ""
+        : "Cannot enroll negative client on PMTCT";
 
     setErrors({
       ...temp,
@@ -762,7 +741,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
   };
 
   /**** Submit Button Processing  */
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     enroll.motherArtInitiationTime = infantMotherArtDto.motherArtInitiationTime;
     enroll.regimenTypeId = infantMotherArtDto.regimenTypeId;
@@ -771,9 +750,7 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
     let pmtctCycleId;
     // Create cycle if needed
-    if (
-      props.onEnrollPatient
-    ) {
+    if (props.onEnrollPatient) {
       const checkIfCycleIsCreated = await createCycle();
       enroll.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
       pmtctCycleId = checkIfCycleIsCreated?.response?.id;
@@ -865,7 +842,6 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
   return (
     <div>
-
       <Card className={classes.root}>
         <CardBody>
           <form>
@@ -890,39 +866,38 @@ return dateOfDelivery.diff(lmp, 'weeks')
 
                 {entryValueDisplay.display}
               </h3>
-<div className="form-group mb-3 col-md-4">
-  <FormGroup>
-    <Label>
-      HIV Status <span style={{ color: "red" }}> *</span>
-    </Label>
+              <div className="form-group mb-3 col-md-4">
+                <FormGroup>
+                  <Label>
+                    HIV Status <span style={{ color: "red" }}> *</span>
+                  </Label>
 
-    <InputGroup>
-      <Input
-        type="select"
-        name="hivStatus"
-        id="hivStatus"
-        value={enroll.hivStatus}
-        onChange={handleInputChangeEnrollmentDto}
-        disabled={isHivStatusDisabled()}
-      >
-        <option value="">Select</option>
-        <option value="Positive">Positive</option>
-        <option value="Negative">Negative</option>
-      </Input>
-    </InputGroup>
+                  <InputGroup>
+                    <Input
+                      type="select"
+                      name="hivStatus"
+                      id="hivStatus"
+                      value={enroll.hivStatus}
+                      onChange={handleInputChangeEnrollmentDto}
+                      disabled={isHivStatusDisabled()}
+                    >
+                      <option value="">Select</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                    </Input>
+                  </InputGroup>
 
-    {errors.hivStatus && (
-      <span className={classes.error}>{errors.hivStatus}</span>
-    )}
+                  {errors.hivStatus && (
+                    <span className={classes.error}>{errors.hivStatus}</span>
+                  )}
 
-    {enroll.hivStatus === "Positive" && (
-      <div className="mt-3">
-        <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
-      </div>
-    )}
-  </FormGroup>
-</div>
-
+                  {enroll.hivStatus === "Positive" && (
+                    <div className="mt-3">
+                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                    </div>
+                  )}
+                </FormGroup>
+              </div>
 
               {patientObj.ancNo && (
                 <div className="form-group mb-3 col-md-4">

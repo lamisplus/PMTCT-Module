@@ -428,6 +428,7 @@ public class PmtctHtsService {
                 htsResponseDto.setArtStartDate(enrollmentData.getArtStartDate());
                 htsResponseDto.setEntryPoint(enrollmentData.getEntryPoint());
                 htsResponseDto.setTbStatus(enrollmentData.getTbStatus());
+                htsResponseDto.setPmtctEnrollmentDate(enrollmentData.getPmtctEnrollmentDate());
                 // Set hivStatus from enrollment - this takes priority over finalResult
                 if (enrollmentData.getHivStatus() != null) {
                     htsResponseDto.setHivStatus(enrollmentData.getHivStatus());

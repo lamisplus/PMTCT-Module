@@ -118,11 +118,13 @@ public class PmtctVisitService {
 
         PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
 
-        // Update maternal_outcome in pregnancy cycle if maternalOutcome is provided
-        if (savedVisit.getMaternalOutcome() != null && savedVisit.getPmtctCycleId() != null) {
+        // Update maternal_outcome and visit_status in pregnancy cycle if provided
+        if (savedVisit.getPmtctCycleId() != null &&
+            (savedVisit.getMaternalOutcome() != null || savedVisit.getVisitStatus() != null)) {
             pmtctPregnancyCycleService.updateMaternalOutcome(
                 savedVisit.getPmtctCycleId(),
-                savedVisit.getMaternalOutcome()
+                savedVisit.getMaternalOutcome(),
+                savedVisit.getVisitStatus()
             );
         }
 
@@ -202,11 +204,13 @@ public class PmtctVisitService {
 
         PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
 
-        // Update maternal_outcome in pregnancy cycle if maternalOutcome is provided
-        if (savedVisit.getMaternalOutcome() != null && savedVisit.getPmtctCycleId() != null) {
+        // Update maternal_outcome and visit_status in pregnancy cycle if provided
+        if (savedVisit.getPmtctCycleId() != null &&
+            (savedVisit.getMaternalOutcome() != null || savedVisit.getVisitStatus() != null)) {
             pmtctPregnancyCycleService.updateMaternalOutcome(
                 savedVisit.getPmtctCycleId(),
-                savedVisit.getMaternalOutcome()
+                savedVisit.getMaternalOutcome(),
+                savedVisit.getVisitStatus()
             );
         }
 

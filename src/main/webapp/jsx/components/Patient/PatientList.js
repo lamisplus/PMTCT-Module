@@ -79,11 +79,21 @@ const Patients = (props) => {
     "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
     "MATERNAL_OUTCOME_TRANSFERRED_OUT"
   ];
+    const negativeVisitStatus = [
+      "VISIT_STATUS_PMTCT_DEAD",
+    ];
 
-  // Helper function to check if maternal outcome is negative
-  const isNegativeOutcome = (maternalOutcome) => {
-    if (!maternalOutcome) return false;
-    return negativeOutcomes.includes(maternalOutcome);
+  // Helper function to check if maternal outcome or visit status is negative
+  const isNegativeOutcome = (maternalOutcome, visitStatus) => {
+    // Check if maternal outcome is negative
+    if (maternalOutcome && negativeOutcomes.includes(maternalOutcome)) {
+      return true;
+    }
+    // Check if visit status is negative
+    if (visitStatus && negativeVisitStatus.includes(visitStatus)) {
+      return true;
+    }
+    return false;
   };
 
   // Helper function to convert maternal outcome code to display value
@@ -199,13 +209,13 @@ const Patients = (props) => {
                     actions: (
                       <div
                         onClick={(e) => {
-                          if (!isNegativeOutcome(row.maternalOutcome)) {
+                          if (!isNegativeOutcome(row.maternalOutcome, row.visitStatus)) {
                             setModalShow(true);
                             setInfo({ patientId: row.id, patientObj: row });
                           }
                         }}
-                        style={{ cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer' }}
-                        title={isNegativeOutcome(row.maternalOutcome) ? `Patient is ${getMaternalOutcomeDisplay(row.maternalOutcome)}` : ''}
+                        style={{ cursor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? 'not-allowed' : 'pointer' }}
+                        title={isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? `Patient is ${getMaternalOutcomeDisplay(row.maternalOutcome)}` : ''}
                       >
                         {/* <Link
                                                 to={{
@@ -217,13 +227,13 @@ const Patients = (props) => {
                           variant="contained"
                           aria-label="split button"
                           style={{
-                            backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
+                            backgroundColor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? "#cccccc" : "rgb(153, 46, 98)",
                             height: "30px",
                             width: "215px",
-                            opacity: isNegativeOutcome(row.maternalOutcome) ? 0.6 : 1,
+                            opacity: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? 0.6 : 1,
                           }}
                           size="large"
-                          disabled={isNegativeOutcome(row.maternalOutcome)}
+                          disabled={isNegativeOutcome(row.maternalOutcome, row.visitStatus)}
                         >
                           <Button
                             color="primary"
@@ -231,24 +241,24 @@ const Patients = (props) => {
                             aria-label="select merge strategy"
                             aria-haspopup="menu"
                             style={{
-                              backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
-                              cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer'
+                              backgroundColor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? "#cccccc" : "rgb(153, 46, 98)",
+                              cursor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? 'not-allowed' : 'pointer'
                             }}
-                            disabled={isNegativeOutcome(row.maternalOutcome)}
+                            disabled={isNegativeOutcome(row.maternalOutcome, row.visitStatus)}
                           >
                             <TiArrowForward />
                           </Button>
                           <Button
                             style={{
-                              backgroundColor: isNegativeOutcome(row.maternalOutcome) ? "#cccccc" : "rgb(153, 46, 98)",
-                              cursor: isNegativeOutcome(row.maternalOutcome) ? 'not-allowed' : 'pointer'
+                              backgroundColor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? "#cccccc" : "rgb(153, 46, 98)",
+                              cursor: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? 'not-allowed' : 'pointer'
                             }}
-                            disabled={isNegativeOutcome(row.maternalOutcome)}
+                            disabled={isNegativeOutcome(row.maternalOutcome, row.visitStatus)}
                           >
                             <span
                               style={{
                                 fontSize: "12px",
-                                color: isNegativeOutcome(row.maternalOutcome) ? "#888" : "#fff",
+                                color: isNegativeOutcome(row.maternalOutcome, row.visitStatus) ? "#888" : "#fff",
                                 fontWeight: "bolder",
                               }}
                             >

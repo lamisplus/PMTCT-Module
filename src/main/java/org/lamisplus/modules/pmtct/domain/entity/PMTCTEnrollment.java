@@ -22,6 +22,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
+    @Column(name = "pmtct_enrollment_date")
     private LocalDate pmtctEnrollmentDate;
     private Integer gravida;
     private Integer gAWeeks;

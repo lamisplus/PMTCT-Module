@@ -45,10 +45,14 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> findLatestPMTCTEnrollmentByPersonUuid(String personUuid);
 
+  @Query(value = "SELECT hiv_status FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  Optional<String> findHivStatusByPersonUuid(String personUuid);
+
   Optional<PMTCTEnrollment> findByPmtctCycleIdAndArchived(Long pmtctCycleId, Long archived);
 
   @Query(
           value =
+                  "SELECT * FROM ( " +
                   "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
@@ -88,7 +92,8 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "  AND pp.facility_id = ?2 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
                           "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                          "ORDER BY pp.uuid, pa.id DESC",
+                          "ORDER BY pp.uuid, pa.id DESC " +
+                  ") AS subquery ORDER BY id DESC",
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
@@ -109,6 +114,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
 
   @Query(
           value =
+                  "SELECT * FROM ( " +
                   "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
@@ -155,7 +161,8 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "AND pp.facility_id = ?3 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
-                          "ORDER BY pp.uuid, pa.id DESC",
+                          "ORDER BY pp.uuid, pa.id DESC " +
+                  ") AS subquery ORDER BY id DESC",
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
@@ -215,7 +222,10 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
                         "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
                         "WHERE person_uuid = pp.uuid AND archived = ?2 " +
-                        "ORDER BY id DESC LIMIT 1) AS maternalOutcome " +
+                        "ORDER BY id DESC LIMIT 1) AS maternalOutcome, " +
+                        "(SELECT visit_status FROM pmtct_pregnancy_cycle " +
+                        "WHERE person_uuid = pp.uuid AND archived = ?2 " +
+                        "ORDER BY id DESC LIMIT 1) AS visitStatus " +
                         "FROM patient_person pp " +
                         "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?2 " +
                         "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?2 " +
@@ -294,7 +304,10 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "CASE WHEN COUNT(ppc.id) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
                           "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
                           "WHERE person_uuid = pp.uuid AND archived = ?1 " +
-                          "ORDER BY id DESC LIMIT 1) AS maternalOutcome " +
+                          "ORDER BY id DESC LIMIT 1) AS maternalOutcome, " +
+                          "(SELECT visit_status FROM pmtct_pregnancy_cycle " +
+                          "WHERE person_uuid = pp.uuid AND archived = ?1 " +
+                          "ORDER BY id DESC LIMIT 1) AS visitStatus " +
                           "FROM patient_person pp " +
                           "LEFT JOIN pmtct_anc pa ON pa.person_uuid = pp.uuid AND pa.archived = ?1 " +
                           "LEFT JOIN pmtct_enrollment pe ON pe.person_uuid = pp.uuid AND pe.archived = ?1 " +
@@ -422,6 +435,9 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
   @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getLatestPmtctEnrollmentDate(String personUuid);
 
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  LocalDate getInitialVisitDate(String personUuid, Long pmtctCycleId);
+
   @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
   boolean checkPatientOnPMTCT(String personUuid);
   @Modifying
@@ -503,7 +519,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) < 1000", nativeQuery = true)
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) < 1000", nativeQuery = true)
     Long getViralSuppressionNumerator(Long facilityId);
 
     // Unsuppressed Total: HIV+ pregnant women on ART with VL result >= 1000 c/ml
@@ -517,7 +534,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) >= 1000", nativeQuery = true)
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000", nativeQuery = true)
     Long getUnsuppressedTotal(Long facilityId);
 
     // Unsuppressed Q1 (Oct-Dec): HIV+ pregnant women on ART with VL result >= 1000 c/ml
@@ -531,7 +549,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (10, 11, 12)", nativeQuery = true)
     Long getUnsuppressedQ1(Long facilityId);
 
@@ -546,7 +565,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (1, 2, 3)", nativeQuery = true)
     Long getUnsuppressedQ2(Long facilityId);
 
@@ -561,7 +581,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (4, 5, 6)", nativeQuery = true)
     Long getUnsuppressedQ3(Long facilityId);
 
@@ -576,7 +597,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND CAST(lr.result_reported AS NUMERIC) >= 1000 " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (7, 8, 9)", nativeQuery = true)
     Long getUnsuppressedQ4(Long facilityId);
 

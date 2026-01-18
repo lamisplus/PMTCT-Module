@@ -28,7 +28,17 @@ function SubMenu(props) {
  const[closeCycle, setCloseCycle]=useState(true)
   const [deliveryStatus, setDeliveryStatus] = useState(true);
 
-  const [patientStatus, setPatientStatus] = useState(props?.patientObj?.staticHivStatus?  props?.patientObj?.staticHivStatus : props?.patientObj?.hivStatus? props?.patientObj?.hivStatus: props.patientObj.dynamicHivStatus );
+  const [patientStatus, setPatientStatus] = useState(() => {
+    const statuses = [
+      props?.patientObj?.staticHivStatus,
+      props?.patientObj?.hivStatus,
+      props?.patientObj?.dynamicHivStatus
+    ];
+    const isPositive = statuses.some(status =>
+      status && ["Positive", "reactive"].includes(status.trim?.() || status)
+    );
+    return isPositive ? "Positive" : (props?.patientObj?.staticHivStatus || props?.patientObj?.hivStatus || props?.patientObj?.dynamicHivStatus);
+  });
   const [allPmtctCycleRecord, setAllPmtctCycleRecord] = useState([]);
 
   // Use selectedCycleId from props if available, otherwise use local state

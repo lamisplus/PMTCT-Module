@@ -94,6 +94,9 @@ const AncEnrollement = (props) => {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [ANCSetting, setANCSetting] = useState([]);
+  const [gravida, setGravida] = useState("");
+  const [parity, setParity] = useState("");
+  const [gravidaError, setGravidaError] = useState("");
 
   const [vital, setVitalSignDto] = useState({
     ancSetting: "",
@@ -112,6 +115,30 @@ const AncEnrollement = (props) => {
 
   const handleInputChangeVitalSignDto = (e) => {
     setVitalSignDto({ ...vital, [e.target.name]: e.target.value });
+  };
+
+  const handleGravidaChange = (e) => {
+    const value = e.target.value;
+    setGravida(value);
+
+    // Validate gravida against parity
+    if (value && parity && parseInt(value) < parseInt(parity)) {
+      setGravidaError("Gravida cannot be less than Parity");
+    } else {
+      setGravidaError("");
+    }
+  };
+
+  const handleParityChange = (e) => {
+    const value = e.target.value;
+    setParity(value);
+
+    // Validate gravida against parity
+    if (gravida && value && parseInt(gravida) < parseInt(value)) {
+      setGravidaError("Gravida cannot be less than Parity");
+    } else {
+      setGravidaError("");
+    }
   };
 
   //FORM VALIDATION

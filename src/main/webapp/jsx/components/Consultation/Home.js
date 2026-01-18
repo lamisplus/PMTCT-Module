@@ -20,7 +20,6 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
-
 const useStyles = makeStyles((theme) => ({
   card: {
     margin: theme.spacing(20),
@@ -68,9 +67,14 @@ const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
   const [errors, setErrors] = useState({});
   const [disabledField, setDisabledField] = useState(false);
-  
+
   // Disable the initial visit date field if patient already has enrollment date
-  const isInitialVisitDisabled = patientObj.pmtctEnrollmentDate ? true : false;
+  const [isInitialVisitDisabled, setIsInitialVisitDisabled] = useState(
+    patientObj?.pmtctEnrollmentDate ||
+      patientObj?.pmtctEnrollmentRespondDto?.pmtctEnrollmentDate
+      ? true
+      : false,
+  );
   let temp = { ...errors };
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
@@ -81,7 +85,7 @@ const ClinicVisit = (props) => {
   const [visitStatus, setVisitStatus] = useState([]);
   const [maternalCome, setMaternalCome] = useState([]);
   const [fp, setFp] = useState([]);
-  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false)
+  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false);
 
   const [entryPoint, setEntryPoint] = useState([]);
   //Vital signs clinical decision support
@@ -89,7 +93,11 @@ const ClinicVisit = (props) => {
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
     dateOfViralLoad: "",
-    dateOfInitialVisit: patientObj.pmtctEnrollmentDate || "",
+    dateOfInitialVisit: patientObj?.pmtctEnrollmentDate
+      ? patientObj.pmtctEnrollmentDate
+      : patientObj?.pmtctEnrollmentRespondDto?.pmtctEnrollmentDate
+        ? patientObj?.pmtctEnrollmentRespondDto.pmtctEnrollmentDate
+        : "",
     dateOfVisit: "",
     dateOfmeternalOutcome: "",
     dateOfDelivery: "",
@@ -118,43 +126,82 @@ const ClinicVisit = (props) => {
   });
   const [entryValueDisplay, setEntryValueDisplay] = useState({});
 
-
-
   const getDateOfDelivery = () => {
+    const pmtctCycleId =
+      props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+
     axios
-      .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
-        ? props.patientObj.person_uuid
-        : props.patientObj.personUuid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}pmtct/anc/get-delivery-date/${
+          props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : props.patientObj.personUuid
+        }?pmtctCycleId=${pmtctCycleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
       .then((response) => {
-        if(response.data){
-          setDisableDeliveryDate(true)
-          setObjValues({...objValues, dateOfDelivery: response.data});
-  
+        if (response.data) {
+          setDisableDeliveryDate(true);
+          setObjValues({ ...objValues, dateOfDelivery: response.data });
         }
 
-        setDisableDeliveryDate(false)
-        setObjValues({...objValues, dateOfDelivery: response.data});
+        setDisableDeliveryDate(false);
+        setObjValues({ ...objValues, dateOfDelivery: response.data });
       })
       .catch((error) => {
-        //console.log(error);
+        //(error);
       });
   };
 
-    
-    // BATCH API
-   const GET_CODESETS = () => {
-  
-     GET_CODESETS_IN_BATCH("VISIT_STATUS_PMTCT", "MATERNAL_OUTCOME", "FAMILY_PLANNING_METHOD", "PMTCT_ENTRY_POINT").then((response)=>{
-        setVisitStatus(response.data.VISIT_STATUS_PMTCT);
-        
-        setMaternalCome(response.data.MATERNAL_OUTCOME);
-         setFp(response.data.FAMILY_PLANNING_METHOD);
-          setEntryPoint(response.data.PMTCT_ENTRY_POINT);
-     })
-    
+  const getInitialVisitDate = () => {
+    const pmtctCycleId =
+      props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+    const personUuid = props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid;
+
+    if (!pmtctCycleId || !personUuid) {
+      return;
     }
+
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-initial-visit-date/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+      .then((response) => {
+        if (response.data) {
+          setObjValues((prevValues) => ({
+            ...prevValues,
+            dateOfInitialVisit: response.data,
+          }));
+          setIsInitialVisitDisabled(true);
+        }
+      })
+      .catch((error) => {
+        //(error);
+      });
+  };
+
+  // BATCH API
+  const GET_CODESETS = () => {
+    GET_CODESETS_IN_BATCH(
+      "VISIT_STATUS_PMTCT",
+      "MATERNAL_OUTCOME",
+      "FAMILY_PLANNING_METHOD",
+      "PMTCT_ENTRY_POINT",
+    ).then((response) => {
+      setVisitStatus(response.data.VISIT_STATUS_PMTCT);
+
+      setMaternalCome(response.data.MATERNAL_OUTCOME);
+      setFp(response.data.FAMILY_PLANNING_METHOD);
+      setEntryPoint(response.data.PMTCT_ENTRY_POINT);
+    });
+  };
 
   const getPatientEntryType = (id) => {
     entryPoint.map((each, i) => {
@@ -167,20 +214,19 @@ const ClinicVisit = (props) => {
   useEffect(() => {
     GET_CODESETS();
 
-    getDateOfDelivery()
-
+    getDateOfDelivery();
+    getInitialVisitDate();
 
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
       props.activeContent.id !== null &&
-      props.activeContent.activeTab === "home" && 
+      props.activeContent.activeTab === "home" &&
       props.activeContent.actionType !== "create"
-
     ) {
       GetVisit(props.activeContent.id);
       setDisabledField(
-        props.activeContent.actionType === "view" ? true : false
+        props.activeContent.actionType === "view" ? true : false,
       );
     }
   }, [props.activeContent]);
@@ -197,17 +243,15 @@ const ClinicVisit = (props) => {
       .then((response) => {
         setObjValues({
           ...response.data,
-          pmtctCycleId: response.data.pmtctCycleId || props?.latestPmtctCycle?.id
+          pmtctCycleId:
+            response.data.pmtctCycleId || props?.latestPmtctCycle?.id,
         });
         DsdModelType(response.data.dsdModel);
       })
       .catch((error) => {
-        //console.log(error);
+        //(error);
       });
   };
-
-
-
 
   const handleInputChange = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
@@ -218,10 +262,13 @@ const ClinicVisit = (props) => {
       async function getGa() {
         const dateOfViralLoad = e.target.value;
         //?ancNo=001&visitDate=2023-02-01
-        const pmtctCycleId = props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+        const pmtctCycleId =
+          props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
 
         if (!pmtctCycleId) {
-          console.error('pmtctCycleId is required for gestational age calculation');
+          console.error(
+            "pmtctCycleId is required for gestational age calculation",
+          );
           return;
         }
 
@@ -236,13 +283,13 @@ const ClinicVisit = (props) => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "text/plain",
             },
-          }
+          },
         );
         if (response.data > 0) {
           objValues.gaOfViralLoad = response.data;
           setObjValues({ ...objValues, [e.target.name]: e.target.value });
         } else {
-          //toast.error("Please select a validate date")
+          //toast.error("Please select a valid date")
           setObjValues({ ...objValues, [e.target.name]: e.target.value });
         }
       }
@@ -263,7 +310,7 @@ const ClinicVisit = (props) => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (response.data.length > 0 && response.data[0]) {
@@ -311,11 +358,11 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        //console.log(response.data);
+        //(response.data);
         setDsdModelType(response.data);
       })
       .catch((error) => {
-        //console.log(error);
+        //(error);
       });
   }
 
@@ -349,7 +396,7 @@ const ClinicVisit = (props) => {
           .put(
             `${baseUrl}pmtct/anc/update-mother-visit/${props.activeContent.id}`,
             objValues,
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${token}` } },
           )
           .then((response) => {
             setSaving(false);
@@ -435,14 +482,17 @@ const ClinicVisit = (props) => {
             <br />
             <br />
             <div className="row">
-
-            <div className="form-group mb-3 col-md-3">
+              <div className="form-group mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName>
-                  Date of Initial Visit <span style={{ color: "red" }}> *</span>
+                    Date of Initial Visit{" "}
+                    <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                    type="date"
+                    onKeyPress={(e) => {
+                      e.preventDefault();
+                    }}
                     name="dateOfInitialVisit"
                     id="dateOfInitialVisit"
                     value={objValues.dateOfInitialVisit}
@@ -451,7 +501,6 @@ const ClinicVisit = (props) => {
                       borderRadius: "0.25rem",
                     }}
                     onChange={handleInputChange}
-               
                     min={patientObj.pmtctEnrollmentDate}
                     disabled={isInitialVisitDisabled}
                   />
@@ -463,14 +512,16 @@ const ClinicVisit = (props) => {
                 </FormGroup>
               </div>
 
-
               <div className="form-group mb-3 col-md-3">
                 <FormGroup>
                   <FormLabelName>
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                    type="date"
+                    onKeyPress={(e) => {
+                      e.preventDefault();
+                    }}
                     name="dateOfVisit"
                     id="dateOfVisit"
                     value={objValues.dateOfVisit}
@@ -491,7 +542,6 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div>
-
 
               <div className=" mb-3 col-md-3">
                 <FormGroup>
@@ -594,14 +644,21 @@ const ClinicVisit = (props) => {
                     </FormLabelName>
 
                     <Input
-                      type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChange}
                       value={objValues.dateOfDelivery}
                       min={props.patientObj.firstAncDate}
                       max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disableDeliveryDate? disableDeliveryDate:disabledField}
+                      disabled={
+                        disableDeliveryDate
+                          ? disableDeliveryDate
+                          : disabledField
+                      }
                     />
 
                     {errors.dateOfDelivery !== "" ? (
@@ -632,7 +689,10 @@ const ClinicVisit = (props) => {
                 <FormGroup>
                   <FormLabelName>Viral Load Collection Date </FormLabelName>
                   <Input
-                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                    type="date"
+                    onKeyPress={(e) => {
+                      e.preventDefault();
+                    }}
                     name="dateOfViralLoad"
                     id="dateOfViralLoad"
                     value={objValues.dateOfViralLoad}
@@ -828,7 +888,10 @@ const ClinicVisit = (props) => {
                     Date of Outcome <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                    type="date"
+                    onKeyPress={(e) => {
+                      e.preventDefault();
+                    }}
                     name="dateOfmeternalOutcome"
                     id="dateOfmeternalOutcome"
                     value={objValues.dateOfmeternalOutcome}
@@ -919,7 +982,8 @@ const ClinicVisit = (props) => {
             )}
 
             <br />
-            {props.activeContent && props.activeContent.actionType   === "update"? (
+            {props.activeContent &&
+            props.activeContent.actionType === "update" ? (
               <>
                 <MatButton
                   type="submit"

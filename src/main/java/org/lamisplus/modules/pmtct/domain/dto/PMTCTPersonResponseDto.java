@@ -12,4 +12,5 @@ public class PMTCTPersonResponseDto extends PersonResponseDto {
     private Boolean hasExistingEnrollment;
     private Long pregnancyCount;
     private String maternalOutcome;
+    private String visitStatus;
 }

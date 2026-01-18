@@ -2296,4 +2296,52 @@
         </sql>
     </changeSet>
 
+    <!-- Add visit_status column to pmtct_pregnancy_cycle (if it exists) -->
+    <changeSet failOnError="false" author="system" id="2026-01-13-add-visit-status-pmtct-pregnancy-cycle-013">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="pmtct_pregnancy_cycle" />
+                <not>
+                    <columnExists tableName="pmtct_pregnancy_cycle" columnName="visit_status" />
+                </not>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_pregnancy_cycle ADD COLUMN visit_status character varying(100);
+        </sql>
+    </changeSet>
+
+    <!-- Populate visit_status in pmtct_pregnancy_cycle from latest mother visitation -->
+    <changeSet failOnError="false" author="system" id="2026-01-14-populate-visit-status-from-mother-visitation-014">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="pmtct_pregnancy_cycle" />
+                <tableExists tableName="pmtct_mother_visitation" />
+                <columnExists tableName="pmtct_pregnancy_cycle" columnName="visit_status" />
+                <columnExists tableName="pmtct_mother_visitation" columnName="visit_status" />
+            </and>
+        </preConditions>
+        <sql>
+            UPDATE pmtct_pregnancy_cycle pc
+            SET visit_status = latest_visit.visit_status,
+                last_modified_date = NOW()
+            FROM (
+                SELECT DISTINCT ON (mv.person_uuid, mv.pmtct_cycle_id)
+                    mv.person_uuid,
+                    mv.pmtct_cycle_id,
+                    mv.visit_status
+                FROM pmtct_mother_visitation mv
+                WHERE mv.visit_status IS NOT NULL
+                  AND mv.archived = 0
+                  AND mv.pmtct_cycle_id IS NOT NULL
+                ORDER BY mv.person_uuid, mv.pmtct_cycle_id, mv.date_of_visit DESC NULLS LAST, mv.id DESC
+            ) latest_visit
+            WHERE pc.person_uuid = latest_visit.person_uuid
+              AND pc.id = latest_visit.pmtct_cycle_id
+              AND pc.archived = 0
+              AND (pc.visit_status IS NULL OR pc.visit_status = '');
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
+

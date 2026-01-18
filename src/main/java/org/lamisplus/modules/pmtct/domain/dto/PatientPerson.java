@@ -28,4 +28,20 @@ public interface PatientPerson {
    String getTbStatus();
    Long getPregnancyCount();
 
+   // ANC-specific fields
+   String getAncSetting();
+   String getCommunitySetting();
+   String getCurrentlyOnArt();
+   String getDynamicHivStatus();
+   LocalDate getFirstAncDate();
+   Integer getGaweeks();
+   Integer getGravida();
+   LocalDate getLmp();
+   Integer getParity();
+   String getPreviouslyKnownHivStatus();
+   String getReferredSyphilisTreatment();
+   String getStaticHivStatus();
+   Long getPmtctCycleId();
+   String getAncUuid();
+
 }

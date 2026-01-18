@@ -491,7 +491,7 @@ const UserRegistration = (props) => {
         setObjValues({ ...objValues, [e.target.name]: e.target.value });
       } else {
         // objValues.gaweeks = response;
-        toast.error("Please select a validate date ");
+        toast.error("Please select a valid date ");
         setObjValues({ ...objValues, [e.target.name]: "" });
       }
     } else if (e.target.name === "lmp" && e.target.value !== "") {
@@ -517,7 +517,7 @@ const UserRegistration = (props) => {
         setObjValues({ ...objValues, [e.target.name]: e.target.value });
       } else {
         // objValues.gaweeks = response;
-        toast.error("Please select a validate date");
+        toast.error("Please select a valid date");
         setObjValues({ ...objValues, [e.target.name]: "" });
       }
     } else if (e.target.name === "previouslyKnownHivStatus") {

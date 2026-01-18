@@ -69,19 +69,16 @@ const PmtctPatients = (props) => {
     }
   };
 
+  const { hasPermission, hasRDErole } = usePermissions();
 
-
-    const { hasPermission, hasRDErole } = usePermissions();
- 
   const permissions = useMemo(
     () => ({
       canSeeEnrollButton: hasPermission("maternal_cohort_register"),
-      genPermission: hasRDErole  || hasPermission("maternal_cohort_register")}),
+      genPermission: hasRDErole || hasPermission("maternal_cohort_register"),
+    }),
 
-    
-    [hasPermission, hasRDErole]
+    [hasPermission, hasRDErole],
   );
-
 
   return (
     <div>
@@ -102,7 +99,11 @@ const PmtctPatients = (props) => {
           },
           { title: "Sex", field: "gender", filtering: false },
           { title: "Age", field: "age", filtering: false },
-          { title: "Pregnancy Count", field: "pregnancy_count", filtering: false },
+          {
+            title: "Pregnancy Count",
+            field: "pregnancy_count",
+            filtering: false,
+          },
           //{ title: "Enrollment Status", field: "v_status", filtering: false },
           //{ title: "ART Number", field: "v_status", filtering: false },
           // { title: "ART Status", field: "status", filtering: false },
@@ -114,7 +115,7 @@ const PmtctPatients = (props) => {
             axios
               .get(
                 `${baseUrl}pmtct/anc/all-active-pmtct?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` } },
               )
               .then((response) => response)
               .then((result) => {
@@ -123,20 +124,19 @@ const PmtctPatients = (props) => {
                   data: result.data.records.map((row) => ({
                     name: (
                       <>
-                      { permissions.genPermission &&  <div>
-                       
-                      <Link
-                        to={{
-                          pathname: "/patient-history",
-                          state: { patientObj: row },
-                        }}
-                        title={"Click to view patient dashboard"}
-                      >
-                        {" "}
-                        {row.surname ? row.surname : row.fullName}
-                      </Link>
-
-                       </div>}
+                        {permissions.genPermission && (
+                          <div>
+                            <Link
+                              to={{
+                                pathname: "/patient-history",
+                                state: { patientObj: row },
+                              }}
+                              title={"Click to view patient dashboard"}
+                            >
+                              {row.fullName}
+                            </Link>
+                          </div>
+                        )}
                       </>
                     ),
 
@@ -192,7 +192,7 @@ const PmtctPatients = (props) => {
                   page: query.page,
                   totalCount: result.data.totalRecords,
                 });
-              })
+              }),
           )
         }
         options={{

@@ -215,6 +215,11 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(personUuid, pmtctCycleId));
     }
 
+    @GetMapping(value = "get-initial-visit-date/{personUuid}")
+    public ResponseEntity<LocalDate> getInitialVisitDate(@PathVariable("personUuid") String personUuid, @RequestParam("pmtctCycleId") Long pmtctCycleId) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getInitialVisitDate(personUuid, pmtctCycleId));
+    }
+
 
     @PutMapping(value = "update-anc/{id}")
     public ResponseEntity<ANCRequestDto> updateANC(@PathVariable("id") Long id, @RequestBody ANCRequestDto ancRequestDto) {

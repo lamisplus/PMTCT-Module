@@ -111,15 +111,25 @@ public class PmtctPregnancyCycleService {
         }
     }
 
-    public void updateMaternalOutcome(Long cycleId, String maternalOutcome) {
-        if (cycleId == null || maternalOutcome == null) {
+    public void updateMaternalOutcome(Long cycleId, String maternalOutcome, String visitStatus) {
+        if (cycleId == null) {
             return;
         }
 
         Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
         if (cycleOptional.isPresent()) {
             PmtctPregnancyCycle cycle = cycleOptional.get();
-            cycle.setMaternalOutcome(maternalOutcome);
+
+            // Update maternal outcome if provided
+            if (maternalOutcome != null) {
+                cycle.setMaternalOutcome(maternalOutcome);
+            }
+
+            // Update visit status if provided
+            if (visitStatus != null) {
+                cycle.setVisitStatus(visitStatus);
+            }
+
             cycle.setLastModifiedDate(LocalDateTime.now());
 
             Optional<User> currentUser = userService.getUserWithRoles();

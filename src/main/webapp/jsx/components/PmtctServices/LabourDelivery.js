@@ -104,7 +104,7 @@ const LabourDelivery = (props) => {
   const [childStatus, setChildStatus] = useState([]);
   const [bookingStatus, setBookingStatus] = useState([]);
   const [romdelivery, setRomdelivery] = useState([]);
-  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false)
+  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false);
   const [timehiv, setTimehiv] = useState([]);
   const [delivery, setDelivery] = useState({
     placeOfDelivery: "",
@@ -140,21 +140,20 @@ const LabourDelivery = (props) => {
     source: "WEB",
   });
   useEffect(() => {
-      GET_CODESETS()
+    GET_CODESETS();
     getDateOfDelivery();
-
 
     if (
       props.activeContent.id &&
       props.activeContent.id !== "" &&
-      props.activeContent.id !== null && props?.activeContent?.actionType !== "create"
+      props.activeContent.id !== null &&
+      props?.activeContent?.actionType !== "create"
     ) {
       GetPatientLabourDTO(props.activeContent.id);
       setSisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
     }
-
   }, [props.patientObj.id, props.activeContent]);
 
   const GetPatientLabourDTO = (id) => {
@@ -163,8 +162,8 @@ const LabourDelivery = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("on it ",response.data)
-        getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery")
+        console.log("on it ", response.data);
+        getGestationalAge(response.data.dateOfDelivery, "dateOfDelivery");
 
         //  setDisableDeliveryDate(false)
         setDelivery({
@@ -181,8 +180,10 @@ const LabourDelivery = (props) => {
           gaweeks: response.data.gaweeks,
           hbstatus: response.data.hbstatus,
           hcstatus: response.data.hcstatus,
-          hivExposedInfantGivenHbWithin24hrs: response.data.hivExposedInfantGivenHbWithin24hrs,
-          nonHbvExposedInfantGivenHbWithin24hrs: response.data.nonHbvExposedInfantGivenHbWithin24hrs,
+          hivExposedInfantGivenHbWithin24hrs:
+            response.data.hivExposedInfantGivenHbWithin24hrs,
+          nonHbvExposedInfantGivenHbWithin24hrs:
+            response.data.nonHbvExposedInfantGivenHbWithin24hrs,
           maternalOutcome: response.data.maternalOutcome,
           maternalOutcomeChild: response.data.maternalOutcomeChild,
           modeOfDelivery: response.data.modeOfDelivery,
@@ -192,9 +193,8 @@ const LabourDelivery = (props) => {
           vaginalTear: response.data.vaginalTear,
           numberOfInfantsAlive: response.data.numberOfInfantsAlive,
           numberOfInfantsDead: response.data.numberOfInfantsDead,
-          personUuid:response.data.personUuid,
-          pmtctCycleId: response.data.pmtctCycleId
-
+          personUuid: response.data.personUuid,
+          pmtctCycleId: response.data.pmtctCycleId,
         });
       })
       .catch((error) => {
@@ -202,58 +202,64 @@ const LabourDelivery = (props) => {
       });
   };
 
-
-
   const getDateOfDelivery = () => {
+    let pmtctCycleId =
+      props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
     axios
-      .get(`${baseUrl}pmtct/anc/get-delivery-date/${props.patientObj.person_uuid
-        ? props.patientObj.person_uuid
-        : props.patientObj.personUuid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${baseUrl}pmtct/anc/get-delivery-date/${
+          props.patientObj.person_uuid
+            ? props.patientObj.person_uuid
+            : props.patientObj.personUuid
+        }?pmtctCycleId=${pmtctCycleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((response) => {
-        console.log(response.data)
-       if(response.data){
-        // setDisableDeliveryDate(true)
-        delivery.dateOfDelivery =response.data
-        // setDelivery({...delivery, dateOfDelivery: response.data});
-        getGestationalAge(response.data, "dateOfDelivery")
-       }
+        console.log(response.data);
+        if (response.data) {
+          // setDisableDeliveryDate(true)
+          delivery.dateOfDelivery = response.data;
+          // setDelivery({...delivery, dateOfDelivery: response.data});
+          getGestationalAge(response.data, "dateOfDelivery");
+        }
       })
       .catch((error) => {
         //console.log(error);
       });
   };
 
- 
-
-
-
   // BATCH API
- const GET_CODESETS = () => {
-
-   GET_CODESETS_IN_BATCH("MODE_DELIVERY", "FEEDING DECISION", "MATERNAL_OUTCOME", "CHILD_STATUS_DELIVERY", "BOOKING STATUS", "ROM_DELIVERY_INTERVAL","TIME_HIV_DIAGNOSIS_PMTCT","PLACE_OF_DELIVERY").then((response)=>{
+  const GET_CODESETS = () => {
+    GET_CODESETS_IN_BATCH(
+      "MODE_DELIVERY",
+      "FEEDING DECISION",
+      "MATERNAL_OUTCOME",
+      "CHILD_STATUS_DELIVERY",
+      "BOOKING STATUS",
+      "ROM_DELIVERY_INTERVAL",
+      "TIME_HIV_DIAGNOSIS_PMTCT",
+      "PLACE_OF_DELIVERY"
+    ).then((response) => {
       setDelieryMode(response.data.MODE_DELIVERY);
-       setfeedingDecision(response.data["FEEDING DECISION"]);
-       setmaternalOutCome(response.data.MATERNAL_OUTCOME)
-       setChildStatus(response.data.CHILD_STATUS_DELIVERY);
-        setBookingStatus(response.data["BOOKING STATUS"]);
-        setRomdelivery(response.data.ROM_DELIVERY_INTERVAL)
-        setTimehiv(response.data.TIME_HIV_DIAGNOSIS_PMTCT)
-        setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY)
-
-   })
-  
+      setfeedingDecision(response.data["FEEDING DECISION"]);
+      setmaternalOutCome(response.data.MATERNAL_OUTCOME);
+      setChildStatus(response.data.CHILD_STATUS_DELIVERY);
+      setBookingStatus(response.data["BOOKING STATUS"]);
+      setRomdelivery(response.data.ROM_DELIVERY_INTERVAL);
+      setTimehiv(response.data.TIME_HIV_DIAGNOSIS_PMTCT);
+      setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
+    });
   };
 
-
-
- const getGestationalAge = async (value, name)=> {
+  const getGestationalAge = async (value, name) => {
     const ga = value;
-    const pmtctCycleId = props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+    const pmtctCycleId =
+      props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
 
     if (!pmtctCycleId) {
-      console.error('pmtctCycleId is required for gestational age calculation');
+      console.error("pmtctCycleId is required for gestational age calculation");
       return;
     }
 
@@ -276,18 +282,17 @@ const LabourDelivery = (props) => {
       // console.log(response.data)
       // setDelivery({...delivery,gaweeks:  response.data, dateOfDelivery: value })
 
-
       delivery.gaweeks = response.data;
-      delivery.dateOfDelivery =value
-      setNewGa(response.data)
+      delivery.dateOfDelivery = value;
+      setNewGa(response.data);
       // setDelivery({ ...delivery, [name]: value, gaweeks: response.data });
     } else {
-      toast.error("Please select a validate date");
-      delivery.dateOfDelivery =value
+      toast.error("Please select a valid date");
+      delivery.dateOfDelivery = value;
 
       // setDelivery({ ...delivery, [name]: value });
     }
-  }
+  };
 
   const handleInputChangeDeliveryDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
@@ -313,7 +318,7 @@ const LabourDelivery = (props) => {
       //     delivery.gaweeks = response.data;
       //     setDelivery({ ...delivery, [e.target.name]: e.target.value });
       //   } else {
-      //     toast.error("Please select a validate date");
+      //     toast.error("Please select a valid date");
       //     setDelivery({ ...delivery, [e.target.name]: e.target.value });
       //   }
       // }
@@ -460,7 +465,7 @@ const LabourDelivery = (props) => {
 
       const targetRoute = isChildAlive ? "infants" : "recent-history";
 
-      if (props.activeContent && props.activeContent.actionType === 'update') {
+      if (props.activeContent && props.activeContent.actionType === "update") {
         //Perform operation for updation action
         axios
           .put(
@@ -586,15 +591,21 @@ const LabourDelivery = (props) => {
                   </Label>
                   <InputGroup>
                     <Input
-                      type="date"                       
-                      onKeyPress={(e)=>{e.preventDefault()}}
+                      type="date"
+                      onKeyPress={(e) => {
+                        e.preventDefault();
+                      }}
                       name="dateOfDelivery"
                       id="dateOfDelivery"
                       onChange={handleInputChangeDeliveryDto}
                       value={delivery.dateOfDelivery}
                       min={props.patientObj.firstAncDate}
                       max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disableDeliveryDate? disableDeliveryDate : disabledField}
+                      disabled={
+                        disableDeliveryDate
+                          ? disableDeliveryDate
+                          : disabledField
+                      }
                     />
                   </InputGroup>
                   {errors.dateOfDelivery !== "" ? (
@@ -746,7 +757,6 @@ const LabourDelivery = (props) => {
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
                       <option value="Unknown">Unknown</option>
-
                     </Input>
                   </InputGroup>
                   {errors.episiotomy !== "" ? (
@@ -774,7 +784,6 @@ const LabourDelivery = (props) => {
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
                       <option value="Unknown">Unknown</option>
-
                     </Input>
                   </InputGroup>
                   {errors.vaginalTear !== "" ? (
@@ -874,9 +883,7 @@ const LabourDelivery = (props) => {
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <Label>
-                    Hepatitis B Status 
-                  </Label>
+                  <Label>Hepatitis B Status</Label>
                   <InputGroup>
                     <Input
                       type="select"
@@ -900,9 +907,7 @@ const LabourDelivery = (props) => {
               </div>
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
-                  <Label>
-                    Hepatitis C Status
-                  </Label>
+                  <Label>Hepatitis C Status</Label>
                   <InputGroup>
                     <Input
                       type="select"
@@ -1176,7 +1181,8 @@ const LabourDelivery = (props) => {
 
             {saving ? <Spinner /> : ""}
             <br />
-            {props.activeContent && props.activeContent.actionType  === 'update'? (
+            {props.activeContent &&
+            props.activeContent.actionType === "update" ? (
               <>
                 <MatButton
                   type="submit"
