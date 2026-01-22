@@ -79,7 +79,6 @@ function PatientCard(props) {
       ? history.location.state.patientObj
       : {};
 
-  console.log("patientObj", patientObj);
   const [latestPmtctCycle, setLatestPmtctCycle] = useState({
     id: patientObj.pmtctCycleId,
   });
@@ -98,7 +97,6 @@ function PatientCard(props) {
   // Handler for cycle selection changes
   const handleCycleChange = async (cycleId) => {
     setSelectedCycleId(cycleId);
-    console.log("Cycle changed in PatientDetail:", cycleId);
 
     // Fetch the selected cycle data
     const personUuid =
@@ -119,7 +117,6 @@ function PatientCard(props) {
         );
         if (selectedCycle) {
           setLatestPmtctCycle(selectedCycle);
-          console.log("Updated latestPmtctCycle:", selectedCycle);
         }
       }
 
@@ -170,7 +167,6 @@ function PatientCard(props) {
           }
         )
         .then((response) => {
-          console.log("response", response);
           if (response?.data) {
             const hasDeliveryActivity = response.data.some(
               (each) => each.activityName == "Labour and Delivery"
@@ -248,7 +244,6 @@ function PatientCard(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log(response.data);
         setPersonInfo(response.data);
       })
       .catch((error) => {

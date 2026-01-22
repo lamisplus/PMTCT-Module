@@ -42,7 +42,6 @@ const ClinicVisitPage = (props) => {
         },
       )
       .then((response) => {
-        // (response.data);
         setAliveChild(
           response.data && response.data.numberOfInfantsAlive
             ? response.data.numberOfInfantsAlive
@@ -50,7 +49,6 @@ const ClinicVisitPage = (props) => {
         );
       })
       .catch((error) => {
-        //(error);
       });
     // }
   };

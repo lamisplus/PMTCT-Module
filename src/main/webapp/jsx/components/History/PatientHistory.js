@@ -171,7 +171,6 @@ const PatientnHistory = (props) => {
         actionType: action,
       });
 
-      console.log("setPmtctHtsRetestingType", row)
       if (props.setPmtctHtsRetestingType) {
         props.setPmtctHtsRetestingType(row?.activityName.toLowerCase())
       }

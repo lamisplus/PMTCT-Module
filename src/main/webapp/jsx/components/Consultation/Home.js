@@ -151,7 +151,6 @@ const ClinicVisit = (props) => {
         setObjValues({ ...objValues, dateOfDelivery: response.data });
       })
       .catch((error) => {
-        //(error);
       });
   };
 
@@ -183,7 +182,6 @@ const ClinicVisit = (props) => {
         }
       })
       .catch((error) => {
-        //(error);
       });
   };
 
@@ -249,7 +247,6 @@ const ClinicVisit = (props) => {
         DsdModelType(response.data.dsdModel);
       })
       .catch((error) => {
-        //(error);
       });
   };
 
@@ -358,11 +355,9 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        //(response.data);
         setDsdModelType(response.data);
       })
       .catch((error) => {
-        //(error);
       });
   }
 

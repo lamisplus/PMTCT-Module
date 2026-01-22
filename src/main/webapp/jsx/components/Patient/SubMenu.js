@@ -70,7 +70,6 @@ function SubMenu(props) {
 
   // Function to handle cycle selection (both default and onChange)
   const handleCycleChange = (cycleId) => {
-    console.log('Selected cycle ID:', cycleId);
 
     // Fetch latest confirmatory result for the selected cycle
     getLatestConfirmatoryResult(cycleId);
@@ -131,13 +130,7 @@ function SubMenu(props) {
 
     useEffect(() => {
     getLatestConfirmatoryResult(selectedCycleId);
-      console.log(
-        "props.mainDeliveryStatus ",
-        props,
-        props.mainDeliveryStatus,
-        patientObj,
-        patientObj.deliveryStatus
-      );
+   
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
     // Only update if setIsOnPMTCT is passed from parent

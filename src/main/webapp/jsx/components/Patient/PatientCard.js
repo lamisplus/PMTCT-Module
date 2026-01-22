@@ -189,7 +189,6 @@ const getHivRetestStatus = async () => {
         }
       )
       .then((response) => {
-        console.log("GET_LATEST_CONFIRMATORY_RESULT", response.data);
         if(response.data !== null && response.data !== undefined && response.data !== ''){
 
           props.setLastestConfirmatoryTest(response.data)
@@ -228,7 +227,6 @@ const getHivRetestStatus = async () => {
         }
       );
 
-      console.log("PMTCT_HTS_RECORD", response.data);
 
       if (response.data && response.data.finalResult) {
         setPmtctHtsFinalStatus(response.data.finalResult);

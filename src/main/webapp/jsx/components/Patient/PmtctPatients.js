@@ -119,7 +119,6 @@ const PmtctPatients = (props) => {
               )
               .then((response) => response)
               .then((result) => {
-                console.log("general PMTCT PATIENT", result);
                 resolve({
                   data: result.data.records.map((row) => ({
                     name: (

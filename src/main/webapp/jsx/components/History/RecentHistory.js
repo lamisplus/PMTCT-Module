@@ -113,7 +113,6 @@ const RecentHistory = (props) => {
         }
       )
       .then((response) => {
-        console.log(response.data);
         setRecentActivities(response.data);
 
         // Check if pmtct_enrollment exists in activities

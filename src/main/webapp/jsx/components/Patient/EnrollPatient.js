@@ -782,14 +782,12 @@ const UserRegistration = (props) => {
       return;
     }
 
-    console.log("validate()", validate(), errors);
     setSaving(true);
 
     if (validate()) {
       try {
         // Wait for createCycle() to complete
         const checkIfCycleIsCreated = await createCycle();
-        console.log("checkIfCycleIsCreated", checkIfCycleIsCreated);
 
         if (checkIfCycleIsCreated?.status) {
           objValues.entryPoint = locationState.entrypointValue;
@@ -1867,10 +1865,9 @@ const UserRegistration = (props) => {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) :(
                 <>
                   {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
-                  {console.log("lastPmtctHtsRecord", lastPmtctHtsRecord)}
                   {patientObj.dynamicHivStatus === "Positive" ||
                   lastPmtctHtsRecord?.finalResult === "Positive" ? (
                     <PmtctEnrollment

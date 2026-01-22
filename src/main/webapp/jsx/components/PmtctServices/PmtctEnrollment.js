@@ -205,7 +205,6 @@ const AncPnc = (props) => {
     //setErrors({...temp, [e.target.name]:""})
   };
 
-  console.log("fddd", enroll.hivStatus);
   //GET AdultRegimenLine
   const AdultRegimenLine = () => {
     axios
@@ -241,7 +240,6 @@ const AncPnc = (props) => {
   };
 
   const createCycle = async () => {
-    console.log("createCycle", props);
     if (props.onEnrollPatient) {
       let payload2 = {
         personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
@@ -413,11 +411,7 @@ const AncPnc = (props) => {
   }, [enroll, canProceedWithEnrollment]);
 
   useEffect(() => {
-    console.log(
-      "props.lastestConfirmatoryTest",
-      props.lastestConfirmatoryTest,
-      props.htsHivStatus
-    );
+   
     if (props.lastestConfirmatoryTest) {
       setEnrollDto({ ...enroll, hivStatus: getInitialHivStatus() });
     }
@@ -704,7 +698,6 @@ const AncPnc = (props) => {
         //console.log(error);
       });
   };
-  console.log("patientObj", patientObj);
 
   //FORM VALIDATION
   const validate = () => {
@@ -1443,7 +1436,6 @@ const AncPnc = (props) => {
             </div>
             {saving ? <Spinner /> : ""}
             <br />
-            {console.log("props", props)}
             {props.hideUpdateButton && (
               <>
                 {props.activeContent &&

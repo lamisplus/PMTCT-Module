@@ -243,7 +243,6 @@ const UserRegistration = (props) => {
        "PREGANACY_STATUS",
        "SOURCE_REFERRAL_PMTCT"
      ).then((response) => {
-       console.log("GET_CODESETS_IN_BATCH", response);
        setANCSetting(response.data.ENROLLMENT_SETTING || []);
        setCommunitySetting(response.data.COMMUNITY_PMTCT);
        getSex(response.data.SEX);
