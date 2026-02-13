@@ -698,7 +698,7 @@ private DeliveryRepository deliveryRepository;
 
         // Check if infants exist
         if (allInfant == null || allInfant.isEmpty()) {
-
+            return Collections.emptyList();
         }
 
         List<InfantPCRAlert>  infantsResult = new ArrayList<>();
@@ -738,32 +738,29 @@ private DeliveryRepository deliveryRepository;
 
         // Get latest visit date for this infant
         LocalDate visitDate = infantVisitRepository.getLatestInfantVisitDate(infantHospitalNo);
-        infantRes.setLastVisitDate(visitDate);
-        // If no visit date, use current date or skip
+        infantRes.setLastVisitDate(visitDate != null ? visitDate : deliveryDate);
+        // If no visit date, use delivery date for age calculation (supports retrospective entry)
         if (visitDate == null) {
-            visitDate= deliveryDate;
-            infantRes.setLastVisitDate(deliveryDate);
-
+            visitDate = deliveryDate;
         }
 
-        // Get latest PCR info
-        InfantPCRTest lastPCR = new InfantPCRTest();
-         lastPCR = infantPCRTestRepository.getLatestInfantPCRInfo(infantHospitalNo, visitDate);
+        // Get latest PCR info (most recent PCR test regardless of visit date)
+        InfantPCRTest lastPCR = infantPCRTestRepository.getLastPCR(infantHospitalNo);
 
-        // Calculate age
+        // Calculate age between delivery date and last visit date (supports retrospective entry)
         long ageInWeeks = ChronoUnit.WEEKS.between(deliveryDate, visitDate);
         long ageInMonths = ChronoUnit.MONTHS.between(deliveryDate, visitDate);
         long ageInHours = ChronoUnit.HOURS.between(deliveryDate.atStartOfDay(), visitDate.atStartOfDay());
 
-        // Determine expected PCR
+        // Determine expected PCR based on age and last PCR type (compliance check)
+        InfantPCRAlert result = determineExpectedPCR(ageInWeeks, ageInMonths, ageInHours, lastPCR, infantRes);
 
-
-        return determineExpectedPCR(ageInWeeks, ageInMonths, ageInHours, lastPCR, infantRes);
+        // Counter-check: if child already has the expected PCR record type, remove the alert
+        return counterCheckPCRRecord(result, infantHospitalNo);
     }
 
     private InfantPCRAlert determineExpectedPCR(long ageInWeeks, long ageInMonths, long ageInHours, InfantPCRTest lastPCR, InfantPCRAlert  infantRes) {
         System.out.println(infantRes.getInfantHospitalNo() + " " + "ageInWeeks: " + ageInWeeks + " ageInMonths " + ageInMonths +  " ageInHours " + ageInHours);
-
 
         // PCR test type constants
         final String PCR_1ST = "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT";
@@ -809,8 +806,58 @@ private DeliveryRepository deliveryRepository;
 
     }
 
+    /**
+     * Counter-checks if the child already has a PCR record of the expected type.
+     * Unlike determineExpectedPCR which checks both age and last PCR type,
+     * this method only checks if the PCR record type exists at all.
+     * If the child has the record, the alert is removed.
+     */
+    private InfantPCRAlert counterCheckPCRRecord(InfantPCRAlert infantRes, String infantHospitalNo) {
+        // If no alert message was set, no need to counter-check
+        if (infantRes.getAlertMessage() == null || infantRes.getAlertMessage().isEmpty()) {
+            return infantRes;
+        }
 
+        // Get all PCR records for this infant
+        List<InfantPCRTest> allPCRTests = infantPCRTestRepository.findByInfantHospitalNumber(infantHospitalNo);
 
+        if (allPCRTests == null || allPCRTests.isEmpty()) {
+            return infantRes; // No records exist, keep the alert
+        }
+
+        // PCR test type constants
+        final String PCR_1ST = "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT";
+        final String PCR_2ND = "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED";
+        final String PCR_3RD = "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE";
+        final String PCR_4TH = "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)";
+
+        // Determine which PCR type the alert is about
+        String alertMessage = infantRes.getAlertMessage();
+        String expectedPCRType = null;
+
+        if (alertMessage.contains("1st PCR")) {
+            expectedPCRType = PCR_1ST;
+        } else if (alertMessage.contains("2nd PCR")) {
+            expectedPCRType = PCR_2ND;
+        } else if (alertMessage.contains("3rd PCR")) {
+            expectedPCRType = PCR_3RD;
+        } else if (alertMessage.contains("4th PCR")) {
+            expectedPCRType = PCR_4TH;
+        }
+
+        if (expectedPCRType != null) {
+            // Check if any existing PCR record matches the expected type
+            for (InfantPCRTest pcrTest : allPCRTests) {
+                if (expectedPCRType.equals(pcrTest.getTestType())) {
+                    // Child already has this PCR record, remove the alert
+                    infantRes.setAlertMessage(null);
+                    break;
+                }
+            }
+        }
+
+        return infantRes;
+    }
 
 
 
