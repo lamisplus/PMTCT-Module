@@ -713,47 +713,46 @@ const ClinicVisit = (props) => {
     const getLatestPCR=(infantHospitalNo)=>{
            let PCRList = [pcrType]
            let newPCRList=PCRList[0]
-          let hasFirstPCR = checkFirstPCRExist(infantHospitalNo)
+
+              // Fetch ALL documented PCR tests for this infant
               axios
-              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}`, {
+              .get(`${baseUrl}pmtct/anc/get-infant-prc-by-hospitalnumber/${infantHospitalNo}`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .then((response) => {
-            setLatestPCR(response.data)
+            const allPCRTests = response.data || [];
+            // Get the latest PCR (first item since ordered by id DESC)
+            const latestPCRData = allPCRTests.length > 0 ? allPCRTests[0] : null;
+            setLatestPCR(latestPCRData)
+
           // check if the last PCR is Confirmatory and positive
-
-          if(response?.data && response?.data?.results?.includes("POSITIVE") && response?.data?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
+          if(latestPCRData && latestPCRData?.results?.includes("POSITIVE") && latestPCRData?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
           //Deactive the whole form and display the child's HIV positive status on child's dashboard
-
           setShowInfantVist(false)
         }else{
           setShowInfantVist(true)
-
         }
-"-"
-        // Remove 1ST PCR if it has been done
-          if(response?.data?.testType === "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT" || hasFirstPCR){
-           let newList =newPCRList.filter((each, index)=>{
 
-                  return each.code !== "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT"
+        // Collect all already-documented test types (only unarchived)
+        const documentedTestTypes = allPCRTests
+          .filter(pcr => pcr.archived === 0 || pcr.archived === null)
+          .map(pcr => pcr.testType)
+          .filter(Boolean);
 
+        // Filter out all already-documented test types from the dropdown
+        let filteredPCRList = newPCRList.filter((each) => {
+          return !documentedTestTypes.includes(each.code);
+        });
 
-                })
-
-          newPCRList=newList
-          }
-
-            //check if the last PCR is positive then set the PCRType to confirmatory
-            if(response?.data && response?.data?.results?.includes("POSITIVE") &&  !props?.activeContent?.id ){
-              newPCRList.map((each, index)=>{
-
-                  if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR"){
-                    newPCRList.push(each)
+            //check if the last PCR is positive then add confirmatory PCR back to dropdown
+            if(latestPCRData && latestPCRData?.results?.includes("POSITIVE") && !props?.activeContent?.id ){
+              newPCRList.forEach((each) => {
+                  if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" && !filteredPCRList.some(item => item.code === each.code)){
+                    filteredPCRList.push(each)
                   }
                 })
-
             }
-            setPcrType(newPCRList)
+            setPcrType(filteredPCRList)
 
               })
               .catch((error) => {

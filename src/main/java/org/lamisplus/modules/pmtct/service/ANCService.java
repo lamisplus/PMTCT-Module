@@ -27,6 +27,7 @@ import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,9 @@ public class ANCService {
 
     @Autowired
     private PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
+
+    @Autowired
+    private PmtctHtsRepository pmtctHtsRepository;
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
@@ -1334,6 +1338,14 @@ public class ANCService {
             Optional<String> pmtctEnrollmentHivStatus = pmtctEnrollmentRepository.findHivStatusByPersonUuid(personUuid);
             if (pmtctEnrollmentHivStatus.isPresent() && pmtctEnrollmentHivStatus.get() != null) {
                 allStatuses.add(pmtctEnrollmentHivStatus.get());
+            }
+        } catch (Exception e) { }
+
+        // 5. Check pmtct_hts table for maternal retesting results
+        try {
+            Optional<String> pmtctHtsResult = pmtctHtsRepository.findLatestFinalResult(personUuid);
+            if (pmtctHtsResult.isPresent() && pmtctHtsResult.get() != null) {
+                allStatuses.add(pmtctHtsResult.get());
             }
         } catch (Exception e) { }
 

@@ -31,4 +31,7 @@ public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCR
     @Query(value = "SELECT * FROM pmtct_infant_pcr WHERE visit_date =?2 and infant_hospital_number=?1 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantPCRTest getLatestInfantPCRInfo(String infantHospitalNo, LocalDate visitDate);
 
+    @Query(value = "SELECT COUNT(*) > 0 FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND test_type = ?2 AND archived = 0", nativeQuery = true)
+    boolean existsByInfantHospitalNumberAndTestType(String infantHospitalNumber, String testType);
+
 }

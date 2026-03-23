@@ -50,7 +50,7 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
 
     @Override
     public boolean isNew() {
-        return false;
+        return getId() == null;
     }
 
 }

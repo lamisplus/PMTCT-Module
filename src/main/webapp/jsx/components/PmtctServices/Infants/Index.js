@@ -63,15 +63,9 @@ const InfantInformation = (props) => {
   const [record, setRecord] = useState(null);
   const toggle = () => setOpen(!open);
   useEffect(() => {
-    // if (props.patientObj.ancNo) {
-    //   InfantInfo();
-    //   console.log("it has anc ");
-    // } else {
     InfantInfoByUuid();
-    //   console.log("it has  no anc ");
-    // }
     DeliveryInfo();
-  }, []);
+  }, [props?.latestPmtctCycle?.id]);
   ///GET LIST OF Infants
   const InfantInfo = () => {
     setLoading(true);
@@ -114,6 +108,11 @@ const InfantInformation = (props) => {
   };
   ///GET Delivery Object
   const DeliveryInfo = () => {
+    const pmtctCycleId = props?.latestPmtctCycle?.id || props?.selectedCycleId;
+    if (!pmtctCycleId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
    let personUuid =props.patientObj.person_uuid
               ? props.patientObj.person_uuid
@@ -121,7 +120,7 @@ const InfantInformation = (props) => {
               ? props.patientObj.personUuid
               : props.patientObj.uuid
       axios
-        .get(`${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle?.id}`, {
+        .get(`${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${pmtctCycleId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -135,7 +134,8 @@ const InfantInformation = (props) => {
         })
 
         .catch((error) => {
-          //console.log(error);
+          setLoading(false);
+          console.log("Error fetching delivery info:", error);
         });
     
   };
@@ -183,13 +183,7 @@ const InfantInformation = (props) => {
 
   return (
     <div>
-      {console.log("infants.length", infants.length )}
-      {console.log("aliveChild",   aliveChild )}
-
-      {infants.length < aliveChild &&
-        aliveChild > infants.length &&
-        // props.patientObj.entryPoint !== "POINT_ENTRY_PMTCT_POSTNATAL_WARD" &&
-        // props.patientObj.entryPoint !== "621"  &&
+      {aliveChild > 0 && infants.length < aliveChild &&
         (
           <>
             <Button

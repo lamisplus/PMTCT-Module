@@ -69,6 +69,6 @@ public class InfantPCRTest implements Serializable, Persistable<Long> {
 
     @Override
     public boolean isNew() {
-        return false;
+        return id == null;
     }
 }

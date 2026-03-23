@@ -166,6 +166,16 @@ public class InfantVisitService
         return this.infantArvRepository.save(infantArv);
     }
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto) {
+        // Check for duplicate test type per infant
+        if (infantPCRTestDto.getInfantHospitalNumber() != null && infantPCRTestDto.getTestType() != null) {
+            boolean exists = infantPCRTestRepository.existsByInfantHospitalNumberAndTestType(
+                    infantPCRTestDto.getInfantHospitalNumber(), infantPCRTestDto.getTestType());
+            if (exists) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "A PCR test of this type has already been documented for this infant");
+            }
+        }
+
         InfantPCRTest infantPCRTest = new InfantPCRTest();
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = currentUser.get();
@@ -195,6 +205,16 @@ public class InfantVisitService
     }
 
     public InfantPCRTest converRequestDtotoEntity(InfantPCRTestDto infantPCRTestDto, String motherPersonUuid) {
+        // Check for duplicate test type per infant
+        if (infantPCRTestDto.getInfantHospitalNumber() != null && infantPCRTestDto.getTestType() != null) {
+            boolean exists = infantPCRTestRepository.existsByInfantHospitalNumberAndTestType(
+                    infantPCRTestDto.getInfantHospitalNumber(), infantPCRTestDto.getTestType());
+            if (exists) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "A PCR test of this type has already been documented for this infant");
+            }
+        }
+
         InfantPCRTest infantPCRTest = new InfantPCRTest();
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = currentUser.get();

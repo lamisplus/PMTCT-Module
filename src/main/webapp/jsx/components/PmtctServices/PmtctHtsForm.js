@@ -469,16 +469,16 @@ const PmtctHtsForm = (props) => {
           dateOfHivTest: response.data.dateOfHivTest,
           testEntryPoint: response.data.testEntryPoint,
           testSetting: response.data.testSetting,
-          // initialHivTest: response.data.initialHivTest,
           stageOfPregnancy: response.data.stageOfPregnancy,
-          // confirmatoryHivTest: response.data.confirmatoryHivTest,
-
           hospitalNumber: response.data.hospitalNumber,
           syphilis: response.data.syphilis,
           hepatitisB: response.data.hepatitisB,
           hepatitisC: response.data.hepatitisC,
           testingType: response.data.testingType,
           personUuid: props.personUuid,
+          ancNo: response.data.ancNo,
+          finalResult: response.data.finalResult || "",
+          source: "WEB",
         });
 
         if (response.data.initialHivTest) {
@@ -518,9 +518,9 @@ const PmtctHtsForm = (props) => {
         setExistingDate(response.data.dateOfHivTest);
         getSettingPoint(response.data.testEntryPoint);
 
-        if (props.activeContent.id === "view") {
+        if (props.activeContent.actionType === "view") {
           setDisabledField(true);
-        } else if (props.activeContent.id === "update") {
+        } else if (props.activeContent.actionType === "update") {
           setDisabledField(false);
         }
       })
@@ -1100,6 +1100,8 @@ const PmtctHtsForm = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (saving) return; // Prevent double submission
+
     // Prepare payload
     payload.initialHivTest = initialHivTest;
     payload.confirmatoryHivTest = confirmatoryHivTest;
@@ -1238,11 +1240,7 @@ const PmtctHtsForm = (props) => {
                 }}
               >
                 <h5 className="card-title" style={{ color: "#fff" }}>
-                  {props.onEnrollPatient &&
-                  lastPmtctHtsRecord?.id &&
-                  lastPmtctHtsRecord?.finalResult === "Negative"
-                    ? "Retesting"
-                    : props?.PmtctHtsRetestingType === "pmtct-hts"
+                  {payload.testingType === "PMTCT-HTS"
                     ? " PMTCT HTS"
                     : "Retesting"}
                 </h5>
@@ -1898,10 +1896,9 @@ const PmtctHtsForm = (props) => {
                   props.activeContent.actionType === "update" ? (
                     <>
                       <MatButton
-                        type="submit"
+                        type="button"
                         variant="contained"
                         color="primary"
-                        hidden={disabledField}
                         className={classes.button}
                         startIcon={<SaveIcon />}
                         style={{ backgroundColor: "#014d88" }}
@@ -1919,10 +1916,10 @@ const PmtctHtsForm = (props) => {
                         )}
                       </MatButton>
                     </>
-                  ) : (
+                  ) : props.activeContent.actionType !== "view" ? (
                     <>
                       <MatButton
-                        type="submit"
+                        type="button"
                         variant="contained"
                         color="primary"
                         className={classes.button}
@@ -1942,7 +1939,7 @@ const PmtctHtsForm = (props) => {
                         )}
                       </MatButton>
                     </>
-                  )}
+                  ) : null}
                 </>
               </>
             </>

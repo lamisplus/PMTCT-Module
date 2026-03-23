@@ -115,7 +115,6 @@ const PatientnHistory = (props) => {
 
   return (
     <div>
-        {partners && partners.length<= 0 && (
         <Button
             variant="contained"
             color="primary"
@@ -126,7 +125,6 @@ const PatientnHistory = (props) => {
         >
             <span style={{ textTransform: "capitalize" }}>New Partner</span>
         </Button>
-        )}
         <br/><br/><br/><br/>
 
             <MaterialTable

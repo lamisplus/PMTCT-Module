@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.util.CollectionUtils;
 import reactor.util.StringUtils;
@@ -52,6 +53,7 @@ public class InfantService {
 private final   InfantRapidTestRepository rapidTestRepository;
 
 
+    @Transactional
     public InfantDtoResponse save(InfantDto infantDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
@@ -134,7 +136,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
-            infantPCRTestDto.setUuid(infant.getMotherPersonUuid());
+            infantPCRTestDto.setUuid(UUID.randomUUID().toString());
             infantPCRTestDto.setVisitDate(LocalDate.now());
             infantPCRTestDto.setPmtctCycleId(infant.getPmtctCycleId());
             infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
@@ -280,18 +282,28 @@ private final   InfantRapidTestRepository rapidTestRepository;
 
     private InfantArv updateInfantArvDto(InfantDto infantDto, Infant infant) {
         InfantArv infantArv = null;
-        if (infantDto.getInfantArvDto().getId() != null) {
+        if (infantDto.getInfantArvDto() != null && infantDto.getInfantArvDto().getId() != null) {
             infantDto.getInfantArvDto().setSource(infantDto.getSource());
             infantArv = infantVisitService.updateInfantArv(infantDto.getInfantArvDto(),infant);
+        } else if (infantDto.getInfantArvDto() != null
+                && infantDto.getInfantArvDto().getInfantArvType() != null
+                && !infantDto.getInfantArvDto().getInfantArvType().isEmpty()) {
+            // New ARV record added during update
+            infantArv = saveInfantArv(infantDto.getInfantArvDto(), infant);
         }
         return infantArv;
     }
 
     private InfantPCRTest updateInfantPCRTest(InfantDto infantDto,Infant infant) {
         InfantPCRTest infantPCRTest = null;
-        if (infantDto.getInfantPCRTestDto().getId() != null) {
+        if (infantDto.getInfantPCRTestDto() != null && infantDto.getInfantPCRTestDto().getId() != null) {
             infantDto.getInfantPCRTestDto().setSource(infantDto.getSource());
             infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(),infant);
+        } else if (infantDto.getInfantPCRTestDto() != null
+                && infantDto.getInfantPCRTestDto().getTestType() != null
+                && !infantDto.getInfantPCRTestDto().getTestType().isEmpty()) {
+            // New PCR record added during update
+            infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(), infant);
         }
         return infantPCRTest;
     }

@@ -105,6 +105,7 @@ const LabourinfantInfo = (props) => {
   const [agectx, setAgeCTX] = useState([]);
   const [ageAtTestList, setAtTestList] = useState([]);
   const [PCRList, setPCRList] = useState([]);
+  const [allChildTestAgeOptions, setAllChildTestAgeOptions] = useState([]);
 
   const [infantArv, setInfantArv] = useState([]);
   //Vital signs clinical decision support
@@ -217,18 +218,56 @@ const LabourinfantInfo = (props) => {
  const GET_CODESETS = () => {
 
    GET_CODESETS_IN_BATCH("CHILD_TEST_AGE", "INFANT_PCR_RESULT", "SEX", "AGE_CTX_INITIATION", "INFANT_ARV_PROPHYLAXIS_TYPE", "INFANT_TESTING_PCR").then((response)=>{
-      setAtTestList(response.data.CHILD_TEST_AGE);
+      // Store CHILD_TEST_AGE as fallback but don't overwrite age-specific list
+      if (response.data.CHILD_TEST_AGE) {
+        setAllChildTestAgeOptions(response.data.CHILD_TEST_AGE);
+      }
       setPcrResult(response.data.INFANT_PCR_RESULT)
       setGenders(response.data.SEX);
       setAgeCTX(response.data.AGE_CTX_INITIATION);
 
       setInfantArv(response.data.INFANT_ARV_PROPHYLAXIS_TYPE)
       getSamplePCRType(response.data.INFANT_TESTING_PCR)
-     
+
    })
   
   };
 
+
+  // Load age-at-test options based on infant's age in weeks
+  const loadAgeAtTestOptions = (dateOfDelivery) => {
+    if (!dateOfDelivery) return;
+    let weeks = calculateAgeInWeek(dateOfDelivery);
+    if (weeks < 7) {
+      axios
+        .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setAtTestList(response.data);
+        })
+        .catch((error) => {});
+    } else if (weeks > 11) {
+      axios
+        .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setAtTestList(response.data);
+        })
+        .catch((error) => {});
+    } else {
+      // 7-11 weeks gap: load all CHILD_TEST_AGE options as fallback
+      axios
+        .get(`${baseUrl}application-codesets/v2/CHILD_TEST_AGE`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setAtTestList(response.data);
+        })
+        .catch((error) => {});
+    }
+  };
 
   // caluculate the PCR
   const calculateAgeInWeek = (dateOfBirth) => {
@@ -357,45 +396,12 @@ const LabourinfantInfo = (props) => {
 
   useEffect(() => {
     GET_CODESETS()
-   
+
     // console.log(props.activeContent.obj);
     if (props.activeContent && props.activeContent.actionType === "create") {
       infantInfo.dateOfDelivery = props.activeContent.obj;
-      let weeks = calculateAgeInWeek(infantInfo.dateOfDelivery);
-    //  weeks < 7
-      if (weeks < 7) {
-        // setInfantPCRTestDto({
-        //   ...infantPCRTestDto,
-        //   testType: "First PCR",
-        // });
-        axios
-          .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((response) => {
-            setAtTestList(response.data);
-          })
-          .catch((error) => {
-            //console.log(error);
-          });
-      }
-
-      if (weeks > 11) {
-        // setInfantPCRTestDto({
-        //   ...infantPCRTestDto,
-        //   testType: "Second PCR",
-        // });
-        axios
-          .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((response) => {
-            setAtTestList(response.data);
-          })
-          .catch((error) => {
-            //console.log(error);
-          });
-      }
+      // Load age-specific options using the reusable function
+      loadAgeAtTestOptions(infantInfo.dateOfDelivery);
     }
     if (props.activeContent && props.activeContent.id) {
       setInfantInfo({ ...infantInfo, ...props.activeContent.obj });
@@ -404,14 +410,17 @@ const LabourinfantInfo = (props) => {
         ...props.activeContent.obj.infantArvDto,
       });
       setInfantPCRTestDto({
-        ...infantArvDto,
+        ...infantPCRTestDto,
         ...props.activeContent.obj.infantPCRTestDto,
       });
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
-
-      //props.activeContent.obj.hospitalNumber2=props.activeContent.obj.hospitalNumber
+      // Load age-at-test options for VIEW/EDIT mode too
+      const existingDateOfDelivery = props.activeContent.obj?.dateOfDelivery;
+      if (existingDateOfDelivery) {
+        loadAgeAtTestOptions(existingDateOfDelivery);
+      }
     }
   }, [props.patientObj.id, props.activeContent.id]);
 
@@ -480,34 +489,7 @@ const LabourinfantInfo = (props) => {
       setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
 
     }else  if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
-      let weeks = calculateAgeInWeek(e.target.value);
-
-      if (weeks < 7) {
-        // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "First PCR" });
-        axios
-          .get(`${baseUrl}application-codesets/v2/1ST PCR_CHILD_TEST_AGE`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((response) => {
-            setAtTestList(response.data);
-          })
-          .catch((error) => {
-            //console.log(error);
-          });
-      }
-      if (weeks > 11) {
-        // setInfantPCRTestDto({ ...infantPCRTestDto, testType: "Second PCR" });
-        axios
-          .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((response) => {
-            setAtTestList(response.data);
-          })
-          .catch((error) => {
-            //console.log(error);
-          });
-      }
+      loadAgeAtTestOptions(e.target.value);
       setInfantInfo({ ...infantInfo, [e.target.name]: e.target.value });
 
     }else if(e.target.name === "ctxStatus"){
@@ -555,9 +537,15 @@ const LabourinfantInfo = (props) => {
       setSaving(true);
 
       if(infantPCRTestDto.testType &&  infantPCRTestDto.dateSampleCollected && infantPCRTestDto.dateSampleSent ){
-         
+
         infantInfo.infantPCRTestDto = infantPCRTestDto;
 
+      } else if(infantPCRTestDto.testType && (!infantPCRTestDto.dateSampleCollected || !infantPCRTestDto.dateSampleSent)){
+        toast.warning("PCR test data incomplete - Sample Collected Date and Sample Sent Date are required. PCR record will not be saved.", {
+          position: toast.POSITION.BOTTOM_CENTER,
+        });
+        setSaving(false);
+        return;
       }
 
 
@@ -656,7 +644,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
 
       setInfantPCRTestDto({...infantPCRTestDto,ageAtTest:  "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
-    }else if(timeDiffinMonth === 2 && timeDiffinMonth <= 12){
+    }else if(timeDiffinMonth >= 2 && timeDiffinMonth <= 12){
 
       setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_2-12_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 

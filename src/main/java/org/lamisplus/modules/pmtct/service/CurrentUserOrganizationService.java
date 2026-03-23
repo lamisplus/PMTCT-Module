@@ -5,13 +5,14 @@ import org.lamisplus.modules.base.service.UserService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Qualifier;
+import org.springframework.context.annotation.Primary;
+
 import java.util.Optional;
 
 
 @Service
 @RequiredArgsConstructor
-
+@Primary
 public class CurrentUserOrganizationService {
     private  final UserService userService;
 

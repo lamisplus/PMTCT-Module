@@ -57,6 +57,6 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
 
     @Override
     public boolean isNew() {
-        return false;
+        return getId() == null;
     }
 }
