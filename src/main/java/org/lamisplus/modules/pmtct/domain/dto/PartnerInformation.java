@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 public class PartnerInformation
 {
+    private String partnerId;
     private String fullName;
     private LocalDate dateOfBirth;
     private String preTestCounseled;

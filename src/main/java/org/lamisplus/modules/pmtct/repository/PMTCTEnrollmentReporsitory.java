@@ -519,7 +519,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) < 1000", nativeQuery = true)
     Long getViralSuppressionNumerator(Long facilityId);
 
@@ -534,7 +534,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000", nativeQuery = true)
     Long getUnsuppressedTotal(Long facilityId);
 
@@ -549,7 +549,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (10, 11, 12)", nativeQuery = true)
     Long getUnsuppressedQ1(Long facilityId);
@@ -565,7 +565,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (1, 2, 3)", nativeQuery = true)
     Long getUnsuppressedQ2(Long facilityId);
@@ -581,7 +581,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (4, 5, 6)", nativeQuery = true)
     Long getUnsuppressedQ3(Long facilityId);
@@ -597,7 +597,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "AND lr.result_reported IS NOT NULL " +
             "AND lr.date_result_reported IS NOT NULL " +
             "AND CAST(lr.date_result_reported AS DATE) >= pe.pmtct_enrollment_date " +
-            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') != '' " +
+            "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
             "AND CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) >= 1000 " +
             "AND EXTRACT(MONTH FROM lr.date_result_reported) IN (7, 8, 9)", nativeQuery = true)
     Long getUnsuppressedQ4(Long facilityId);

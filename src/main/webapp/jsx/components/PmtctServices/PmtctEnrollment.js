@@ -242,7 +242,7 @@ const AncPnc = (props) => {
   const createCycle = async () => {
     if (props.onEnrollPatient) {
       let payload2 = {
-        personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+        personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
         maternalOutcome: "",
         entryPoint: locationState.entrypointValue,
         hivStatus: patientObj?.dynamicHivStatus,
@@ -272,7 +272,8 @@ const AncPnc = (props) => {
           };
         }
       } catch (e) {
-        console.log(e);
+        
+        (e);
         toast.error(
           `${e?.response?.status}: New pmtct cycle not created: ${e?.response?.data}`
         );
@@ -788,17 +789,18 @@ const AncPnc = (props) => {
       } else {
         //perform operation for save action
         let payload = {
+          
           ...enroll,
           entryPoint: locationState.entrypointValue
             ? locationState.entrypointValue
             : props.entrypointValue,
           personUuid:
-            locationState && locationState.patientObj
-              ? locationState.patientObj.uuid
-              : props.patientObj.uuid,
-          personUuid: props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : locationState.patientObj.uuid,
+            props.patientObj.person_uuid
+              || props.patientObj.personUuid
+              || props.patientObj.uuid
+              || (locationState && locationState.patientObj
+                ? (locationState.patientObj.personUuid || locationState.patientObj.uuid)
+                : undefined),
           pmtctCycleId: pmtctCycleId || props?.latestPmtctCycle?.id,
           source: "WEB",
         };

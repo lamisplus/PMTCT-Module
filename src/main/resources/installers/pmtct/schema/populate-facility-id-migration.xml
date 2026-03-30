@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <!-- ========================================
+         Populate NULL facility_id in all PMTCT tables
+         by looking up the value from patient_person table.
+
+         Tables using person_uuid (mother tables):
+           1. pmtct_enrollment
+           2. pmtct_anc
+           3. pmtct_delivery
+           4. pmtct_mother_visitation
+           5. pmtct_hts
+           6. pmtct_pregnancy_cycle
+
+         Tables using mother_person_uuid (infant tables):
+           7. pmtct_infant_information
+           8. pmtct_infant_visit
+           9. pmtct_infant_pcr
+          10. pmtct_infant_arv
+          11. pmtct_infant_mother_art
+          12. pmtct_infant_rapid_antibody
+
+         Author: system
+         Date: 2026-03-26
+         ======================================== -->
+
+    <!-- 1. pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-enrollment">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_enrollment" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_enrollment pe
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE pe.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (pe.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 2. pmtct_anc -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-anc">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_anc pa
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE pa.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (pa.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 3. pmtct_delivery -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-delivery">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_delivery" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_delivery pd
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE pd.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (pd.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 4. pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-mother-visitation">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation mv
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE mv.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (mv.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 5. pmtct_hts -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-hts">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_hts" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_hts ph
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ph.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ph.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 6. pmtct_pregnancy_cycle -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-pregnancy-cycle">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_pregnancy_cycle" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_pregnancy_cycle pc
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE pc.person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (pc.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 7. pmtct_infant_information -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-information">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_information" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_information ii
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ii.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ii.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 8. pmtct_infant_visit -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-visit">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_visit" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_visit iv
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE iv.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (iv.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 9. pmtct_infant_pcr -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-pcr">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_pcr" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_pcr ip
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ip.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ip.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 10. pmtct_infant_arv -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-arv">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_arv" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_arv ia
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ia.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ia.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 11. pmtct_infant_mother_art -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-mother-art">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_mother_art" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_mother_art ima
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ima.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ima.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+    <!-- 12. pmtct_infant_rapid_antibody -->
+    <changeSet failOnError="false" author="system" id="2026-03-26-populate-facility-id-infant-rapid-antibody">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_rapid_antibody" columnName="facility_id" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_rapid_antibody ira
+            SET facility_id = pp.facility_id
+            FROM patient_person pp
+            WHERE ira.mother_person_uuid = pp.uuid
+              AND pp.facility_id IS NOT NULL
+              AND (ira.facility_id IS NULL);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

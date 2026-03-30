@@ -21,16 +21,16 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, Lo
         @Query(value = "SELECT * FROM public.pmtct_mother_visitation where anc_no = ?1 and date_of_visit > ?2 order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisits(String ancNo, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and date_of_visit > ?2 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and date_of_visit > ?2 and (archived = 0 or archived is null) order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisitsByPersonUuid(String personUuid, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and pmtct_cycle_id = ?2 and date_of_visit > ?3 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and pmtct_cycle_id = ?2 and date_of_visit > ?3 and (archived = 0 or archived is null) order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisitsByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and date_of_visit <= ?2 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and date_of_visit <= ?2 and (archived = 0 or archived is null) order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getANCVisitsByPersonUuid(String personUuid, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and pmtct_cycle_id = ?2 and date_of_visit <= ?3 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where person_uuid = ?1 and pmtct_cycle_id = ?2 and date_of_visit <= ?3 and (archived = 0 or archived is null) order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getANCVisitsByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId, LocalDate deliveryDate);
 
         @Query(value = "SELECT count(*) FROM public.pmtct_mother_visitation where anc_no = ?1", nativeQuery = true)

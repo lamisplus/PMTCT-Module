@@ -69,6 +69,13 @@ public class PMTCTController {
         return ResponseEntity.ok(ancService.getSingleAnc(id));
     }
 
+    @GetMapping(value = "get-anc-by-person")
+    public ResponseEntity<ANC> getANCByPersonUuidAndCycleId(
+            @RequestParam String personUuid,
+            @RequestParam Long pmtctCycleId) {
+        return ResponseEntity.ok(ancService.getAncByPersonUuidAndCycleId(personUuid, pmtctCycleId));
+    }
+
 //    @GetMapping(value = "check-for-infant-high-risk")
 //    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PersonUuid) {
 //        return ResponseEntity.ok(ancService.isAtRisk(PersonUuid));
@@ -288,9 +295,14 @@ public class PMTCTController {
         return ResponseEntity.ok(infantService.updateInfant(id, infantDto));
     }
 
-    @PutMapping(value = "update-partnerinformation-in-anc/{id}")
-    public PartnerInformation updatePartnerInformation(@PathVariable("id") Long id, @RequestBody PartnerInformation partnerInformation) {
-        return ancService.updateAncWithPartnerInfo(id, partnerInformation);
+    @PostMapping(value = "add-partnerinformation-in-anc/{id}")
+    public PartnerInformation addPartnerInformation(@PathVariable("id") Long id, @RequestBody PartnerInformation partnerInformation) {
+        return ancService.addPartnerToAnc(id, partnerInformation);
+    }
+
+    @PutMapping(value = "update-partnerinformation-in-anc/{id}/{partnerId}")
+    public PartnerInformation updatePartnerInformation(@PathVariable("id") Long id, @PathVariable("partnerId") String partnerId, @RequestBody PartnerInformation partnerInformation) {
+        return ancService.updatePartnerInAnc(id, partnerId, partnerInformation);
     }
 
     @PutMapping(value = "delete-partnerinformation-in-anc/{id}")
@@ -333,8 +345,8 @@ public class PMTCTController {
         return ResponseEntity.ok(infantVisitService.save(infantVisitRequestDto));
     }
 
-    @GetMapping(value = "get-infantvisit-by-hospitalnumber/{hospitalNumber}")
-    public ResponseEntity<List<InfantVisit>> getInfantVisitByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber) {
+    @GetMapping(value = "get-infantvisit-by-hospitalnumber")
+    public ResponseEntity<List<InfantVisit>> getInfantVisitByHospitalNumber(@RequestParam("hospitalNumber") String hospitalNumber) {
         return ResponseEntity.ok(infantVisitService.getInfantVisitByHospitalNumber(hospitalNumber));
     }
 
@@ -348,8 +360,8 @@ public class PMTCTController {
         return ResponseEntity.ok(infantVisitService.save(infantPCRTestDto));
     }
 
-    @GetMapping(value = "get-infant-prc-by-hospitalnumber/{hospitalNumber}")
-    public ResponseEntity<List<InfantPCRTest>> getInfantPCRTestByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber) {
+    @GetMapping(value = "get-infant-prc-by-hospitalnumber")
+    public ResponseEntity<List<InfantPCRTest>> getInfantPCRTestByHospitalNumber(@RequestParam("hospitalNumber") String hospitalNumber) {
         return ResponseEntity.ok(infantVisitService.getInfantPCRTestByHospitalNumber(hospitalNumber));
     }
 
@@ -363,8 +375,8 @@ public class PMTCTController {
         return ResponseEntity.ok(infantVisitService.save(infantArvDto));
     }
 
-    @GetMapping(value = "get-infant-arv-by-hospitalnumber/{hospitalNumber}")
-    public ResponseEntity<List<InfantArv>> getInfantArvByHospitalNumber(@PathVariable("hospitalNumber") String hospitalNumber) {
+    @GetMapping(value = "get-infant-arv-by-hospitalnumber")
+    public ResponseEntity<List<InfantArv>> getInfantArvByHospitalNumber(@RequestParam("hospitalNumber") String hospitalNumber) {
         return ResponseEntity.ok(infantVisitService.getInfantArvByHospitalNumber(hospitalNumber));
     }
 
@@ -397,8 +409,8 @@ public class PMTCTController {
         return ResponseEntity.ok(infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto()));
     }
 
-    @GetMapping(value = "get-form-filter/{hospitalNumber}")
-    public FormFilterResponseDto getFormFilter(@PathVariable("hospitalNumber") String hospitalNumber) {
+    @GetMapping(value = "get-form-filter")
+    public FormFilterResponseDto getFormFilter(@RequestParam("hospitalNumber") String hospitalNumber) {
         return infantVisitService.getFormFilter(hospitalNumber);
     }
 
@@ -487,9 +499,9 @@ public class PMTCTController {
         return ResponseEntity.accepted().build();
     }
 
-    @DeleteMapping(value = "delete/partnerinfo/{id}")
-    public ResponseEntity<String> deletePartnerInfo(@PathVariable("id") Long id) {
-        ancService.deletePartnerInfo(id);
+    @DeleteMapping(value = "delete/partnerinfo/{id}/{partnerId}")
+    public ResponseEntity<String> deletePartnerInfo(@PathVariable("id") Long id, @PathVariable("partnerId") String partnerId) {
+        ancService.deletePartnerFromAnc(id, partnerId);
         return ResponseEntity.accepted().build();
     }
 
@@ -724,8 +736,9 @@ public class PMTCTController {
     @GetMapping(value = "is-infant-visit-date-exists")
     public ResponseEntity<Boolean> isInfantVisitDateExists(
             @RequestParam String hospitalNumber,
-            @RequestParam LocalDate visitDate) {
-        boolean exists = infantVisitService.isInfantVisitDateExists(hospitalNumber, visitDate);
+            @RequestParam LocalDate visitDate,
+            @RequestParam(required = false) Long excludeId) {
+        boolean exists = infantVisitService.isInfantVisitDateExists(hospitalNumber, visitDate, excludeId);
         return ResponseEntity.ok(exists);
     }
 

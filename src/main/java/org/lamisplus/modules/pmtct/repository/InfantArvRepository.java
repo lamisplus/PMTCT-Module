@@ -29,6 +29,13 @@ public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long
     Optional<InfantArv> getByInfantHospitalNumberAndVisitDate (String hospitalNumber, LocalDate visitDate);
     Optional<InfantArv> findByUniqueUuid(String uniqueUuid);
 
+    @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND (archived = 0 OR archived IS NULL) ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantArv getLatestByHospitalNumberAndVisitDate(String hospitalNumber, LocalDate visitDate);
 
+    @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND (archived = 0 OR archived IS NULL) ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantArv getLatestByUuidAndHospitalNumberAndVisitDate(String uuid, String hospitalNumber, LocalDate visitDate);
+
+    @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE unique_uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND (archived = 0 OR archived IS NULL) ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantArv getByUniqueUuidAndHospitalNumberAndVisitDate(String uniqueUuid, String hospitalNumber, LocalDate visitDate);
 
 }

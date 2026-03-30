@@ -164,7 +164,7 @@ const UserRegistration = (props) => {
   });
   const [latestPmtctCycle, setLatestPmtctCycle] = useState(null);
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
-    personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+    personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
     maternalOutcome: "",
     entryPoint: locationState.entrypointValue,
     hivStatus: patientObj?.dynamicHivStatus || "",
@@ -429,7 +429,7 @@ const UserRegistration = (props) => {
 
   const createCycle = async () => {
     let payload = {
-      personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+      personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
       maternalOutcome: "",
       entryPoint: locationState.entrypointValue,
       hivStatus: objValues.staticHivStatus,
@@ -791,7 +791,7 @@ const UserRegistration = (props) => {
 
         if (checkIfCycleIsCreated?.status) {
           objValues.entryPoint = locationState.entrypointValue;
-          objValues.person_uuid = patientObj.uuid || patientObj?.personUuid;
+          objValues.person_uuid = patientObj.personUuid || patientObj?.uuid;
           objValues.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
           objValues.source = "WEB";
           let url = "";

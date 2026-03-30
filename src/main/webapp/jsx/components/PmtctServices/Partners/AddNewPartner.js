@@ -97,6 +97,7 @@ const Labourpartner = (props) => {
   const [syphills, setSyphills] = useState([]);
   const [referred, setReferred] = useState([]);
   const [partnerHivStatus, setPartnerHivStatus] = useState("");
+  const [ancId, setAncId] = useState(null);
   const [partner, setpartner] = useState({
     age: "",
     dateOfBirth: "",
@@ -112,7 +113,17 @@ const Labourpartner = (props) => {
   });
   useEffect(() => {
     GET_CODESETS()
-  
+    // Fetch ANC id using personUuid + pmtctCycleId
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id || props.patientObj.pmtctCycleId;
+    if (personUuid && pmtctCycleId) {
+      axios.get(`${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).then((response) => {
+        setAncId(response.data.id);
+      }).catch((error) => {});
+    }
+
     if (props.activeContent && props.activeContent.id) {
       setpartner(props.activeContent.obj);
       setDisabledField(
@@ -172,16 +183,28 @@ const Labourpartner = (props) => {
     e.preventDefault();
     if (validate()) {
       setSaving(true);
-      axios
-        .put(
-          `${baseUrl}pmtct/anc/update-partnerinformation-in-anc/${props.patientObj.id}`,
+      const isUpdate = props.activeContent && props.activeContent.actionType === "update";
+      const partnerId = partner.partnerId;
+      let request;
+      if (isUpdate && partnerId) {
+        // Update existing partner by partnerId
+        request = axios.put(
+          `${baseUrl}pmtct/anc/update-partnerinformation-in-anc/${ancId}/${partnerId}`,
           partner,
           { headers: { Authorization: `Bearer ${token}` } }
-        )
+        );
+      } else {
+        // Add new partner
+        request = axios.post(
+          `${baseUrl}pmtct/anc/add-partnerinformation-in-anc/${ancId}`,
+          partner,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+      request
         .then((response) => {
           setSaving(false);
-          //props.patientObj.commenced=true
-          toast.success("Record save successful", {
+          toast.success(isUpdate ? "Partner updated successfully" : "Partner added successfully", {
             position: toast.POSITION.BOTTOM_CENTER,
           });
           props.setActiveContent({ ...props.activeContent, route: "partners" });

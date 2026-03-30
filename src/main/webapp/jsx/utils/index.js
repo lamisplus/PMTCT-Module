@@ -94,24 +94,17 @@ export const calculateGestationalAge = (enrollmentDate, lmp) => {
 export  const convertMaternalCodeToValue = (code) => {
   const stored = JSON.parse(localStorage.getItem("maternalOutcome"));
 
-      if(stored.length > 0){
+      if(stored && stored.length > 0){
            let convertedValue =  stored.filter((each )=>{
 
               return each.code === code
 
              })
 
-
-
-        
-             return  convertedValue[0].display;
+             return  convertedValue.length > 0 ? convertedValue[0].display : "";
 
           }
-     
-
-
-
-
+      return "";
 }
 
 

@@ -2343,5 +2343,14 @@
         </sql>
     </changeSet>
 
+    <changeSet failOnError="false" author="system" id="2026-03-30-fix-null-archived-infant-information-002">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_infant_information" columnName="archived"/>
+        </preConditions>
+        <sql>
+            UPDATE pmtct_infant_information SET archived = 0 WHERE archived IS NULL OR archived != 1;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
 

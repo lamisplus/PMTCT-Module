@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <!-- Step 1: Convert single-object partnerInformation to array format -->
+    <changeSet failOnError="false" author="system" id="2026-03-28-partner-info-convert-object-to-array">
+        <comment>Convert partnerInformation from single JSON object to JSON array for records that are not already arrays</comment>
+        <sql>
+            UPDATE pmtct_anc
+            SET partner_information = jsonb_build_array(partner_information)
+            WHERE partner_information IS NOT NULL
+              AND jsonb_typeof(partner_information) = 'object';
+        </sql>
+    </changeSet>
+
+    <!-- Step 2: Add partnerId UUID to each partner element that doesn't have one -->
+    <changeSet failOnError="false" author="system" id="2026-03-28-partner-info-add-partner-id">
+        <comment>Add partnerId (UUID) to each partner in the partnerInformation array that does not have one</comment>
+        <sql>
+            UPDATE pmtct_anc
+            SET partner_information = (
+                SELECT jsonb_agg(
+                    CASE
+                        WHEN elem->>'partnerId' IS NULL OR elem->>'partnerId' = ''
+                        THEN elem || jsonb_build_object('partnerId', gen_random_uuid()::text)
+                        ELSE elem
+                    END
+                )
+                FROM jsonb_array_elements(partner_information) AS elem
+            )
+            WHERE partner_information IS NOT NULL
+              AND jsonb_typeof(partner_information) = 'array'
+              AND jsonb_array_length(partner_information) > 0
+              AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(partner_information) AS el
+                  WHERE el->>'partnerId' IS NULL OR el->>'partnerId' = ''
+              );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

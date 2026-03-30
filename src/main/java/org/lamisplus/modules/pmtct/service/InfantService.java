@@ -74,6 +74,8 @@ private final   InfantRapidTestRepository rapidTestRepository;
         infant.setFacilityId(facilityId);
         infant.setCreatedBy(user.getUserName());
         infant.setLastModifiedBy(user.getUserName());
+        infant.setCreatedDate(java.time.LocalDateTime.now());
+        infant.setLastModifiedDate(java.time.LocalDateTime.now());
         infant.setLastVisitDate(infantDto.getDateOfDelivery());
         infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
         infant.setDefaultDays(0);
@@ -115,11 +117,8 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 .build();
     }
     private InfantArv saveInfantArv(InfantArvDto infantArvDto, Infant infant) {
-
-//        System.out.println("infantArvDto " + infantArvDto);
-//        if (ObjectUtils.isNotEmpty(infantArvDto) && StringUtils.hasText(infantArvDto.getInfantArvType())) {
             infantArvDto.setId(infant.getId());
-            infantArvDto.setVisitDate(LocalDate.now());
+            infantArvDto.setVisitDate(infant.getDateOfDelivery());
             infantArvDto.setUuid(infant.getMotherPersonUuid());
             infantArvDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantArvDto.setAncNumber(infant.getAncNo());
@@ -127,22 +126,19 @@ private final   InfantRapidTestRepository rapidTestRepository;
             infantArvDto.setMotherPersonUuid(infant.getMotherPersonUuid());
             infantArvDto.setSource(infant.getSource());
 
-//        }
         return infantVisitService.save(infantArvDto);
     }
 
     private InfantPCRTest saveInfantPCRTest(InfantPCRTestDto infantPCRTestDto, Infant infant) {
-//        if (ObjectUtils.isNotEmpty(infantPCRTestDto) && StringUtils.hasText(infantPCRTestDto.getTestType())) {
             infantPCRTestDto.setId(infant.getId());
             infantPCRTestDto.setInfantHospitalNumber(infant.getHospitalNumber());
             infantPCRTestDto.setAncNumber(infant.getAncNo());
             infantPCRTestDto.setUuid(UUID.randomUUID().toString());
-            infantPCRTestDto.setVisitDate(LocalDate.now());
+            infantPCRTestDto.setVisitDate(infant.getDateOfDelivery());
             infantPCRTestDto.setPmtctCycleId(infant.getPmtctCycleId());
             infantPCRTestDto.setMotherPersonUuid(infant.getMotherPersonUuid());
-             infantPCRTestDto.setSource(infant.getSource());
+            infantPCRTestDto.setSource(infant.getSource());
 
-//        }
         return infantVisitService.save(infantPCRTestDto);
     }
 
@@ -199,13 +195,13 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 .hospitalNumber(infant.getHospitalNumber())
                 .uuid(infant.getUuid())
                 .ancNo(infant.getAncNo())
-                .ancNo(infant.getInfantOutcomeAt18_months())
+                .infantOutcomeAt18Months(infant.getInfantOutcomeAt18_months())
                 .personUuid(infant.getMotherPersonUuid())
                 .bodyWeight(infant.getBodyWeight())
                 .ctxStatus(infant.getCtxStatus())
                 .pmtctCycleId(infant.getPmtctCycleId())
-                .infantArvDto(infantVisitService.getInfantArvByUUID(personUuid))
-                .infantPCRTestDto(infantVisitService.getInfantPCRTestByUUID(personUuid))
+                .infantArvDto(infantVisitService.getInfantArvForRegistration(infant.getMotherPersonUuid(), infant.getHospitalNumber(), infant.getDateOfDelivery()))
+                .infantPCRTestDto(infantVisitService.getInfantPCRTestForRegistration(infant.getHospitalNumber(), infant.getDateOfDelivery()))
                 .build();
     }
 
@@ -232,6 +228,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
                 .orElseThrow(() -> new Exception("Infant NOT FOUND"));
     }
 
+     @Transactional
      public InfantDtoUpdateResponse updateInfant(Long id, InfantDto infantDto) {
          Optional<User> currentUser = this.userService.getUserWithRoles();
          User user = (User) currentUser.get();
@@ -249,9 +246,18 @@ private final   InfantRapidTestRepository rapidTestRepository;
          infant.setHospitalNumber(infantDto.getHospitalNumber());
          infant.setUuid(infantDto.getUuid());
          infant.setFacilityId(facilityId);
-         infant.setCreatedBy(user.getUserName());
-         infant.setLastModifiedBy(user.getUserName());
          infant.setId(id);
+         // Preserve original created_by, created_date, and archived from existing record
+         Optional<Infant> existingInfant = infantRepository.findById(id);
+         if (existingInfant.isPresent()) {
+             infant.setCreatedBy(existingInfant.get().getCreatedBy());
+             infant.setCreatedDate(existingInfant.get().getCreatedDate());
+             infant.setArchived(existingInfant.get().getArchived() != null ? existingInfant.get().getArchived() : 0L);
+         } else {
+             infant.setArchived(0L);
+         }
+         infant.setLastModifiedBy(user.getUserName());
+         infant.setLastModifiedDate(java.time.LocalDateTime.now());
          infant.setLastVisitDate(infantDto.getDateOfDelivery());
          infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
          infant.setDefaultDays(0);
@@ -260,9 +266,11 @@ private final   InfantRapidTestRepository rapidTestRepository;
          infant.setMotherPersonUuid(infantDto.getPersonUuid());
         infant.setSource(infantDto.getSource());
 
-         // Update pmtctCycleId if provided
+         // Update pmtctCycleId if provided, otherwise preserve existing
          if (infantDto.getPmtctCycleId() != null) {
              infant.setPmtctCycleId(infantDto.getPmtctCycleId());
+         } else if (existingInfant.isPresent()) {
+             infant.setPmtctCycleId(existingInfant.get().getPmtctCycleId());
          }
 
          Infant result =  infantRepository.save(infant);
@@ -302,8 +310,17 @@ private final   InfantRapidTestRepository rapidTestRepository;
         } else if (infantDto.getInfantPCRTestDto() != null
                 && infantDto.getInfantPCRTestDto().getTestType() != null
                 && !infantDto.getInfantPCRTestDto().getTestType().isEmpty()) {
-            // New PCR record added during update
-            infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(), infant);
+            // Check if a PCR record already exists for this infant with the same test type - if so, update it
+            InfantPCRTest existingPCR = infantPCRTestRepository.findByInfantHospitalNumberAndTestType(
+                    infant.getHospitalNumber(), infantDto.getInfantPCRTestDto().getTestType());
+            if (existingPCR != null) {
+                infantDto.getInfantPCRTestDto().setId(existingPCR.getId());
+                infantDto.getInfantPCRTestDto().setSource(infantDto.getSource());
+                infantPCRTest = infantVisitService.updateInfantPCRTest(infantDto.getInfantPCRTestDto(), infant);
+            } else {
+                // Truly new PCR record for this registration
+                infantPCRTest = saveInfantPCRTest(infantDto.getInfantPCRTestDto(), infant);
+            }
         }
         return infantPCRTest;
     }
@@ -340,10 +357,14 @@ private final   InfantRapidTestRepository rapidTestRepository;
         return personMetaDataDto;
     }
     public void updateInfant(String hospitalNo, String outCome) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
         Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNo);
         if (infants.isPresent()){
             Infant infant = infants.get();
             infant.setInfantOutcomeAt18_months(outCome);
+            infant.setLastModifiedDate(java.time.LocalDateTime.now());
+            infant.setLastModifiedBy(user.getUserName());
             infantRepository.save(infant);
         }
     }
@@ -361,16 +382,31 @@ private final   InfantRapidTestRepository rapidTestRepository;
     }
 
     public void deleteInfant(Long id) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
         Infant exist = this.getSingleInfant(id);
-        // Soft delete: set archived to 1 instead of physical deletion
+
+        // Find ARV and PCR using the same logic as view (buildInfantDTO)
+        InfantArvDto infantArvDto = infantVisitService.getInfantArvForRegistration(
+                exist.getMotherPersonUuid(), exist.getHospitalNumber(), exist.getDateOfDelivery());
+        InfantPCRTestDto infantPCRTestDto = infantVisitService.getInfantPCRTestForRegistration(
+                exist.getHospitalNumber(), exist.getDateOfDelivery());
+
+        // Soft delete the Infant record
         exist.setArchived(1L);
+        exist.setLastModifiedDate(java.time.LocalDateTime.now());
+        exist.setLastModifiedBy(user.getUserName());
         this.infantRepository.save(exist);
 
-        //soft delete InfantARV
-        infantVisitService.deleteInfantArv(id);
+        // Soft delete InfantARV using the ID found by the same retrieval as view
+        if (infantArvDto != null && infantArvDto.getId() != null) {
+            infantVisitService.deleteInfantArv(infantArvDto.getId());
+        }
 
-        //soft delete InfantPCR
-        infantVisitService.deleteInfantPCRTestDt(id);
+        // Soft delete InfantPCR using the ID found by the same retrieval as view
+        if (infantPCRTestDto != null && infantPCRTestDto.getId() != null) {
+            infantVisitService.deleteInfantPCRTestDt(infantPCRTestDto.getId());
+        }
     }
 
 

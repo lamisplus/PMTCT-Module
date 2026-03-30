@@ -183,7 +183,7 @@ const LabourinfantInfo = (props) => {
     motherPersonUuid: props.patientObj.person_uuid
       ? props.patientObj.person_uuid
       : props.patientObj.personUuid,
-
+    source: "WEB",
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "",
@@ -198,6 +198,7 @@ const LabourinfantInfo = (props) => {
     motherPersonUuid: props.patientObj.person_uuid
       ? props.patientObj.person_uuid
       : props.patientObj.personUuid,
+    source: "WEB",
   });
 
    const getSamplePCRType = (arr) => {
@@ -404,14 +405,16 @@ const LabourinfantInfo = (props) => {
       loadAgeAtTestOptions(infantInfo.dateOfDelivery);
     }
     if (props.activeContent && props.activeContent.id) {
-      setInfantInfo({ ...infantInfo, ...props.activeContent.obj });
+      setInfantInfo({ ...infantInfo, ...props.activeContent.obj, source: props.activeContent.obj.source || "WEB" });
       setInfantArvDto({
         ...infantArvDto,
         ...props.activeContent.obj.infantArvDto,
+        source: props.activeContent.obj.infantArvDto?.source || "WEB",
       });
       setInfantPCRTestDto({
         ...infantPCRTestDto,
         ...props.activeContent.obj.infantPCRTestDto,
+        source: props.activeContent.obj.infantPCRTestDto?.source || "WEB",
       });
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
@@ -537,8 +540,10 @@ const LabourinfantInfo = (props) => {
       setSaving(true);
 
       if(infantPCRTestDto.testType &&  infantPCRTestDto.dateSampleCollected && infantPCRTestDto.dateSampleSent ){
-
-        infantInfo.infantPCRTestDto = infantPCRTestDto;
+        const pcrToSend = { ...infantPCRTestDto };
+        if (!pcrToSend.dateResultReceivedAtFacility) pcrToSend.dateResultReceivedAtFacility = null;
+        if (!pcrToSend.dateResultReceivedByCaregiver) pcrToSend.dateResultReceivedByCaregiver = null;
+        infantInfo.infantPCRTestDto = pcrToSend;
 
       } else if(infantPCRTestDto.testType && (!infantPCRTestDto.dateSampleCollected || !infantPCRTestDto.dateSampleSent)){
         toast.warning("PCR test data incomplete - Sample Collected Date and Sample Sent Date are required. PCR record will not be saved.", {

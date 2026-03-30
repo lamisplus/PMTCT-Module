@@ -875,6 +875,11 @@ const ClinicVisit = (props) => {
                       </option>
                     ))}
                   </Input>
+                  {errors.maternalOutcome !== "" ? (
+                    <span className={classes.error}>{errors.maternalOutcome}</span>
+                  ) : (
+                    ""
+                  )}
                 </FormGroup>
               </div>
               <div className=" mb-3 col-md-3">

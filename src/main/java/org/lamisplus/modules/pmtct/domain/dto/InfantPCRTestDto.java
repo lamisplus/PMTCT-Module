@@ -2,23 +2,14 @@ package org.lamisplus.modules.pmtct.domain.dto;
 
 import lombok.Data;
 
-import lombok.Data;
-import org.lamisplus.modules.patient.utility.SecurityUtils;
 import org.springframework.data.annotation.CreatedDate;
 
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-@MappedSuperclass
 @Data
 public class InfantPCRTestDto implements Serializable
 {
-    @NotNull(message = "Source is required")
     private String source;
     private Long id;
     @CreatedDate
@@ -34,7 +25,6 @@ public class InfantPCRTestDto implements Serializable
     private String results;
     private String uuid;
     private String  uniqueUuid;
-    @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
     private String motherPersonUuid;
 

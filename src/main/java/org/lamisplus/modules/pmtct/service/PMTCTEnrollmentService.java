@@ -117,6 +117,8 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
         pmtctEnrollment.setCreatedBy(user.getUserName());
         pmtctEnrollment.setLastModifiedBy(user.getUserName());
+        pmtctEnrollment.setCreatedDate(java.time.LocalDateTime.now());
+        pmtctEnrollment.setLastModifiedDate(java.time.LocalDateTime.now());
 
 
         pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
@@ -461,6 +463,7 @@ private DeliveryRepository deliveryRepository;
 
             // Update lastModifiedBy with current user
             pmtctEnrollment1.setLastModifiedBy(user.getUserName());
+            pmtctEnrollment1.setLastModifiedDate(java.time.LocalDateTime.now());
 
             // Update pmtctCycleId if provided
             if (pmtctEnrollmentRequestDto.getPmtctCycleId() != null) {

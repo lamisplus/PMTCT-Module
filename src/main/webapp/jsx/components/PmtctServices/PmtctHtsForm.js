@@ -130,7 +130,7 @@ const PmtctHtsForm = (props) => {
     id: "",
   });
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
-    personUuid: patientObj.uuid ? patientObj.uuid : patientObj?.personUuid,
+    personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
     maternalOutcome: "",
     entryPoint: locationState.entrypointValue,
     hivStatus: patientObj?.dynamicHivStatus || "",
@@ -211,17 +211,19 @@ const PmtctHtsForm = (props) => {
 
     setInitialHivTest((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-    if (e.target.value === "non-reactive") {
-      setFinalResult("Negative");
-    } else {
-      setFinalResult("");
-    }
+    if (e.target.name === "result") {
+      if (e.target.value === "non-reactive") {
+        setFinalResult("Negative");
+      } else {
+        setFinalResult("");
+      }
 
-    setConfirmatoryHivTest({ result: "", dateOfTest: "" });
-    setTieBreaker({ result: "", dateOfTest: "" });
-    setRetesting({ result: "", dateOfTest: "" });
-    setConfirmatoryTest2({ result: "", dateOfTest: "" });
-    setTieBreaker2({ result: "", dateOfTest: "" });
+      setConfirmatoryHivTest({ result: "", dateOfTest: "" });
+      setTieBreaker({ result: "", dateOfTest: "" });
+      setRetesting({ result: "", dateOfTest: "" });
+      setConfirmatoryTest2({ result: "", dateOfTest: "" });
+      setTieBreaker2({ result: "", dateOfTest: "" });
+    }
   };
 
   const handleConfirmatoryInputChange = (e) => {
@@ -234,12 +236,14 @@ const PmtctHtsForm = (props) => {
       [e.target.name]: e.target.value,
     }));
 
-    setTieBreaker({ result: "", dateOfTest: "" });
-    setRetesting({ result: "", dateOfTest: "" });
-    setConfirmatoryTest2({ result: "", dateOfTest: "" });
-    setTieBreaker2({ result: "", dateOfTest: "" });
+    if (e.target.name === "result") {
+      setTieBreaker({ result: "", dateOfTest: "" });
+      setRetesting({ result: "", dateOfTest: "" });
+      setConfirmatoryTest2({ result: "", dateOfTest: "" });
+      setTieBreaker2({ result: "", dateOfTest: "" });
 
-    setFinalResult("");
+      setFinalResult("");
+    }
   };
 
   const handleTieBreakerInputChange = (e) => {
@@ -249,15 +253,17 @@ const PmtctHtsForm = (props) => {
 
     setTieBreaker((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-    if (e.target.value === "non-reactive") {
-      setFinalResult("Negative");
-    } else {
-      setFinalResult("");
-    }
+    if (e.target.name === "result") {
+      if (e.target.value === "non-reactive") {
+        setFinalResult("Negative");
+      } else {
+        setFinalResult("");
+      }
 
-    setRetesting({ result: "", dateOfTest: "" });
-    setConfirmatoryTest2({ result: "", dateOfTest: "" });
-    setTieBreaker2({ result: "", dateOfTest: "" });
+      setRetesting({ result: "", dateOfTest: "" });
+      setConfirmatoryTest2({ result: "", dateOfTest: "" });
+      setTieBreaker2({ result: "", dateOfTest: "" });
+    }
   };
 
   const handleRetestingInputChange = (e) => {
@@ -267,14 +273,16 @@ const PmtctHtsForm = (props) => {
 
     setRetesting((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-    if (e.target.value === "non-reactive") {
-      setFinalResult("Negative");
-    } else {
-      setFinalResult("");
-    }
+    if (e.target.name === "result") {
+      if (e.target.value === "non-reactive") {
+        setFinalResult("Negative");
+      } else {
+        setFinalResult("");
+      }
 
-    setConfirmatoryTest2({ result: "", dateOfTest: "" });
-    setTieBreaker2({ result: "", dateOfTest: "" });
+      setConfirmatoryTest2({ result: "", dateOfTest: "" });
+      setTieBreaker2({ result: "", dateOfTest: "" });
+    }
   };
 
   const handleConfirmatory2InputChange = (e) => {
@@ -287,13 +295,15 @@ const PmtctHtsForm = (props) => {
       [e.target.name]: e.target.value,
     }));
 
-    if (e.target.value === "reactive") {
-      setFinalResult("Positive");
-    } else {
-      setFinalResult("");
-    }
+    if (e.target.name === "result") {
+      if (e.target.value === "reactive") {
+        setFinalResult("Positive");
+      } else {
+        setFinalResult("");
+      }
 
-    setTieBreaker2({ result: "", dateOfTest: "" });
+      setTieBreaker2({ result: "", dateOfTest: "" });
+    }
   };
 
   const handleTieBreaker2InputChange = (e) => {
@@ -303,10 +313,12 @@ const PmtctHtsForm = (props) => {
 
     setTieBreaker2((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-    if (e.target.value === "reactive") {
-      setFinalResult("Positive");
-    } else if (e.target.value === "non-reactive") {
-      setFinalResult("Negative");
+    if (e.target.name === "result") {
+      if (e.target.value === "reactive") {
+        setFinalResult("Positive");
+      } else if (e.target.value === "non-reactive") {
+        setFinalResult("Negative");
+      }
     }
   };
   //get the person last record on PMTCT HTS if exist
@@ -497,21 +509,24 @@ const PmtctHtsForm = (props) => {
         if (response.data.confirmatoryTest2) {
           setConfirmatoryTest2(response.data.confirmatoryTest2);
         }
-        if (response.data.confirmatoryTest2) {
+        if (response.data.tieBreaker2) {
           setTieBreaker2(response.data.tieBreaker2);
         }
 
-        if (response.data.initialHivTest.result === "non-reactive") {
+        // Use DB value if available, otherwise recalculate from test results
+        if (response.data.finalResult) {
+          setFinalResult(response.data.finalResult);
+        } else if (response.data.initialHivTest?.result === "non-reactive") {
           setFinalResult("Negative");
-        } else if (response.data.retesting.result === "non-reactive") {
+        } else if (response.data.retesting?.result === "non-reactive") {
           setFinalResult("Negative");
-        } else if (response.data.tieBreaker.result === "non-reactive") {
+        } else if (response.data.tieBreaker?.result === "non-reactive") {
           setFinalResult("Negative");
-        } else if (response.data.confirmatoryTest2.result === "reactive") {
+        } else if (response.data.confirmatoryTest2?.result === "reactive") {
           setFinalResult("Positive");
-        } else if (response.data.tieBreaker2.result === "reactive") {
+        } else if (response.data.tieBreaker2?.result === "reactive") {
           setFinalResult("Positive");
-        } else if (response.data.tieBreaker2.result === "non-reactive") {
+        } else if (response.data.tieBreaker2?.result === "non-reactive") {
           setFinalResult("Negative");
         }
 

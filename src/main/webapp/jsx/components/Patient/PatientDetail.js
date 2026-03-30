@@ -256,7 +256,9 @@ function PatientCard(props) {
 
   useEffect(() => {
     getLatestMaternalOutcome();
-    getLatestPmtctCycle();
+    if (!selectedCycleId) {
+      getLatestPmtctCycle();
+    }
     RecentActivities(selectedCycleId);
   }, [activeContent, selectedCycleId]);
 

@@ -55,38 +55,51 @@ const PatientnHistory = (props) => {
     const [open, setOpen] = React.useState(false)
     const [saving, setSaving] = useState(false)
     const [record, setRecord] = useState(null)
+    const [ancId, setAncId] = useState(null)
     const toggle = () => setOpen(!open);
     useEffect(() => {
         PatientHistory()
-      }, [props.patientObj.id]);
+      }, [props.patientObj.id, props.selectedCycleId]);
         ///GET LIST OF Patients
         const PatientHistory =()=>{
             setLoading(true)
+            const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+            const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id || props.patientObj.pmtctCycleId;
             axios
-               .get(`${baseUrl}pmtct/anc/${props.patientObj.id}`,
+               .get(`${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
                    { headers: {"Authorization" : `Bearer ${token}`} }
                )
                .then((response) => {
                 setLoading(false)
-                //console.log(response.data.partnerInformation)
-                setPartners(response.data.partnerInformation!==null ? [response.data.partnerInformation] : [])
+                setAncId(response.data.id)
+                const pi = response.data.partnerInformation;
+                let partnersList = [];
+                if (pi !== null && pi !== undefined) {
+                    if (Array.isArray(pi)) {
+                        partnersList = pi;
+                    } else {
+                        // backward compat: single object
+                        partnersList = [pi];
+                    }
+                }
+                setPartners(partnersList)
                 })
 
                .catch((error) => {
-               //console.log(error);
+               setLoading(false)
                });
-           
+
           }
     
-    const LoadPage =(row,activePage)=>{    
+    const LoadPage =(row, activePage)=>{
             props.setActiveContent({...props.activeContent, route:'add-partner', id:row, actionType:activePage, obj:row})
     }
     const LoadDeletePage =(row)=>{
-
-            setSaving(true)       
-            //props.setActiveContent({...props.activeContent, route:'mental-health-view', id:row.id})
+            if (saving) return;
+            setSaving(true)
+            const partnerId = row.partnerId;
             axios
-            .delete(`${baseUrl}pmtct/anc/delete/partnerinfo/${props.patientObj.id}`,
+            .delete(`${baseUrl}pmtct/anc/delete/partnerinfo/${ancId}/${partnerId}`,
                 { headers: {"Authorization" : `Bearer ${token}`} }
             )
             .then((response) => {
@@ -154,7 +167,7 @@ const PatientnHistory = (props) => {
                    syphillis: row.syphillisStatus,
                    referred: row.referredTo,
                    actions:
-            
+
                     <div>
                         <Menu.Menu position='right'  >
                         <Menu.Item >
@@ -171,7 +184,7 @@ const PatientnHistory = (props) => {
                         </Menu.Item>
                         </Menu.Menu>
                     </div>
-                  
+
                   }))}
             
                         options={{

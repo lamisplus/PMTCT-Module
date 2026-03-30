@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Grid, Segment, Label, List } from "semantic-ui-react";
 // Page titie
 import {
@@ -170,6 +170,8 @@ const ClinicVisit = (props) => {
   const [referToART, setReferToART] = useState(false);
   const [placeOfDelivery, setPlaceOfDelivery] = useState([]);
   const [pcrType, setPcrType] = useState([]);
+  const pcrTypeFullRef = useRef([]);
+  const currentVisitPCRTypeRef = useRef(null);
   const [latestPCR, setLatestPCR] = useState({});
   const [latestRapidTest, setLatestRapidTest] = useState({});
   const [showInfantVist, setShowInfantVist] = useState(true);
@@ -294,6 +296,7 @@ const ClinicVisit = (props) => {
         setInfantOutcome(response.data.INFANT_OUTCOME_AT_18_MONTHS);
         setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
         setPcrType(response.data.INFANT_TESTING_PCR);
+        pcrTypeFullRef.current = response.data.INFANT_TESTING_PCR;
         setTimingProphylaxisList(response.data.TIMING_PROPHYLAXIS_WITHIN_72HRS);
 
 
@@ -622,25 +625,33 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        // getTypeOfTimingOfARV(response.data.infantArvDto.arvDeliveryPoint);
         filterOutTheChosenChildForView(
           response.data.infantVisitRequestDto.infantHospitalNumber
         );
-        setObjValues(response.data);
+        setObjValues({...response.data, source: "WEB"});
         setInfantVisitRequestDto({ ...response.data.infantVisitRequestDto });
-        setInfantArvDto({ ...response.data.infantArvDto });
-        setInfantMotherArtDto({ ...response.data.infantMotherArtDto });
-        setInfantPCRTestDto({ ...response.data.infantPCRTestDto });
-        setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
+        if (response.data.infantArvDto) {
+          setInfantArvDto({ ...response.data.infantArvDto });
+        } else {
+          // No ARV record exists - clear ctxStatus so ARV section appears empty
+          setInfantVisitRequestDto(prev => ({ ...prev, ctxStatus: "" }));
+        }
+        if (response.data.infantMotherArtDto) {
+          setInfantMotherArtDto({ ...response.data.infantMotherArtDto });
+          RegimenType(response.data.infantMotherArtDto.regimenTypeId);
+        }
+        if (response.data.infantPCRTestDto) {
+          setInfantPCRTestDto({ ...response.data.infantPCRTestDto });
+          currentVisitPCRTypeRef.current = response.data.infantPCRTestDto.testType;
+        }
+        if (response.data.infantRapidAntiBodyTestDto) {
+          setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
+        }
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
-        RegimenType(response.data.infantMotherArtDto.regimenTypeId);
-        // getTimingARVType(response.data.infantArvDto.arvDeliveryPoint);
 
         if (
-          response.data.infantPCRTestDto.results ===
-            "INFANT_PCR_RESULT_POSITIVE" ||
-          response.data.infantRapidTestDTO.result ===
-            "INFANT_PCR_RESULT_POSITIVE"
+          (response.data.infantPCRTestDto && response.data.infantPCRTestDto.results === "INFANT_PCR_RESULT_POSITIVE") ||
+          (response.data.infantRapidAntiBodyTestDto && response.data.infantRapidAntiBodyTestDto.result === "INFANT_PCR_RESULT_POSITIVE")
         ) {
           setReferToART(true);
         }
@@ -657,7 +668,7 @@ const ClinicVisit = (props) => {
       //setLoading(true)
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-form-filter/${obj.infantHospitalNumber}`,
+          `${baseUrl}pmtct/anc/get-form-filter?hospitalNumber=${obj.infantHospitalNumber}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
@@ -711,18 +722,15 @@ const ClinicVisit = (props) => {
   }
 
     const getLatestPCR=(infantHospitalNo)=>{
-           let PCRList = [pcrType]
-           let newPCRList=PCRList[0]
+           let newPCRList = pcrTypeFullRef.current || [];
 
-              // Fetch ALL documented PCR tests for this infant
+              // Fetch only the latest PCR test for this infant
               axios
-              .get(`${baseUrl}pmtct/anc/get-infant-prc-by-hospitalnumber/${infantHospitalNo}`, {
+              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .then((response) => {
-            const allPCRTests = response.data || [];
-            // Get the latest PCR (first item since ordered by id DESC)
-            const latestPCRData = allPCRTests.length > 0 ? allPCRTests[0] : null;
+            const latestPCRData = response.data || null;
             setLatestPCR(latestPCRData)
 
           // check if the last PCR is Confirmatory and positive
@@ -733,25 +741,44 @@ const ClinicVisit = (props) => {
           setShowInfantVist(true)
         }
 
-        // Collect all already-documented test types (only unarchived)
-        const documentedTestTypes = allPCRTests
-          .filter(pcr => pcr.archived === 0 || pcr.archived === null)
-          .map(pcr => pcr.testType)
-          .filter(Boolean);
+        // Determine the next PCR type based on the order sequence
+        let pcrOrder = [
+          "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT",
+          "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED",
+          "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE",
+          "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)"
+        ];
 
-        // Filter out all already-documented test types from the dropdown
-        let filteredPCRList = newPCRList.filter((each) => {
-          return !documentedTestTypes.includes(each.code);
-        });
+        let filteredPCRList = [];
 
-            //check if the last PCR is positive then add confirmatory PCR back to dropdown
-            if(latestPCRData && latestPCRData?.results?.includes("POSITIVE") && !props?.activeContent?.id ){
-              newPCRList.forEach((each) => {
-                  if(each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" && !filteredPCRList.some(item => item.code === each.code)){
-                    filteredPCRList.push(each)
-                  }
-                })
+        if (latestPCRData && latestPCRData.testType) {
+          // If latest PCR is positive, next should be Confirmatory
+          if (latestPCRData.results?.includes("POSITIVE")) {
+            filteredPCRList = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR");
+          } else {
+            // Find the next PCR in sequence after the latest
+            let currentIndex = pcrOrder.indexOf(latestPCRData.testType);
+            if (currentIndex !== -1 && currentIndex + 1 < pcrOrder.length) {
+              let nextType = pcrOrder[currentIndex + 1];
+              filteredPCRList = newPCRList.filter(each => each.code === nextType);
             }
+          }
+        } else {
+          // No PCR documented yet, show 1st PCR
+          filteredPCRList = newPCRList.filter(each => each.code === pcrOrder[0]);
+        }
+
+            // On update/view, keep the current visit's PCR type in the dropdown
+            if (props?.activeContent?.actionType !== "create" && currentVisitPCRTypeRef.current) {
+              const currentType = currentVisitPCRTypeRef.current;
+              if (!filteredPCRList.some(item => item.code === currentType)) {
+                const fullType = newPCRList.find(item => item.code === currentType);
+                if (fullType) {
+                  filteredPCRList.push(fullType);
+                }
+              }
+            }
+
             setPcrType(filteredPCRList)
 
               })
@@ -768,8 +795,10 @@ const ClinicVisit = (props) => {
           .then((response) => {
             setLatestRapidTest(response.data)
             if(response?.data?.id){
-
-              setInfantRapidTestDTO({...response.data})
+              // Only prefill form state in create mode; for view/update, form state comes from GetVisit()
+              if (props?.activeContent?.actionType === "create") {
+                setInfantRapidTestDTO({...response.data})
+              }
               setDisableRapidField(true)
             }
           })
@@ -827,10 +856,12 @@ const ClinicVisit = (props) => {
     //console.log(e.target.name)
     if (e.target.name === "visitDate" && e.target.value !== "") {
       async function checkForVisitDate() {
-        const ga = e.target.value;
-        const response = await axios.get(
-          `${baseUrl}pmtct/anc/is-infant-visit-date-exists?hospitalNumber=${infantHospitalNumber}&visitDate=${e.target.value}`,
-          {
+        let url = `${baseUrl}pmtct/anc/is-infant-visit-date-exists?hospitalNumber=${infantHospitalNumber}&visitDate=${e.target.value}`;
+        // On update, exclude the current record so its own date doesn't trigger duplicate
+        if (props?.activeContent?.actionType === "update" && props?.activeContent?.id) {
+          url += `&excludeId=${props.activeContent.id}`;
+        }
+        const response = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "text/plain",
@@ -839,7 +870,7 @@ const ClinicVisit = (props) => {
         );
         if (response.data) {
           errors.visitDate = "";
-          toast.error("Visit Date already exist");
+          toast.error("Visit Date already exists for this infant. Please select a different date.");
 
           setVisitDateStatus(true);
         } else {
@@ -1006,29 +1037,37 @@ const ClinicVisit = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (visitDateStatus) {
+      toast.error("Visit Date already exists for this infant. Please select a different date.");
+      return;
+    }
     console.log("validate()", validate(), errors);
     if (validate()) {
       setSaving(true);
       objValues.infantMotherArtDto = infantMotherArtDto;
       objValues.infantMotherArtDto.visitDate = infantVisitRequestDto.visitDate;
+      objValues.infantMotherArtDto.source = objValues.source;
 
 
       if(infantArvDto.infantArvType){
       objValues.infantArvDto = infantArvDto;
       objValues.infantArvDto.visitDate = infantVisitRequestDto.visitDate;
-
+      objValues.infantArvDto.source = objValues.source;
       }
      if(infantPCRTestDto.testType &&  infantPCRTestDto.dateSampleCollected && infantPCRTestDto.dateSampleSent ){
-         
+
         objValues.infantPCRTestDto = infantPCRTestDto;
       objValues.infantPCRTestDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantPCRTestDto.infantHospitalNumber =
         infantArvDto.infantHospitalNumber;
+      objValues.infantPCRTestDto.source = objValues.source;
       }
-     
+
 
       objValues.infantRapidAntiBodyTestDto = infantRapidTestDTO;
+      objValues.infantRapidAntiBodyTestDto.source = objValues.source;
       objValues.infantVisitRequestDto = infantVisitRequestDto;
+      objValues.infantVisitRequestDto.source = objValues.source;
 
       if (props.activeContent && props.activeContent.actionType  === "update") {
         //Perform operation for updation action
@@ -1166,17 +1205,14 @@ const ClinicVisit = (props) => {
     setChoosenInfant(obj);
     getLatestPCR(obj.hospitalNumber)
     getLatestRapidTest(obj.hospitalNumber, obj.personUuid)
-    setInfantArvDto({...infantArvDto,ageAtCtx: obj.infantArvDto?.ageAtCtx || "" , dateOfCtx: obj.infantArvDto?.dateOfCtx || ""})
+    // ARV fields should come from backend (infant visit response), not from registration
     // setInfantVisitRequestDto({...infantVisitRequestDto, ctxStatus: obj.ctxStatus})
     let weeks = calculateAgeInWeek(obj.dateOfDelivery);
     setWeeksValue(weeks);
 
     calculateAgeAtTestMonth(weeks);
+    // PCR fields should come from backend (infant visit response), not prefilled from registration
     if (obj?.infantPCRTestDto?.results === "INFANT_PCR_RESULT_POSITIVE") {
-      setInfantPCRTestDto({
-        ...infantPCRTestDto,
-        testType: "Confirmatory PCR",
-      });
       axios
         .get(`${baseUrl}application-codesets/v2/2ND_3RD_PCR_CHILD_TEST_AGE`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -1197,7 +1233,7 @@ const ClinicVisit = (props) => {
     const InfantVisit = () => {
       //setLoading(true)
       axios
-        .get(`${baseUrl}pmtct/anc/get-form-filter/${obj.hospitalNumber}`, {
+        .get(`${baseUrl}pmtct/anc/get-form-filter?hospitalNumber=${obj.hospitalNumber}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -1772,9 +1808,7 @@ const ClinicVisit = (props) => {
                         type="select"
                         name="ctxStatus"
                         id="ctxStatus"
-                        value={ choosenInfant?.ctxStatus}
-
-                        // value={infantVisitRequestDto.ctxStatus}
+                        value={infantVisitRequestDto.ctxStatus}
                         style={{
                           border: "1px solid #014D88",
                           borderRadius: "0.25rem",
@@ -1797,7 +1831,7 @@ const ClinicVisit = (props) => {
                       )} */}
                     </FormGroup>
                   </div>
-               { choosenInfant?.ctxStatus === "YES" &&<div className=" mb-3 col-md-4">
+               { infantVisitRequestDto.ctxStatus === "YES" &&<div className=" mb-3 col-md-4">
                     <FormGroup>
                       <FormLabelName>Date of CTX initiation</FormLabelName>
                       <Input
@@ -1805,9 +1839,7 @@ const ClinicVisit = (props) => {
                          onKeyPress={(e)=>{e.preventDefault()}}
                         name="dateOfCtx"
                         id="dateOfCtx"
-                        // value={infantArvDto.dateOfCtx}
-
-                        value={choosenInfant?.infantArvDto?.dateOfCtx}
+                        value={infantArvDto.dateOfCtx}
                         onChange={handleInputChangeInfantArvDto}
                         style={{
                           border: "1px solid #014D88",
@@ -1835,9 +1867,7 @@ const ClinicVisit = (props) => {
                       type="select"
                       name="ageAtCtx"
                       id="ageAtCtx"
-                      value={choosenInfant?.infantArvDto?.ageAtCtx}
-
-                      // value={infantArvDto.ageAtCtx}
+                      value={infantArvDto.ageAtCtx}
                       onChange={handleInputChangeInfantArvDto}
                       style={{
                         border: "1px solid #014D88",

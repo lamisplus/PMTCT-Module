@@ -22,6 +22,7 @@ function SubMenu(props) {
   //const patientCurrentStatus=props.patientObj && props.patientObj.currentStatus==="Died (Confirmed)" ? true : false ;
   const [patientObj, setpatientObj] = useState(patientObjs);
   const [genderType, setGenderType] = useState();
+  const [menuReady, setMenuReady]=useState(false)
   const [showRetesting, setShowRetesting]=useState(false)
   const [retestingStatus, setRetestingStatus]=useState("pmtct-hts")
   // const [derivedHivStatus, setDerivedHivStatus]=useState("")
@@ -231,9 +232,11 @@ function SubMenu(props) {
               : props.patientObj.dynamicHivStatus
           );
           showRetestingMenu(response.data);
+          setMenuReady(true);
         })
         .catch((error) => {
           console.error("Error fetching confirmatory result:", error);
+          setMenuReady(true);
         });
     }
   
@@ -291,59 +294,63 @@ const showRetestingMenu = (patientHivStatus) => {
       <Menu size="large" color={"black"} inverted>
         <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
 
-        {showRetesting && retestingStatus === "pmtct-hts" && (
-          <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>
-            {" "}
-            PMTCT HTS{" "}
-          </Menu.Item>
-        )}
-
-        {["Positive", "reactive"].includes(patientStatus?.trim()) && (
+        {menuReady && (
           <>
-            {isOnPMTCT !== true ? (
-              <>
-                <>
-                  {permissions.genAndPmtct && (
-                    <Menu.Item onClick={() => loadAncPnc()}>
-                      PMTCT Enrollment
-                    </Menu.Item>
-                  )}
-                </>
-              </>
-            ) : (
-              <>
-                {closeCycle && (
-                  <>
-                    <Menu.Item onClick={() => onClickConsultation()}>
-                      Follow Up Visit
-                    </Menu.Item>
+            {showRetesting && retestingStatus === "pmtct-hts" && (
+              <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>
+                {" "}
+                PMTCT HTS{" "}
+              </Menu.Item>
+            )}
 
-                    {!deliveryStatus && (
-                      <Menu.Item onClick={() => loadLabourDelivery()}>
-                        Labour and Delivery
-                      </Menu.Item>
+            {["Positive", "reactive"].includes(patientStatus?.trim()) && (
+              <>
+                {isOnPMTCT !== true ? (
+                  <>
+                    <>
+                      {permissions.genAndPmtct && (
+                        <Menu.Item onClick={() => loadAncPnc()}>
+                          PMTCT Enrollment
+                        </Menu.Item>
+                      )}
+                    </>
+                  </>
+                ) : (
+                  <>
+                    {closeCycle && (
+                      <>
+                        <Menu.Item onClick={() => onClickConsultation()}>
+                          Follow Up Visit
+                        </Menu.Item>
+
+                        {!deliveryStatus && (
+                          <Menu.Item onClick={() => loadLabourDelivery()}>
+                            Labour and Delivery
+                          </Menu.Item>
+                        )}
+                        {patientObj?.ancNo && (
+                          <Menu.Item onClick={() => onClickPartner()}>
+                            {" "}
+                            Partners
+                          </Menu.Item>
+                        )}
+                        {/* )} */}
+                        <Menu.Item onClick={() => onClickInfant()}>
+                          {" "}
+                          Infant Information
+                        </Menu.Item>
+                      </>
                     )}
-                    {patientObj?.ancNo && (
-                      <Menu.Item onClick={() => onClickPartner()}>
-                        {" "}
-                        Partners
-                      </Menu.Item>
-                    )}
-                    {/* )} */}
-                    <Menu.Item onClick={() => onClickInfant()}>
-                      {" "}
-                      Infant Information
-                    </Menu.Item>
                   </>
                 )}
               </>
             )}
+            {showRetesting && retestingStatus === "retesting" && (
+              <Menu.Item onClick={() => onClickPmtctHts("retesting")}>
+                Retesting{" "}
+              </Menu.Item>
+            )}
           </>
-        )}
-        {showRetesting && retestingStatus === "retesting" && (
-          <Menu.Item onClick={() => onClickPmtctHts("retesting")}>
-            Retesting{" "}
-          </Menu.Item>
         )}
 
         <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>

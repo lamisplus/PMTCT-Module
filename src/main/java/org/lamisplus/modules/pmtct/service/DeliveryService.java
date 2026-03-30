@@ -87,6 +87,8 @@ public class DeliveryService
         delivery.setUuid(UUID.randomUUID().toString());
         delivery.setCreatedBy(user.getUserName());
         delivery.setLastModifiedBy(user.getUserName());
+        delivery.setCreatedDate(LocalDateTime.now());
+        delivery.setLastModifiedDate(LocalDateTime.now());
         delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
         delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
 
@@ -278,6 +280,8 @@ public class DeliveryService
             }
 
             delivery.setSource(deliveryRequestDto.getSource());
+            delivery.setLastModifiedDate(LocalDateTime.now());
+            delivery.setLastModifiedBy(userService.getUserWithRoles().get().getUserName());
             //check if the chld has been created
 
             boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());

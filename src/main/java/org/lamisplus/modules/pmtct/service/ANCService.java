@@ -116,6 +116,10 @@ public class ANCService {
             anc.setHospitalNumber(hostpitalNumber);
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
+            anc.setCreatedDate(LocalDateTime.now());
+            anc.setLastModifiedDate(LocalDateTime.now());
+            anc.setCreatedBy(user.getUserName());
+            anc.setLastModifiedBy(user.getUserName());
             try{
                 LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -163,6 +167,10 @@ public class ANCService {
                 anc.setUuid(UUID.randomUUID().toString());
                 anc.setHospitalNumber(hostpitalNumber);
                 anc.setArchived(0L);
+                anc.setCreatedDate(LocalDateTime.now());
+                anc.setLastModifiedDate(LocalDateTime.now());
+                anc.setCreatedBy(user.getUserName());
+                anc.setLastModifiedBy(user.getUserName());
                 try{
                     LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -375,6 +383,12 @@ public class ANCService {
         return this.ancRepository.findById(id)
                 .orElseThrow(() -> new Exception("ANC NOT FOUND"));
 
+    }
+
+    @SneakyThrows
+    public ANC getAncByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId) {
+        return this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L)
+                .orElseThrow(() -> new Exception("ANC NOT FOUND for personUuid=" + personUuid + " and pmtctCycleId=" + pmtctCycleId));
     }
 
     public int calculateAge(LocalDate dob) {
@@ -824,6 +838,8 @@ public class ANCService {
             anc.setHivDiognosicTime(ancEnrollementRequestDto.getHivDiognosicTime());
             anc.setCreatedBy(user.getUserName());
             anc.setLastModifiedBy(user.getUserName());
+            anc.setCreatedDate(LocalDateTime.now());
+            anc.setLastModifiedDate(LocalDateTime.now());
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
             anc.setHospitalNumber(person.getHospitalNumber());
@@ -947,6 +963,8 @@ public class ANCService {
             anc.setHivDiognosicTime(ancWithPersonRequestDto.getHivDiognosicTime());
             anc.setCreatedBy(user.getUserName());
             anc.setLastModifiedBy(user.getUserName());
+            anc.setCreatedDate(LocalDateTime.now());
+            anc.setLastModifiedDate(LocalDateTime.now());
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPersonUuid(person.getUuid());
             anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
@@ -1290,16 +1308,64 @@ public class ANCService {
     }
     //entityToDto
 
-    public PartnerInformation updateAncWithPartnerInfo(Long id, PartnerInformation partnerInformation) {
-        // PmtctVisit existVisit = getExistVisit(id);
-        ANC anc = this.getExistingANC(id);
-        PartnerInformation partnerInformation2 = partnerInformation;
-        if (partnerInformation2 != null) {
-            JsonNode partnerInformation2JsonNode = mapper.valueToTree(partnerInformation2);
-            anc.setPartnerInformation(partnerInformation2JsonNode);
+    /**
+     * Gets existing partners as an ArrayNode. Handles backward compatibility
+     * where partnerInformation may be a single object or null.
+     */
+    private ArrayNode getPartnersArray(ANC anc) {
+        ArrayNode partnersArray = mapper.createArrayNode();
+        JsonNode existing = anc.getPartnerInformation();
+        if (existing != null && !existing.isNull()) {
+            if (existing.isArray()) {
+                partnersArray = (ArrayNode) existing;
+            } else if (existing.isObject()) {
+                // backward compat: single object → wrap in array
+                partnersArray.add(existing);
+            }
         }
+        return partnersArray;
+    }
+
+    public PartnerInformation addPartnerToAnc(Long ancId, PartnerInformation partnerInformation) {
+        ANC anc = this.getExistingANC(ancId);
+        ArrayNode partnersArray = getPartnersArray(anc);
+        // Assign a unique partnerId
+        partnerInformation.setPartnerId(java.util.UUID.randomUUID().toString());
+        JsonNode newPartner = mapper.valueToTree(partnerInformation);
+        partnersArray.add(newPartner);
+        anc.setPartnerInformation(partnersArray);
         ancRepository.save(anc);
         return partnerInformation;
+    }
+
+    public PartnerInformation updatePartnerInAnc(Long ancId, String partnerId, PartnerInformation partnerInformation) {
+        ANC anc = this.getExistingANC(ancId);
+        ArrayNode partnersArray = getPartnersArray(anc);
+        int index = findPartnerIndex(partnersArray, partnerId);
+        if (index == -1) {
+            throw new EntityNotFoundException(PartnerInformation.class, "partnerId", partnerId);
+        }
+        partnerInformation.setPartnerId(partnerId);
+        JsonNode updatedPartner = mapper.valueToTree(partnerInformation);
+        partnersArray.set(index, updatedPartner);
+        anc.setPartnerInformation(partnersArray);
+        ancRepository.save(anc);
+        return partnerInformation;
+    }
+
+    private int findPartnerIndex(ArrayNode partnersArray, String partnerId) {
+        for (int i = 0; i < partnersArray.size(); i++) {
+            JsonNode node = partnersArray.get(i);
+            if (node.has("partnerId") && partnerId.equals(node.get("partnerId").asText())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public PartnerInformation updateAncWithPartnerInfo(Long id, PartnerInformation partnerInformation) {
+        // kept for backward compat - delegates to addPartnerToAnc
+        return addPartnerToAnc(id, partnerInformation);
     }
 
 
@@ -1480,12 +1546,22 @@ public class ANCService {
         ancRepository.save(existingANC);
     }
 
-    public void deletePartnerInfo(Long id)
-    {
-        // PmtctVisit existVisit = getExistVisit(id);
+    public void deletePartnerFromAnc(Long ancId, String partnerId) {
+        ANC anc = this.getExistingANC(ancId);
+        ArrayNode partnersArray = getPartnersArray(anc);
+        int index = findPartnerIndex(partnersArray, partnerId);
+        if (index == -1) {
+            throw new EntityNotFoundException(PartnerInformation.class, "partnerId", partnerId);
+        }
+        partnersArray.remove(index);
+        anc.setPartnerInformation(partnersArray);
+        ancRepository.save(anc);
+    }
+
+    public void deletePartnerInfo(Long id) {
+        // kept for backward compat - deletes all partners
         ANC anc = this.getExistingANC(id);
-        JsonNode partnerInformation2JsonNode = mapper.valueToTree(null);
-        anc.setPartnerInformation(partnerInformation2JsonNode);
+        anc.setPartnerInformation(mapper.createArrayNode());
         ancRepository.save(anc);
     }
 
