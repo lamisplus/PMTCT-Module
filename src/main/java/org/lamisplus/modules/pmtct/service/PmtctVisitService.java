@@ -70,7 +70,7 @@ public class PmtctVisitService {
         if(pmtctVisitRequestDto.getGaOfViralLoad()!=null) {
             int ga = pmtctVisitRequestDto.getGaOfViralLoad();
             String tVL = "Other Time";
-            if ((ga >= 32) || (ga <= 36)) tVL = "Between 32 and 36";
+            if ((ga >= 32) && (ga <= 36)) tVL = "Between 32 and 36";
             pmtctVisit.setTimeOfViralLoad(tVL);
         }
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
@@ -143,7 +143,7 @@ public class PmtctVisitService {
         pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
         pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(existingVisit.getUuid());
-        pmtctVisit.setPersonUuid(existingVisit.getUuid());
+        pmtctVisit.setPersonUuid(existingVisit.getPersonUuid());
         pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
         pmtctVisit.setCreatedBy(existingVisit.getCreatedBy());
         pmtctVisit.setCreatedDate(existingVisit.getCreatedDate());
@@ -156,7 +156,7 @@ public class PmtctVisitService {
         if(pmtctVisitRequestDto.getGaOfViralLoad()!=null) {
             int ga = pmtctVisitRequestDto.getGaOfViralLoad();
             String tVL = "Other Time";
-            if ((ga >= 32) || (ga <= 36)) tVL = "Between 32 and 36";
+            if ((ga >= 32) && (ga <= 36)) tVL = "Between 32 and 36";
             pmtctVisit.setTimeOfViralLoad(tVL);
         }
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
@@ -169,7 +169,6 @@ public class PmtctVisitService {
         pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(nextAppointmentDate(pmtctVisitRequestDto.getDateOfVisit()));
         pmtctVisit.setArchived(existingVisit.getArchived() != null ? existingVisit.getArchived() : 0L);
-        pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
 //            Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -243,6 +242,7 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setTransferTo(pmtctVisit.getTransferTo());
         pmtctVisitResponseDto.setNextAppointmentDate(pmtctVisit.getNextAppointmentDate());
         pmtctVisitResponseDto.setPmtctCycleId(pmtctVisit.getPmtctCycleId());
+        pmtctVisitResponseDto.setSource(pmtctVisit.getSource());
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
@@ -357,7 +357,7 @@ public class PmtctVisitService {
     }
 
 
-    public  String  getLatestMaternalOutcome(String personUuid) {
-        return pmtctVisitRepository.findLatestMaternalOutcome(personUuid).orElse("");
+    public  String  getLatestMaternalOutcome(String personUuid, Long pmtctCycleId) {
+        return pmtctVisitRepository.findLatestMaternalOutcomeByCycle(personUuid, pmtctCycleId).orElse("");
     }
 }

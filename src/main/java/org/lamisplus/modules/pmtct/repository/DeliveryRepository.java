@@ -13,6 +13,7 @@ public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
 {
     //Delivery getDeliveryById(Long id);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByAncNo(String ancNo);
 
     @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
@@ -21,14 +22,16 @@ public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
     @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
 
-
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByPersonUuid(String personUuid);
 
     @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByAncNo(String ancNo);
 
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE hospital_number = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByHospitalNumber(String hospitalNumber);
 
     @Query(value = "SELECT date_of_delivery FROM public.pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)

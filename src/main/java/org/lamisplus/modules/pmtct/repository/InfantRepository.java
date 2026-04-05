@@ -17,7 +17,7 @@ import java.util.Optional;
 public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
     List<Infant> findInfantByAncNo (String ancNo);
 
-    @Query(value = "SELECT * FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND (archived = 0 OR archived IS NULL)", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND archived = 0", nativeQuery = true)
     List<Infant> findInfantByMotherPersonUuid(String personUuid);
 
     List<Infant> findInfantsByHospitalNumber(String hospitalNumber);
@@ -38,14 +38,14 @@ public interface InfantRepository extends CommonJpaRepository<Infant, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE public.pmtct_infant_information SET date_of_delivery = ?1 WHERE mother_person_uuid = CAST(?2 AS VARCHAR) ", nativeQuery = true)
-    void updateDeliveryDate(LocalDate deliveryDate , String personUuid);
+    @Query(value = "UPDATE public.pmtct_infant_information SET date_of_delivery = ?1 WHERE mother_person_uuid = CAST(?2 AS VARCHAR) AND pmtct_cycle_id = ?3 ", nativeQuery = true)
+    void updateDeliveryDate(LocalDate deliveryDate , String personUuid, Long pmtctCycleId);
 
 
-    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND (archived = 0 OR archived IS NULL) ", nativeQuery = true)
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND archived = 0 ", nativeQuery = true)
     List<Infant> getAllInfantByPersonUuid(String personUuid);
 
-    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id=?2 AND (archived = 0 OR archived IS NULL) ", nativeQuery = true)
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id=?2 AND archived = 0 ", nativeQuery = true)
     List<Infant> getAllInfantByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
 
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import MatButton from "@material-ui/core/Button";
 import Button from "@material-ui/core/Button";
@@ -237,6 +237,7 @@ const UserRegistration = (props) => {
   const [enrollmentValidation, setEnrollmentValidation] = useState(null);
   const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
   const [hasValidated, setHasValidated] = useState(false);
+  const hasCheckedHivStatusRef = useRef(false);
 
   const validateEnrollment = async (personUuid) => {
     // Prevent duplicate validation calls
@@ -255,8 +256,6 @@ const UserRegistration = (props) => {
         // List of negative outcomes that should NOT show the modal
         const negativeOutcomes = [
           "MATERNAL_OUTCOME_DEAD",
-          "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
-          "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
           "MATERNAL_OUTCOME_TRANSFERRED_OUT"
         ];
 
@@ -284,10 +283,11 @@ const UserRegistration = (props) => {
     }
   };
 
-  const checkANCEnrollment = async (personUuid) => {
+  const checkANCEnrollment = async (personUuid, cycleId) => {
+    if (!cycleId) return;
     try {
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/check-anc-enrollment?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/check-anc-enrollment?personUuid=${personUuid}&pmtctCycleId=${cycleId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -324,6 +324,7 @@ const UserRegistration = (props) => {
       if (cyclesResponse.data && cyclesResponse.data.length > 0) {
         const latestCycle = cyclesResponse.data[0];
         setLatestPmtctCycle(latestCycle);
+        checkANCEnrollment(personUuid, latestCycle.id);
       }
     } catch (error) {
       console.log("Error fetching PMTCT HTS record:", error);
@@ -331,6 +332,10 @@ const UserRegistration = (props) => {
   };
 
   const getHistoricalHivStatus = async (personUuid) => {
+    // Prevent duplicate calls - ref updates synchronously across all renders
+    if (hasCheckedHivStatusRef.current) return;
+    hasCheckedHivStatusRef.current = true;
+
     try {
       const response = await axios.get(
         `${baseUrl}pmtct/anc/get-historical-hiv-status`,
@@ -365,7 +370,6 @@ const UserRegistration = (props) => {
 
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
-      checkANCEnrollment(patientObj?.uuid);
       getHistoricalHivStatus(patientObj?.uuid);
 
       // Only validate enrollment if patient is not already enrolled via ANC
@@ -407,7 +411,7 @@ const UserRegistration = (props) => {
     if (basicInfo.dateOfRegistration < basicInfo.dob) {
       alert("Date of registration can not be earlier than date of birth");
     }
-  }, [patientObj, patientId, basicInfo.dateOfRegistration]);
+  }, [patientObj?.uuid, patientId]);
 
   // BATCH API
   const GET_CODESETS = () => {

@@ -36,4 +36,5 @@ public class PmtctVisitResponseDto implements Serializable {
     private LocalDate nextAppointmentDate;
     private String personUuid;
     private Long pmtctCycleId;
+    private String source;
 }

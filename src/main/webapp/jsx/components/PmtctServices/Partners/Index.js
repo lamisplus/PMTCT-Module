@@ -163,7 +163,7 @@ const PatientnHistory = (props) => {
                    hiv: row.acceptHivTest,
                    post: row.postTestCounseled,
                    hbv: row.hbStatus,
-                   hcv: row.hbStatus,
+                   hcv: row.hcStatus,
                    syphillis: row.syphillisStatus,
                    referred: row.referredTo,
                    actions:

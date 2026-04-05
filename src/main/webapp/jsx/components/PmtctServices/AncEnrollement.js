@@ -625,20 +625,42 @@ const AncEnrollement = (props) => {
             {saving ? <Spinner /> : ""}
             <br />
 
-            <MatButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              startIcon={<SaveIcon />}
-              onClick={handleSubmit}
-            >
-              {!saving ? (
-                <span style={{ textTransform: "capitalize" }}>Save</span>
-              ) : (
-                <span style={{ textTransform: "capitalize" }}>Saving...</span>
-              )}
-            </MatButton>
+            {props.activeContent &&
+            props.activeContent.actionType === "update" ? (
+              <MatButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                startIcon={<SaveIcon />}
+                style={{ backgroundColor: "#014d88" }}
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {!saving ? (
+                  <span style={{ textTransform: "capitalize" }}>Update</span>
+                ) : (
+                  <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                )}
+              </MatButton>
+            ) : props.activeContent?.actionType !== "view" ? (
+              <MatButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                startIcon={<SaveIcon />}
+                style={{ backgroundColor: "#014d88" }}
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {!saving ? (
+                  <span style={{ textTransform: "capitalize" }}>Save</span>
+                ) : (
+                  <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                )}
+              </MatButton>
+            ) : null}
 
             <MatButton
               variant="contained"

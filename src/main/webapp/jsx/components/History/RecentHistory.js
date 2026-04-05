@@ -686,11 +686,11 @@ const RecentHistory = (props) => {
                         >
                           <ul className="timeline">
                             {infants.length > 0
-                              ? infants.map((obj) => (
-                                  <li key={index}>
+                              ? infants.map((obj, idx) => (
+                                  <li key={idx}>
                                     <div
                                       className={
-                                        index % 2 == 0
+                                        idx % 2 == 0
                                           ? "timeline-badge info"
                                           : "timeline-badge success"
                                       }

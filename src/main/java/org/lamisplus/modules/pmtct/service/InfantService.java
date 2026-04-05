@@ -77,7 +77,7 @@ private final   InfantRapidTestRepository rapidTestRepository;
         infant.setCreatedDate(java.time.LocalDateTime.now());
         infant.setLastModifiedDate(java.time.LocalDateTime.now());
         infant.setLastVisitDate(infantDto.getDateOfDelivery());
-        infant.setNextAppointmentDate(this.calculateNAD(infantDto.getDateOfDelivery()));
+        infant.setNextAppointmentDate(infantDto.getDateOfDelivery() != null ? this.calculateNAD(infantDto.getDateOfDelivery()) : null);
         infant.setDefaultDays(0);
         infant.setBodyWeight(infantDto.getBodyWeight());
         infant.setCtxStatus(infantDto.getCtxStatus());
@@ -222,10 +222,9 @@ private final   InfantRapidTestRepository rapidTestRepository;
         return infantList;
     }
 
-    @SneakyThrows
     public Infant getSingleInfant(Long id){
         return this.infantRepository.findById(id)
-                .orElseThrow(() -> new Exception("Infant NOT FOUND"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Infant NOT FOUND"));
     }
 
      @Transactional
@@ -264,7 +263,6 @@ private final   InfantRapidTestRepository rapidTestRepository;
          infant.setBodyWeight(infantDto.getBodyWeight());
          infant.setCtxStatus(infantDto.getCtxStatus());
          infant.setMotherPersonUuid(infantDto.getPersonUuid());
-        infant.setSource(infantDto.getSource());
 
          // Update pmtctCycleId if provided, otherwise preserve existing
          if (infantDto.getPmtctCycleId() != null) {
@@ -446,9 +444,9 @@ private final   InfantRapidTestRepository rapidTestRepository;
         return infantPCRTestDto;
 
     }
-    public InfantPCRTestDto getLatestPCR(String infantHospitalNumber) {
+    public InfantPCRTestDto getLatestPCR(String infantHospitalNumber, Long pmtctCycleId) {
         if (!infantHospitalNumber.isEmpty()) {
-            InfantPCRTest pcrTest = infantPCRTestRepository.getLastPCR(infantHospitalNumber);
+            InfantPCRTest pcrTest = infantPCRTestRepository.getLastPCRByCycle(infantHospitalNumber, pmtctCycleId);
             if (pcrTest != null) {
                 return convertInfanTPCREntityToDTO(pcrTest);
             }
@@ -456,9 +454,9 @@ private final   InfantRapidTestRepository rapidTestRepository;
         return new InfantPCRTestDto();
     }
 
-    public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid) {
+    public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid, Long pmtctCycleId) {
 
-        String lastVisitId = String.valueOf(rapidTestRepository.getLastInfantVisit(infantHospitalNumber, motherUuid));
+        String lastVisitId = String.valueOf(rapidTestRepository.getLastInfantVisitByCycle(infantHospitalNumber, motherUuid, pmtctCycleId));
 
         if(!lastVisitId.isEmpty() && !lastVisitId.equals("null")){
         InfantRapidAntiBodyTest result= rapidTestRepository.getLastInfantRapid(lastVisitId);

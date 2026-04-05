@@ -130,12 +130,12 @@ const Labourpartner = (props) => {
         props.activeContent.actionType === "view" ? true : false
       );
     }
-    if (props.patientObj.hivStatus) {
-      setPartnerHivStatus(props.patientObj.hivStatus);
+    if (props?.patientObj?.dynamicHivStatus) {
+      setPartnerHivStatus(props.patientObj.dynamicHivStatus);
     } else if (props?.patientObj?.staticHivStatus) {
-      setPartnerHivStatus(props?.patientObj?.staticHivStatus);
-    } else if (props?.patientObj?.dynamicHivStatus) {
-      setPartnerHivStatus(props?.patientObj?.dynamicHivStatus);
+      setPartnerHivStatus(props.patientObj.staticHivStatus);
+    } else if (props.patientObj.hivStatus) {
+      setPartnerHivStatus(props.patientObj.hivStatus);
     }
   }, [props.patientObj.id, props.activeContent]);
 
@@ -628,13 +628,12 @@ const Labourpartner = (props) => {
                   )}
                 </MatButton>
               </>
-            ) : (
+            ) : props.activeContent?.actionType !== "view" ? (
               <>
                 <MatButton
                   type="submit"
                   variant="contained"
                   color="primary"
-                  hidden={disabledField}
                   className={classes.button}
                   disabled={saving}
                   startIcon={<SaveIcon />}
@@ -648,7 +647,7 @@ const Labourpartner = (props) => {
                   )}
                 </MatButton>
               </>
-            )}
+            ) : null}
 
             <MatButton
               variant="contained"

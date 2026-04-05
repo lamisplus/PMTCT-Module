@@ -6,15 +6,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.lamisplus.modules.pmtct.domain.dto.*;
-import org.lamisplus.modules.pmtct.domain.dto.HTSPatient;
-import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 
@@ -48,6 +44,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
   @Query(value = "SELECT hiv_status FROM pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<String> findHivStatusByPersonUuid(String personUuid);
 
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE pmtct_cycle_id = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> findByPmtctCycleIdAndArchived(Long pmtctCycleId, Long archived);
 
   @Query(
@@ -381,8 +378,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
   @Query(value = "SELECT * FROM public.pmtct_enrollment WHERE hiv_status = :hivStatus OR entry_point = :entryPoint", nativeQuery = true)
   List<PMTCTEnrollment> findByHivStatusOrEntryPoint(String hivStatus, String entryPoint);
 
-  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE Person_uuid = :personUuid", nativeQuery = true)
-  DeliveryResponseDto findDeliveryByPersonUuid(String personUuid);
+  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE person_uuid = :personUuid AND pmtct_cycle_id = :pmtctCycleId AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  DeliveryResponseDto findDeliveryByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
 
   @Query(value = "select * from pmtct_enrollment where Person_uuid = :personUuid", nativeQuery = true)
   PMTCTEnrollment findBypersonuuid(String personUuid);
@@ -421,7 +418,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 //  boolean checkForInfantHighRisk (String personUuid);
 
 
-  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE person_uuid = ?1 )", nativeQuery = true)
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE person_uuid = ?1 AND archived = 0 )", nativeQuery = true)
   boolean checkPatientOnANC(String personUuid);
 
   @Modifying
@@ -429,8 +426,8 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
   @Query(value = "UPDATE public.pmtct_enrollment SET lmp = CAST(?1 AS DATE ) WHERE person_uuid = ?2", nativeQuery = true)
   void updateLmp(LocalDate lmp , String personUuid);
 
-  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1", nativeQuery = true)
-  LocalDate getPmtctEnrollmentDate(String personUuid);
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  LocalDate getPmtctEnrollmentDate(String personUuid, Long pmtctCycleId);
 
   @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getLatestPmtctEnrollmentDate(String personUuid);
@@ -438,7 +435,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
   @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getInitialVisitDate(String personUuid, Long pmtctCycleId);
 
-  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 )", nativeQuery = true)
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE person_uuid = ?1 AND archived = 0 )", nativeQuery = true)
   boolean checkPatientOnPMTCT(String personUuid);
   @Modifying
   @Transactional
@@ -455,7 +452,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE person_uuid =?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     String checkRuptureMembraneAt4hrs (String personUuid, Long pmtctCycleId);
 
-    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE (uuid =?1 OR unique_uuid = ?1) AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE mother_person_uuid =?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     String getNVPandAZT (String personUuid, Long pmtctCycleId);
 
     @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)

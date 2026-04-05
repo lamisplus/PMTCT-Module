@@ -29,10 +29,10 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
 
     List<InfantVisit> getInfantVisitsByAncNumber(String ancNO);
 
-    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND (archived = 0 OR archived IS NULL)", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND archived = 0", nativeQuery = true)
     List<InfantVisit> getInfantVisitsByMotherPersonUuid(String motherPersonUuid);
 
-    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id=?2 AND (archived = 0 OR archived IS NULL)", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id=?2 AND archived = 0", nativeQuery = true)
     List<InfantVisit> getInfantVisitsByMotherPersonUuidAndCycleId(String motherPersonUuid, Long pmtctCycleId);
 
       @Query(value = "SELECT visit_date FROM pmtct_infant_visit WHERE infant_hospital_number=?1 ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)

@@ -726,7 +726,7 @@ const ClinicVisit = (props) => {
 
               // Fetch only the latest PCR test for this infant
               axios
-              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}`, {
+              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}&pmtctCycleId=${props?.latestPmtctCycle?.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .then((response) => {
@@ -789,7 +789,7 @@ const ClinicVisit = (props) => {
 
     const getLatestRapidTest=(infantHospitalNo, motherUuid)=>{
           axios
-          .get(`${baseUrl}pmtct/anc/get-latest-rapid-test?infantHospitalNumber=${infantHospitalNo}&motherUuid=${motherUuid}`, {
+          .get(`${baseUrl}pmtct/anc/get-latest-rapid-test?infantHospitalNumber=${infantHospitalNo}&motherUuid=${motherUuid}&pmtctCycleId=${props?.latestPmtctCycle?.id}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
@@ -1097,7 +1097,9 @@ const ClinicVisit = (props) => {
                 error.response.data.apierror &&
                 error.response.data.apierror.message !== ""
                   ? error.response.data.apierror.message
-                  : "Something went wrong, please try again";
+                  : error.response.data.message && error.response.data.message !== ""
+                    ? error.response.data.message
+                    : "Something went wrong, please try again";
               toast.error(errorMessage, {
                 position: toast.POSITION.BOTTOM_CENTER,
               });
@@ -1132,7 +1134,9 @@ const ClinicVisit = (props) => {
                 error.response.data.apierror &&
                 error.response.data.apierror.message !== ""
                   ? error.response.data.apierror.message
-                  : "Something went wrong, please try again";
+                  : error.response.data.message && error.response.data.message !== ""
+                    ? error.response.data.message
+                    : "Something went wrong, please try again";
               toast.error(errorMessage, {
                 position: toast.POSITION.BOTTOM_CENTER,
               });
@@ -2468,13 +2472,12 @@ const ClinicVisit = (props) => {
             {infantVisitRequestDto &&
             infantVisitRequestDto.infantHospitalNumber ? (
               <>
-                {props.activeContent && props.activeContent.actionType  === "update"? (
+                {props.activeContent && props.activeContent.actionType === "update" ? (
                   <>
                     <MatButton
                       type="submit"
                       variant="contained"
                       color="primary"
-                      hidden={disabledField}
                       className={classes.button}
                       startIcon={<SaveIcon />}
                       style={{ backgroundColor: "#014d88" }}
@@ -2492,7 +2495,7 @@ const ClinicVisit = (props) => {
                       )}
                     </MatButton>
                   </>
-                ) : (
+                ) : props.activeContent?.actionType !== "view" ? (
                   <>
                     <MatButton
                       type="submit"
@@ -2515,7 +2518,7 @@ const ClinicVisit = (props) => {
                       )}
                     </MatButton>
                   </>
-                )}
+                ) : null}
               </>
             ) : (
               ""

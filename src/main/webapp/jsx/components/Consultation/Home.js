@@ -243,6 +243,7 @@ const ClinicVisit = (props) => {
           ...response.data,
           pmtctCycleId:
             response.data.pmtctCycleId || props?.latestPmtctCycle?.id,
+          source: response.data.source || "WEB",
         });
         DsdModelType(response.data.dsdModel);
       })

@@ -169,40 +169,32 @@ function SubMenu(props) {
       });
   };
   const loadAncPnc = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "anc-pnc", actionType: "create"
- });
+    props.setActiveContent({ ...props.activeContent, route: "anc-pnc", actionType: "create", id: "", obj: {} });
   };
   const loadLabourDelivery = (row) => {
-    props.setActiveContent({
-      ...props.activeContent,
-      route: "labour-delivery",
-       actionType: "create"
-    });
+    props.setActiveContent({ ...props.activeContent, route: "labour-delivery", actionType: "create", id: "", obj: {} });
   };
   const onClickConsultation = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "consultation",   actionType: "create" });
+    props.setActiveContent({ ...props.activeContent, route: "consultation", actionType: "create", id: "", obj: {}, activeTab: "home" });
   };
 
     const onClickPmtctHts= (type) => {
-    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts",  actionType: "create" });
+    props.setActiveContent({ ...props.activeContent, route: "pmtct-hts", actionType: "create", id: "", obj: {} });
     props.setPmtctHtsRetestingType(type)
   };
-  
+
   const onClickHome = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "recent-history",   actionType: "create" });
+    props.setActiveContent({ ...props.activeContent, route: "recent-history", actionType: "create", id: "", obj: {} });
   };
 
   const onClickInfant = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "infants",  actionType: "create" });
+    props.setActiveContent({ ...props.activeContent, route: "infants", actionType: "create", id: "", obj: {} });
   };
   const onClickPartner = (row) => {
-    props.setActiveContent({ ...props.activeContent, route: "partners",   actionType: "create" });
+    props.setActiveContent({ ...props.activeContent, route: "partners", actionType: "create", id: "", obj: {} });
   };
   const loadPatientHistory = () => {
-    props.setActiveContent({
-      ...props.activeContent,
-      route: "patient-history",
-    });
+    props.setActiveContent({ ...props.activeContent, route: "patient-history", actionType: "create", id: "", obj: {} });
   };
   //
 
@@ -303,7 +295,7 @@ const showRetestingMenu = (patientHivStatus) => {
               </Menu.Item>
             )}
 
-            {["Positive", "reactive"].includes(patientStatus?.trim()) && (
+            {["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) && (
               <>
                 {isOnPMTCT !== true ? (
                   <>

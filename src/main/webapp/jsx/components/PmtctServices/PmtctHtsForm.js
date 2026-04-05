@@ -562,8 +562,8 @@ const PmtctHtsForm = (props) => {
       )
       .then((response) => {
         if (response.data[0] !== null && response?.data[0]?.artStartDate) {
-          setEnrollDto({
-            ...enroll,
+          setPayload({
+            ...payload,
             artStartDate: response?.data[0]?.artStartDate,
           });
         }
@@ -758,7 +758,7 @@ const PmtctHtsForm = (props) => {
       )
       .then((response) => {
         if (response.data) {
-          setEnrollDto({ ...enroll, hivStatus: response.data });
+          setPayload({ ...payload, hivStatus: response.data });
           setDisableHIVStatus(true);
         }
       })
@@ -1001,8 +1001,8 @@ const PmtctHtsForm = (props) => {
     const isRetesting = payload.testingType === "RETESTING";
     const hasPreviousRetesting = lastPmtctHtsRecord?.id;
 
-    // Skip validation if not retesting or no ANC enrollment date
-    if (!isRetesting || !ancEnrollmentDate) {
+    // Skip validation if no ANC enrollment date
+    if (!ancEnrollmentDate) {
       setValidateAncEnrollment({
         message: "",
         isValid: true,
@@ -1013,7 +1013,7 @@ const PmtctHtsForm = (props) => {
 
     // If patient has previous retesting documented, skip this validation
     // The validateHIVRetestDate function will handle the validation against last test date
-    if (hasPreviousRetesting) {
+    if (isRetesting && hasPreviousRetesting) {
       setValidateAncEnrollment({
         message: "",
         isValid: true,
@@ -1022,7 +1022,6 @@ const PmtctHtsForm = (props) => {
       return;
     }
 
-    // Only validate against ANC enrollment date if NO previous retesting exists
     // Parse dates using moment
     const testDate = moment(newTestDate);
     const enrollmentDate = moment(ancEnrollmentDate);
@@ -1037,17 +1036,19 @@ const PmtctHtsForm = (props) => {
       return;
     }
 
-    // Calculate difference in days
-    const daysDifference = testDate.diff(enrollmentDate, "days");
-    const isWithinOneMonth = daysDifference < 30;
+    // 30-day gap check only applies to retesting
+    if (isRetesting) {
+      const daysDifference = testDate.diff(enrollmentDate, "days");
+      const isWithinOneMonth = daysDifference < 30;
 
-    if (isWithinOneMonth) {
-      setValidateAncEnrollment({
-        message: `Cannot document HIV test. Test date must be at least 1 month (30 days) after ANC enrollment date (${moment(ancEnrollmentDate).format("YYYY-MM-DD")}). Current gap: ${daysDifference} days.`,
-        isValid: false,
-        showError: true,
-      });
-      return;
+      if (isWithinOneMonth) {
+        setValidateAncEnrollment({
+          message: `Cannot document HIV test. Test date must be at least 1 month (30 days) after ANC enrollment date (${moment(ancEnrollmentDate).format("YYYY-MM-DD")}). Current gap: ${daysDifference} days.`,
+          isValid: false,
+          showError: true,
+        });
+        return;
+      }
     }
 
     // Validation passed

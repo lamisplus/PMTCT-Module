@@ -125,7 +125,7 @@ const InfantInformation = (props) => {
         })
         .then((response) => {
           setLoading(false);
-          setDelivery(response.data.dateOfDelivery);
+          setDelivery(response.data ? response.data.dateOfDelivery : null);
           setAliveChild(
             response.data && response.data.numberOfInfantsAlive
               ? response.data.numberOfInfantsAlive

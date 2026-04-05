@@ -92,11 +92,33 @@ public class ANCService {
         String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Long facilityId = 0L;
+        Long facilityId = user.getCurrentOrganisationUnitId();
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancRequestDto.getPerson_uuid(), facilityId, 0);
         if (persons.isPresent()) {
             Person person = persons.get();
-            ANC anc = new ANC();
+
+            // Check for existing ANC to prevent duplicates
+            Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
+                    person.getUuid(), ancRequestDto.getPmtctCycleId(), 0L);
+
+            ANC anc;
+            if (existingAnc.isPresent()) {
+                anc = existingAnc.get();
+                anc.setLastModifiedBy(user.getUserName());
+                anc.setLastModifiedDate(LocalDateTime.now());
+            } else {
+                anc = new ANC();
+                anc.setUuid(UUID.randomUUID().toString());
+                anc.setPersonUuid(person.getUuid());
+                anc.setHospitalNumber(hostpitalNumber);
+                anc.setArchived(0L);
+                anc.setFacilityId(person.getFacilityId());
+                anc.setCreatedDate(LocalDateTime.now());
+                anc.setLastModifiedDate(LocalDateTime.now());
+                anc.setCreatedBy(user.getUserName());
+                anc.setLastModifiedBy(user.getUserName());
+            }
+
             anc.setAncNo(ancRequestDto.getAncNo());
             anc.setFirstAncDate(ancRequestDto.getFirstAncDate());
             anc.setGravida(ancRequestDto.getGravida());
@@ -111,15 +133,7 @@ public class ANCService {
             anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
             anc.setReferredSyphilisTreatment(ancRequestDto.getReferredSyphilisTreatment());
             anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
-            anc.setUuid(UUID.randomUUID().toString());
-            anc.setPersonUuid(person.getUuid());
-            anc.setHospitalNumber(hostpitalNumber);
-            anc.setArchived(0L);
-            anc.setFacilityId(person.getFacilityId());
-            anc.setCreatedDate(LocalDateTime.now());
-            anc.setLastModifiedDate(LocalDateTime.now());
-            anc.setCreatedBy(user.getUserName());
-            anc.setLastModifiedBy(user.getUserName());
+            anc.setPmtctCycleId(ancRequestDto.getPmtctCycleId());
             try{
                 LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -148,8 +162,27 @@ public class ANCService {
             String personUuid = this.createPerson(ancRequestDto.getPersonDto());
             if (personUuid != null) {
 
+                // Check for existing ANC to prevent duplicates
+                Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
+                        personUuid, ancRequestDto.getPmtctCycleId(), 0L);
 
-                ANC anc = new ANC();
+                ANC anc;
+                if (existingAnc.isPresent()) {
+                    anc = existingAnc.get();
+                    anc.setLastModifiedBy(user.getUserName());
+                    anc.setLastModifiedDate(LocalDateTime.now());
+                } else {
+                    anc = new ANC();
+                    anc.setUuid(UUID.randomUUID().toString());
+                    anc.setHospitalNumber(hostpitalNumber);
+                    anc.setArchived(0L);
+                    anc.setCreatedDate(LocalDateTime.now());
+                    anc.setLastModifiedDate(LocalDateTime.now());
+                    anc.setCreatedBy(user.getUserName());
+                    anc.setLastModifiedBy(user.getUserName());
+                    anc.setPersonUuid(personUuid);
+                }
+
                 anc.setAncNo(ancRequestDto.getAncNo());
                 anc.setFirstAncDate(ancRequestDto.getFirstAncDate());
                 anc.setGravida(ancRequestDto.getGravida());
@@ -157,20 +190,13 @@ public class ANCService {
                 anc.setLMP(ancRequestDto.getLMP());
                 try {
                     LocalDate eed = this.calculateEDD(ancRequestDto.getLMP());
-                    // System.out.println("@ invocation "+ eed);
                     anc.setExpectedDeliveryDate(eed);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 anc.setGAWeeks(ancRequestDto.getGAWeeks());
                 anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
-                anc.setUuid(UUID.randomUUID().toString());
-                anc.setHospitalNumber(hostpitalNumber);
-                anc.setArchived(0L);
-                anc.setCreatedDate(LocalDateTime.now());
-                anc.setLastModifiedDate(LocalDateTime.now());
-                anc.setCreatedBy(user.getUserName());
-                anc.setLastModifiedBy(user.getUserName());
+                anc.setPmtctCycleId(ancRequestDto.getPmtctCycleId());
                 try{
                     LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
 
@@ -198,7 +224,6 @@ public class ANCService {
                     }
                 } catch (Exception e) {
                 }
-                anc.setPersonUuid(personUuid);
                 ancRepository.save(anc);
             }
 
@@ -371,6 +396,7 @@ public class ANCService {
         ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
         ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         ancRespondDto.setPartnerInformation(anc.getPartnerInformation());
+        ancRespondDto.setSource(anc.getSource());
         //ancRespondDto.setPersonDto(getDtoFromPerson(person));
 
 
@@ -824,10 +850,33 @@ public class ANCService {
         User user = (User) currentUser.get();
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancEnrollementRequestDto.getPerson_uuid(), user.getCurrentOrganisationUnitId(), 0);
         Person person = new Person();
-        ANC anc = new ANC();
+        ANC anc;
         if (persons.isPresent()) {
             person = persons.get();
-            System.out.println("person found " + person);
+
+            // Check for existing ANC to prevent duplicates
+            Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
+                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleId(), 0L);
+
+            if (existingAnc.isPresent()) {
+                anc = existingAnc.get();
+                anc.setLastModifiedBy(user.getUserName());
+                anc.setLastModifiedDate(LocalDateTime.now());
+            } else {
+                anc = new ANC();
+                anc.setCreatedBy(user.getUserName());
+                anc.setLastModifiedBy(user.getUserName());
+                anc.setCreatedDate(LocalDateTime.now());
+                anc.setLastModifiedDate(LocalDateTime.now());
+                anc.setUuid(UUID.randomUUID().toString());
+                anc.setPersonUuid(person.getUuid());
+                anc.setHospitalNumber(person.getHospitalNumber());
+                anc.setArchived(0L);
+                anc.setFacilityId(person.getFacilityId());
+                anc.setStatus("NV");
+                anc.setSource(ancEnrollementRequestDto.getSource());
+            }
+
             anc.setAncNo(ancEnrollementRequestDto.getAncNo());
             anc.setFirstAncDate(ancEnrollementRequestDto.getFirstAncDate());
             anc.setGravida(ancEnrollementRequestDto.getGravida());
@@ -836,16 +885,6 @@ public class ANCService {
             anc.setExpectedDeliveryDate(ancEnrollementRequestDto.getExpectedDeliveryDate());
             anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
             anc.setHivDiognosicTime(ancEnrollementRequestDto.getHivDiognosicTime());
-            anc.setCreatedBy(user.getUserName());
-            anc.setLastModifiedBy(user.getUserName());
-            anc.setCreatedDate(LocalDateTime.now());
-            anc.setLastModifiedDate(LocalDateTime.now());
-            anc.setUuid(UUID.randomUUID().toString());
-            anc.setPersonUuid(person.getUuid());
-            anc.setHospitalNumber(person.getHospitalNumber());
-            anc.setArchived(0L);
-            anc.setFacilityId(person.getFacilityId());
-            anc.setStatus("NV");
             anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
             anc.setPreviouslyKnownHivStatus(ancEnrollementRequestDto.getPreviouslyKnownHivStatus());
             anc.setCurrentlyOnArt(ancEnrollementRequestDto.getCurrentlyOnArt());
@@ -862,7 +901,6 @@ public class ANCService {
             anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
             anc.setPmtctCycleId(ancEnrollementRequestDto.getPmtctCycleId());
-            anc.setSource(ancEnrollementRequestDto.getSource());
 
             try{
                 LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
@@ -895,6 +933,8 @@ public class ANCService {
                 JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
                 anc.setPartnerNotification(partnerNotificationInfoJsonNode);
             }
+        } else {
+            anc = new ANC();
         }
 
         ANC savedAnc = ancRepository.save(anc);
@@ -937,6 +977,7 @@ public class ANCService {
         ancRespondDto.setPerson_uuid(persons.getUuid());
         ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
+        ancRespondDto.setSource(anc.getSource());
         return ancRespondDto;
     }
 
@@ -946,12 +987,10 @@ public class ANCService {
         String personUuid = createPerson(ancWithPersonRequestDto.getPersonDto());
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0);
         Person person = new Person();
-        System.out.println("created person " + persons.get());
 
         ANC anc = new ANC();
         if (persons.isPresent()) {
             person = persons.get();
-            System.out.println("new person " + person);
 
             anc.setAncNo(ancWithPersonRequestDto.getAncNo());
             anc.setFirstAncDate(ancWithPersonRequestDto.getFirstAncDate());
@@ -983,7 +1022,7 @@ public class ANCService {
             anc.setDateOfHepatitisC(ancWithPersonRequestDto.getDateOfHepatitisC());
             anc.setHepatitisC(ancWithPersonRequestDto.getHepatitisC());
             anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
-            anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
+            anc.setTreatedHepatitisC(ancWithPersonRequestDto.getTreatedHepatitisC());
             anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancWithPersonRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
@@ -1654,11 +1693,11 @@ public class ANCService {
         return highRiskInfants;
     }
 
-    public ANCEnrollmentCheckDto checkANCEnrollmentByPersonUuid(String personUuid) {
+    public ANCEnrollmentCheckDto checkANCEnrollmentByPersonUuid(String personUuid, Long pmtctCycleId) {
         ANCEnrollmentCheckDto response = new ANCEnrollmentCheckDto();
 
-        // Get the latest ANC record for this patient
-        Optional<ANC> ancOptional = ancRepository.findLatestANCByPersonUuidAndArchived(personUuid, 0L);
+        // Get the ANC record for this patient and cycle
+        Optional<ANC> ancOptional = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L);
 
         if (ancOptional.isPresent()) {
             ANC anc = ancOptional.get();

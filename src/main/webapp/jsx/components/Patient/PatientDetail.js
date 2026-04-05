@@ -20,6 +20,8 @@ import AddInfants from "./../PmtctServices/Infants/InfantRegistration";
 import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { url as baseUrl, token as token } from "./../../../api";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 import PatientVisits from "./CheckedInVisit";
@@ -197,9 +199,12 @@ function PatientCard(props) {
       ? patientObj.personUuid
       : patientObj.uuid;
 
+    const cycleId = selectedCycleId || latestPmtctCycle?.id || patientObj.pmtctCycleId;
+    if (!cycleId) return;
+
     await axios
       .get(
-        `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}&pmtctCycleId=${cycleId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

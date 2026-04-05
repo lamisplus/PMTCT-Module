@@ -70,6 +70,7 @@ public class PmtctHtsService {
         pmtctHtsReponseDTO.setFinalResult(pmtctHts.getFinalResult());
 
         pmtctHtsReponseDTO.setAncNo(pmtctHts.getAncNo());
+        pmtctHtsReponseDTO.setSource(pmtctHts.getSource());
                try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
@@ -170,7 +171,6 @@ public class PmtctHtsService {
 
 
 
-            pmtctEnrollment1.setSource(pmtctHtsRequestDTO.getSource());
             pmtctEnrollment1.setLastModifiedBy(user.getUserName());
             pmtctEnrollment1.setLastModifiedDate(java.time.LocalDateTime.now());
 

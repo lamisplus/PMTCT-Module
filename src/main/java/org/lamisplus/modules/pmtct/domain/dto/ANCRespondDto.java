@@ -58,6 +58,7 @@ public class ANCRespondDto implements Serializable {
     private Long pregnancyCount;
     private String entryPoint;
     private String tbStatus;
+    private String source;
 
 
 }

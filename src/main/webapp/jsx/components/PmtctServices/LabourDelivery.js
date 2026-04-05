@@ -195,6 +195,7 @@ const LabourDelivery = (props) => {
           numberOfInfantsDead: response.data.numberOfInfantsDead,
           personUuid: response.data.personUuid,
           pmtctCycleId: response.data.pmtctCycleId,
+          source: response.data.source || "WEB",
         });
       })
       .catch((error) => {
@@ -1188,7 +1189,6 @@ const LabourDelivery = (props) => {
                   type="submit"
                   variant="contained"
                   color="primary"
-                  hidden={disabledField}
                   className={classes.button}
                   startIcon={<SaveIcon />}
                   style={{ backgroundColor: "#014d88" }}
@@ -1204,7 +1204,7 @@ const LabourDelivery = (props) => {
                   )}
                 </MatButton>
               </>
-            ) : (
+            ) : props.activeContent?.actionType !== "view" ? (
               <>
                 <MatButton
                   type="submit"
@@ -1225,7 +1225,7 @@ const LabourDelivery = (props) => {
                   )}
                 </MatButton>
               </>
-            )}
+            ) : null}
           </form>
         </CardBody>
       </Card>

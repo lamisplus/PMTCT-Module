@@ -115,8 +115,7 @@ public class InfantVisitService
 
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
-        //infantArv.setUuid(UUID.randomUUID().toString());
-        infantArv.setUuid(infantArvDto.getUuid());
+        infantArv.setUuid(UUID.randomUUID().toString());
         infantArv.setVisitDate(infantArvDto.getVisitDate());
         infantArv.setInfantArvType(infantArvDto.getInfantArvType());
         infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
@@ -148,7 +147,7 @@ public class InfantVisitService
 
         infantArv.setInfantHospitalNumber(infantArvDto.getInfantHospitalNumber());
         infantArv.setAncNumber(infantArvDto.getAncNumber());
-        infantArv.setUuid(infantArvDto.getUuid());
+        infantArv.setUuid(UUID.randomUUID().toString());
         infantArv.setVisitDate(infantArvDto.getVisitDate());
         infantArv.setInfantArvType(infantArvDto.getInfantArvType());
         infantArv.setInfantArvTime(infantArvDto.getInfantArvTime());
@@ -193,8 +192,7 @@ public class InfantVisitService
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
         infantPCRTest.setAncNumber(infantPCRTestDto.getAncNumber());
         infantPCRTest.setResults(infantPCRTestDto.getResults());
-        //infantPCRTest.setUuid(UUID.randomUUID().toString());
-        infantPCRTest.setUuid(infantPCRTestDto.getUuid());
+        infantPCRTest.setUuid(UUID.randomUUID().toString());
         infantPCRTest.setVisitDate(infantPCRTestDto.getVisitDate());
         infantPCRTest.setDateResultReceivedAtFacility(infantPCRTestDto.getDateResultReceivedAtFacility());
         infantPCRTest.setDateResultReceivedByCaregiver(infantPCRTestDto.getDateResultReceivedByCaregiver());
@@ -235,7 +233,7 @@ public class InfantVisitService
         infantPCRTest.setTestType(infantPCRTestDto.getTestType());
         infantPCRTest.setAncNumber(infantPCRTestDto.getAncNumber());
         infantPCRTest.setResults(infantPCRTestDto.getResults());
-        infantPCRTest.setUuid(infantPCRTestDto.getUuid());
+        infantPCRTest.setUuid(UUID.randomUUID().toString());
         infantPCRTest.setVisitDate(infantPCRTestDto.getVisitDate());
         infantPCRTest.setDateResultReceivedAtFacility(infantPCRTestDto.getDateResultReceivedAtFacility());
         infantPCRTest.setDateResultReceivedByCaregiver(infantPCRTestDto.getDateResultReceivedByCaregiver());
@@ -317,6 +315,7 @@ public class InfantVisitService
         infantVisitResponseDto.setVisitDate(infantVisit.getVisitDate());
         infantVisitResponseDto.setVisitStatus(infantVisit.getVisitStatus());
         infantVisitResponseDto.setUniqueUuid(infantVisit.getUniqueUuid());
+        infantVisitResponseDto.setSource(infantVisit.getSource());
 
 
         return infantVisitResponseDto;
@@ -1013,9 +1012,6 @@ public class InfantVisitService
         } else if (infant.getMotherPersonUuid() != null) {
             exist.setMotherPersonUuid(infant.getMotherPersonUuid());
         }
-        if (dto.getSource() != null) {
-            exist.setSource(dto.getSource());
-        }
 
        return this.infantPCRTestRepository.save(exist);
     }
@@ -1044,9 +1040,6 @@ public class InfantVisitService
             exist.setMotherPersonUuid(dto.getMotherPersonUuid());
         } else if (infant.getMotherPersonUuid() != null) {
             exist.setMotherPersonUuid(infant.getMotherPersonUuid());
-        }
-        if (dto.getSource() != null) {
-            exist.setSource(dto.getSource());
         }
 
         return this.infantRapidTestRepository.save(exist);
@@ -1080,9 +1073,6 @@ public class InfantVisitService
         exist.setBreastFeeding(infantVisitRequestDto.getBreastFeeding());
         exist.setLastModifiedBy(user.getUserName());
         exist.setLastModifiedDate(java.time.LocalDateTime.now());
-        if (infantVisitRequestDto.getSource() != null) {
-            exist.setSource(infantVisitRequestDto.getSource());
-        }
 //        System.out.println("=================EXIST==========================");
 
 
@@ -1133,9 +1123,6 @@ public class InfantVisitService
         } else if (infant.getMotherPersonUuid() != null) {
             exist.setMotherPersonUuid(infant.getMotherPersonUuid());
         }
-        if (infantArvDto.getSource() != null) {
-            exist.setSource(infantArvDto.getSource());
-        }
 
        return  this.infantArvRepository.save(exist);
     }
@@ -1161,9 +1148,6 @@ public class InfantVisitService
         // Set mother_person_uuid from DTO if provided
         if (dto.getMotherPersonUuid() != null) {
             exist.setMotherPersonUuid(dto.getMotherPersonUuid());
-        }
-        if (dto.getSource() != null) {
-            exist.setSource(dto.getSource());
         }
         this.infantMotherArtRepository.save(exist);
     }

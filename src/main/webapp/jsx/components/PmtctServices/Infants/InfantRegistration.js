@@ -520,6 +520,7 @@ const LabourinfantInfo = (props) => {
     // temp.ageAtTest = infantPCRTestDto.ageAtTest ? "" : "This field is required";
     //temp.dateOfinfantInfo = infantInfo.dateOfinfantInfo ? "" : "This field is required"
     temp.sex = infantInfo.sex ? "" : "This field is required";
+    temp.dateOfDelivery = infantInfo.dateOfDelivery ? "" : "This field is required";
     infantInfo.ctxStatus === "YES" && ( temp.dateOfCtx =infantArvDto.dateOfCtx? "" : "This field is required");
     infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
     infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.infantArvType = infantArvDto.infantArvType? "" : "This field is required");
@@ -1406,13 +1407,13 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                   )}
                 </MatButton>
               </>
-            ) : (
+            ) : props.activeContent?.actionType !== "view" ? (
               <>
                 <MatButton
                   type="submit"
                   variant="contained"
                   color="primary"
-                  hidden={disabledField || hospitalNumStatus}
+                  hidden={hospitalNumStatus}
                   className={classes.button}
                   disabled={saving}
                   startIcon={<SaveIcon />}
@@ -1426,7 +1427,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                   )}
                 </MatButton>
               </>
-            )}
+            ) : null}
             <MatButton
               variant="contained"
               className={classes.button}

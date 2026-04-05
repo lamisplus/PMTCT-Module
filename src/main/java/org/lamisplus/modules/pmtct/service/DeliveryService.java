@@ -58,9 +58,46 @@ public class DeliveryService
     }
 
     public Delivery converRequestDtotoEntity(DeliveryRequestDto deliveryRequestDto) {
-        Delivery delivery = new Delivery();
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
+
+        // Set pmtctCycleId - this is now compulsory
+        if (deliveryRequestDto.getPmtctCycleId() == null) {
+            throw new IllegalArgumentException("pmtctCycleId is required for delivery");
+        }
+
+        // Check if a delivery already exists for this person + cycle to prevent duplicates
+        Optional<Delivery> existingDelivery = this.deliveryRepository
+                .findDeliveryByPersonUuidAndPmtctCycleId(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
+
+        Delivery delivery;
+        if (existingDelivery.isPresent()) {
+            // Update the existing delivery instead of creating a duplicate
+            delivery = existingDelivery.get();
+            delivery.setLastModifiedBy(user.getUserName());
+            delivery.setLastModifiedDate(LocalDateTime.now());
+        } else {
+            // Create new delivery
+            delivery = new Delivery();
+            delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
+            delivery.setUuid(UUID.randomUUID().toString());
+            delivery.setCreatedBy(user.getUserName());
+            delivery.setCreatedDate(LocalDateTime.now());
+            delivery.setLastModifiedBy(user.getUserName());
+            delivery.setLastModifiedDate(LocalDateTime.now());
+            delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+            delivery.setSource(deliveryRequestDto.getSource());
+
+            Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
+
+            if(pmtctOptional.isPresent()) {
+                PMTCTEnrollment pmtct = pmtctOptional.get();
+                delivery.setHospitalNumber(pmtct.getHospitalNumber());
+                delivery.setFacilityId(pmtct.getFacilityId());
+            } else {
+                throw new RuntimeException("PMTCT enrollment is required before delivery can be saved");
+            }
+        }
 
         delivery.setAncNo(deliveryRequestDto.getAncNo());
         delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
@@ -84,32 +121,7 @@ public class DeliveryService
         delivery.setReferalSource(deliveryRequestDto.getReferalSource());
         delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
         delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
-        delivery.setUuid(UUID.randomUUID().toString());
-        delivery.setCreatedBy(user.getUserName());
-        delivery.setLastModifiedBy(user.getUserName());
-        delivery.setCreatedDate(LocalDateTime.now());
-        delivery.setLastModifiedDate(LocalDateTime.now());
-        delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
         delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
-
-        // Set pmtctCycleId - this is now compulsory
-        if (deliveryRequestDto.getPmtctCycleId() == null) {
-            throw new IllegalArgumentException("pmtctCycleId is required for delivery");
-        }
-        delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
-        delivery.setSource(deliveryRequestDto.getSource());
-
-        Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.findLatestByPersonUuidAndArchived(deliveryRequestDto.getPersonUuid(), Long.valueOf(0L));
-        ANC anc = this.ancRepository.findByAncNoAndArchived(deliveryRequestDto.getAncNo(), Long.valueOf(0L));
-
-        if(pmtctOptional.isPresent()) {
-            PMTCTEnrollment pmtct = pmtctOptional.get();
-            delivery.setHospitalNumber(pmtct.getHospitalNumber());
-            delivery.setFacilityId(pmtct.getFacilityId());
-        } else if (anc != null) {
-            delivery.setHospitalNumber(anc.getHospitalNumber());
-            delivery.setFacilityId(anc.getFacilityId()); }
-        else { throw new RuntimeException("YET TO REGISTER FOR ANC OR PERSON UUID"); }
 
         return this.deliveryRepository.save(delivery);
     }
@@ -117,7 +129,7 @@ public class DeliveryService
         DeliveryResponseDto deliveryResponseDto = new DeliveryResponseDto();
         deliveryResponseDto.setId(delivery.getId());
         deliveryResponseDto.setAncNo(delivery.getAncNo());
-        deliveryResponseDto.setHospitalNumber(delivery.getPersonUuid());
+        deliveryResponseDto.setHospitalNumber(delivery.getHospitalNumber());
         deliveryResponseDto.setFullName(getFullName(delivery.getPersonUuid()));
         deliveryResponseDto.setAge(calculateAge(delivery.getPersonUuid()));
         deliveryResponseDto.setUuid(delivery.getUuid());
@@ -143,6 +155,10 @@ public class DeliveryService
         deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
         deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
         deliveryResponseDto.setPmtctCycleId(delivery.getPmtctCycleId());
+        deliveryResponseDto.setSource(delivery.getSource());
+        deliveryResponseDto.setNumberOfInfantsAlive(delivery.getNumberOfInfantsAlive());
+        deliveryResponseDto.setNumberOfInfantsDead(delivery.getNumberOfInfantsDead());
+        deliveryResponseDto.setNonHbvExposedInfantGivenHbWithin24hrs(delivery.getNonHbvExposedInfantGivenHbWithin24hrs());
 
         return deliveryResponseDto;
     }
@@ -151,7 +167,7 @@ public class DeliveryService
         System.out.println("hostpitalNumber = " + uuid);
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Long facilityId = 0L;
+        Long facilityId = user.getCurrentOrganisationUnitId();
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
         String fullName = "";
         if (persons.isPresent())
@@ -170,7 +186,7 @@ public class DeliveryService
         //System.out.println("hostpitalNumber = " + uuid);
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Long facilityId = 0L;
+        Long facilityId = user.getCurrentOrganisationUnitId();
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
         int age = 0;
         //System.out.println("HostpitalNumber in Age " + uuid);
@@ -229,11 +245,9 @@ public class DeliveryService
 //    }
 
 
-    public void  updateDateOfDeliveryFromPMTCT(String personUuid, String deliveryDate, Integer ga)
+    public void  updateDateOfDeliveryFromPMTCT(String personUuid, Long pmtctCycleId, String deliveryDate, Integer ga)
     {
-
-
-        Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(personUuid);
+        Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
         if(deliverys.isPresent())
         {
             Delivery delivery = deliverys.get();
@@ -279,14 +293,13 @@ public class DeliveryService
                 delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
             }
 
-            delivery.setSource(deliveryRequestDto.getSource());
             delivery.setLastModifiedDate(LocalDateTime.now());
             delivery.setLastModifiedBy(userService.getUserWithRoles().get().getUserName());
             //check if the chld has been created
 
             boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());
             if(hasChild){
-                infantRepository.updateDeliveryDate(deliveryRequestDto.getDateOfDelivery(), deliveryRequestDto.getPersonUuid());
+                infantRepository.updateDeliveryDate(deliveryRequestDto.getDateOfDelivery(), deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
             }
 
 
@@ -305,12 +318,7 @@ public class DeliveryService
     }
 
     public Delivery getSingleDeliveryWithUuid(String personUuid, Long pmtctCycleId) {
-        Delivery deliveryOptional= deliveryRepository.getDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
-        Delivery delivery = new Delivery();
-        if (deliveryOptional != null) {
-            delivery =  deliveryOptional;
-        }
-        return delivery;
+        return deliveryRepository.getDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
     }
 
     /**
@@ -343,6 +351,8 @@ public class DeliveryService
                         maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP") ||
                         maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT")) {
                         cycle.setIsClosed(true);
+                    } else {
+                        cycle.setIsClosed(false);
                     }
                 }
 

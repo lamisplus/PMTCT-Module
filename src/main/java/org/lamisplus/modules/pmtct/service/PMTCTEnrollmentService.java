@@ -86,13 +86,38 @@ private DeliveryRepository deliveryRepository;
             throw new IllegalArgumentException("Neither personUuid nor personDto provided");
         }
 
-        PMTCTEnrollment pmtctEnrollment = new PMTCTEnrollment();
+        // Set pmtctCycleId - this is now compulsory
+        if (pmtctEnrollmentRequestDto.getPmtctCycleId() == null) {
+            throw new IllegalArgumentException("pmtctCycleId is required for PMTCT enrollment");
+        }
+
+        // Check if an enrollment already exists for this person + cycle to prevent duplicates
+        Optional<PMTCTEnrollment> existingEnrollment = this.pmtctEnrollmentReporsitory
+                .getByPersonUuidAndPmtctCycleId(person.getUuid(), pmtctEnrollmentRequestDto.getPmtctCycleId());
+
+        PMTCTEnrollment pmtctEnrollment;
+        if (existingEnrollment.isPresent()) {
+            // Update the existing enrollment instead of creating a duplicate
+            pmtctEnrollment = existingEnrollment.get();
+            pmtctEnrollment.setLastModifiedBy(user.getUserName());
+            pmtctEnrollment.setLastModifiedDate(java.time.LocalDateTime.now());
+        } else {
+            // Create new enrollment
+            pmtctEnrollment = new PMTCTEnrollment();
+            pmtctEnrollment.setPersonUuid(person.getUuid());
+            pmtctEnrollment.setUuid(UUID.randomUUID().toString());
+            pmtctEnrollment.setArchived(0L);
+            pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
+            pmtctEnrollment.setCreatedBy(user.getUserName());
+            pmtctEnrollment.setCreatedDate(java.time.LocalDateTime.now());
+            pmtctEnrollment.setLastModifiedBy(user.getUserName());
+            pmtctEnrollment.setLastModifiedDate(java.time.LocalDateTime.now());
+            pmtctEnrollment.setPmtctCycleId(pmtctEnrollmentRequestDto.getPmtctCycleId());
+            pmtctEnrollment.setSource(pmtctEnrollmentRequestDto.getSource());
+        }
+
         pmtctEnrollment.setHospitalNumber(person.getHospitalNumber());
         pmtctEnrollment.setPmtctType(pmtctEnrollmentRequestDto.getPmtctType());
-//      System.out.println("got to the type parameter");
-//      System.out.println(pmtctEnrollmentRequestDto.getPmtctType());
-//      System.out.println(pmtctEnrollment.getPmtctType());
-        pmtctEnrollment.setPersonUuid(person.getUuid());
         pmtctEnrollment.setHivStatus(pmtctEnrollmentRequestDto.getHivStatus());
         pmtctEnrollment.setPmtctEnrollmentDate(pmtctEnrollmentRequestDto.getPmtctEnrollmentDate());
         pmtctEnrollment.setLmp(pmtctEnrollmentRequestDto.getLmp());
@@ -101,39 +126,16 @@ private DeliveryRepository deliveryRepository;
         pmtctEnrollment.setDateOfDelivery(pmtctEnrollmentRequestDto.getDateOfDelivery());
         pmtctEnrollment.setExpectedDeliveryDate(pmtctEnrollmentRequestDto.getExpectedDeliveryDate());
         pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
-
-        if (pmtctEnrollmentRequestDto.getPmtctType() == "ANC") {
-            pmtctEnrollment.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
-        }
         pmtctEnrollment.setEntryPoint(pmtctEnrollmentRequestDto.getEntryPoint());
         pmtctEnrollment.setArtStartDate(pmtctEnrollmentRequestDto.getArtStartDate());
         pmtctEnrollment.setArtStartTime(pmtctEnrollmentRequestDto.getArtStartTime());
         pmtctEnrollment.setTbStatus(pmtctEnrollmentRequestDto.getTbStatus());
-        pmtctEnrollment.setUuid(UUID.randomUUID().toString());
-        pmtctEnrollment.setArchived(0L);
         pmtctEnrollment.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
-
-        // Set facility ID and audit fields from current user
-        pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
-        pmtctEnrollment.setCreatedBy(user.getUserName());
-        pmtctEnrollment.setLastModifiedBy(user.getUserName());
-        pmtctEnrollment.setCreatedDate(java.time.LocalDateTime.now());
-        pmtctEnrollment.setLastModifiedDate(java.time.LocalDateTime.now());
-
-
         pmtctEnrollment.setMotherArtInitiationTime(pmtctEnrollmentRequestDto.getMotherArtInitiationTime());
         pmtctEnrollment.setRegimenTypeId(pmtctEnrollmentRequestDto.getRegimenTypeId());
         pmtctEnrollment.setRegimenId(pmtctEnrollmentRequestDto.getRegimenId());
         pmtctEnrollment.setHepatitisB(pmtctEnrollmentRequestDto.getHepatitisB());
         pmtctEnrollment.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
-
-        // Set pmtctCycleId - this is now compulsory
-        if (pmtctEnrollmentRequestDto.getPmtctCycleId() == null) {
-            throw new IllegalArgumentException("pmtctCycleId is required for PMTCT enrollment");
-        }
-        pmtctEnrollment.setPmtctCycleId(pmtctEnrollmentRequestDto.getPmtctCycleId());
-        pmtctEnrollment.setSource(pmtctEnrollmentRequestDto.getSource());
-//     else { throw new RuntimeException("YET TO REGISTER FOR ANC"); }
 
         PMTCTEnrollment savedEnrollment = (PMTCTEnrollment) this.pmtctEnrollmentReporsitory.save(pmtctEnrollment);
 
@@ -323,6 +325,7 @@ private DeliveryRepository deliveryRepository;
            pmtctEnrollmentRespondDto.setExpectedDeliveryDate(pmtctEnrollment.getExpectedDeliveryDate());
            pmtctEnrollmentRespondDto.setAncNo(pmtctEnrollment.getAncNo());
            pmtctEnrollmentRespondDto.setPmtctCycleId(pmtctEnrollment.getPmtctCycleId());
+           pmtctEnrollmentRespondDto.setSource(pmtctEnrollment.getSource());
 
 
 
@@ -459,7 +462,6 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment1.setUrinalysis(pmtctEnrollmentRequestDto.getUrinalysis());
             pmtctEnrollment1.setTimeOfHivDiagnosis(pmtctEnrollmentRequestDto.getTimeOfHivDiagnosis());
             pmtctEnrollment1.setAncNo(pmtctEnrollmentRequestDto.getAncNo());
-            pmtctEnrollment1.setSource(pmtctEnrollmentRequestDto.getSource());
 
             // Update lastModifiedBy with current user
             pmtctEnrollment1.setLastModifiedBy(user.getUserName());
@@ -479,11 +481,12 @@ private DeliveryRepository deliveryRepository;
             }
 
 //            check if the patient has LD record and update the GA
-            Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuid(pmtctEnrollmentRequestDto.getPersonUuid());
+            Long cycleId = pmtctEnrollment1.getPmtctCycleId();
+            Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(pmtctEnrollmentRequestDto.getPersonUuid(), cycleId);
 
-            if(deliverys.isPresent() & !pmtctEnrollmentRequestDto.getDateOfDelivery().isEmpty()){
+            if(deliverys.isPresent() && pmtctEnrollmentRequestDto.getDateOfDelivery() != null && !pmtctEnrollmentRequestDto.getDateOfDelivery().isEmpty()){
 
-                deliveryService.updateDateOfDeliveryFromPMTCT(pmtctEnrollmentRequestDto.getPersonUuid(), pmtctEnrollmentRequestDto.getDateOfDelivery(), pmtctEnrollmentRequestDto.getGAWeeks());
+                deliveryService.updateDateOfDeliveryFromPMTCT(pmtctEnrollmentRequestDto.getPersonUuid(), cycleId, pmtctEnrollmentRequestDto.getDateOfDelivery(), pmtctEnrollmentRequestDto.getGAWeeks());
 
             }
             this.pmtctEnrollmentReporsitory.save(pmtctEnrollment1);
@@ -503,7 +506,7 @@ private DeliveryRepository deliveryRepository;
     public String getDeliveryDate(String personUuid, Long pmtctCycleId) {
       String deliveryDate =  pmtctEnrollmentReporsitory.getDateOfDelivery(personUuid, pmtctCycleId);
 
-        if(deliveryDate != ""){
+        if(deliveryDate != null && !deliveryDate.isEmpty()){
          return deliveryDate;
         }else{
             return "";
@@ -542,22 +545,9 @@ private DeliveryRepository deliveryRepository;
 //            return false;
 //        }
 
-    public boolean checkPatientOnPMTCT(String personUuid) {
-        PMTCTEnrollment person = pmtctEnrollmentReporsitory.findBypersonuuid(personUuid);
-        if (person == null) {
-            System.out.println("No enrollment found for person: " + personUuid);
-            return false;
-        }
-
-        if (person.getHivStatus() == null || person.getArtStartDate() == null) {
-            System.out.println("Missing HIV status or ART start date for person: " + personUuid);
-            return false;
-        }
-
-        DeliveryResponseDto deliveryDto = pmtctEnrollmentReporsitory.findDeliveryByPersonUuid(personUuid);
-        boolean result = deliveryDto != null && "Yes".equalsIgnoreCase(deliveryDto.getArtStartedLdWard());
-        System.out.println("Delivery condition met? " + result);
-        return result;
+    public boolean checkPatientOnPMTCT(String personUuid, Long pmtctCycleId) {
+        Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        return enrollment.isPresent();
     }
 
 
@@ -577,15 +567,20 @@ private DeliveryRepository deliveryRepository;
     public  RegisterPatientResponseDTO checkPatientOnHTS(String clientCode) {
         String res_Uuid = pmtctEnrollmentReporsitory.checkPatientOnHts(clientCode);
        RegisterPatientResponseDTO htsClientResponse = new RegisterPatientResponseDTO();
+
+        if (res_Uuid == null || res_Uuid.isEmpty()) {
+            htsClientResponse.setMessage("User does not have HTS record !");
+            htsClientResponse.setStatus(false);
+            return htsClientResponse;
+        }
+
         String res_status = pmtctEnrollmentReporsitory.checkresultOnHts(clientCode);
         String res_testing = pmtctEnrollmentReporsitory.checkSettingOnHts(clientCode);
-        System.out.println(res_Uuid);
-        System.out.println(clientCode);
        boolean personOnPMTCT = pmtctEnrollmentReporsitory.checkPatientOnPMTCT(res_Uuid);
         boolean personOnANC = pmtctEnrollmentReporsitory.checkPatientOnANC(res_Uuid);
 
 
-        if (!res_Uuid.isEmpty() & !personOnPMTCT & !personOnANC  ) {
+        if (!personOnPMTCT && !personOnANC  ) {
            String patientPersonOptional = pmtctEnrollmentReporsitory.findPatientName(res_Uuid);
             String patientPersonHospital = pmtctEnrollmentReporsitory.findPatientHos(res_Uuid);
             String patientPersonDob = pmtctEnrollmentReporsitory.findPatientDOB(res_Uuid);

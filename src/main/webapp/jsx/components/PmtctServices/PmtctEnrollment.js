@@ -766,7 +766,7 @@ const AncPnc = (props) => {
         axios
           .put(
             `${baseUrl}pmtct/anc/update-pmtct-enrollment/${props.activeContent.id}`,
-            enroll,
+            { ...enroll, source: enroll.source || "WEB" },
             { headers: { Authorization: `Bearer ${token}` } }
           )
           .then((response) => {
@@ -874,7 +874,7 @@ const AncPnc = (props) => {
                       id="hivStatus"
                       value={enroll.hivStatus}
                       onChange={handleInputChangeEnrollmentDto}
-                      disabled={isHivStatusDisabled()}
+                      disabled={disabledField || isHivStatusDisabled()}
                     >
                       <option value="">Select</option>
                       <option value="Positive">Positive</option>
@@ -978,7 +978,7 @@ const AncPnc = (props) => {
                           ? enroll.pmtctEnrollmentDate
                           : moment(new Date()).format("YYYY-MM-DD")
                       }
-                      disabled={props?.ancEntryType}
+                      disabled={disabledField || props?.ancEntryType}
                     />
                   </InputGroup>
                   {errors.lmp !== "" ? (
@@ -1438,7 +1438,7 @@ const AncPnc = (props) => {
             </div>
             {saving ? <Spinner /> : ""}
             <br />
-            {props.hideUpdateButton && (
+            {props.hideUpdateButton && props.activeContent?.actionType !== "view" && (
               <>
                 {props.activeContent &&
                 props.activeContent.actionType === "update" ? (
@@ -1447,7 +1447,6 @@ const AncPnc = (props) => {
                       type="submit"
                       variant="contained"
                       color="primary"
-                      hidden={disabledField}
                       className={classes.button}
                       startIcon={<SaveIcon />}
                       style={{ backgroundColor: "#014d88" }}

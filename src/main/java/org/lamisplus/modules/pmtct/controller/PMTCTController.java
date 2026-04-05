@@ -511,13 +511,13 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "get-latest-pcr")
-    public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber) {
-        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber));
+    public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber, @RequestParam Long pmtctCycleId) {
+        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber, pmtctCycleId));
     }
 
     @GetMapping(value = "get-latest-rapid-test")
-    public ResponseEntity<InfantRapidAntiBodyTestDto> getLastRapidTest(@RequestParam String infantHospitalNumber, @RequestParam String motherUuid) {
-        return ResponseEntity.ok(infantService.getLatestRapidTest(infantHospitalNumber, motherUuid));
+    public ResponseEntity<InfantRapidAntiBodyTestDto> getLastRapidTest(@RequestParam String infantHospitalNumber, @RequestParam String motherUuid, @RequestParam Long pmtctCycleId) {
+        return ResponseEntity.ok(infantService.getLatestRapidTest(infantHospitalNumber, motherUuid, pmtctCycleId));
     }
 
 //
@@ -527,8 +527,8 @@ public class PMTCTController {
 //    }
 
     @GetMapping(value = "is-on-pmtct")
-    public boolean getPatientOnPMTCT(@RequestParam String personUuid) {
-        return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid);
+    public boolean getPatientOnPMTCT(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
+        return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid, pmtctCycleId);
     }
 
     @GetMapping(value = "is-on-hts")
@@ -618,11 +618,8 @@ public class PMTCTController {
 
 
     @GetMapping(value = "get-latest-maternal-outcome")
-    public  ResponseEntity<String>  getLatestMaternalOutcome(@RequestParam String personUuid) {
-//
-        return ResponseEntity.ok(pmtctVisitService.getLatestMaternalOutcome(personUuid));
-
-
+    public  ResponseEntity<String>  getLatestMaternalOutcome(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
+        return ResponseEntity.ok(pmtctVisitService.getLatestMaternalOutcome(personUuid, pmtctCycleId));
     }
 
 
@@ -704,12 +701,12 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "check-anc-enrollment")
-    public ResponseEntity<ANCEnrollmentCheckDto> checkANCEnrollment(@RequestParam String personUuid) {
+    public ResponseEntity<ANCEnrollmentCheckDto> checkANCEnrollment(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
         if (personUuid == null || personUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        ANCEnrollmentCheckDto response = ancService.checkANCEnrollmentByPersonUuid(personUuid);
+        ANCEnrollmentCheckDto response = ancService.checkANCEnrollmentByPersonUuid(personUuid, pmtctCycleId);
         return ResponseEntity.ok(response);
     }
 
