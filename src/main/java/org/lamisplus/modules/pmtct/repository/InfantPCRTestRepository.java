@@ -41,7 +41,7 @@ public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCR
     @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND test_type = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantPCRTest findByInfantHospitalNumberAndTestType(String infantHospitalNumber, String testType);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND test_type = ?3 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND test_type = ?3 AND unique_uuid IS NULL AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantPCRTest getLatestByHospitalNumberAndVisitDateAndTestType(String hospitalNumber, LocalDate visitDate, String testType);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE unique_uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
