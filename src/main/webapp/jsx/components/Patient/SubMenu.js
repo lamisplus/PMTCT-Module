@@ -240,13 +240,27 @@ const showRetestingMenu = (patientHivStatus) => {
     return; // Exit early if pmtct registered
   }
 
+  // If the API returned a definitive result, use it as the sole source of truth
+  if (patientHivStatus) {
+    const status = String(patientHivStatus).toLowerCase().trim();
+    if (status.includes("positive") || (status.includes("reactive") && !status.includes("non-reactive") && !status.includes("non reactive"))) {
+      setShowRetesting(false);
+      setRetestingStatus('retesting');
+      return;
+    }
+    if (status.includes("negative") || status.includes("non-reactive") || status.includes("non reactive")) {
+      setShowRetesting(true);
+      setRetestingStatus('retesting');
+      return;
+    }
+  }
+
+  // Only fall through to checking patientObj if API had no result
   let hivStatusSource = [
-    patientHivStatus, 
-    props?.patientObj?.hivStatus, 
-    props?.patientObj?.dynamicHivStatus, 
+    props?.patientObj?.hivStatus,
+    props?.patientObj?.dynamicHivStatus,
     props?.patientObj?.staticHivStatus
   ];
-  
 
   // Filter out null/undefined and convert to lowercase
   const validStatuses = hivStatusSource
@@ -255,16 +269,14 @@ const showRetestingMenu = (patientHivStatus) => {
 
   // Check for positive/reactive (excluding non-reactive)
   const hasPositive = validStatuses.some(status => {
-    // Exclude non-reactive first
     if (status.includes("non-reactive") || status.includes("non reactive")) {
       return false;
     }
-    // Then check for positive/reactive
     return status.includes("positive") || status.includes("reactive");
   });
 
   // Check for negative/non-reactive
-  const hasNegative = validStatuses.some(status => 
+  const hasNegative = validStatuses.some(status =>
     status.includes("negative") || status.includes("non-reactive") || status.includes("non reactive")
   );
 
@@ -275,7 +287,7 @@ const showRetestingMenu = (patientHivStatus) => {
     setShowRetesting(true);
     setRetestingStatus('retesting');
   } else {
-    // if the status is unknown 
+    // if the status is unknown
     setShowRetesting(true);
     setRetestingStatus("pmtct-hts");
   }
@@ -302,7 +314,7 @@ const showRetestingMenu = (patientHivStatus) => {
                     <>
                       {permissions.genAndPmtct && (
                         <Menu.Item onClick={() => loadAncPnc()}>
-                          PMTCT Enrollment
+                         Mother Clinical Information
                         </Menu.Item>
                       )}
                     </>
@@ -329,7 +341,7 @@ const showRetestingMenu = (patientHivStatus) => {
                         {/* )} */}
                         <Menu.Item onClick={() => onClickInfant()}>
                           {" "}
-                          Infant Information
+                          Infant Information- MIP2
                         </Menu.Item>
                       </>
                     )}

@@ -111,6 +111,13 @@ public class PmtctPregnancyCycleService {
         }
     }
 
+    private static final List<String> TERMINAL_OUTCOMES = Arrays.asList(
+        "MATERNAL_OUTCOME_TRANSFERRED_OUT",
+        "MATERNAL_OUTCOME_DIED",
+        "MATERNAL_OUTCOME_DEAD",
+        "MATERNAL_OUTCOME_COMPLETED_PMTCT"
+    );
+
     public void updateMaternalOutcome(Long cycleId, String maternalOutcome, String visitStatus) {
         if (cycleId == null) {
             return;
@@ -123,6 +130,11 @@ public class PmtctPregnancyCycleService {
             // Update maternal outcome if provided
             if (maternalOutcome != null) {
                 cycle.setMaternalOutcome(maternalOutcome);
+
+                // Close the MIP Card if terminal outcome
+                if (TERMINAL_OUTCOMES.contains(maternalOutcome)) {
+                    cycle.setIsClosed(true);
+                }
             }
 
             // Update visit status if provided
@@ -137,6 +149,12 @@ public class PmtctPregnancyCycleService {
 
             pregnancyCycleRepository.save(cycle);
         }
+    }
+
+    public boolean isCycleClosed(Long cycleId) {
+        if (cycleId == null) return false;
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
+        return cycleOptional.map(c -> Boolean.TRUE.equals(c.getIsClosed())).orElse(false);
     }
 
 

@@ -338,7 +338,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
 
 
-  @Query(value = "SELECT CASE WHEN date_started IS NULL THEN date_of_registration ELSE date_started END AS artStartDate from hiv_enrollment WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0", nativeQuery = true)
+  @Query(value = "SELECT date_art_started AS artStartDate FROM hiv_enrollment_commencement WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
   List<PatientArtData> getArtDate (String personUuid, Long facilityId);
 
 

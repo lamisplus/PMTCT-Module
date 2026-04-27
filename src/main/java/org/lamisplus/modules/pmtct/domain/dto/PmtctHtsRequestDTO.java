@@ -34,6 +34,23 @@ public class PmtctHtsRequestDTO {
     private HivTestDto tieBreaker2;
     private String finalResult;
 
+    // New PMTCT Register fields
+    private String pregnancyStatusAtEntry;
+    private String previouslyKnownHivPositive;
+    private String enrolledOnArt;
+    private String typeOfHivTest;
+    private String hivEarlyDetect;
+    private String hivEarlyDetectViralLoad;
+    private String confirmatoryFromSpokes;
+    private String initiatedOnProphylaxis;
+    private String tbReferred;
+    private SyphilisDetailsDto syphilisInfo;
+    private HbvInfoDto hbvInfo;
+    private PartnerInfoDto partnerInfo;
+    private String tbScreeningStatus;
+    private String pmtctTestEntryPoint;
+    private String viralLoadMonitoring;
+
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;
 

@@ -66,6 +66,13 @@ const PatientnHistory = (props) => {
   const toggle = () => setOpen(!open);
   let notToBeUpdated = ["pmtct_infant_information"];
 
+  // Map activity names for display
+  const displayActivityName = (name) => {
+    if (!name) return name;
+    if (name.toLowerCase() === "pmtct enrollment") return "Mother Information- MIP1";
+    return name;
+  };
+
   // Get pmtctCycleId from props
   const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
 
@@ -362,7 +369,7 @@ const PatientnHistory = (props) => {
         data={
           recentActivities &&
           recentActivities.map((row) => ({
-            name: row.activityName,
+            name: displayActivityName(row.activityName),
             date: row.activityDate,
             actions: !notToBeUpdated.includes(row.path) ? (
               <Dropdown className="dropdown">

@@ -1,20 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Grid,
-  Segment,
-  Label,
-  Icon,
-  List,
-  Button,
   Card,
-  Feed,
-} from "semantic-ui-react";
-// Page titie
-import { FormGroup, Label as FormLabelName, Input } from "reactstrap";
+  CardBody,
+  FormGroup,
+  Label,
+  Input,
+  InputGroup,
+} from "reactstrap";
 import { url as baseUrl, token } from "../../../api";
 import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
+import EventIcon from "@material-ui/icons/Event";
+import FitnessCenterIcon from "@material-ui/icons/FitnessCenter";
+import LocalHospitalIcon from "@material-ui/icons/LocalHospital";
+import TimelineIcon from "@material-ui/icons/Timeline";
+import ChildCareIcon from "@material-ui/icons/ChildCare";
+import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
+import ScheduleIcon from "@material-ui/icons/Schedule";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
@@ -46,8 +49,32 @@ const useStyles = makeStyles((theme) => ({
   },
 
   root: {
-    "& > *": {
-      margin: theme.spacing(1),
+    flexGrow: 1,
+    "& .card-title": {
+      color: "#fff",
+      fontWeight: "bold",
+    },
+    "& .form-control": {
+      borderRadius: "0.25rem",
+      height: "41px",
+      borderColor: "#d2d6dc",
+    },
+    "& .card-header:first-child": {
+      borderRadius: "calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0",
+    },
+    "& .dropdown-toggle::after": {
+      display: " block !important",
+    },
+    "& select": {
+      "-webkit-appearance": "listbox !important",
+    },
+    "& p": {
+      color: "red",
+    },
+    "& label": {
+      fontSize: "14px",
+      color: "#014d88",
+      fontWeight: "bold",
     },
   },
   input: {
@@ -62,6 +89,30 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "11px",
   },
 }));
+
+const sectionContainerStyle = {
+  border: "1px solid #e0e0e0",
+  borderRadius: "0.35rem",
+  padding: "15px 10px",
+  backgroundColor: "#f8f9fa",
+};
+
+const sectionHeaderStyle = {
+  backgroundColor: "#f0f4f8",
+  color: "#2d3748",
+  padding: "8px 12px",
+  borderRadius: "0.25rem",
+  fontSize: "13px",
+  fontWeight: "bold",
+  marginBottom: "12px",
+};
+
+const sectionIconStyle = {
+  fontSize: "16px",
+  color: "#014d88",
+  marginRight: "6px",
+  verticalAlign: "text-bottom",
+};
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
@@ -78,38 +129,36 @@ const ClinicVisit = (props) => {
   let temp = { ...errors };
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
-  //const [clinicalStage, setClinicalStage] = useState([]);
-  const [dsdModelType, setDsdModelType] = useState([]);
-  // const [currentVitalSigns, setcurrentVitalSigns] = useState({})
-  // const [showCurrentVitalSigns, setShowCurrentVitalSigns] = useState(false)
   const [visitStatus, setVisitStatus] = useState([]);
   const [maternalCome, setMaternalCome] = useState([]);
-  const [fp, setFp] = useState([]);
-  const [disableDeliveryDate, setDisableDeliveryDate] = useState(false);
+  const [adultRegimenLine, setAdultRegimenLine] = useState([]);
+  const [regimenType, setRegimenType] = useState([]);
+  const [selectedRegimenLineId, setSelectedRegimenLineId] = useState("");
+  const [cycleClosed, setCycleClosed] = useState(false);
 
-  const [entryPoint, setEntryPoint] = useState([]);
-  //Vital signs clinical decision support
-  const entrypointRef = useRef(null);
   const [objValues, setObjValues] = useState({
     ancNo: patientObj.ancNo,
     dateOfViralLoad: "",
+    dateOfVlResultReceived: "",
     dateOfInitialVisit: patientObj?.pmtctEnrollmentDate
       ? patientObj.pmtctEnrollmentDate
       : patientObj?.pmtctEnrollmentRespondDto?.pmtctEnrollmentDate
         ? patientObj?.pmtctEnrollmentRespondDto.pmtctEnrollmentDate
         : "",
+    currentStatus: "",
+    weight: "",
+    sfhLength: "",
+    currentArtStatus: "",
+    mothersArtRegimen: "",
+    currentHbvStatus: "",
+    nameOfHbvDrug: "",
+    currentSyphilisStatus: "",
+    nameOfSyphilisDrug: "",
+    infantFeedingPractice: "",
+    infantOnCtx: "",
+    referredToTreatment: "",
     dateOfVisit: "",
     dateOfmeternalOutcome: "",
-    dateOfDelivery: "",
-    dsd: "",
-    dsdModel: "",
-    dsdOption: "",
-    enteryPoint:
-      props.patientObj.entryPoint === "619"
-        ? "POINT_ENTRY_PMTCT_ANC"
-        : "POINT_ENTRY_PMTCT",
-    fpCounseling: "",
-    fpMethod: "",
     gaOfViralLoad: "",
     id: "",
     maternalOutcome: "",
@@ -121,38 +170,10 @@ const ClinicVisit = (props) => {
     transferTo: "",
     visitStatus: "",
     timeOfViralLoad: "",
+    signature: "",
     pmtctCycleId: props?.latestPmtctCycle?.id,
     source: "WEB",
   });
-  const [entryValueDisplay, setEntryValueDisplay] = useState({});
-
-  const getDateOfDelivery = () => {
-    const pmtctCycleId =
-      props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
-
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/get-delivery-date/${
-          props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : props.patientObj.personUuid
-        }?pmtctCycleId=${pmtctCycleId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      )
-      .then((response) => {
-        if (response.data) {
-          setDisableDeliveryDate(true);
-          setObjValues({ ...objValues, dateOfDelivery: response.data });
-        }
-
-        setDisableDeliveryDate(false);
-        setObjValues({ ...objValues, dateOfDelivery: response.data });
-      })
-      .catch((error) => {
-      });
-  };
 
   const getInitialVisitDate = () => {
     const pmtctCycleId =
@@ -190,30 +211,101 @@ const ClinicVisit = (props) => {
     GET_CODESETS_IN_BATCH(
       "VISIT_STATUS_PMTCT",
       "MATERNAL_OUTCOME",
-      "FAMILY_PLANNING_METHOD",
-      "PMTCT_ENTRY_POINT",
     ).then((response) => {
       setVisitStatus(response.data.VISIT_STATUS_PMTCT);
-
       setMaternalCome(response.data.MATERNAL_OUTCOME);
-      setFp(response.data.FAMILY_PLANNING_METHOD);
-      setEntryPoint(response.data.PMTCT_ENTRY_POINT);
     });
   };
 
-  const getPatientEntryType = (id) => {
-    entryPoint.map((each, i) => {
-      if (Number(each.id) === Number(props.patientObj.entryPoint)) {
-        setEntryValueDisplay(each);
-      }
-    });
+
+  const checkCycleClosed = () => {
+    const pmtctCycleId = props.latestPmtctCycle?.id || props.patientObj?.pmtctCycleId;
+    if (!pmtctCycleId) return;
+
+    axios
+      .get(`${baseUrl}pmtct/anc/is-cycle-closed/${pmtctCycleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data === true) {
+          setCycleClosed(true);
+        }
+      })
+      .catch((error) => {});
+  };
+
+  const getLatestArtRegimen = () => {
+    const personUuid = props.patientObj.person_uuid
+      ? props.patientObj.person_uuid
+      : props.patientObj.personUuid;
+    if (!personUuid) return;
+
+    axios
+      .get(`${baseUrl}pmtct/anc/get-latest-art-regimen/${personUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data && response.data !== "") {
+          // Only auto-populate if creating a new visit (not editing)
+          if (!props.activeContent?.id || props.activeContent?.actionType === "create") {
+            setObjValues((prev) => ({
+              ...prev,
+              mothersArtRegimen: prev.mothersArtRegimen || response.data,
+            }));
+          }
+        }
+      })
+      .catch((error) => {});
+  };
+
+  const AdultRegimenLine = () => {
+    axios
+      .get(`${baseUrl}hiv/regimen/arv/adult`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const artRegimen = response.data.filter(
+          (x) => x.id === 1 || x.id === 2 || x.id === 14
+        );
+        setAdultRegimenLine(artRegimen);
+      })
+      .catch((error) => {});
+  };
+
+  const RegimenType = (id) => {
+    axios
+      .get(`${baseUrl}hiv/regimen/types/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setRegimenType(response.data);
+      })
+      .catch((error) => {});
+  };
+
+  const handleSelectRegimenLine = (e) => {
+    const lineId = e.target.value;
+    setSelectedRegimenLineId(lineId);
+    setObjValues({ ...objValues, mothersArtRegimen: "" });
+    if (lineId) {
+      RegimenType(lineId);
+    } else {
+      setRegimenType([]);
+    }
+  };
+
+  const handleSelectRegimen = (e) => {
+    const selectedValue = e.target.value;
+    setErrors({ ...temp, mothersArtRegimen: "" });
+    setObjValues({ ...objValues, mothersArtRegimen: selectedValue });
   };
 
   useEffect(() => {
     GET_CODESETS();
-
-    getDateOfDelivery();
     getInitialVisitDate();
+    AdultRegimenLine();
+    getLatestArtRegimen();
+    checkCycleClosed();
 
     if (
       props.activeContent.id &&
@@ -229,9 +321,6 @@ const ClinicVisit = (props) => {
     }
   }, [props.activeContent]);
 
-  useEffect(() => {
-    getPatientEntryType();
-  }, []);
 
   const GetVisit = (id) => {
     axios
@@ -239,13 +328,18 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setObjValues({
-          ...response.data,
-          pmtctCycleId:
-            response.data.pmtctCycleId || props?.latestPmtctCycle?.id,
-          source: response.data.source || "WEB",
+        // Convert null values to empty strings so controlled inputs display properly
+        const data = response.data;
+        const sanitized = {};
+        Object.keys(data).forEach((key) => {
+          sanitized[key] = data[key] !== null && data[key] !== undefined ? data[key] : "";
         });
-        DsdModelType(response.data.dsdModel);
+        setObjValues({
+          ...sanitized,
+          pmtctCycleId:
+            sanitized.pmtctCycleId || props?.latestPmtctCycle?.id,
+          source: sanitized.source || "WEB",
+        });
       })
       .catch((error) => {
       });
@@ -253,9 +347,6 @@ const ClinicVisit = (props) => {
 
   const handleInputChange = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
-    if (e.target.name === "dsdModel") {
-      DsdModelType(e.target.value);
-    }
     if (e.target.name === "dateOfViralLoad" && e.target.value !== "") {
       async function getGa() {
         const dateOfViralLoad = e.target.value;
@@ -325,18 +416,6 @@ const ClinicVisit = (props) => {
 
       //
     }
-    if (e.target.name === "fpCounseling" && e.target.value === "No") {
-      objValues.fpMethod = "";
-      setObjValues({ ...objValues, ["fpMethod"]: "" });
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    }
-    if (e.target.name === "dsd" && e.target.value !== "Yes") {
-      objValues.dsdModel = "";
-      objValues.dsdOption = "";
-      setObjValues({ ...objValues, ["dsdModel"]: "" });
-      setObjValues({ ...objValues, ["dsdOption"]: "" });
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    } //objValues.visitStatus==='VISIT_STATUS_PMTCT_TRANSFER_OUT'
     if (
       e.target.name === "visitStatus" &&
       e.target.value !== "VISIT_STATUS_PMTCT_TRANSFER_OUT"
@@ -345,37 +424,83 @@ const ClinicVisit = (props) => {
       setObjValues({ ...objValues, ["transferTo"]: "" });
       setObjValues({ ...objValues, [e.target.name]: e.target.value });
     }
+    if (e.target.name === "maternalOutcome" &&
+      e.target.value === "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT"
+    ) {
+      setObjValues({ ...objValues, dateOfmeternalOutcome: "", [e.target.name]: e.target.value });
+      return;
+    }
+    if (e.target.name === "currentHbvStatus" &&
+      e.target.value !== "Positive on Treatment" &&
+      e.target.value !== "Positive on Prophylaxis"
+    ) {
+      setObjValues({ ...objValues, nameOfHbvDrug: "", [e.target.name]: e.target.value });
+      return;
+    }
+    if (e.target.name === "currentSyphilisStatus" &&
+      e.target.value !== "Positive on Treatment"
+    ) {
+      setObjValues({ ...objValues, nameOfSyphilisDrug: "", [e.target.name]: e.target.value });
+      return;
+    }
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
   };
 
-  function DsdModelType(dsdmodel) {
-    const dsd =
-      dsdmodel === "Facility" ? "DSD_MODEL_FACILITY" : "DSD_MODEL_COMMUNITY";
-    axios
-      .get(`${baseUrl}application-codesets/v2/${dsd}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setDsdModelType(response.data);
-      })
-      .catch((error) => {
-      });
-  }
-
   //Validations of the forms
   const validate = () => {
+    temp.currentStatus = objValues.currentStatus ? "" : "This field is required";
+    temp.weight = objValues.weight ? "" : "This field is required";
+    if (objValues.weight && (objValues.weight < 30 || objValues.weight > 180)) {
+      temp.weight = "Weight must be between 30 and 180 kg";
+    }
+    temp.sfhLength = objValues.sfhLength ? "" : "This field is required";
+    temp.currentArtStatus = objValues.currentArtStatus ? "" : "This field is required";
+    temp.mothersArtRegimen = objValues.mothersArtRegimen ? "" : "This field is required";
+    if (
+      (objValues.currentHbvStatus === "Positive on Treatment" ||
+        objValues.currentHbvStatus === "Positive on Prophylaxis") &&
+      !objValues.nameOfHbvDrug
+    ) {
+      temp.nameOfHbvDrug = "This field is required";
+    }
+    if (
+      objValues.currentSyphilisStatus === "Positive on Treatment" &&
+      !objValues.nameOfSyphilisDrug
+    ) {
+      temp.nameOfSyphilisDrug = "This field is required";
+    }
+    // Conditional VL group validation: if any VL field is filled, all become mandatory
+    const hasAnyVlField = objValues.dateOfViralLoad || objValues.resultOfViralLoad || objValues.dateOfVlResultReceived;
+    if (hasAnyVlField) {
+      temp.dateOfViralLoad = objValues.dateOfViralLoad ? "" : "This field is required when any VL field is filled";
+      temp.resultOfViralLoad = objValues.resultOfViralLoad ? "" : "This field is required when any VL field is filled";
+      temp.dateOfVlResultReceived = objValues.dateOfVlResultReceived ? "" : "This field is required when any VL field is filled";
+      // Date VL Result Received must be >= Date VL Sample Collected
+      if (objValues.dateOfVlResultReceived && objValues.dateOfViralLoad &&
+        objValues.dateOfVlResultReceived < objValues.dateOfViralLoad) {
+        temp.dateOfVlResultReceived = "Date VL Result Received cannot be before the Sample Collection Date";
+      }
+    }
+    temp.infantFeedingPractice = objValues.infantFeedingPractice ? "" : "This field is required";
+    temp.infantOnCtx = objValues.infantOnCtx ? "" : "This field is required";
+    temp.referredToTreatment = objValues.referredToTreatment ? "" : "This field is required";
     temp.visitStatus = objValues.visitStatus ? "" : "This field is required";
     temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required";
-    temp.dsd = objValues.dsd ? "" : "This field is required";
-    temp.enteryPoint = objValues.enteryPoint ? "" : "This field is required";
-    temp.fpCounseling = objValues.fpCounseling ? "" : "This field is required";
-    //temp.fpMethod = objValues.fpMethod ? "" : "This field is required"
-    temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome
-      ? ""
-      : "This field is required";
     temp.maternalOutcome = objValues.maternalOutcome
       ? ""
       : "This field is required";
+    // Date of Outcome is only mandatory when Maternal Outcome is NOT Active in PMTCT
+    if (objValues.maternalOutcome && objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT") {
+      temp.dateOfmeternalOutcome = objValues.dateOfmeternalOutcome
+        ? ""
+        : "This field is required";
+    }
+    temp.nextAppointmentDate = objValues.nextAppointmentDate ? "" : "This field is required";
+    if (objValues.nextAppointmentDate && objValues.dateOfVisit &&
+      objValues.nextAppointmentDate < objValues.dateOfVisit) {
+      temp.nextAppointmentDate = "Next Appointment Date must be on or after the current visit date";
+    }
+    temp.signature = objValues.signature ? "" : "This field is required";
     setErrors({
       ...temp,
     });
@@ -457,537 +582,842 @@ const ClinicVisit = (props) => {
     }
   };
 
-  return (
-    <div>
-      <div className="row">
-        <div className="col-md-8 ">
-          <h2>Mother Follow-up Visit</h2>
+  // If cycle is closed and this is a new visit (not edit/view), block the form
+  if (cycleClosed && (!props.activeContent?.id || props.activeContent?.actionType === "create")) {
+    return (
+      <div>
+        <div style={{
+          backgroundColor: "#f8d7da",
+          border: "1px solid #f5c6cb",
+          borderRadius: "4px",
+          padding: "20px",
+          textAlign: "center",
+          marginTop: "20px",
+        }}>
+          <h3 style={{ color: "#721c24", marginBottom: "10px" }}>MIP Card Closed</h3>
+          <p style={{ color: "#721c24", fontSize: "14px" }}>
+            This MIP Card has been closed due to a terminal maternal outcome (Transferred Out, Died, or Completed PMTCT).
+            No further visit records can be created on this cycle.
+          </p>
+          <MatButton
+            variant="contained"
+            style={{ backgroundColor: "#014d88", marginTop: "10px" }}
+            onClick={() => props.setActiveContent({ ...props.activeContent, route: "recent-history" })}
+          >
+            <span style={{ textTransform: "capitalize", color: "#fff" }}>Back to History</span>
+          </MatButton>
         </div>
       </div>
-      <Grid>
-        <Grid.Column>
-          <Segment>
-            <Label
-              as="a"
-              color="blue"
-              style={{ width: "106%", height: "35px" }}
-              ribbon
-            >
-              <h4 style={{ color: "#fff" }}>VITAL SIGNS</h4>
-            </Label>
-            <br />
-            <br />
+    );
+  }
+
+  return (
+    <div>
+      <Card className={classes.root}>
+        <CardBody>
+          <form>
             <div className="row">
-              <div className="form-group mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Date of Initial Visit{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="date"
-                    onKeyPress={(e) => {
-                      e.preventDefault();
-                    }}
-                    name="dateOfInitialVisit"
-                    id="dateOfInitialVisit"
-                    value={objValues.dateOfInitialVisit}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChange}
-                    min={patientObj.pmtctEnrollmentDate}
-                    disabled={isInitialVisitDisabled}
-                  />
-                  {/* {errors.dateOfInitialVisit !== "" ? (
-                    <span className={classes.error}>{errors.dateOfInitialVisit}</span>
-                  ) : (
-                    ""
-                  )} */}
-                </FormGroup>
+              <div
+                className="card-header mb-3"
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "#1a202c",
+                  fontWeight: "bolder",
+                  borderRadius: "0.2rem",
+                  marginTop: "-20px",
+                  borderLeft: "4px solid #014d88",
+                  borderBottom: "2px solid #e2e8f0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                }}
+              >
+                <h5 className="card-title" style={{ color: "#014d88", fontWeight: "700", marginBottom: "4px" }}>
+                  Mother Follow-up Visit
+                </h5>
+                {objValues.dateOfInitialVisit && (
+                  <span style={{
+                    display: "inline-block",
+                    backgroundColor: "#e8f0fe",
+                    color: "#014d88",
+                    padding: "3px 10px",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    border: "1px solid #ccdcf0"
+                  }}>
+                    Date of Initial Visit:{" "}
+                    <b>{moment(objValues.dateOfInitialVisit).format("DD-MM-YYYY")}</b>
+                  </span>
+                )}
               </div>
 
-              <div className="form-group mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Date of Visit <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="date"
-                    onKeyPress={(e) => {
-                      e.preventDefault();
-                    }}
-                    name="dateOfVisit"
-                    id="dateOfVisit"
-                    value={objValues.dateOfVisit}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChange}
-                    min={props.patientObj.firstAncDate}
-                    max={moment(new Date()).format("YYYY-MM-DD")}
-                    //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
-                    disabled={disabledField}
-                  />
-                  {errors.dateOfVisit !== "" ? (
-                    <span className={classes.error}>{errors.dateOfVisit}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
+              {/* === Visit Information === */}
+              <div className="col-md-12 mb-3 mt-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <EventIcon style={sectionIconStyle} />Visit Information
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Date of Visit <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="dateOfVisit"
+                            id="dateOfVisit"
+                            value={objValues.dateOfVisit}
+                            onChange={handleInputChange}
+                            min={props.patientObj.firstAncDate}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.dateOfVisit !== "" ? (
+                          <span className={classes.error}>{errors.dateOfVisit}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
 
-              <div className=" mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Point of Entry<span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="enteryPoint"
-                    id="enteryPoint"
-                    value={props.patientObj.entryPoint}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={true}
-                  >
-                    {/* <option value="select">Select </option> */}
-
-                    {entryPoint.map((each, i) => {
-                      return (
-                        <option key={i} value={each.code}>
-                          {each.display}
-                        </option>
-                      );
-                    })}
-                  </Input>
-                  {errors.enteryPoint !== "" ? (
-                    <span className={classes.error}>{errors.enteryPoint}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    FP Counselling <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="fpCounseling"
-                    id="fpCounseling"
-                    value={objValues.fpCounseling}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value="">Select </option>
-                    <option value="Yes">YES </option>
-                    <option value="No">NO </option>
-                  </Input>
-                  {errors.fpCounseling !== "" ? (
-                    <span className={classes.error}>{errors.fpCounseling}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              {objValues.fpCounseling === "Yes" && (
-                <div className=" mb-3 col-md-3">
-                  <FormGroup>
-                    <FormLabelName>FP Method </FormLabelName>
-                    <Input
-                      type="select"
-                      name="fpMethod"
-                      id="fpMethod"
-                      value={objValues.fpMethod}
-                      onChange={handleInputChange}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.25rem",
-                      }}
-                      disabled={disabledField}
-                    >
-                      <option value="select">Select </option>
-                      {fp.map((value) => (
-                        <option key={value.id} value={value.id}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                    {errors.fpMethod !== "" ? (
-                      <span className={classes.error}>{errors.fpMethod}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-              )}
-              {props.patientObj.entryPoint !== "PMTCT_ENTRY_POINT_ANC" && (
-                <div className="mb-3 col-md-3">
-                  <FormGroup>
-                    <FormLabelName>
-                      Date of Delivery <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-
-                    <Input
-                      type="date"
-                      onKeyPress={(e) => {
-                        e.preventDefault();
-                      }}
-                      name="dateOfDelivery"
-                      id="dateOfDelivery"
-                      onChange={handleInputChange}
-                      value={objValues.dateOfDelivery}
-                      min={props.patientObj.firstAncDate}
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={
-                        disableDeliveryDate
-                          ? disableDeliveryDate
-                          : disabledField
-                      }
-                    />
-
-                    {errors.dateOfDelivery !== "" ? (
-                      <span className={classes.error}>
-                        {errors.dateOfDelivery}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-              )}
-            </div>
-            <br />
-            <Label
-              as="a"
-              color="teal"
-              style={{ width: "106%", height: "35px" }}
-              ribbon
-            >
-              <h4 style={{ color: "#fff" }}> VIRAL LOAD </h4>
-            </Label>
-            <br />
-            <br />
-            {/* TB Screening Form */}
-            <div className="row">
-              <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>Viral Load Collection Date </FormLabelName>
-                  <Input
-                    type="date"
-                    onKeyPress={(e) => {
-                      e.preventDefault();
-                    }}
-                    name="dateOfViralLoad"
-                    id="dateOfViralLoad"
-                    value={objValues.dateOfViralLoad}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    min={props.patientObj.firstAncDate}
-                    max={moment(new Date()).format("YYYY-MM-DD")}
-                    disabled={disabledField}
-                  />
-                  {errors.dateOfViralLoad !== "" ? (
-                    <span className={classes.error}>
-                      {errors.dateOfViralLoad}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>GA at VL Collection </FormLabelName>
-                  <Input
-                    type="number"
-                    name="gaOfViralLoad"
-                    id="gaOfViralLoad"
-                    value={objValues.gaOfViralLoad}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    min={props.patientObj.firstAncDate}
-                    disabled={disabledField === false ? true : disabledField}
-                  />
-                  {errors.gaOfViralLoad !== "" ? (
-                    <span className={classes.error}>
-                      {errors.gaOfViralLoad}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>Result </FormLabelName>
-                  <Input
-                    type="number"
-                    name="resultOfViralLoad"
-                    id="resultOfViralLoad"
-                    value={objValues.resultOfViralLoad}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  />
-                  {errors.resultOfViralLoad !== "" ? (
-                    <span className={classes.error}>
-                      {errors.resultOfViralLoad}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-            </div>
-            <br />
-
-            <br />
-            <Label
-              as="a"
-              color="black"
-              style={{ width: "106%", height: "35px" }}
-              ribbon
-            >
-              <h4 style={{ color: "#fff" }}> DSD MODEL & OUTCOME</h4>
-            </Label>
-            <br />
-            <br />
-            {/*  */}
-            <div className="row">
-              <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>
-                    DSD <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="dsd"
-                    id="dsd"
-                    value={objValues.dsd}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value="">Select </option>
-                    <option value="Yes">YES </option>
-                    <option value="No">NO </option>
-                  </Input>
-                  {errors.dsd !== "" ? (
-                    <span className={classes.error}>{errors.dsd}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              {objValues.dsd === "Yes" && (
-                <>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>DSD Model</FormLabelName>
-                      <Input
-                        type="select"
-                        name="dsdModel"
-                        id="dsdModel"
-                        value={objValues.dsdModel}
-                        onChange={handleInputChange}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        <option value="Facility">Facility </option>
-                        <option value="Community">Community </option>
-                      </Input>
-                    </FormGroup>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Current Status <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="currentStatus"
+                            id="currentStatus"
+                            value={objValues.currentStatus}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Pregnant">Pregnant</option>
+                            <option value="Breastfeeding">Breastfeeding</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.currentStatus !== "" ? (
+                          <span className={classes.error}>
+                            {errors.currentStatus}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
                   </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>DSD Model Type</FormLabelName>
-                      <Input
-                        type="select"
-                        name="dsdOption"
-                        id="dsdOption"
-                        value={objValues.dsdOption}
-                        onChange={handleInputChange}
-                        style={{
-                          border: "1px solid #014D88",
-                          borderRadius: "0.25rem",
-                        }}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        {dsdModelType.map((value) => (
-                          <option key={value.code} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                    </FormGroup>
-                  </div>
-                </>
-              )}
-              <div className="form-group mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Maternal Outcome <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="maternalOutcome"
-                    id="maternalOutcome"
-                    value={objValues.maternalOutcome}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value="">Select </option>
-                    {maternalCome.map((value) => (
-                      <option key={value.code} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
-                  </Input>
-                  {errors.maternalOutcome !== "" ? (
-                    <span className={classes.error}>{errors.maternalOutcome}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Date of Outcome <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="date"
-                    onKeyPress={(e) => {
-                      e.preventDefault();
-                    }}
-                    name="dateOfmeternalOutcome"
-                    id="dateOfmeternalOutcome"
-                    value={objValues.dateOfmeternalOutcome}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    min={props.patientObj.firstAncDate}
-                    max={moment(new Date()).format("YYYY-MM-DD")}
-                    disabled={disabledField}
-                  />
-                  {errors.dateOfmeternalOutcome !== "" ? (
-                    <span className={classes.error}>
-                      {errors.dateOfmeternalOutcome}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-
-              <div className="form-group mb-3 col-md-3">
-                <FormGroup>
-                  <FormLabelName>
-                    Client Visit Status <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="visitStatus"
-                    id="visitStatus"
-                    value={objValues.visitStatus}
-                    onChange={handleInputChange}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value="">Select </option>
-                    {visitStatus.map((value) => (
-                      <option key={value.code} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
-                  </Input>
-                  {errors.visitStatus !== "" ? (
-                    <span className={classes.error}>{errors.visitStatus}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              {objValues.visitStatus ===
-                "VISIT_STATUS_PMTCT_TRANSITIONED_TO_ART_CLINIC" && (
-                <div className="form-group mb-3 col-md-3">
-                  <FormGroup>
-                    <FormLabelName>Name of ART Facility </FormLabelName>
-                    <Input
-                      type="text"
-                      name="transferTo"
-                      id="transferTo"
-                      value={objValues.transferTo}
-                      onChange={handleInputChange}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.25rem",
-                      }}
-                      disabled={disabledField}
-                    />
-                    {errors.transferTo !== "" ? (
-                      <span className={classes.error}>{errors.transferTo}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
                 </div>
-              )}
-            </div>
-            {/* Display notification when maternal outcome is IIT and transfer out */}
-            {objValues.maternalOutcome !== "" &&
-            objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" &&
-            objValues.maternalOutcome !== "" &&
-            objValues.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE" ? (
-              <h2 style={{ color: "red" }}>Kindly fill tracking form</h2>
-            ) : (
-              ""
-            )}
+              </div>
+              {/* === Vital Signs === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <FitnessCenterIcon style={sectionIconStyle} />Vital Signs
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Weight (kg) <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="weight"
+                            id="weight"
+                            value={objValues.weight}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            min="30"
+                            max="180"
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.weight !== "" ? (
+                          <span className={classes.error}>{errors.weight}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          SFH / Length (cm) <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="sfhLength"
+                            id="sfhLength"
+                            value={objValues.sfhLength}
+                            onChange={handleInputChange}
+                            step="0.1"
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.sfhLength !== "" ? (
+                          <span className={classes.error}>{errors.sfhLength}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* === Treatment Status === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <LocalHospitalIcon style={sectionIconStyle} />Treatment Status
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Current ART Status <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="currentArtStatus"
+                            id="currentArtStatus"
+                            value={objValues.currentArtStatus}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="On ART">On ART</option>
+                            <option value="Not on ART">Not on ART</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.currentArtStatus !== "" ? (
+                          <span className={classes.error}>
+                            {errors.currentArtStatus}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Regimen Line <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="regimenLineId"
+                            id="regimenLineId"
+                            value={selectedRegimenLineId}
+                            onChange={handleSelectRegimenLine}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {adultRegimenLine.map((value) => (
+                              <option key={value.id} value={value.id}>
+                                {value.description}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Mother's ART Regimen <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="mothersArtRegimen"
+                            id="mothersArtRegimen"
+                            value={objValues.mothersArtRegimen}
+                            onChange={handleSelectRegimen}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {regimenType.map((value) => (
+                              <option key={value.id} value={value.description}>
+                                {value.description}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.mothersArtRegimen !== "" ? (
+                          <span className={classes.error}>
+                            {errors.mothersArtRegimen}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Current HBV Status</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="currentHbvStatus"
+                            id="currentHbvStatus"
+                            value={objValues.currentHbvStatus}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive on Treatment">
+                              Positive on Treatment
+                            </option>
+                            <option value="Positive on Prophylaxis">
+                              Positive on Prophylaxis
+                            </option>
+                            <option value="Positive not on Treatment">
+                              Positive not on Treatment
+                            </option>
+                            <option value="Negative">Negative</option>
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    {(objValues.currentHbvStatus === "Positive on Treatment" ||
+                      objValues.currentHbvStatus === "Positive on Prophylaxis") && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>
+                            Name of Current HBV Drug <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="nameOfHbvDrug"
+                              id="nameOfHbvDrug"
+                              value={objValues.nameOfHbvDrug}
+                              onChange={handleInputChange}
+                              maxLength="100"
+                              disabled={disabledField}
+                            />
+                          </InputGroup>
+                          {errors.nameOfHbvDrug !== "" ? (
+                            <span className={classes.error}>
+                              {errors.nameOfHbvDrug}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                    )}
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Mother's Current Syphilis Status</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="currentSyphilisStatus"
+                            id="currentSyphilisStatus"
+                            value={objValues.currentSyphilisStatus}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive on Treatment">
+                              Positive on Treatment
+                            </option>
+                            <option value="Positive not on Treatment">
+                              Positive not on Treatment
+                            </option>
+                            <option value="Negative">Negative</option>
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    {objValues.currentSyphilisStatus === "Positive on Treatment" && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>
+                            Name of Syphilis Drug Administered <span style={{ color: "red" }}> *</span>
+                          </Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="nameOfSyphilisDrug"
+                              id="nameOfSyphilisDrug"
+                              value={objValues.nameOfSyphilisDrug}
+                              onChange={handleInputChange}
+                              maxLength="100"
+                              disabled={disabledField}
+                            />
+                          </InputGroup>
+                          {errors.nameOfSyphilisDrug !== "" ? (
+                            <span className={classes.error}>
+                              {errors.nameOfSyphilisDrug}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {/* === HIV Viral Load Test === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <TimelineIcon style={sectionIconStyle} />HIV Viral Load Test
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Date VL Sample Collected</Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="dateOfViralLoad"
+                            id="dateOfViralLoad"
+                            value={objValues.dateOfViralLoad}
+                            onChange={handleInputChange}
+                            min={props.patientObj.firstAncDate}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.dateOfViralLoad !== "" ? (
+                          <span className={classes.error}>
+                            {errors.dateOfViralLoad}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>GA at VL Collection</Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="gaOfViralLoad"
+                            id="gaOfViralLoad"
+                            value={objValues.gaOfViralLoad}
+                            onChange={handleInputChange}
+                            min={props.patientObj.firstAncDate}
+                            disabled={disabledField === false ? true : disabledField}
+                          />
+                        </InputGroup>
+                        {errors.gaOfViralLoad !== "" ? (
+                          <span className={classes.error}>
+                            {errors.gaOfViralLoad}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Viral Load Result (copies per ml)</Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="resultOfViralLoad"
+                            id="resultOfViralLoad"
+                            value={objValues.resultOfViralLoad}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.resultOfViralLoad !== "" ? (
+                          <span className={classes.error}>
+                            {errors.resultOfViralLoad}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Date VL Result Received</Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="dateOfVlResultReceived"
+                            id="dateOfVlResultReceived"
+                            value={objValues.dateOfVlResultReceived}
+                            onChange={handleInputChange}
+                            min={objValues.dateOfViralLoad || props.patientObj.firstAncDate}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.dateOfVlResultReceived !== "" ? (
+                          <span className={classes.error}>
+                            {errors.dateOfVlResultReceived}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                  {objValues.resultOfViralLoad && Number(objValues.resultOfViralLoad) >= 1000 && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>
+                          WARNING: Unsuppressed Viral Load detected (&gt;= 1,000 copies/ml). Please ensure enhanced adherence counselling is initiated.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* === Infant Details === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <ChildCareIcon style={sectionIconStyle} />Infant Details
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Infant Feeding Practice at Present <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="infantFeedingPractice"
+                            id="infantFeedingPractice"
+                            value={objValues.infantFeedingPractice}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Exclusive Breastfeeding (EBF)">
+                              Exclusive Breastfeeding (EBF)
+                            </option>
+                            <option value="Mixed Feeding (MF)">
+                              Mixed Feeding (MF)
+                            </option>
+                            <option value="Exclusive Formula Feeding (EFF)">
+                              Exclusive Formula Feeding (EFF)
+                            </option>
+                            <option value="Weaned">Weaned</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.infantFeedingPractice !== "" ? (
+                          <span className={classes.error}>
+                            {errors.infantFeedingPractice}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Infant on CTX <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="infantOnCtx"
+                            id="infantOnCtx"
+                            value={objValues.infantOnCtx}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.infantOnCtx !== "" ? (
+                          <span className={classes.error}>
+                            {errors.infantOnCtx}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Referred To Treatment <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="referredToTreatment"
+                            id="referredToTreatment"
+                            value={objValues.referredToTreatment}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="HIV treatment">HIV treatment</option>
+                            <option value="Syphilis treatment">
+                              Syphilis treatment
+                            </option>
+                            <option value="HBV treatment">HBV treatment</option>
+                            <option value="None">None</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.referredToTreatment !== "" ? (
+                          <span className={classes.error}>
+                            {errors.referredToTreatment}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* === Visit Outcome & Status === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <AssignmentTurnedInIcon style={sectionIconStyle} />Visit Outcome & Status
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Maternal Outcome <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="maternalOutcome"
+                            id="maternalOutcome"
+                            value={objValues.maternalOutcome}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {maternalCome.map((value) => (
+                              <option key={value.code} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.maternalOutcome !== "" ? (
+                          <span className={classes.error}>{errors.maternalOutcome}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    {objValues.maternalOutcome && objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" && (
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Date of Outcome <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="dateOfmeternalOutcome"
+                            id="dateOfmeternalOutcome"
+                            value={objValues.dateOfmeternalOutcome}
+                            onChange={handleInputChange}
+                            min={props.patientObj.firstAncDate}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.dateOfmeternalOutcome !== "" ? (
+                          <span className={classes.error}>
+                            {errors.dateOfmeternalOutcome}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    )}
 
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Client Visit Status <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="visitStatus"
+                            id="visitStatus"
+                            value={objValues.visitStatus}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {visitStatus.map((value) => (
+                              <option key={value.code} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.visitStatus !== "" ? (
+                          <span className={classes.error}>{errors.visitStatus}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    {objValues.visitStatus ===
+                      "VISIT_STATUS_PMTCT_TRANSITIONED_TO_ART_CLINIC" && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Name of ART Facility</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="transferTo"
+                              id="transferTo"
+                              value={objValues.transferTo}
+                              onChange={handleInputChange}
+                              disabled={disabledField}
+                            />
+                          </InputGroup>
+                          {errors.transferTo !== "" ? (
+                            <span className={classes.error}>{errors.transferTo}</span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                    )}
+                  </div>
+                  {/* Display notification when maternal outcome is IIT */}
+                  {objValues.maternalOutcome !== "" &&
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" &&
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_ALIVE" &&
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_TRANSFERRED_OUT" &&
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_DIED" &&
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_COMPLETED_PMTCT" ? (
+                    <h2 style={{ color: "red" }}>Kindly fill tracking form</h2>
+                  ) : (
+                    ""
+                  )}
+                  {/* MIP Card closure prompt */}
+                  {(objValues.maternalOutcome === "MATERNAL_OUTCOME_TRANSFERRED_OUT" ||
+                    objValues.maternalOutcome === "MATERNAL_OUTCOME_DIED" ||
+                    objValues.maternalOutcome === "MATERNAL_OUTCOME_COMPLETED_PMTCT") && (
+                    <div style={{
+                      backgroundColor: "#fff3cd",
+                      border: "1px solid #ffc107",
+                      borderRadius: "4px",
+                      padding: "12px",
+                      marginTop: "8px",
+                    }}>
+                      <p style={{ color: "#856404", fontWeight: "bold", fontSize: "14px", margin: 0 }}>
+                        NOTE: This maternal outcome will close the MIP Card record. No further visit records can be created after this save.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* === Next Appointment & Signature === */}
+              <div className="col-md-12 mb-3">
+                <div style={sectionContainerStyle}>
+                  <h6 style={sectionHeaderStyle}>
+                    <ScheduleIcon style={sectionIconStyle} />Next Appointment & Signature
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Next Appointment Date <span style={{ color: "red" }}> *</span></Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="nextAppointmentDate"
+                            id="nextAppointmentDate"
+                            value={objValues.nextAppointmentDate}
+                            onChange={handleInputChange}
+                            min={objValues.dateOfVisit || moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.nextAppointmentDate !== "" ? (
+                          <span className={classes.error}>{errors.nextAppointmentDate}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Signature <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="signature"
+                            id="signature"
+                            value={objValues.signature}
+                            onChange={handleInputChange}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.signature !== "" ? (
+                          <span className={classes.error}>{errors.signature}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <br />
-            {props.activeContent &&
-            props.activeContent.actionType === "update" ? (
-              <>
+
+            <div style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}>
+              {props.activeContent &&
+              props.activeContent.actionType === "update" ? (
                 <MatButton
-                  type="submit"
+                  type="button"
                   variant="contained"
                   color="primary"
                   hidden={disabledField}
@@ -1005,11 +1435,9 @@ const ClinicVisit = (props) => {
                     </span>
                   )}
                 </MatButton>
-              </>
-            ) : (
-              <>
+              ) : (
                 <MatButton
-                  type="submit"
+                  type="button"
                   variant="contained"
                   color="primary"
                   className={classes.button}
@@ -1026,11 +1454,11 @@ const ClinicVisit = (props) => {
                     </span>
                   )}
                 </MatButton>
-              </>
-            )}
-          </Segment>
-        </Grid.Column>
-      </Grid>
+              )}
+            </div>
+          </form>
+        </CardBody>
+      </Card>
     </div>
   );
 };

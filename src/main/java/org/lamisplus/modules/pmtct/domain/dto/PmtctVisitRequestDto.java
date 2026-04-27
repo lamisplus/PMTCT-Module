@@ -24,6 +24,15 @@ public class PmtctVisitRequestDto implements Serializable {
     private Long id;
     private String ancNo;
     private String enteryPoint;
+    private String currentStatus;
+    private Double weight;
+    private Double sfhLength;
+    private String currentArtStatus;
+    private String mothersArtRegimen;
+    private String currentHbvStatus;
+    private String nameOfHbvDrug;
+    private String currentSyphilisStatus;
+    private String nameOfSyphilisDrug;
     private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
     private LocalDate dateOfDelivery;
@@ -31,8 +40,12 @@ public class PmtctVisitRequestDto implements Serializable {
     private String fpMethod;
     private String timeOfViralLoad;
     private LocalDate dateOfViralLoad;
+    private LocalDate dateOfVlResultReceived;
     private Integer gaOfViralLoad;
     private Long resultOfViralLoad;
+    private String infantFeedingPractice;
+    private String infantOnCtx;
+    private String referredToTreatment;
     private String dsd;
     private String dsdOption;
     private String dsdModel;
@@ -41,6 +54,7 @@ public class PmtctVisitRequestDto implements Serializable {
     private String visitStatus;
     private String transferTo;
     private LocalDate nextAppointmentDate;
+    private String signature;
     private String personUuid;
     @NotNull(message = "pmtctCycleId is required")
     private Long pmtctCycleId;

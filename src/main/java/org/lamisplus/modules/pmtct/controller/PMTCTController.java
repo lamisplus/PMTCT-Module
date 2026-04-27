@@ -136,12 +136,11 @@ public class PMTCTController {
         return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
     }
 
-    //uncomment
-//    @GetMapping("/art/")
-//    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid) {
-//        Long facility = organizationService.getCurrentUserOrganization();
-//        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
-//    }
+    @GetMapping("/art/")
+    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid) {
+        Long facility = organizationService.getCurrentUserOrganization();
+        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
+    }
 
     //uncomment
 
@@ -225,6 +224,22 @@ public class PMTCTController {
     @GetMapping(value = "get-initial-visit-date/{personUuid}")
     public ResponseEntity<LocalDate> getInitialVisitDate(@PathVariable("personUuid") String personUuid, @RequestParam("pmtctCycleId") Long pmtctCycleId) {
         return ResponseEntity.ok(pmtctEnrollmentService.getInitialVisitDate(personUuid, pmtctCycleId));
+    }
+
+    @GetMapping(value = "get-latest-art-regimen/{personUuid}")
+    public ResponseEntity<String> getLatestArtRegimen(@PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok(pmtctVisitService.getLatestArtRegimenFromPharmacy(personUuid));
+    }
+
+    @GetMapping(value = "is-cycle-closed/{cycleId}")
+    public ResponseEntity<Boolean> isCycleClosed(@PathVariable("cycleId") Long cycleId) {
+        return ResponseEntity.ok(pmtctPregnancyCycleService.isCycleClosed(cycleId));
+    }
+
+    @GetMapping(value = "check-unsuppressed-vl/{personUuid}")
+    public ResponseEntity<Boolean> checkUnsuppressedVl(
+            @PathVariable("personUuid") String personUuid) {
+        return ResponseEntity.ok(pmtctVisitService.isViralLoadUnsuppressed(personUuid));
     }
 
 

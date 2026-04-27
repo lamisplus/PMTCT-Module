@@ -14,6 +14,12 @@ import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
 import CancelIcon from "@material-ui/icons/Cancel";
+import EventNoteIcon from "@material-ui/icons/EventNote";
+import LocalHospitalIcon from "@material-ui/icons/LocalHospital";
+import ListAltIcon from "@material-ui/icons/ListAlt";
+import HealingIcon from "@material-ui/icons/Healing";
+import ChildFriendlyIcon from "@material-ui/icons/ChildFriendly";
+import FavoriteIcon from "@material-ui/icons/Favorite";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { url as baseUrl, token } from "../../../api";
@@ -59,6 +65,7 @@ const useStyles = makeStyles((theme) => ({
     "& .form-control": {
       borderRadius: "0.25rem",
       height: "41px",
+      borderColor: "#d2d6dc",
     },
     "& .card-header:first-child": {
       borderRadius: "calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0",
@@ -116,6 +123,8 @@ const AncPnc = (props) => {
   const [urinalysisList, setUrinalysisList] = useState([]);
   const [timeHivDiagnosis, setTimeHivDiagnosis] = useState([]);
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
+  const [deliveryModeList, setDeliveryModeList] = useState([]);
+  const [artUniqueNumber, setArtUniqueNumber] = useState("");
   const [maxARTDate, setMaxARTDate] = useState(
     moment(new Date()).format("YYYY-MM-DD")
   );
@@ -150,6 +159,8 @@ const AncPnc = (props) => {
     pmtctEnrollmentDate: "",
     dateOfDelivery: "",
     expectedDeliveryDate: "",
+    modeOfDelivery: patientObj.modeOfDelivery || "",
+    modeOfDeliveryOther: patientObj.modeOfDeliveryOther || "",
     entryPoint: entryValueDisplay?.id,
     ga: "",
     gravida: props.patientObj.gravida,
@@ -162,6 +173,19 @@ const AncPnc = (props) => {
     lmp: props?.patientObj?.lmp || "",
     gaweeks: "",
     pmtctType: entryValueDisplay.display,
+    // Syphilis details (MIP Card 9a-9c) - stored as JSONB
+    syphilisDetails: patientObj.syphilisDetails || {
+      testResult: "",
+      treatment: "",
+      drugName: "",
+    },
+    // HBV details (MIP Card 10b-10e) - stored as JSONB
+    hbvDetails: patientObj.hbvDetails || {
+      vlResultDate: "",
+      vlResult: "",
+      treatmentType: "",
+      drugName: "",
+    },
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -340,6 +364,137 @@ const AncPnc = (props) => {
     }
   };
 
+  // Auto-populate serology fields from latest PMTCT HTS record
+  const autoPopulateSerologyFromHts = async (personUuid, pmtctCycleId) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data) {
+        const htsData = response.data;
+        const updates = {};
+        // Map syphilis from HTS to enrollment syphilisDetails
+        if (htsData.syphilis) {
+          const mapped = htsData.syphilis === "reactive" ? "Positive"
+            : htsData.syphilis === "non-reactive" ? "Negative"
+            : htsData.syphilis;
+          updates.syphilisDetails = { ...enroll.syphilisDetails, testResult: mapped };
+        }
+        // Map full syphilis JSONB from HTS if available
+        if (htsData.syphilisInfo) {
+          updates.syphilisDetails = {
+            testResult: htsData.syphilisInfo.testResult || updates.syphilisDetails?.testResult || "",
+            treatment: htsData.syphilisInfo.treatment || "",
+            drugName: htsData.syphilisInfo.drugName || "",
+          };
+        }
+        // Map hepatitisB from HTS to enrollment
+        if (htsData.hepatitisB) {
+          const mapped = htsData.hepatitisB === "reactive" ? "Positive"
+            : htsData.hepatitisB === "non-reactive" ? "Negative"
+            : htsData.hepatitisB;
+          updates.hepatitisB = mapped;
+        }
+        // Map full HBV JSONB from HTS if available
+        if (htsData.hbvInfo) {
+          updates.hbvDetails = {
+            vlResultDate: htsData.hbvInfo.vlResultDate || "",
+            vlResult: htsData.hbvInfo.vlResult || "",
+            treatmentType: htsData.hbvInfo.treatmentType || htsData.hbvInfo.treatment || "",
+            drugName: htsData.hbvInfo.drugName || "",
+          };
+        }
+        if (Object.keys(updates).length > 0) {
+          setEnrollDto((prev) => ({ ...prev, ...updates }));
+          toast.info("Serology fields auto-populated from PMTCT HTS record.", {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+          });
+        }
+      }
+    } catch (error) {
+      // No HTS record found — try ANC fallback
+      try {
+        const ancResponse = await axios.get(
+          `${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (ancResponse.data) {
+          const ancData = ancResponse.data;
+          const updates = {};
+          if (ancData.testResultSyphilis) {
+            const mapped = ancData.testResultSyphilis === "reactive" ? "Positive"
+              : ancData.testResultSyphilis === "non-reactive" ? "Negative"
+              : ancData.testResultSyphilis;
+            updates.syphilisDetails = { ...enroll.syphilisDetails, testResult: mapped };
+          }
+          if (ancData.hepatitisB) {
+            const mapped = ancData.hepatitisB === "reactive" ? "Positive"
+              : ancData.hepatitisB === "non-reactive" ? "Negative"
+              : ancData.hepatitisB;
+            updates.hepatitisB = mapped;
+          }
+          if (Object.keys(updates).length > 0) {
+            setEnrollDto((prev) => ({ ...prev, ...updates }));
+            toast.info("Serology fields auto-populated from ANC record.", {
+              position: toast.POSITION.TOP_RIGHT,
+              autoClose: 3000,
+            });
+          }
+        }
+      } catch (ancError) {
+        // No ANC record found either — fields remain blank for manual entry
+      }
+    }
+  };
+
+  // Auto-populate delivery from L&D form
+  const autoPopulateDeliveryFromLD = async (personUuid, pmtctCycleId) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${pmtctCycleId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data) {
+        const deliveryData = response.data;
+        const updates = {};
+        if (deliveryData.dateOfDelivery) {
+          updates.dateOfDelivery = deliveryData.dateOfDelivery;
+        }
+        if (deliveryData.modeOfDelivery) {
+          updates.modeOfDelivery = deliveryData.modeOfDelivery;
+        }
+        if (Object.keys(updates).length > 0) {
+          setEnrollDto((prev) => ({ ...prev, ...updates }));
+          toast.info("Delivery fields auto-populated from Labour & Delivery record.", {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+          });
+        }
+      }
+    } catch (error) {
+      // No L&D record found — fields remain blank for manual entry
+    }
+  };
+
+  // Extract ART unique number from patient identifier
+  const getArtUniqueNumber = () => {
+    try {
+      const identifierObj = patientObj?.identifier;
+      if (identifierObj && identifierObj.identifier && Array.isArray(identifierObj.identifier)) {
+        const artId = identifierObj.identifier.find(
+          (id) => id.type === "UniqueId" || id.type === "HivUniqueId" || id.type === "ARTNumber"
+        );
+        if (artId && artId.value) {
+          setArtUniqueNumber(artId.value);
+        }
+      }
+    } catch (error) {
+      // Could not extract ART number
+    }
+  };
+
   useEffect(() => {
     GET_CODESETS();
     checkTimingOfART(0);
@@ -358,6 +513,7 @@ const AncPnc = (props) => {
     if (personUuid) {
       checkPMTCTValidationDates(personUuid);
       getHistoricalHivStatus(personUuid);
+      getArtUniqueNumber();
     }
     if (
       props.activeContent.id &&
@@ -397,6 +553,12 @@ const AncPnc = (props) => {
         position: toast.POSITION.BOTTOM_CENTER,
       });
     }
+    // Auto-populate serology from HTS on create mode only
+    if (!props.activeContent.id && personUuid && props?.latestPmtctCycle?.id) {
+      autoPopulateSerologyFromHts(personUuid, props.latestPmtctCycle.id);
+      autoPopulateDeliveryFromLD(personUuid, props.latestPmtctCycle.id);
+    }
+    // TODO: Fetch parity from ANC for gravida validation once ANC Enrollment form is implemented
   }, []);
 
   useEffect(() => {
@@ -441,18 +603,20 @@ const AncPnc = (props) => {
     GET_CODESETS_IN_BATCH(
       "TIMING_MOTHERS_ART_INITIATION",
       "PMTCT_URINALYSIS_RESULT",
-      "TIME_HIV_DIAGNOSIS",
+      "PERIOD_DIAGNOSED_HIV",
       "PMTCT_ENTRY_POINT",
       "POINT_ENTRY_PMTCT",
       "TIMING_MOTHERS_ART_INITIATION",
-      "TB_STATUS"
+      "TB_STATUS",
+      "MODE_DELIVERY"
     ).then((response) => {
       setTimeHivInitiation(response.data.TIMING_MOTHERS_ART_INITIATION);
       setUrinalysisList(response.data.PMTCT_URINALYSIS_RESULT);
-      setTimeHivDiagnosis(response.data.TIME_HIV_DIAGNOSIS);
+      setTimeHivDiagnosis(response.data.PERIOD_DIAGNOSED_HIV);
       setAllNewEntryPoint(response.data.PMTCT_ENTRY_POINT);
       setartStartTime(response.data.TIMING_MOTHERS_ART_INITIATION);
       setTbStatus(response.data.TB_STATUS);
+      setDeliveryModeList(response.data.MODE_DELIVERY || []);
     });
   };
   //END OF BATCH API
@@ -583,10 +747,35 @@ const AncPnc = (props) => {
       });
   };
 
+  const handleSyphilisDetailsChange = (e) => {
+    const updated = { ...enroll.syphilisDetails, [e.target.name]: e.target.value };
+    // Clear dependent fields when testResult changes to Negative
+    if (e.target.name === "testResult" && e.target.value === "Negative") {
+      updated.treatment = "";
+      updated.drugName = "";
+    }
+    // Clear drugName when treatment changes to No
+    if (e.target.name === "treatment" && e.target.value === "No") {
+      updated.drugName = "";
+    }
+    setEnrollDto({ ...enroll, syphilisDetails: updated });
+  };
+
+  const handleHbvDetailsChange = (e) => {
+    setEnrollDto({
+      ...enroll,
+      hbvDetails: { ...enroll.hbvDetails, [e.target.name]: e.target.value },
+    });
+  };
+
   const handleInputChangeEnrollmentDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
 
     setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+    // Clear modeOfDeliveryOther when modeOfDelivery changes away from Others
+    if (e.target.name === "modeOfDelivery" && e.target.value !== "MODE_DELIVERY_OTHERS") {
+      setEnrollDto({ ...enroll, [e.target.name]: e.target.value, modeOfDeliveryOther: "" });
+    }
     // artStartTime
     if (e.target.name === "artStartTime" && e.target.value !== "") {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
@@ -624,10 +813,12 @@ const AncPnc = (props) => {
 
       if (response > 0) {
         enroll.gaweeks = response;
+        let EDD = calculateExpectedDate(e.target.value);
         setEnrollDto({
           ...enroll,
           [e.target.name]: e.target.value,
           dateOfDelivery: "",
+          expectedDeliveryDate: EDD,
         });
       } else {
         // enroll.gaweeks = response;
@@ -652,16 +843,12 @@ const AncPnc = (props) => {
         toast.error("Please select a valid date");
         // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
       }
-      if (entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC") {
-        let EDD = calculateExpectedDate(enroll.lmp);
-        setEnrollDto({
-          ...enroll,
-          [e.target.name]: e.target.value,
-          expectedDeliveryDate: EDD,
-        });
-      } else {
-        setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
-      }
+      let EDD = calculateExpectedDate(enroll.lmp);
+      setEnrollDto({
+        ...enroll,
+        [e.target.name]: e.target.value,
+        expectedDeliveryDate: EDD,
+      });
     } else if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
       let Ga = calculateGaFromPmtct(e.target.value);
 
@@ -706,22 +893,30 @@ const AncPnc = (props) => {
     temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
       ? ""
       : "This field is required";
-    //temp.entryPoint = enroll.entryPoint ? "" : "This field is required"
-    //temp.ga = enroll.ga ? "" : "This field is required"
-    // temp.gravida = enroll.gravida ? "" : "This field is required"
     temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis
       ? ""
       : "This field is required";
-    temp.gaweeks = enroll.gaweeks ? "" : "This field is required";
-    temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
-      ? ""
-      : "This field is required";
-    temp.artStartDate = enroll.artStartDate ? "" : "This field is required";
-    temp.artStartTime = enroll.artStartTime ? "" : "This field is required";
-    temp.tbStatus = enroll.tbStatus ? "" : "This field is required";
-    temp.hivStatus = enroll.hivStatus ? "" : "This field is required";
+    // GA validation: must be between 4 and 45 weeks
+    if (!enroll.gaweeks) {
+      temp.gaweeks = "This field is required";
+    } else if (parseInt(enroll.gaweeks) < 4 || parseInt(enroll.gaweeks) > 45) {
+      temp.gaweeks = "Gestational age must be between 4 and 45 weeks";
+    } else {
+      temp.gaweeks = "";
+    }
 
-    //  enroll.hivStatus === "Positive"
+    // ART Start Date and Timing — conditional: required unless Period of HIV Diagnosis is HIV Negative
+    if (enroll.timeOfHivDiagnosis === "PERIOD_DIAGNOSED_HIV_HIV_NEGATIVE") {
+      temp.artStartDate = "";
+      temp.artStartTime = "";
+    } else {
+      temp.artStartDate = enroll.artStartDate ? "" : "This field is required";
+      temp.artStartTime = enroll.artStartTime ? "" : "This field is required";
+    }
+
+    temp.hivStatus = enroll.hivStatus ? "" : "This field is required";
+    temp.syphilisTestResult = enroll.syphilisDetails?.testResult ? "" : "This field is required";
+    temp.hepatitisB = enroll.hepatitisB ? "" : "This field is required";
 
     temp.hivStatus =
       enroll.hivStatus === "Positive"
@@ -844,651 +1039,810 @@ const AncPnc = (props) => {
               <div
                 className="card-header mb-3 "
                 style={{
-                  backgroundColor: "#014d88",
-                  color: "#fff",
+                  backgroundColor: "#ffffff",
+                  color: "#1a202c",
                   fontWeight: "bolder",
                   borderRadius: "0.2rem",
                   marginTop: "-20px",
+                  borderLeft: "4px solid #014d88",
+                  borderBottom: "2px solid #e2e8f0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}
               >
-                <h5 className="card-title" style={{ color: "#fff" }}>
-                  PMTCT Enrollment
+                <h5 className="card-title" style={{ color: "#014d88", fontWeight: "700", marginBottom: "4px" }}>
+                  Mother Infant Pair Card
                 </h5>
-              </div>
-
-              <h3 className="mb-3">
-                <span>Point of Entry: </span>
-
-                {entryValueDisplay.display}
-              </h3>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    HIV Status <span style={{ color: "red" }}> *</span>
-                  </Label>
-
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="hivStatus"
-                      id="hivStatus"
-                      value={enroll.hivStatus}
-                      onChange={handleInputChangeEnrollmentDto}
-                      disabled={disabledField || isHivStatusDisabled()}
-                    >
-                      <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                    </Input>
-                  </InputGroup>
-
-                  {errors.hivStatus && (
-                    <span className={classes.error}>{errors.hivStatus}</span>
-                  )}
-
-                  {enroll.hivStatus === "Positive" && (
-                    <div className="mt-3">
-                      <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
-                    </div>
-                  )}
-                </FormGroup>
-              </div>
-
-              {patientObj.ancNo && (
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <Label>
-                      ANC ID
-                      {/* <span style={{ color:"red"}}> *</span> */}
-                    </Label>
-                    <InputGroup>
-                      <Input
-                        type="text"
-                        name="ancNo"
-                        id="ancNo"
-                        onChange={handleInputChangeEnrollmentDto}
-                        value={patientObj.ancNo}
-                        disabled
-                      />
-                    </InputGroup>
-                    {errors.ancNo !== "" ? (
-                      <span className={classes.error}>{errors.ancNo}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span style={{ color: "#718096", fontSize: "13px", fontWeight: "500" }}>
+                    Mother's Clinical Information
+                  </span>
+                  <span style={{
+                    display: "inline-block",
+                    backgroundColor: "#e8f0fe",
+                    color: "#014d88",
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    border: "1px solid #ccdcf0"
+                  }}>
+                    Point of Entry: <strong>{entryValueDisplay.display}</strong>
+                  </span>
                 </div>
-              )}
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Date of Enrollment <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"
-                      onKeyPress={(e) => {
-                        e.preventDefault();
-                      }}
-                      name="pmtctEnrollmentDate"
-                      id="pmtctEnrollmentDate"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.pmtctEnrollmentDate}
-                      min={
-                        minPmtctEnrollmentDate
-                          ? minPmtctEnrollmentDate
-                          : patientObj.ancNo
-                          ? props.patientObj.firstAncDate
-                          : props?.newRegDate
-                          ? props?.newRegDate
-                          : ""
-                      }
-                      max={moment(new Date()).format("YYYY-MM-DD")}
-                      disabled={disabledField}
-                    />
-                  </InputGroup>
-                  {errors.pmtctEnrollmentDate !== "" ? (
-                    <span className={classes.error}>
-                      {errors.pmtctEnrollmentDate}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
               </div>
 
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Date Of Last Menstrual Period
-                    <span style={{ color: "red" }}>*</span>{" "}
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"
-                      onKeyPress={(e) => {
-                        e.preventDefault();
-                      }}
-                      name="lmp"
-                      id="lmp"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.lmp}
-                      max={
-                        enroll.pmtctEnrollmentDate
-                          ? enroll.pmtctEnrollmentDate
-                          : moment(new Date()).format("YYYY-MM-DD")
-                      }
-                      disabled={disabledField || props?.ancEntryType}
-                    />
-                  </InputGroup>
-                  {errors.lmp !== "" ? (
-                    <span className={classes.error}>{errors.lmp}</span>
-                  ) : (
-                    ""
-                  )}
-                  {enroll.gaweeks === 0 ? (
-                    <span className={classes.error}>Invalid date </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Gestational Age (Weeks){" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="number"
-                      name="gaweeks"
-                      id="gaweeks"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.gaweeks}
-                      disabled
-                    />
-                  </InputGroup>
-                  {errors.gaweeks !== "" ? (
-                    <span className={classes.error}>{errors.gaweeks}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-
-              {/* <div className="form-group mb-3 col-md-4">
+              {/* === Enrollment Details (bordered container) === */}
+              <div className="col-md-12 mb-3 mt-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <EventNoteIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Enrollment Details
+                  </h6>
+                  <div className="row">
+                    {patientObj.ancNo && (
+                      <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                        <Label >Point of Entry <span style={{ color:"red"}}> *</span></Label>
-                        <InputGroup> 
-                            <Input 
-                                type="select"
-                                name="entryPoint"
-                                id="entryPoint"
-                                onChange={handleInputChangeEnrollmentDto}
-                                value={enroll.entryPoint} 
-                                disabled={disabledField}
-                            >
-                                <option value="">Select</option>
-                                {entryPoint.map((value, index) => (
-                                    <option key={index} value={value.code}>
-                                        {value.display}
-                                    </option>
-                                ))}
-                            </Input>
-
-                        </InputGroup>
-                        {errors.entryPoint !=="" ? (
-                                <span className={classes.error}>{errors.entryPoint}</span>
-                        ) : "" }
+                          <Label>ANC ID</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="ancNo"
+                              id="ancNo"
+                              onChange={handleInputChangeEnrollmentDto}
+                              value={patientObj.ancNo}
+                              disabled
+                            />
+                          </InputGroup>
+                          {errors.ancNo !== "" ? (
+                            <span className={classes.error}>{errors.ancNo}</span>
+                          ) : (
+                            ""
+                          )}
                         </FormGroup>
-                    </div>  */}
-
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Gravida <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="number"
-                      name="gravida"
-                      id="gravida"
-                      min="1"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.gravida}
-                      disabled={disabledField}
-                    />
-                  </InputGroup>
-                  {errors.gravida !== "" ? (
-                    <span className={classes.error}>{errors.gravida}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
+                      </div>
+                    )}
+                    {artUniqueNumber && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Unique ART Number</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="artUniqueNumber"
+                              id="artUniqueNumber"
+                              value={artUniqueNumber}
+                              disabled
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Date of Enrollment into PMTCT <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => { e.preventDefault(); }}
+                            name="pmtctEnrollmentDate"
+                            id="pmtctEnrollmentDate"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.pmtctEnrollmentDate}
+                            min={
+                              minPmtctEnrollmentDate
+                                ? minPmtctEnrollmentDate
+                                : patientObj.ancNo
+                                  ? props.patientObj.firstAncDate
+                                  : props?.newRegDate
+                                    ? props?.newRegDate
+                                    : ""
+                            }
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.pmtctEnrollmentDate !== "" ? (
+                          <span className={classes.error}>{errors.pmtctEnrollmentDate}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Date Of Last Menstrual Period
+                          <span style={{ color: "red" }}>*</span>{" "}
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => { e.preventDefault(); }}
+                            name="lmp"
+                            id="lmp"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.lmp}
+                            max={
+                              enroll.pmtctEnrollmentDate
+                                ? enroll.pmtctEnrollmentDate
+                                : moment(new Date()).format("YYYY-MM-DD")
+                            }
+                            min={moment().subtract(294, "days").format("YYYY-MM-DD")}
+                            disabled={disabledField || props?.ancEntryType}
+                          />
+                        </InputGroup>
+                        {errors.lmp !== "" ? (
+                          <span className={classes.error}>{errors.lmp}</span>
+                        ) : (
+                          ""
+                        )}
+                        {enroll.gaweeks === 0 ? (
+                          <span className={classes.error}>Invalid date </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Gestational Age (Weeks){" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="gaweeks"
+                            id="gaweeks"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.gaweeks}
+                            disabled
+                          />
+                        </InputGroup>
+                        {errors.gaweeks !== "" ? (
+                          <span className={classes.error}>{errors.gaweeks}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="form-group mb-3 col-md-4">
-                {/* Post-Partum */}
-                <FormGroup>
-                  <Label>
-                    Timing of ART Initiation{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="artStartTime"
-                      id="artStartTime"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.artStartTime}
-                      disabled={disabledField}
-
-                      // disabled={disabledField? disabledField : autoPostPartumTiming}
-                    >
-                      <option value="">Select</option>
-                      {artStartTime.map((value, index) => (
-                        <option key={index} value={value.code}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.artStartTime !== "" ? (
-                    <span className={classes.error}>{errors.artStartTime}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Art Start Date <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="date"
-                      onKeyPress={(e) => {
-                        e.preventDefault();
-                      }}
-                      name="artStartDate"
-                      id="artStartDate"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.artStartDate}
-                      max={maxARTDate}
-                      min={minARTDate}
-                      disabled={disabledField}
-                    />
-                  </InputGroup>
-                  {errors.artStartDate !== "" ? (
-                    <span className={classes.error}>{errors.artStartDate}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Time Of HIV Diagnosis{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="timeOfHivDiagnosis"
-                      id="timeOfHivDiagnosis"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.timeOfHivDiagnosis}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      {timeHivDiagnosis.map((value, index) => (
-                        <option key={index} value={value.code}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.timeHivDiagnosis !== "" ? (
-                    <span className={classes.error}>
-                      {errors.timeHivDiagnosis}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-
-              {/* <div className=" mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>
-                    Timing of mother's ART Initiation{" "}
-                  </FormLabelName>
-                  <Input
-                    type="select"
-                    name="motherArtInitiationTime"
-                    id="motherArtInitiationTime"
-                    value={infantMotherArtDto.motherArtInitiationTime}
-                    onChange={handleInputChangeInfantMotherArtDto}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value="select">Select </option>
-                    {timeMotherArt.map((value, index) => (
-                      <option key={index} value={value.code}>
-                        {value.display}
-                      </option>
-                    ))}
-                  </Input>
-                  {errors.motherArtInitiationTime !== "" ? (
-                    <span className={classes.error}>
-                      {errors.motherArtInitiationTime}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div> */}
-
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>Original Regimen Line </FormLabelName>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="regimenTypeId"
-                      id="regimenTypeId"
-                      value={infantMotherArtDto.regimenTypeId}
-                      onChange={handleSelecteRegimen}
-                      required
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.25rem",
-                      }}
-                      disabled={disabledField}
-                    >
-                      <option value=""> Select</option>
-
-                      {adultRegimenLine.map((value) => (
-                        <option key={value.id} value={value.id}>
-                          {value.description}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.regimenTypeId !== "" ? (
-                    <span className={classes.error}>
-                      {errors.regimenTypeId}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <FormLabelName>Original Regimen </FormLabelName>
-                  <Input
-                    type="select"
-                    name="regimenId"
-                    id="regimenId"
-                    value={infantMotherArtDto.regimenId}
-                    onChange={handleInputChangeInfantMotherArtDto}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    disabled={disabledField}
-                  >
-                    <option value=""> Select</option>
-                    {regimenType.map((value) => (
-                      <option key={value.id} value={value.code}>
-                        {value.description}
-                      </option>
-                    ))}
-                  </Input>
-                  {errors.regimenId !== "" ? (
-                    <span className={classes.error}>{errors.regimenId}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
+              {/* === ART Information (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />ART Information
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Gravida <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="gravida"
+                            id="gravida"
+                            min="1"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.gravida}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.gravida !== "" ? (
+                          <span className={classes.error}>{errors.gravida}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Timing of ART Initiation{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="artStartTime"
+                            id="artStartTime"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.artStartTime}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {artStartTime.map((value, index) => (
+                              <option key={index} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.artStartTime !== "" ? (
+                          <span className={classes.error}>{errors.artStartTime}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Art Start Date <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => { e.preventDefault(); }}
+                            name="artStartDate"
+                            id="artStartDate"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.artStartDate}
+                            max={maxARTDate}
+                            min={minARTDate}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.artStartDate !== "" ? (
+                          <span className={classes.error}>{errors.artStartDate}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          Period of HIV Diagnosis{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="timeOfHivDiagnosis"
+                            id="timeOfHivDiagnosis"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.timeOfHivDiagnosis}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {timeHivDiagnosis.map((value, index) => (
+                              <option key={index} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.timeOfHivDiagnosis !== "" ? (
+                          <span className={classes.error}>{errors.timeOfHivDiagnosis}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    TB Status <span style={{ color: "red" }}> *</span>
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="tbStatus"
-                      id="tbStatus"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.tbStatus}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      {tbStatus.map((value, index) => (
-                        <option key={index} value={value.code}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.tbStatus !== "" ? (
-                    <span className={classes.error}>{errors.tbStatus}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Hepatitis B Status
-                    {/* <span style={{ color: "red" }}> *</span> */}
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="hepatitisB"
-                      id="hepatitisB"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.hepatitisB}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                    </Input>
-                  </InputGroup>
-                  {/* {errors.hbstatus !== "" ? (
-                    <span className={classes.error}>{errors.hbstatus}</span>
-                  ) : (
-                    ""
-                  )} */}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-4">
-                <FormGroup>
-                  <Label>
-                    Urinalysis
-                    {/* <span style={{ color: "red" }}> *</span> */}
-                  </Label>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="urinalysis"
-                      id="urinalysis"
-                      onChange={handleInputChangeEnrollmentDto}
-                      value={enroll.urinalysis}
-                      disabled={disabledField}
-                    >
-                      <option value="">Select</option>
-                      {urinalysisList.length > 0 &&
-                        urinalysisList.map((each) => {
-                          return (
-                            <option value={each.code} key={each.id}>
-                              {each.display}
+              {/* === Regimen (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <ListAltIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Regimen
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>Original Regimen Line </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="regimenTypeId"
+                            id="regimenTypeId"
+                            value={infantMotherArtDto.regimenTypeId}
+                            onChange={handleSelecteRegimen}
+                            required
+                            style={{
+                              border: "1px solid #d2d6dc",
+                              borderRadius: "0.25rem",
+                            }}
+                            disabled={disabledField}
+                          >
+                            <option value=""> Select</option>
+                            {adultRegimenLine.map((value) => (
+                              <option key={value.id} value={value.id}>
+                                {value.description}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.regimenTypeId !== "" ? (
+                          <span className={classes.error}>{errors.regimenTypeId}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>Original Regimen </FormLabelName>
+                        <Input
+                          type="select"
+                          name="regimenId"
+                          id="regimenId"
+                          value={infantMotherArtDto.regimenId}
+                          onChange={handleInputChangeInfantMotherArtDto}
+                          style={{
+                            border: "1px solid #d2d6dc",
+                            borderRadius: "0.25rem",
+                          }}
+                          disabled={disabledField}
+                        >
+                          <option value=""> Select</option>
+                          {regimenType.map((value) => (
+                            <option key={value.id} value={value.code}>
+                              {value.description}
                             </option>
-                          );
-                        })}
-                    </Input>
-                  </InputGroup>
-                  {/* {errors.hbstatus !== "" ? (
-                    <span className={classes.error}>{errors.hbstatus}</span>
-                  ) : (
-                    ""
-                  )} */}
-                </FormGroup>
+                          ))}
+                        </Input>
+                        {errors.regimenId !== "" ? (
+                          <span className={classes.error}>{errors.regimenId}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC" && (
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <Label>Expected date of delivery</Label>
-                    <InputGroup>
-                      <Input
-                        type="date"
-                        onKeyPress={(e) => {
-                          e.preventDefault();
-                        }}
-                        name="expectedDeliveryDate"
-                        id="expectedDeliveryDate"
-                        onChange={handleInputChangeEnrollmentDto}
-                        value={enroll.expectedDeliveryDate}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        min={
-                          props?.ancEntryType
-                            ? props?.patientObj?.lmp
-                            : enroll.lmp
-                        }
-                        disabled={true}
-                      />
-                    </InputGroup>
-                  </FormGroup>
-                </div>
-              )}
-              {entryValueDisplay.code !== "PMTCT_ENTRY_POINT_ANC" && (
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <Label>Date of Delivery</Label>
-                    <InputGroup>
-                      <Input
-                        type="date"
-                        onKeyPress={(e) => {
-                          e.preventDefault();
-                        }}
-                        name="dateOfDelivery"
-                        id="dateOfDelivery"
-                        onChange={handleInputChangeEnrollmentDto}
-                        value={enroll.dateOfDelivery}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        min={
-                          minDeliveryDate
-                            ? minDeliveryDate
-                            : props?.ancEntryType
-                            ? props?.patientObj?.lmp
-                            : enroll.lmp
-                        }
-                        disabled={disabledField}
-                      />
-                    </InputGroup>
-                    {errors.artStartDate !== "" ? (
-                      <span className={classes.error}>
-                        {errors.artStartDate}
-                      </span>
-                    ) : (
-                      ""
+              {/* === Syphilis (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <HealingIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Syphilis
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Syphilis Testing <span style={{ color: "red" }}> *</span></Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="testResult"
+                            id="syphilisTestResult"
+                            onChange={handleSyphilisDetailsChange}
+                            value={enroll.syphilisDetails?.testResult || ""}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Negative">Negative</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.syphilisTestResult !== "" ? (
+                          <span className={classes.error}>{errors.syphilisTestResult}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    {enroll.syphilisDetails?.testResult === "Positive" && (
+                    <>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Syphilis Treatment</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="treatment"
+                            id="syphilisTreatment"
+                            onChange={handleSyphilisDetailsChange}
+                            value={enroll.syphilisDetails?.treatment || ""}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    {enroll.syphilisDetails?.treatment === "Yes" && (
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Syphilis Drug Name</Label>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="drugName"
+                            id="syphilisDrugName"
+                            onChange={handleSyphilisDetailsChange}
+                            value={enroll.syphilisDetails?.drugName || ""}
+                            disabled={disabledField}
+                            placeholder="Enter drug name"
+                          />
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
                     )}
-                    {enroll.gaweeks === 0 && enroll.lmp === "" ? (
-                      <span className={classes.error}>
-                        Last menstrual period date is empty{" "}
-                      </span>
-                    ) : (
-                      ""
+                    </>
                     )}
-                  </FormGroup>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* === Hepatitis B (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <HealingIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Hepatitis B
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>HBV Testing Result <span style={{ color: "red" }}> *</span></Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="hepatitisB"
+                            id="hepatitisB"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.hepatitisB}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Negative">Negative</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.hepatitisB !== "" ? (
+                          <span className={classes.error}>{errors.hepatitisB}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    {enroll.hepatitisB === "Positive" && (
+                      <>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HBV VL Result Date</Label>
+                            <InputGroup>
+                              <Input
+                                type="date"
+                                onKeyPress={(e) => { e.preventDefault(); }}
+                                name="vlResultDate"
+                                id="vlResultDate"
+                                onChange={handleHbvDetailsChange}
+                                value={enroll.hbvDetails?.vlResultDate || ""}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                                disabled={disabledField}
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HBV VL Result (Cp/ml)</Label>
+                            <InputGroup>
+                              <Input
+                                type="number"
+                                name="vlResult"
+                                id="vlResult"
+                                onChange={handleHbvDetailsChange}
+                                value={enroll.hbvDetails?.vlResult || ""}
+                                disabled={disabledField}
+                                placeholder="Enter result in Cp/ml"
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HBV Treatment/Prophylaxis</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="treatmentType"
+                                id="treatmentType"
+                                onChange={handleHbvDetailsChange}
+                                value={enroll.hbvDetails?.treatmentType || ""}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="None">None</option>
+                                <option value="Treatment">Treatment</option>
+                                <option value="Prophylaxis">Prophylaxis</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        {(enroll.hbvDetails?.treatmentType === "Treatment" || enroll.hbvDetails?.treatmentType === "Prophylaxis") && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HBV Drug Name</Label>
+                            <InputGroup>
+                              <Input
+                                type="text"
+                                name="drugName"
+                                id="drugName"
+                                onChange={handleHbvDetailsChange}
+                                value={enroll.hbvDetails?.drugName || ""}
+                                disabled={disabledField}
+                                placeholder="Enter drug name"
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* === Delivery Information (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <ChildFriendlyIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Delivery Information
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Expected Date of Delivery</Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => { e.preventDefault(); }}
+                            name="expectedDeliveryDate"
+                            id="expectedDeliveryDate"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.expectedDeliveryDate}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            min={
+                              props?.ancEntryType
+                                ? props?.patientObj?.lmp
+                                : enroll.lmp
+                            }
+                            disabled={true}
+                          />
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Date of Delivery</Label>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => { e.preventDefault(); }}
+                            name="dateOfDelivery"
+                            id="dateOfDelivery"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.dateOfDelivery}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            min={
+                              [minDeliveryDate, enroll.pmtctEnrollmentDate, enroll.lmp, props?.patientObj?.firstAncDate]
+                                .filter(Boolean)
+                                .sort()
+                                .pop() || ""
+                            }
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {enroll.gaweeks === 0 && enroll.lmp === "" ? (
+                          <span className={classes.error}>
+                            Last menstrual period date is empty{" "}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Mode of Delivery</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="modeOfDelivery"
+                            id="modeOfDelivery"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.modeOfDelivery}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {deliveryModeList.map((value, index) => (
+                              <option key={index} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    {enroll.modeOfDelivery && enroll.modeOfDelivery === "MODE_DELIVERY_OTHERS" && (
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Specify</Label>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="modeOfDeliveryOther"
+                            id="modeOfDeliveryOther"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.modeOfDeliveryOther}
+                            disabled={disabledField}
+                            placeholder="Specify mode of delivery"
+                          />
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* === HIV Status (bordered container) === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <FavoriteIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV Status
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
+                          HIV Status <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="hivStatus"
+                            id="hivStatus"
+                            value={enroll.hivStatus}
+                            onChange={handleInputChangeEnrollmentDto}
+                            disabled={true}
+                          >
+                            <option value="">Select</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Negative">Negative</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.hivStatus && (
+                          <span className={classes.error}>{errors.hivStatus}</span>
+                        )}
+                        {enroll.hivStatus === "Positive" && (
+                          <div className="mt-3">
+                            <h3 style={{ color: "red" }}>Kindly refer for ART</h3>
+                          </div>
+                        )}
+                      </FormGroup>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              {" "}
-              <>
-                {/* <Label
-                  as="a"
-                  color="teal"
-                  style={{ width: "106%", height: "35px" }}
-                  ribbon
-                >
-                  <h4 style={{ color: "#fff" }}> Mother's ART </h4>
-                </Label>
-                <br />
-                <br /> */}
-                {/* <div className="row">
-                </div> */}
-              </>
-            </div>
+            <div></div>
             {saving ? <Spinner /> : ""}
             <br />
-            {props.hideUpdateButton && props.activeContent?.actionType !== "view" && (
-              <>
-                {props.activeContent &&
-                props.activeContent.actionType === "update" ? (
-                  <>
-                    <MatButton
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      className={classes.button}
-                      startIcon={<SaveIcon />}
-                      style={{ backgroundColor: "#014d88" }}
-                      onClick={handleSubmit}
-                      disabled={saving}
-                    >
-                      {!saving ? (
-                        <span style={{ textTransform: "capitalize" }}>
-                          Update
-                        </span>
-                      ) : (
-                        <span style={{ textTransform: "capitalize" }}>
-                          Updating...
-                        </span>
-                      )}
-                    </MatButton>
-                  </>
-                ) : (
-                  <>
-                    <MatButton
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      className={classes.button}
-                      startIcon={<SaveIcon />}
-                      style={{ backgroundColor: "#014d88" }}
-                      onClick={handleSubmit}
-                      disabled={saving}
-                    >
-                      {!saving ? (
-                        <span style={{ textTransform: "capitalize" }}>
-                          Save
-                        </span>
-                      ) : (
-                        <span style={{ textTransform: "capitalize" }}>
-                          Saving...
-                        </span>
-                      )}
-                    </MatButton>
-                  </>
-                )}
-              </>
+            {props.hideUpdateButton &&
+              props.activeContent?.actionType !== "view" && (
+                <>
+                  {props.activeContent &&
+                  props.activeContent.actionType === "update" ? (
+                    <>
+                      <MatButton
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        startIcon={<SaveIcon />}
+                        style={{ backgroundColor: "#014d88" }}
+                        onClick={handleSubmit}
+                        disabled={saving}
+                      >
+                        {!saving ? (
+                          <span style={{ textTransform: "capitalize" }}>
+                            Update
+                          </span>
+                        ) : (
+                          <span style={{ textTransform: "capitalize" }}>
+                            Updating...
+                          </span>
+                        )}
+                      </MatButton>
+                    </>
+                  ) : (
+                    <>
+                      <MatButton
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        startIcon={<SaveIcon />}
+                        style={{ backgroundColor: "#014d88" }}
+                        onClick={handleSubmit}
+                        disabled={saving}
+                      >
+                        {!saving ? (
+                          <span style={{ textTransform: "capitalize" }}>
+                            Save
+                          </span>
+                        ) : (
+                          <span style={{ textTransform: "capitalize" }}>
+                            Saving...
+                          </span>
+                        )}
+                      </MatButton>
+                    </>
+                  )}
+                </>
+              )}
+
+            {(props.activeContent?.actionType === "view" ||
+              props.activeContent?.actionType === "update") && (
+              <MatButton
+                type="button"
+                variant="contained"
+                className={classes.button}
+                startIcon={<CancelIcon />}
+                style={{ backgroundColor: "#992E62", color: "#fff" }}
+                onClick={() =>
+                  props.setActiveContent({
+                    ...props.activeContent,
+                    route: "recent-history",
+                    actionType: "",
+                    id: "",
+                  })
+                }
+              >
+                <span style={{ textTransform: "capitalize" }}>Back</span>
+              </MatButton>
             )}
           </form>
         </CardBody>

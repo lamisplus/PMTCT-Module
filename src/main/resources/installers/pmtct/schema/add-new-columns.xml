@@ -2352,5 +2352,598 @@
         </sql>
     </changeSet>
 
-</databaseChangeLog>
+    <!-- Add syphilis_details JSONB column to pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-syphilis-details-to-enrollment-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="syphilis_details" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN syphilis_details jsonb;
+        </sql>
+    </changeSet>
 
+    <!-- Migrate old syphilis columns to syphilis_details JSONB (if old columns exist) -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-migrate-syphilis-to-jsonb-001">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_enrollment" columnName="syphilis_details" />
+                <columnExists tableName="pmtct_enrollment" columnName="syphilis_test_result" />
+            </and>
+        </preConditions>
+        <sql>
+            UPDATE pmtct_enrollment
+            SET syphilis_details = jsonb_build_object(
+                'testResult', COALESCE(syphilis_test_result, ''),
+                'treatment', COALESCE(syphilis_treatment, ''),
+                'drugName', COALESCE(syphilis_drug_name, '')
+            )
+            WHERE syphilis_test_result IS NOT NULL
+              AND syphilis_details IS NULL;
+
+            ALTER TABLE pmtct_enrollment DROP COLUMN IF EXISTS syphilis_test_result;
+            ALTER TABLE pmtct_enrollment DROP COLUMN IF EXISTS syphilis_treatment;
+            ALTER TABLE pmtct_enrollment DROP COLUMN IF EXISTS syphilis_drug_name;
+        </sql>
+    </changeSet>
+
+    <!-- Add hbv_details JSONB column to pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-hbv-details-to-enrollment-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="hbv_details" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN hbv_details jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Add mode_of_delivery to pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-mode-of-delivery-to-enrollment-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="mode_of_delivery" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN mode_of_delivery character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- Add mode_of_delivery_other to pmtct_enrollment -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-mode-of-delivery-other-to-enrollment-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_enrollment" columnName="mode_of_delivery_other" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment ADD COLUMN mode_of_delivery_other character varying(255);
+        </sql>
+    </changeSet>
+
+    <!-- PMTCT HTS: Add new PMTCT Register columns -->
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-001">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="pregnancy_status_at_entry" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN pregnancy_status_at_entry character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-002">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="previously_known_hiv_positive" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN previously_known_hiv_positive character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-003">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="hiv_early_detect" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN hiv_early_detect character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-004">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="hiv_early_detect_viral_load" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN hiv_early_detect_viral_load character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-005">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="syphilis_info" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN syphilis_info jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-006">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="hbv_info" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN hbv_info jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-007">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="partner_info" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN partner_info jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-008">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="tb_screening_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN tb_screening_status character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-009">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="pmtct_test_entry_point" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN pmtct_test_entry_point character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-04-07-add-pmtct-register-fields-to-hts-010">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="viral_load_monitoring" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN viral_load_monitoring character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-13-add-enrolled-on-art-to-hts" author="Ganiyat-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="enrolled_on_art" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN enrolled_on_art character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-13-add-type-of-hiv-test-to-hts" author="Ganiyat-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="type_of_hiv_test" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN type_of_hiv_test character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-13-add-confirmatory-from-spokes-to-hts" author="Ganiyat-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="confirmatory_from_spokes" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN confirmatory_from_spokes character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-13-add-initiated-on-prophylaxis-to-hts" author="Ganiyat-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="initiated_on_prophylaxis" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN initiated_on_prophylaxis character varying(255);
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-13-add-tb-referred-to-hts" author="Ganiyat-data-fi">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_hts" columnName="tb_referred" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts ADD COLUMN tb_referred character varying(255);
+        </sql>
+    </changeSet>
+
+    <!--
+        Migrate pmtct_enrollment.time_of_hiv_diagnosis from old TIME_HIV_DIAGNOSIS codes
+        to new PERIOD_DIAGNOSED_HIV codeset codes.
+
+        Verified against DB — actual old codes use HTML entities (&LT; &GT; &AMP;)
+        and new codeset uses unicode (≤).
+
+        Mapping:
+         Old: Previous - Non pregnant              → New: Previously in Care/ART (PERIOD_DIAGNOSED_HIV_PREVIOUSLY_IN_CARE_ART)
+         Old: Previous pregnancy (ANC)             → New: Previously in Care/ART
+         Old: Previous pregnancy (L and D)         → New: Previously in Care/ART
+         Old: Previous pregnancy (PP at 72hrs)     → New: Previously in Care/ART
+         Old: Previously known HIV positive (ANC)  → New: Previously in Care/ART
+         Old: ANC                                  → New: ANC (PERIOD_DIAGNOSED_HIV_ANC)
+         Old: Newly tested HIV positive (ANC)      → New: ANC
+         Old: Labour                               → New: Labour (PERIOD_DIAGNOSED_HIV_LABOUR)
+         Old: Post Partum <=72hrs                  → New: ≤ 72 hrs Postpartum (PERIOD_DIAGNOSED_HIV_≤_72_HRS_POSTPARTUM)
+         Old: Post Partum >72hrs                   → New: Breastfeeding Period (PERIOD_DIAGNOSED_HIV_BREASTFEEDING_PERIOD)
+    -->
+    <changeSet failOnError="false" id="2026-04-15-migrate-enrollment-to-period-diagnosed-hiv-001" author="Ganiyat-data-fix">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+                FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+            </sqlCheck>
+        </preConditions>
+        <sql splitStatements="false"><![CDATA[
+            -- 1. Map "Previous" variants + "Previously known HIV positive (ANC)" -> Previously in Care/ART
+            UPDATE pmtct_enrollment
+            SET time_of_hiv_diagnosis = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'Previously in Care/ART'
+                LIMIT 1
+            )
+            WHERE time_of_hiv_diagnosis IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND (
+                    display ILIKE '%Non pregnant%'
+                    OR display ILIKE '%Previous pregnancy%'
+                    OR display ILIKE '%Previously known HIV%positive%'
+                )
+            );
+
+            -- 2. Map "ANC" and "Newly tested HIV positive (ANC)" -> ANC
+            UPDATE pmtct_enrollment
+            SET time_of_hiv_diagnosis = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'ANC'
+                LIMIT 1
+            )
+            WHERE time_of_hiv_diagnosis IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND (
+                    display = 'ANC'
+                    OR display ILIKE '%Newly tested HIV positive%'
+                )
+            );
+
+            -- 3. Map "Labour" -> Labour
+            UPDATE pmtct_enrollment
+            SET time_of_hiv_diagnosis = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'Labour'
+                LIMIT 1
+            )
+            WHERE time_of_hiv_diagnosis IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND display = 'Labour'
+            );
+
+            -- 4. Map "Post Partum <=72hrs" -> 72 hrs Postpartum
+            --    Note: old codeset has identical display for <=72 and >72, so match by code pattern (LT = less than)
+            UPDATE pmtct_enrollment
+            SET time_of_hiv_diagnosis = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display ILIKE '%Postpartum%'
+                AND display ILIKE '%72%'
+                LIMIT 1
+            )
+            WHERE time_of_hiv_diagnosis IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND code ILIKE '%POST_PARTUM%LT%'
+            );
+
+            -- 5. Map "Post Partum >72hrs" -> Breastfeeding Period
+            --    Note: old codeset has identical display for <=72 and >72, so match by code pattern (GT = greater than)
+            UPDATE pmtct_enrollment
+            SET time_of_hiv_diagnosis = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display ILIKE '%Breastfeeding%'
+                LIMIT 1
+            )
+            WHERE time_of_hiv_diagnosis IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND code ILIKE '%POST_PARTUM%GT%'
+            );
+        ]]></sql>
+    </changeSet>
+
+    <!-- Migrate pmtct_anc.hiv_diognosic_time with same mapping to PERIOD_DIAGNOSED_HIV -->
+    <changeSet failOnError="false" id="2026-04-15-migrate-anc-to-period-diagnosed-hiv-002" author="Ganiyat-data-fix">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+                FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+            </sqlCheck>
+        </preConditions>
+        <sql splitStatements="false"><![CDATA[
+            -- 1. Map "Previous" variants + "Previously known HIV positive (ANC)" -> Previously in Care/ART
+            UPDATE pmtct_anc
+            SET hiv_diognosic_time = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'Previously in Care/ART'
+                LIMIT 1
+            )
+            WHERE hiv_diognosic_time IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND (
+                    display ILIKE '%Non pregnant%'
+                    OR display ILIKE '%Previous pregnancy%'
+                    OR display ILIKE '%Previously known HIV%positive%'
+                )
+            );
+
+            -- 2. Map "ANC" and "Newly tested HIV positive (ANC)" -> ANC
+            UPDATE pmtct_anc
+            SET hiv_diognosic_time = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'ANC'
+                LIMIT 1
+            )
+            WHERE hiv_diognosic_time IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND (
+                    display = 'ANC'
+                    OR display ILIKE '%Newly tested HIV positive%'
+                )
+            );
+
+            -- 3. Map "Labour" -> Labour
+            UPDATE pmtct_anc
+            SET hiv_diognosic_time = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display = 'Labour'
+                LIMIT 1
+            )
+            WHERE hiv_diognosic_time IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND display = 'Labour'
+            );
+
+            -- 4. Map "Post Partum <=72hrs" -> 72 hrs Postpartum
+            --    Note: old codeset has identical display for <=72 and >72, so match by code pattern (LT = less than)
+            UPDATE pmtct_anc
+            SET hiv_diognosic_time = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display ILIKE '%Postpartum%'
+                AND display ILIKE '%72%'
+                LIMIT 1
+            )
+            WHERE hiv_diognosic_time IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND code ILIKE '%POST_PARTUM%LT%'
+            );
+
+            -- 5. Map "Post Partum >72hrs" -> Breastfeeding Period
+            --    Note: old codeset has identical display for <=72 and >72, so match by code pattern (GT = greater than)
+            UPDATE pmtct_anc
+            SET hiv_diognosic_time = (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'PERIOD_DIAGNOSED_HIV'
+                AND display ILIKE '%Breastfeeding%'
+                LIMIT 1
+            )
+            WHERE hiv_diognosic_time IN (
+                SELECT code FROM base_application_codeset
+                WHERE codeset_group = 'TIME_HIV_DIAGNOSIS'
+                AND code ILIKE '%POST_PARTUM%GT%'
+            );
+        ]]></sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-current-status-to-mother-visit" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD current_status VARCHAR(50)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-weight-to-mother-visit" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="weight" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD weight DOUBLE PRECISION
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-sfh-length-to-mother-visit" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="sfh_length" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD sfh_length DOUBLE PRECISION
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-001" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_art_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD current_art_status VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-002" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="mothers_art_regimen" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD mothers_art_regimen VARCHAR(255)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-003" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_hbv_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD current_hbv_status VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-004" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="name_of_hbv_drug" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD name_of_hbv_drug VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-005" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_syphilis_status" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD current_syphilis_status VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-treatment-status-fields-to-mother-visit-006" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="name_of_syphilis_drug" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD name_of_syphilis_drug VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-infant-details-to-mother-visit-001" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="infant_feeding_practice" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD infant_feeding_practice VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-infant-details-to-mother-visit-002" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="infant_on_ctx" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD infant_on_ctx VARCHAR(10)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-infant-details-to-mother-visit-003" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="referred_to_treatment" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD referred_to_treatment VARCHAR(100)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-signature-to-mother-visit" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="signature" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD signature VARCHAR(255)
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="true" id="2026-04-23-add-date-of-vl-result-received-to-mother-visit" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="date_of_vl_result_received" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD date_of_vl_result_received DATE
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

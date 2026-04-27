@@ -38,9 +38,13 @@
      private String regimenId;
      private String hepatitisB;
      private String urinalysis;
+     private HbvDetailsDto hbvDetails;
+     private SyphilisDetailsDto syphilisDetails;
      private String timeOfHivDiagnosis;
      private String dateOfDelivery;
      private String expectedDeliveryDate;
+     private String modeOfDelivery;
+     private String modeOfDeliveryOther;
      @NotNull(message = "pmtctCycleId is required")
      private Long pmtctCycleId;
 

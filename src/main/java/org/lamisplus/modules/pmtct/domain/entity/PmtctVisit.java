@@ -32,6 +32,15 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String personUuid;
     private String uuid;
     private String entryPoint;
+    private String currentStatus;
+    private Double weight;
+    private Double sfhLength;
+    private String currentArtStatus;
+    private String mothersArtRegimen;
+    private String currentHbvStatus;
+    private String nameOfHbvDrug;
+    private String currentSyphilisStatus;
+    private String nameOfSyphilisDrug;
     private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
     private LocalDate dateOfDelivery;
@@ -39,8 +48,12 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String fpMethod;
     private String timeOfViralLoad;
     private LocalDate dateOfViralLoad;
+    private LocalDate dateOfVlResultReceived;
     private Integer gaOfViralLoad;
     private Long resultOfViralLoad;
+    private String infantFeedingPractice;
+    private String infantOnCtx;
+    private String referredToTreatment;
     private String dsd;
     private String dsdOption;
     private String dsdModel;
@@ -51,6 +64,7 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private LocalDate nextAppointmentDate;
     private Long pmtctCycleId;
     private Long archived;
+    private String signature;
     private Long facilityId;
     @Column(name = "created_date", updatable = false)
     @CreatedDate

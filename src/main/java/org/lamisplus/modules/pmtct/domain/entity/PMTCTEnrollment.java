@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 
 import org.springframework.data.domain.Persistable;
 
+import org.lamisplus.modules.pmtct.domain.dto.HbvDetailsDto;
+import org.lamisplus.modules.pmtct.domain.dto.SyphilisDetailsDto;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -41,9 +44,17 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String regimenId;
     private String hepatitisB;
     private String urinalysis;
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private HbvDetailsDto hbvDetails;
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private SyphilisDetailsDto syphilisDetails;
     private String timeOfHivDiagnosis;
     private String dateOfDelivery;
     private String expectedDeliveryDate;
+    private String modeOfDelivery;
+    private String modeOfDeliveryOther;
     private String ancNo;
     private Long pmtctCycleId;
     private String source;

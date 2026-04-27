@@ -1,0 +1,17 @@
+package org.lamisplus.modules.pmtct.domain.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HbvInfoDto {
+    private String knownPositive;
+    private String testResult;
+    private String treatment;
+    private String vlResultDate;
+    private String vlResult;
+    private String drugName;
+}

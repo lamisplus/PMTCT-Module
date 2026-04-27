@@ -89,6 +89,7 @@ function PatientCard(props) {
   
   const [highRiskInfants, setHighRiskInfants] = useState([]);
   const [expandedHighRiskIndex, setExpandedHighRiskIndex] = useState(false);
+  const [unsuppressedVl, setUnsuppressedVl] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState(
     props?.patientObj?.finalResult ||
     props?.patientObj?.staticHivStatus ||
@@ -163,6 +164,7 @@ const getHivRetestStatus = async () => {
 
 
     getHighRiskInfantStatus();
+    checkUnsuppressedVl();
     PatientCurrentStatus();
     CheckBiometric();
   }, [props.patientObj]);
@@ -174,6 +176,7 @@ const getHivRetestStatus = async () => {
       getHivRetestStatus()
     getLatestConfirmatoryResult();
      getHighRiskInfantStatus();
+     checkUnsuppressedVl();
     // getMaternalOutcome();
 
 
@@ -306,6 +309,22 @@ const getMaternalOutcome = async () => {
   };
 
 
+  const checkUnsuppressedVl = () => {
+    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    if (!personUuid) return;
+
+    axios
+      .get(`${baseUrl}pmtct/anc/check-unsuppressed-vl/${personUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setUnsuppressedVl(response.data === true);
+      })
+      .catch((error) => {
+        setUnsuppressedVl(false);
+      });
+  };
+
  const getHETInfantStatus = () => {
     
     if ( props.latestPmtctCycle?.id) {
@@ -409,9 +428,12 @@ const getMaternalOutcome = async () => {
                 </Col>
 
                 <Col md={4} className={classes.root2}>
+                  {patientObj?.ancNo && (
                   <span>
-                    {/* Date Of Birth : <b>{patientObj.dateOfBirth }</b> */}
+                    {" "}
+                    ANC Number : <b>{patientObj.ancNo}</b>
                   </span>
+                  )}
                 </Col>
                 <Col md={4} className={classes.root2}>
                   <span>
@@ -635,8 +657,24 @@ const getMaternalOutcome = async () => {
                     </Typography>
                   </div>
                 )}
-                  
-                  
+                  {unsuppressedVl && (
+                  <div>
+                    <Typography variant="caption">
+                      <Label
+                        color="red"
+                        size="mini"
+                        style={{ animation: 'none' }}
+                      >
+                        <WarningAmberIcon sx={{ fontSize: '10px', marginRight: '2px', verticalAlign: 'middle' }} />
+                        Unsuppressed VL
+                        <Label.Detail>
+                          {'>='} 1,000 copies/ml
+                        </Label.Detail>
+                      </Label>
+                    </Typography>
+                  </div>
+                  )}
+
                   </div>
                 </Col>
               </Row>

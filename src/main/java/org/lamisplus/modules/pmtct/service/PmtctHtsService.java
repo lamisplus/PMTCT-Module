@@ -71,6 +71,21 @@ public class PmtctHtsService {
 
         pmtctHtsReponseDTO.setAncNo(pmtctHts.getAncNo());
         pmtctHtsReponseDTO.setSource(pmtctHts.getSource());
+        pmtctHtsReponseDTO.setPregnancyStatusAtEntry(pmtctHts.getPregnancyStatusAtEntry());
+        pmtctHtsReponseDTO.setPreviouslyKnownHivPositive(pmtctHts.getPreviouslyKnownHivPositive());
+        pmtctHtsReponseDTO.setEnrolledOnArt(pmtctHts.getEnrolledOnArt());
+        pmtctHtsReponseDTO.setTypeOfHivTest(pmtctHts.getTypeOfHivTest());
+        pmtctHtsReponseDTO.setHivEarlyDetect(pmtctHts.getHivEarlyDetect());
+        pmtctHtsReponseDTO.setHivEarlyDetectViralLoad(pmtctHts.getHivEarlyDetectViralLoad());
+        pmtctHtsReponseDTO.setConfirmatoryFromSpokes(pmtctHts.getConfirmatoryFromSpokes());
+        pmtctHtsReponseDTO.setInitiatedOnProphylaxis(pmtctHts.getInitiatedOnProphylaxis());
+        pmtctHtsReponseDTO.setTbReferred(pmtctHts.getTbReferred());
+        pmtctHtsReponseDTO.setSyphilisInfo(pmtctHts.getSyphilisInfo());
+        pmtctHtsReponseDTO.setHbvInfo(pmtctHts.getHbvInfo());
+        pmtctHtsReponseDTO.setPartnerInfo(pmtctHts.getPartnerInfo());
+        pmtctHtsReponseDTO.setTbScreeningStatus(pmtctHts.getTbScreeningStatus());
+        pmtctHtsReponseDTO.setPmtctTestEntryPoint(pmtctHts.getPmtctTestEntryPoint());
+        pmtctHtsReponseDTO.setViralLoadMonitoring(pmtctHts.getViralLoadMonitoring());
                try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
@@ -125,6 +140,21 @@ public class PmtctHtsService {
         pmtctHts.setCreatedDate(java.time.LocalDateTime.now());
         pmtctHts.setLastModifiedDate(java.time.LocalDateTime.now());
         pmtctHts.setSource(pmtctHtsRequestDTO.getSource());
+        pmtctHts.setPregnancyStatusAtEntry(pmtctHtsRequestDTO.getPregnancyStatusAtEntry());
+        pmtctHts.setPreviouslyKnownHivPositive(pmtctHtsRequestDTO.getPreviouslyKnownHivPositive());
+        pmtctHts.setEnrolledOnArt(pmtctHtsRequestDTO.getEnrolledOnArt());
+        pmtctHts.setTypeOfHivTest(pmtctHtsRequestDTO.getTypeOfHivTest());
+        pmtctHts.setHivEarlyDetect(pmtctHtsRequestDTO.getHivEarlyDetect());
+        pmtctHts.setHivEarlyDetectViralLoad(pmtctHtsRequestDTO.getHivEarlyDetectViralLoad());
+        pmtctHts.setConfirmatoryFromSpokes(pmtctHtsRequestDTO.getConfirmatoryFromSpokes());
+        pmtctHts.setInitiatedOnProphylaxis(pmtctHtsRequestDTO.getInitiatedOnProphylaxis());
+        pmtctHts.setTbReferred(pmtctHtsRequestDTO.getTbReferred());
+        pmtctHts.setSyphilisInfo(pmtctHtsRequestDTO.getSyphilisInfo());
+        pmtctHts.setHbvInfo(pmtctHtsRequestDTO.getHbvInfo());
+        pmtctHts.setPartnerInfo(pmtctHtsRequestDTO.getPartnerInfo());
+        pmtctHts.setTbScreeningStatus(pmtctHtsRequestDTO.getTbScreeningStatus());
+        pmtctHts.setPmtctTestEntryPoint(pmtctHtsRequestDTO.getPmtctTestEntryPoint());
+        pmtctHts.setViralLoadMonitoring(pmtctHtsRequestDTO.getViralLoadMonitoring());
 
         PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
 
@@ -166,6 +196,21 @@ public class PmtctHtsService {
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
             pmtctEnrollment1.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
+            pmtctEnrollment1.setPregnancyStatusAtEntry(pmtctHtsRequestDTO.getPregnancyStatusAtEntry());
+            pmtctEnrollment1.setPreviouslyKnownHivPositive(pmtctHtsRequestDTO.getPreviouslyKnownHivPositive());
+            pmtctEnrollment1.setEnrolledOnArt(pmtctHtsRequestDTO.getEnrolledOnArt());
+            pmtctEnrollment1.setTypeOfHivTest(pmtctHtsRequestDTO.getTypeOfHivTest());
+            pmtctEnrollment1.setHivEarlyDetect(pmtctHtsRequestDTO.getHivEarlyDetect());
+            pmtctEnrollment1.setHivEarlyDetectViralLoad(pmtctHtsRequestDTO.getHivEarlyDetectViralLoad());
+            pmtctEnrollment1.setConfirmatoryFromSpokes(pmtctHtsRequestDTO.getConfirmatoryFromSpokes());
+            pmtctEnrollment1.setInitiatedOnProphylaxis(pmtctHtsRequestDTO.getInitiatedOnProphylaxis());
+            pmtctEnrollment1.setTbReferred(pmtctHtsRequestDTO.getTbReferred());
+            pmtctEnrollment1.setSyphilisInfo(pmtctHtsRequestDTO.getSyphilisInfo());
+            pmtctEnrollment1.setHbvInfo(pmtctHtsRequestDTO.getHbvInfo());
+            pmtctEnrollment1.setPartnerInfo(pmtctHtsRequestDTO.getPartnerInfo());
+            pmtctEnrollment1.setTbScreeningStatus(pmtctHtsRequestDTO.getTbScreeningStatus());
+            pmtctEnrollment1.setPmtctTestEntryPoint(pmtctHtsRequestDTO.getPmtctTestEntryPoint());
+            pmtctEnrollment1.setViralLoadMonitoring(pmtctHtsRequestDTO.getViralLoadMonitoring());
 //            pmtctEnrollment1.setTestingType(pmtctHtsRequestDTO.getTestingType());
 
 

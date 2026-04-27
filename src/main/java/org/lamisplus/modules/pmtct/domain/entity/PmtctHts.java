@@ -3,7 +3,10 @@ package org.lamisplus.modules.pmtct.domain.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.lamisplus.modules.pmtct.domain.dto.HbvInfoDto;
 import org.lamisplus.modules.pmtct.domain.dto.HivTestDto;
+import org.lamisplus.modules.pmtct.domain.dto.PartnerInfoDto;
+import org.lamisplus.modules.pmtct.domain.dto.SyphilisDetailsDto;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -66,6 +69,33 @@ public class PmtctHts {
     @Type(type = "jsonb")
     @Column(name = "tie_breaker2",columnDefinition = "jsonb")
     private HivTestDto tieBreaker2;
+
+    // New PMTCT Register fields
+    private String pregnancyStatusAtEntry;
+    private String previouslyKnownHivPositive;
+    private String enrolledOnArt;
+    private String typeOfHivTest;
+    private String hivEarlyDetect;
+    private String hivEarlyDetectViralLoad;
+    private String confirmatoryFromSpokes;
+    private String initiatedOnProphylaxis;
+    private String tbReferred;
+
+    @Type(type = "jsonb")
+    @Column(name = "syphilis_info", columnDefinition = "jsonb")
+    private SyphilisDetailsDto syphilisInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "hbv_info", columnDefinition = "jsonb")
+    private HbvInfoDto hbvInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "partner_info", columnDefinition = "jsonb")
+    private PartnerInfoDto partnerInfo;
+
+    private String tbScreeningStatus;
+    private String pmtctTestEntryPoint;
+    private String viralLoadMonitoring;
 
     private Long pmtctCycleId;
     private Long facilityId;

@@ -147,9 +147,16 @@ const RecentHistory = (props) => {
         //console.log(error);
       });
   };
+  // Map activity names for display
+  const displayActivityName = (name) => {
+    if (!name) return name;
+    if (name.toLowerCase() === "pmtct enrollment") return "Mother Clinical Information";
+    return name;
+  };
+
   const ActivityName = (name) => {
     if (name === "pmtct-enrollment") {
-      return "PE";
+      return "MI";
     } else if (name === "anc-enrollment") {
       return "AE";
     } else if (name === "anc-delivery") {
@@ -461,9 +468,9 @@ const RecentHistory = (props) => {
                             }
                           >
                             <span className="accordion-header-icon"></span>
-                            <span className="accordion-header-text">
-                              Visit Date :{" "}
-                              <span className="">{data.activityName}</span>{" "}
+                            <span className="accordion-header-text" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", paddingRight: "25px" }}>
+                              <span>{displayActivityName(data.activityName)}</span>
+                              <span style={{ color: "#fff", fontSize: "13px", fontWeight: "600", marginLeft: "auto", paddingLeft: "10px", whiteSpace: "nowrap" }}>{data.activityDate}</span>
                             </span>
                             <span className="accordion-header-indicator"></span>
                           </Accordion.Toggle>
@@ -486,7 +493,7 @@ const RecentHistory = (props) => {
                                     </div>
                                     <div className="media-body">
                                       <h5 className="mb-1">
-                                        {data.activityName}
+                                        {displayActivityName(data.activityName)}
                                       </h5>
                                       <small className="d-block">
                                         {data.activityDate}

@@ -50,4 +50,23 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, Lo
         @Query(value = "SELECT maternal_outcome FROM public.pmtct_mother_visitation WHERE person_uuid=?1 AND pmtct_cycle_id = ?2 ORDER BY ID DESC LIMIT 1", nativeQuery = true)
         Optional<String> findLatestMaternalOutcomeByCycle(String personUuid, Long pmtctCycleId);
 
+        @Query(value = "SELECT CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) AS vl_result " +
+                "FROM laboratory_result lr " +
+                "INNER JOIN laboratory_test lt ON lr.test_id = lt.id " +
+                "WHERE lt.lab_test_id = 16 " +
+                "AND lr.patient_uuid = ?1 " +
+                "AND lr.archived = 0 " +
+                "AND lr.result_reported IS NOT NULL " +
+                "AND lr.date_result_reported IS NOT NULL " +
+                "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
+                "ORDER BY lr.date_result_reported DESC, lr.id DESC LIMIT 1", nativeQuery = true)
+        Optional<Long> findLatestViralLoadResult(String personUuid);
+
+        @Query(value = "SELECT pharmacy_object->>'regimenName' AS regimen_name " +
+                "FROM hiv_art_pharmacy h, " +
+                "jsonb_array_elements(h.extra->'regimens') AS pharmacy_object " +
+                "WHERE h.person_uuid = ?1 AND h.archived = 0 " +
+                "ORDER BY h.visit_date DESC, h.id DESC LIMIT 1", nativeQuery = true)
+        Optional<String> findLatestArtRegimenFromPharmacy(String personUuid);
+
 }
