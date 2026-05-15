@@ -19,13 +19,12 @@ public class PmtctHtsRequestDTO {
     private String testEntryPoint;
     private String testSetting;
     private String stageOfPregnancy;
-    private String personUuid;
+    private String patientUuid;
     private String hospitalNumber;
     private String syphilis;
     private String hepatitisB;
     private String hepatitisC;
     private String testingType;
-    private String ancNo;
     private HivTestDto initialHivTest;
     private HivTestDto confirmatoryHivTest;
     private HivTestDto tieBreaker;
@@ -51,8 +50,8 @@ public class PmtctHtsRequestDTO {
     private String pmtctTestEntryPoint;
     private String viralLoadMonitoring;
 
-    @NotNull(message = "pmtctCycleId is required")
-    private Long pmtctCycleId;
+    @NotNull(message = "pmtctCycleUuid is required")
+    private String pmtctCycleUuid;
 
 
 

@@ -10,7 +10,7 @@ public class ActivityTracker implements Serializable
 {
     private String activityName;
     private String path;
-    private Long recordId;
+    private String recordId;
     private LocalDate activityDate;
     private boolean deletable;
     private boolean editable;

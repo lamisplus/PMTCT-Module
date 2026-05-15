@@ -86,7 +86,7 @@ public class HTSPatient {
 
      @Basic
      @Column(name = "person_uuid")
-     private String personUuid;
+     private String patientUuid;
 
      @Basic
      @Column(name = "uuid", updatable = false)

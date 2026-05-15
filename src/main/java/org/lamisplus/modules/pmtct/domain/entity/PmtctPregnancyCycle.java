@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "pmtct_pregnancy_cycle", schema = "public")
@@ -13,13 +14,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class PmtctPregnancyCycle {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
 
-    @Column(name = "person_uuid", nullable = false)
-    private String personUuid;
+    @Id
+    @Column(name = "uuid", columnDefinition = "varchar", nullable = false)
+    private String uuid;
+
+    @Column(name = "patient_uuid", nullable = false)
+    private String patientUuid;
 
     @Column(name = "maternal_outcome")
     private String maternalOutcome;
@@ -30,14 +34,8 @@ public class PmtctPregnancyCycle {
     @Column(name = "entry_point")
     private String entryPoint;
 
-    @Column(name = "hiv_status")
-    private String hivStatus;
-
     @Column(name = "pregnancy_outcome")
     private String pregnancyOutcome;
-
-    @Column(name = "number_of_infants")
-    private Integer numberOfInfants;
 
     @Column(name = "pmtct_status")
     private String pmtctStatus;
@@ -57,12 +55,16 @@ public class PmtctPregnancyCycle {
     @Column(name = "last_modified_date")
     private LocalDateTime lastModifiedDate = LocalDateTime.now();
 
-    @Column(name = "uuid", unique = true, nullable = false)
-    private String uuid;
-
     @Column(name = "archived")
     private Long archived = 0L;
 
     @Column(name = "is_closed")
     private Boolean isClosed = false;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.uuid == null || this.uuid.isEmpty()) {
+            this.uuid = UUID.randomUUID().toString();
+        }
+    }
 }

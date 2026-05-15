@@ -17,6 +17,7 @@ import Partners from "./../PmtctServices/Partners/Index";
 import Infants from "./../PmtctServices/Infants/Index";
 import AddPartners from "./../PmtctServices/Partners/AddNewPartner";
 import AddInfants from "./../PmtctServices/Infants/InfantRegistration";
+import InfantVisit from "./../Consultation/InfantVisit";
 import PatientHistory from "./../History/PatientHistory";
 import RecentHistory from "./../History/RecentHistory";
 import axios from "axios";
@@ -69,6 +70,7 @@ function PatientCard(props) {
   const [allEntryPoint, setAllEntryPoint] = useState([]);
   const [enrollPMTCT, setEnrollPMTCT] = useState(false);
   const [PmtctHtsRetestingType, setPmtctHtsRetestingType] = useState("");
+  const [motherVisitType, setMotherVisitType] = useState("MOTHER_VISIT");
   const [lastestConfirmatoryTest, setLastestConfirmatoryTest] = useState("");
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
@@ -82,7 +84,7 @@ function PatientCard(props) {
       : {};
 
   const [latestPmtctCycle, setLatestPmtctCycle] = useState({
-    id: patientObj.pmtctCycleId,
+    uuid: patientObj.pmtctCycleUuid,
   });
   const [selectedCycleId, setSelectedCycleId] = useState(null);
 
@@ -101,13 +103,13 @@ function PatientCard(props) {
     setSelectedCycleId(cycleId);
 
     // Fetch the selected cycle data
-    const personUuid =
-      patientObj.person_uuid || patientObj.personUuid || patientObj.uuid;
+    const patientUuid =
+      patientObj.patient_uuid || patientObj.patientUuid || patientObj.uuid;
 
     try {
       // Get all cycles and find the selected one
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/pregnancy-cycles?patientUuid=${patientUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -115,7 +117,7 @@ function PatientCard(props) {
 
       if (response.data && response.data.length > 0) {
         const selectedCycle = response.data.find(
-          (cycle) => cycle.id === cycleId
+          (cycle) => cycle.uuid === cycleId
         );
         if (selectedCycle) {
           setLatestPmtctCycle(selectedCycle);
@@ -130,15 +132,15 @@ function PatientCard(props) {
   };
 
   const getLatestPmtctCycle = async () => {
-    const personUuid = patientObj.person_uuid
-      ? patientObj.person_uuid
-      : patientObj.personUuid
-      ? patientObj.personUuid
+    const patientUuid = patientObj.patient_uuid
+      ? patientObj.patient_uuid
+      : patientObj.patientUuid
+      ? patientObj.patientUuid
       : patientObj.uuid;
 
     await axios
       .get(
-        `${baseUrl}pmtct/anc/get-latest-pregnancy-cycle?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/get-latest-pregnancy-cycle?patientUuid=${patientUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -151,19 +153,19 @@ function PatientCard(props) {
       });
   };
   const RecentActivities = (cycleIdToUse) => {
-    const personUuid = patientObj.person_uuid
-      ? patientObj.person_uuid
-      : patientObj.personUuid
-      ? patientObj.personUuid
+    const patientUuid = patientObj.patient_uuid
+      ? patientObj.patient_uuid
+      : patientObj.patientUuid
+      ? patientObj.patientUuid
       : patientObj.uuid;
 
     // Use the provided cycleId, or fall back to selectedCycleId, latestPmtctCycle, or patientObj
-    const pmtctCycleId = cycleIdToUse || selectedCycleId || latestPmtctCycle?.id || patientObj.pmtctCycleId;
+    const pmtctCycleUuid = cycleIdToUse || selectedCycleId || latestPmtctCycle?.uuid || patientObj.pmtctCycleUuid;
 
-    if (pmtctCycleId) {
+    if (pmtctCycleUuid) {
       axios
         .get(
-          `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+          `${baseUrl}pmtct/anc/getAllActivities/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -193,18 +195,18 @@ function PatientCard(props) {
   };
 
   const getLatestMaternalOutcome = async () => {
-    const personUuid = patientObj.person_uuid
-      ? patientObj.person_uuid
-      : patientObj.personUuid
-      ? patientObj.personUuid
+    const patientUuid = patientObj.patient_uuid
+      ? patientObj.patient_uuid
+      : patientObj.patientUuid
+      ? patientObj.patientUuid
       : patientObj.uuid;
 
-    const cycleId = selectedCycleId || latestPmtctCycle?.id || patientObj.pmtctCycleId;
+    const cycleId = selectedCycleId || latestPmtctCycle?.uuid || patientObj.pmtctCycleUuid;
     if (!cycleId) return;
 
     await axios
       .get(
-        `${baseUrl}pmtct/anc/get-latest-maternal-outcome?personUuid=${personUuid}&pmtctCycleId=${cycleId}`,
+        `${baseUrl}pmtct/anc/get-latest-maternal-outcome?patientUuid=${patientUuid}&pmtctCycleUuid=${cycleId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -239,50 +241,53 @@ function PatientCard(props) {
     });
   };
 
+  // One-time setup: fetch patient info, codesets, entry points, and latest cycle
   useEffect(() => {
     GET_CODESETS();
-    RecentActivities();
-    getLatestMaternalOutcome();
-    let patientId = patientObj?.id || patientObj?.personId;
-    axios
-      .get(`${baseUrl}patient/${patientId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setPersonInfo(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching patient info:", error);
-      });
     POINT_ENTRY_PMTCT();
     getLatestPmtctCycle();
-  }, []);
-  ////
-
-  useEffect(() => {
-    getLatestMaternalOutcome();
-    if (!selectedCycleId) {
-      getLatestPmtctCycle();
+    let patientId = patientObj?.id || patientObj?.personId;
+    if (patientId) {
+      axios
+        .get(`${baseUrl}patient/${patientId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setPersonInfo(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching patient info:", error);
+        });
     }
+  }, []);
+
+  // Cycle-dependent calls: only run when we have a valid cycle UUID
+  useEffect(() => {
+    if (!latestPmtctCycle?.uuid) return;
+    getLatestMaternalOutcome();
     RecentActivities(selectedCycleId);
-  }, [activeContent, selectedCycleId]);
+  }, [activeContent, latestPmtctCycle?.uuid, selectedCycleId]);
+
+  // Re-fetch cycle when user selects a different cycle manually
+  useEffect(() => {
+    if (selectedCycleId && selectedCycleId !== latestPmtctCycle?.uuid) {
+      // handleCycleChange already updates latestPmtctCycle, no extra fetch needed
+    }
+  }, [selectedCycleId]);
 
   return (
-    <div className={classes.root}>
-      <div
-        className="row page-titles mx-0"
-        style={{ marginTop: "0px", marginBottom: "-10px" }}
-      >
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item active">
-            <h4>
-              <Link to={"/"}>PMTCT /</Link> Patient Dashboard
-            </h4>
-          </li>
-        </ol>
+    <div className={classes.root} style={{ background: "#f4f6f9", minHeight: "100vh", padding: "0 0 24px" }}>
+      <div style={{ padding: "10px 24px 6px", marginBottom: "4px" }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+          <Link to={"/"} style={{ color: "#64748b", textDecoration: "none", fontWeight: "500" }}>
+            PMTCT
+          </Link>
+          <span style={{ color: "#cbd5e1", fontSize: "11px" }}>/</span>
+          <span style={{ color: "#0f172a", fontWeight: "600" }}>Patient Dashboard</span>
+        </nav>
       </div>
 
-      <Card>
+      <Card style={{ background: "transparent", boxShadow: "none" }}>
         <CardContent>
           {/* Patient Card Detail */}
           <PatientCardDetail
@@ -313,6 +318,7 @@ function PatientCard(props) {
             latestPmtctCycle={latestPmtctCycle}
             selectedCycleId={selectedCycleId}
             onCycleChange={handleCycleChange}
+            setMotherVisitType={setMotherVisitType}
           />
           <br />
 
@@ -345,6 +351,7 @@ function PatientCard(props) {
               maternalOutcome={maternalOutcome}
               latestPmtctCycle={latestPmtctCycle}
               selectedCycleId={selectedCycleId}
+              motherVisitType={motherVisitType}
             />
           )}
 
@@ -358,11 +365,11 @@ function PatientCard(props) {
               onEnrollPatient={false}
               entrypointValue={patientObj.entryPoint}
               patientAge={patientObj?.age}
-              personUuid={
-                patientObj.person_uuid
-                  ? patientObj.person_uuid
-                  : patientObj.personUuid
-                  ? patientObj.personUuid
+              patientUuid={
+                patientObj.patient_uuid
+                  ? patientObj.patient_uuid
+                  : patientObj.patientUuid
+                  ? patientObj.patientUuid
                   : patientObj.uuid
               }
               latestPmtctCycle={latestPmtctCycle}
@@ -448,6 +455,16 @@ function PatientCard(props) {
             <AddInfants
               patientObj={patientObj}
               patientAge={patientObj.age}
+              setActiveContent={setActiveContent}
+              activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
+            />
+          )}
+
+          {activeContent.route === "infant-visit" && (
+            <InfantVisit
+              patientObj={patientObj}
               setActiveContent={setActiveContent}
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}

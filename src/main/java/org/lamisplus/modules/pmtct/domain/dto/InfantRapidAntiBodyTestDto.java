@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Data
 public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String source;
-    private Long id ;
+    private String id ;
     private String rapidTestType;
     private String ancNumber;
     private String ageAtTest;
@@ -20,6 +20,6 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String  uniqueUuid;
     @JsonIgnore
     private String uuid;
-    private Long pmtctCycleId;
-    private String motherPersonUuid;
+    private String pmtctCycleUuid;
+    private String motherPatientUuid;
 }

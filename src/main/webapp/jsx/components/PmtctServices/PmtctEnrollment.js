@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Redirect } from "react-router-dom";
 import {
   Card,
@@ -98,6 +98,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// Maps display text values to codeset codes for records saved from mobile app
+const normalizeCodesetValue = (value, codesetList) => {
+  if (!value || !codesetList || codesetList.length === 0) return value;
+  if (codesetList.some((item) => item.code === value)) return value;
+  const match = codesetList.find(
+    (item) =>
+      item.display &&
+      item.display.toLowerCase().trim() === String(value).toLowerCase().trim()
+  );
+  return match ? match.code : value;
+};
+
 const AncPnc = (props) => {
   const patientObj = props.patientObj;
   let history = useHistory();
@@ -131,6 +143,7 @@ const AncPnc = (props) => {
   const [minARTDate, setMinARTDate] = useState("");
   const [minPmtctEnrollmentDate, setMinPmtctEnrollmentDate] = useState(null);
   const [minDeliveryDate, setMinDeliveryDate] = useState(null);
+  const [parityFromAnc, setParityFromAnc] = useState(null);
 
   // Get canProceedWithEnrollment from props (controlled by parent)
   const canProceedWithEnrollment = props.canProceedWithEnrollment ?? true;
@@ -153,7 +166,7 @@ const AncPnc = (props) => {
   };
 
   const [enroll, setEnrollDto] = useState({
-    hepatitisB: patientObj.hepatitisB || "",
+    hepatitisB: patientObj.hepatitisB || patientObj.hbvDetails?.testResult || "",
     urinalysis: patientObj.urinalysis || "",
     ancNo: patientObj.ancNo || "",
     pmtctEnrollmentDate: "",
@@ -181,6 +194,7 @@ const AncPnc = (props) => {
     },
     // HBV details (MIP Card 10b-10e) - stored as JSONB
     hbvDetails: patientObj.hbvDetails || {
+      testResult: "",
       vlResultDate: "",
       vlResult: "",
       treatmentType: "",
@@ -197,6 +211,7 @@ const AncPnc = (props) => {
     regimenId: props?.patientObj?.regimenId ? props?.patientObj?.regimenId : "",
   });
   const RegimenType = (id) => {
+    if (!id) return;
     axios
       .get(`${baseUrl}hiv/regimen/types/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -259,14 +274,21 @@ const AncPnc = (props) => {
           setEntryValueDisplay(each);
         }
       });
-    } else {
+    } else if (enroll.entryPoint) {
+      // Fallback for view/update: match entry point from loaded enrollment data
+      const entryCode = mapEntryPointToCode(enroll.entryPoint);
+      allNewEntryPoint.forEach((each) => {
+        if (each.code === entryCode) {
+          setEntryValueDisplay(each);
+        }
+      });
     }
   };
 
   const createCycle = async () => {
     if (props.onEnrollPatient) {
       let payload2 = {
-        personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
+        patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
         maternalOutcome: "",
         entryPoint: locationState.entrypointValue,
         hivStatus: patientObj?.dynamicHivStatus,
@@ -309,10 +331,10 @@ const AncPnc = (props) => {
     }
   };
 
-  const checkPMTCTValidationDates = async (personUuid) => {
+  const checkPMTCTValidationDates = async (patientUuid) => {
     try {
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/check-pmtct-validation-dates?personUuid=${personUuid}`,
+        `${baseUrl}pmtct/anc/check-pmtct-validation-dates?patientUuid=${patientUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -335,12 +357,12 @@ const AncPnc = (props) => {
     }
   };
 
-  const getHistoricalHivStatus = async (personUuid) => {
+  const getHistoricalHivStatus = async (patientUuid) => {
     try {
       const response = await axios.get(
         `${baseUrl}pmtct/anc/get-historical-hiv-status`,
         {
-          params: { personUuid },
+          params: { patientUuid },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
@@ -365,10 +387,10 @@ const AncPnc = (props) => {
   };
 
   // Auto-populate serology fields from latest PMTCT HTS record
-  const autoPopulateSerologyFromHts = async (personUuid, pmtctCycleId) => {
+  const autoPopulateSerologyFromHts = async (patientUuid, pmtctCycleUuid) => {
     try {
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data) {
@@ -390,19 +412,21 @@ const AncPnc = (props) => {
           };
         }
         // Map hepatitisB from HTS to enrollment
+        let mappedHbv = "";
         if (htsData.hepatitisB) {
-          const mapped = htsData.hepatitisB === "reactive" ? "Positive"
+          mappedHbv = htsData.hepatitisB === "reactive" ? "Positive"
             : htsData.hepatitisB === "non-reactive" ? "Negative"
             : htsData.hepatitisB;
-          updates.hepatitisB = mapped;
+          updates.hepatitisB = mappedHbv;
         }
-        // Map full HBV JSONB from HTS if available
-        if (htsData.hbvInfo) {
+        // Map full HBV JSONB from HTS if available, always include testResult
+        if (htsData.hbvInfo || mappedHbv) {
           updates.hbvDetails = {
-            vlResultDate: htsData.hbvInfo.vlResultDate || "",
-            vlResult: htsData.hbvInfo.vlResult || "",
-            treatmentType: htsData.hbvInfo.treatmentType || htsData.hbvInfo.treatment || "",
-            drugName: htsData.hbvInfo.drugName || "",
+            testResult: mappedHbv || "",
+            vlResultDate: htsData.hbvInfo?.vlResultDate || "",
+            vlResult: htsData.hbvInfo?.vlResult || "",
+            treatmentType: htsData.hbvInfo?.treatmentType || htsData.hbvInfo?.treatment || "",
+            drugName: htsData.hbvInfo?.drugName || "",
           };
         }
         if (Object.keys(updates).length > 0) {
@@ -417,7 +441,7 @@ const AncPnc = (props) => {
       // No HTS record found — try ANC fallback
       try {
         const ancResponse = await axios.get(
-          `${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
+          `${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (ancResponse.data) {
@@ -434,6 +458,7 @@ const AncPnc = (props) => {
               : ancData.hepatitisB === "non-reactive" ? "Negative"
               : ancData.hepatitisB;
             updates.hepatitisB = mapped;
+            updates.hbvDetails = { ...enroll.hbvDetails, testResult: mapped };
           }
           if (Object.keys(updates).length > 0) {
             setEnrollDto((prev) => ({ ...prev, ...updates }));
@@ -450,10 +475,10 @@ const AncPnc = (props) => {
   };
 
   // Auto-populate delivery from L&D form
-  const autoPopulateDeliveryFromLD = async (personUuid, pmtctCycleId) => {
+  const autoPopulateDeliveryFromLD = async (patientUuid, pmtctCycleUuid) => {
     try {
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${pmtctCycleId}`,
+        `${baseUrl}pmtct/anc/view-delivery-with-uuid/${patientUuid}/${pmtctCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data) {
@@ -475,6 +500,20 @@ const AncPnc = (props) => {
       }
     } catch (error) {
       // No L&D record found — fields remain blank for manual entry
+    }
+  };
+
+  const fetchParityFromAnc = async (patientUuid, pmtctCycleUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data && response.data.parity != null) {
+        setParityFromAnc(response.data.parity);
+      }
+    } catch (error) {
+      // No ANC record — parity validation skipped
     }
   };
 
@@ -505,26 +544,23 @@ const AncPnc = (props) => {
     }
 
     // Check validation dates for PMTCT enrollment and delivery
-    const personUuid =
+    const patientUuid =
       props?.patientObj?.uuid ||
-      props?.patientObj?.person_uuid ||
+      props?.patientObj?.patient_uuid ||
       locationState?.patientObj?.uuid ||
-      locationState?.patientObj?.person_uuid;
-    if (personUuid) {
-      checkPMTCTValidationDates(personUuid);
-      getHistoricalHivStatus(personUuid);
+      locationState?.patientObj?.patient_uuid;
+    if (patientUuid) {
+      checkPMTCTValidationDates(patientUuid);
+      getHistoricalHivStatus(patientUuid);
       getArtUniqueNumber();
     }
-    if (
-      props.activeContent.id &&
-      props.activeContent.id !== "" &&
-      props.activeContent.id !== null &&
-      props?.activeContent?.actionType !== "create"
-    ) {
-      GetPatientPMTCT(props.activeContent.id);
-      setSisabledField(
-        props.activeContent.actionType === "view" ? true : false
-      );
+    console.log("PmtctEnrollment useEffect => activeContent:", JSON.stringify(props.activeContent));
+    const pmtctRecordId = props.activeContent?.id;
+    const pmtctActionType = props.activeContent?.actionType;
+    if (pmtctRecordId && pmtctRecordId !== "" && pmtctActionType !== "create") {
+      console.log("PmtctEnrollment => UPDATE/VIEW mode, fetching record:", pmtctRecordId);
+      GetPatientPMTCT(pmtctRecordId);
+      setSisabledField(pmtctActionType === "view");
     }
     if (!props.activeContent.id && props.htsHivStatus) {
       let result = getInitialHivStatus();
@@ -533,18 +569,17 @@ const AncPnc = (props) => {
         hivStatus: result ? result : props.htsHivStatus,
       });
     }
-    if (
-      props?.patientObj?.person_uuid ||
-      locationState?.patientObj?.person_uuid
-    ) {
+    const resolvedPatientUuid =
+      props?.patientObj?.patient_uuid ||
+      locationState?.patientObj?.patient_uuid ||
+      props?.patientObj?.patientUuid ||
+      locationState?.patientObj?.patientUuid ||
+      props?.patientObj?.uuid ||
+      locationState?.patientObj?.uuid;
+    if (resolvedPatientUuid) {
       setEnrollDto({
         ...enroll,
-        personUuid: locationState.patientObj.person_uuid,
-      });
-    } else if (props?.patientObj?.uuid || locationState?.patientObj?.uuid) {
-      setEnrollDto({
-        ...enroll,
-        personUuid: locationState.patientObj.uuid,
+        patientUuid: resolvedPatientUuid,
       });
     }
 
@@ -553,19 +588,22 @@ const AncPnc = (props) => {
         position: toast.POSITION.BOTTOM_CENTER,
       });
     }
-    // Auto-populate serology from HTS on create mode only
-    if (!props.activeContent.id && personUuid && props?.latestPmtctCycle?.id) {
-      autoPopulateSerologyFromHts(personUuid, props.latestPmtctCycle.id);
-      autoPopulateDeliveryFromLD(personUuid, props.latestPmtctCycle.id);
+    // Fetch parity for gravida validation (both create and edit modes)
+    if (patientUuid && props?.latestPmtctCycle?.uuid) {
+      fetchParityFromAnc(patientUuid, props.latestPmtctCycle.uuid);
     }
-    // TODO: Fetch parity from ANC for gravida validation once ANC Enrollment form is implemented
+    // Auto-populate serology from HTS on create mode only
+    if (!props.activeContent.id && patientUuid && props?.latestPmtctCycle?.uuid) {
+      autoPopulateSerologyFromHts(patientUuid, props.latestPmtctCycle.uuid);
+      autoPopulateDeliveryFromLD(patientUuid, props.latestPmtctCycle.uuid);
+    }
   }, []);
 
   useEffect(() => {
     // if (props?.allEntryPoint) {
     getPatientEntryType();
     // }
-  }, [allNewEntryPoint]);
+  }, [allNewEntryPoint, enroll.entryPoint]);
 
   useEffect(() => {
     if (props.getPMTCTInfo && canProceedWithEnrollment) {
@@ -579,6 +617,52 @@ const AncPnc = (props) => {
       setEnrollDto({ ...enroll, hivStatus: getInitialHivStatus() });
     }
   }, [props.lastestConfirmatoryTest]);
+
+  // Normalize codeset display values to codes for records saved from mobile app
+  const normalizedRecordRef = useRef(null);
+  useEffect(() => {
+    const recordId = props.activeContent?.id;
+    const actionType = props.activeContent?.actionType;
+    if (actionType === "create") return;
+    if (!recordId || normalizedRecordRef.current === recordId) return;
+    if (!enroll.pmtctEnrollmentDate) return; // record data not loaded yet
+    if (artStartTime.length === 0 && tbStatus.length === 0) return; // codesets not loaded yet
+
+    const fieldMappings = [
+      { field: "artStartTime", codesets: artStartTime },
+      { field: "timeOfHivDiagnosis", codesets: timeHivDiagnosis },
+      { field: "tbStatus", codesets: tbStatus },
+      { field: "urinalysis", codesets: urinalysisList },
+      { field: "modeOfDelivery", codesets: deliveryModeList },
+    ];
+
+    const updates = {};
+    let hasChanges = false;
+    fieldMappings.forEach(({ field, codesets }) => {
+      if (enroll[field] && codesets.length > 0) {
+        const normalized = normalizeCodesetValue(enroll[field], codesets);
+        if (normalized !== enroll[field]) {
+          updates[field] = normalized;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      console.log("PmtctEnrollment: Normalizing codeset display values to codes:", updates);
+      setEnrollDto((prev) => ({ ...prev, ...updates }));
+    }
+    normalizedRecordRef.current = recordId;
+  }, [
+    enroll.pmtctEnrollmentDate,
+    enroll.artStartTime,
+    enroll.tbStatus,
+    artStartTime,
+    timeHivDiagnosis,
+    tbStatus,
+    urinalysisList,
+    deliveryModeList,
+  ]);
 
   const calculateExpectedDate = (lmp) => {
     let LastPeriod = moment(lmp);
@@ -621,33 +705,70 @@ const AncPnc = (props) => {
   };
   //END OF BATCH API
 
+  // Map short entry point values back to codeset codes for dropdown matching
+  const mapEntryPointToCode = (ep) => {
+    if (!ep) return "";
+    const mapping = {
+      "ANC": "PMTCT_ENTRY_POINT_ANC",
+      "L&D": "PMTCT_ENTRY_POINT_L&D",
+      "Post-partum": "PMTCT_ENTRY_POINT_POST-PARTUM",
+    };
+    // If already a codeset code, return as-is
+    if (ep.startsWith("PMTCT_ENTRY_POINT_")) return ep;
+    return mapping[ep] || ep;
+  };
+
   const GetPatientPMTCT = (id) => {
+    console.log("GetPatientPMTCT => calling view-pmtct-enrollment with id:", id);
     axios
       .get(
-        `${baseUrl}pmtct/anc/view-pmtct-enrollment/${props.activeContent.id}`,
+        `${baseUrl}pmtct/anc/view-pmtct-enrollment/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        setEnrollDto({ ...enroll, ...response.data });
-        if (entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC") {
-          calculateExpectedDate(response.data.lmp); // this console should be autocalculated by adding 40wks to the "date of the Last Menstrual Period"
+        console.log("GetPatientPMTCT => response:", response.data);
+        const data = response.data;
+        // Strip null/undefined values so they don't overwrite existing form defaults
+        const sanitized = {};
+        Object.keys(data).forEach((key) => {
+          if (data[key] !== null && data[key] !== undefined) {
+            sanitized[key] = data[key];
+          }
+        });
+        // Map entryPoint back to codeset code so the dropdown renders correctly
+        if (sanitized.entryPoint) {
+          sanitized.entryPoint = mapEntryPointToCode(sanitized.entryPoint);
+        }
+        // Populate hepatitisB from hbvDetails.testResult so the dropdown shows the saved value
+        const hepatitisB = sanitized.hbvDetails?.testResult || sanitized.hepatitisB || enroll.hepatitisB || "";
+        setEnrollDto({ ...enroll, ...sanitized, hepatitisB });
+        // Set entryValueDisplay so the "Point of Entry" label renders correctly
+        if (sanitized.entryPoint && allNewEntryPoint.length > 0) {
+          const matchedEntry = allNewEntryPoint.find(
+            (ep) => ep.code === sanitized.entryPoint
+          );
+          if (matchedEntry) {
+            setEntryValueDisplay(matchedEntry);
+          }
+        }
+        if (sanitized.entryPoint === "PMTCT_ENTRY_POINT_ANC" || entryValueDisplay.code === "PMTCT_ENTRY_POINT_ANC") {
+          calculateExpectedDate(data.lmp);
         }
         setInfantMotherArtDto({
           ...infantMotherArtDto,
-          regimenTypeId: response.data.regimenTypeId,
-          regimenId: response.data.regimenId,
-          motherArtInitiationTime: response.data.motherArtInitiationTime,
+          regimenTypeId: data.regimenTypeId,
+          regimenId: data.regimenId,
+          motherArtInitiationTime: data.motherArtInitiationTime,
         });
-        RegimenType(response.data.regimenTypeId);
-        //regimenTypeId
+        RegimenType(data.regimenTypeId);
       })
       .catch((error) => {
-        //console.log(error);
+        console.error("GetPatientPMTCT => error:", error);
       });
   };
 
-  //   public int calculateGaFromPmtct(String personUuid, LocalDate visitDate) {
-  //     LocalDate lmp = getLMPFromPMTCT(personUuid);
+  //   public int calculateGaFromPmtct(String patientUuid, LocalDate visitDate) {
+  //     LocalDate lmp = getLMPFromPMTCT(patientUuid);
   //     int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
   //     if (ga < 0) ga = 0;
   //     return ga;
@@ -726,8 +847,8 @@ const AncPnc = (props) => {
             ? props?.patientObj.person_Uuud
             : props?.patientObj?.personUuud
             ? props?.patientObj?.personUuud
-            : props?.patientObj?.person_uuid
-            ? props?.patientObj?.person_uuid
+            : props?.patientObj?.patient_uuid
+            ? props?.patientObj?.patient_uuid
             : props?.patientObj?.uuid
         }`,
         {
@@ -735,11 +856,30 @@ const AncPnc = (props) => {
         }
       )
       .then((response) => {
-        if (response.data[0] !== null && response?.data[0]?.artStartDate) {
-          setEnrollDto({
-            ...enroll,
-            artStartDate: response?.data[0]?.artStartDate,
-          });
+        const artData = response.data[0];
+        if (artData) {
+          if (artData.artStartDate) {
+            setEnrollDto((prev) => ({
+              ...prev,
+              artStartDate: artData.artStartDate,
+            }));
+          }
+          if (artData.regimenTypeId) {
+            setInfantMotherArtDto((prev) => {
+              const updates = {};
+              if (!prev.regimenTypeId) {
+                updates.regimenTypeId = String(artData.regimenTypeId);
+              }
+              if (!prev.regimenId && artData.regimenId) {
+                updates.regimenId = String(artData.regimenId);
+              }
+              if (Object.keys(updates).length > 0) {
+                return { ...prev, ...updates };
+              }
+              return prev;
+            });
+            RegimenType(artData.regimenTypeId);
+          }
         }
       })
       .catch((error) => {
@@ -772,6 +912,14 @@ const AncPnc = (props) => {
     setErrors({ ...errors, [e.target.name]: "" });
 
     setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
+    // Sync hepatitisB into hbvDetails.testResult so backend persists it
+    if (e.target.name === "hepatitisB") {
+      setEnrollDto((prev) => ({
+        ...prev,
+        hepatitisB: e.target.value,
+        hbvDetails: { ...prev.hbvDetails, testResult: e.target.value },
+      }));
+    }
     // Clear modeOfDeliveryOther when modeOfDelivery changes away from Others
     if (e.target.name === "modeOfDelivery" && e.target.value !== "MODE_DELIVERY_OTHERS") {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value, modeOfDeliveryOther: "" });
@@ -871,7 +1019,7 @@ const AncPnc = (props) => {
   const getHIVStatus = (hospitalNumber, uuid) => {
     axios
       .get(
-        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
+        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&patientUuid=${uuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -893,6 +1041,10 @@ const AncPnc = (props) => {
     temp.pmtctEnrollmentDate = enroll.pmtctEnrollmentDate
       ? ""
       : "This field is required";
+    temp.gravida = enroll.gravida ? "" : "This field is required";
+    if (!temp.gravida && parityFromAnc !== null && parseInt(enroll.gravida) < parseInt(parityFromAnc)) {
+      temp.gravida = "Gravida should not be less than Parity";
+    }
     temp.timeOfHivDiagnosis = enroll.timeOfHivDiagnosis
       ? ""
       : "This field is required";
@@ -918,8 +1070,10 @@ const AncPnc = (props) => {
     temp.syphilisTestResult = enroll.syphilisDetails?.testResult ? "" : "This field is required";
     temp.hepatitisB = enroll.hepatitisB ? "" : "This field is required";
 
+    // Accept all positive HIV status variants (Positive, Known Positive, HIV_STATUS_POSITIVE, etc.)
+    const hivNormalized = (enroll.hivStatus || "").toString().toUpperCase();
     temp.hivStatus =
-      enroll.hivStatus === "Positive"
+      hivNormalized.includes("POSITIVE")
         ? ""
         : "Cannot enroll negative client on PMTCT";
 
@@ -932,17 +1086,19 @@ const AncPnc = (props) => {
   /**** Submit Button Processing  */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Ensure hepatitisB test result is synced into hbvDetails before submit
+    enroll.hbvDetails = { ...enroll.hbvDetails, testResult: enroll.hepatitisB };
     enroll.motherArtInitiationTime = infantMotherArtDto.motherArtInitiationTime;
     enroll.regimenTypeId = infantMotherArtDto.regimenTypeId;
     enroll.regimenId = infantMotherArtDto.regimenId;
     enroll.ga = enroll.gaweeks;
 
-    let pmtctCycleId;
+    let pmtctCycleUuid;
     // Create cycle if needed
     if (props.onEnrollPatient) {
       const checkIfCycleIsCreated = await createCycle();
-      enroll.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
-      pmtctCycleId = checkIfCycleIsCreated?.response?.id;
+      enroll.pmtctCycleUuid = checkIfCycleIsCreated?.response?.uuid;
+      pmtctCycleUuid = checkIfCycleIsCreated?.response?.uuid;
 
       if (!checkIfCycleIsCreated?.status) {
         toast.error("Failed to create cycle", {
@@ -951,7 +1107,7 @@ const AncPnc = (props) => {
         return; // Exit if cycle creation fails
       }
     } else {
-      enroll.pmtctCycleId = props?.latestPmtctCycle?.id;
+      enroll.pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
     }
 
     if (validate()) {
@@ -989,14 +1145,14 @@ const AncPnc = (props) => {
           entryPoint: locationState.entrypointValue
             ? locationState.entrypointValue
             : props.entrypointValue,
-          personUuid:
-            props.patientObj.person_uuid
-              || props.patientObj.personUuid
+          patientUuid:
+            props.patientObj.patient_uuid
+              || props.patientObj.patientUuid
               || props.patientObj.uuid
               || (locationState && locationState.patientObj
-                ? (locationState.patientObj.personUuid || locationState.patientObj.uuid)
+                ? (locationState.patientObj.patientUuid || locationState.patientObj.uuid)
                 : undefined),
-          pmtctCycleId: pmtctCycleId || props?.latestPmtctCycle?.id,
+          pmtctCycleUuid: pmtctCycleUuid || props?.latestPmtctCycle?.uuid,
           source: "WEB",
         };
 
@@ -1138,7 +1294,7 @@ const AncPnc = (props) => {
                               minPmtctEnrollmentDate
                                 ? minPmtctEnrollmentDate
                                 : patientObj.ancNo
-                                  ? props.patientObj.firstAncDate
+                                  ? props.patientObj.dateOfEnrollment
                                   : props?.newRegDate
                                     ? props?.newRegDate
                                     : ""
@@ -1249,6 +1405,10 @@ const AncPnc = (props) => {
                         ) : (
                           ""
                         )}
+                        {parityFromAnc !== null && enroll.gravida &&
+                          parseInt(enroll.gravida) < parseInt(parityFromAnc) && (
+                          <span className={classes.error}>Gravida should not be less than Parity</span>
+                        )}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
@@ -1334,6 +1494,50 @@ const AncPnc = (props) => {
                         ) : (
                           ""
                         )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>TB Status</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="tbStatus"
+                            id="tbStatus"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.tbStatus}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {tbStatus.map((value, index) => (
+                              <option key={index} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Urinalysis</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="urinalysis"
+                            id="urinalysis"
+                            onChange={handleInputChangeEnrollmentDto}
+                            value={enroll.urinalysis}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {urinalysisList.map((value, index) => (
+                              <option key={index} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
                       </FormGroup>
                     </div>
                   </div>
@@ -1661,7 +1865,7 @@ const AncPnc = (props) => {
                             value={enroll.dateOfDelivery}
                             max={moment(new Date()).format("YYYY-MM-DD")}
                             min={
-                              [minDeliveryDate, enroll.pmtctEnrollmentDate, enroll.lmp, props?.patientObj?.firstAncDate]
+                              [minDeliveryDate, enroll.pmtctEnrollmentDate, enroll.lmp, props?.patientObj?.dateOfEnrollment]
                                 .filter(Boolean)
                                 .sort()
                                 .pop() || ""

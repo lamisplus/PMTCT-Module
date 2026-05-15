@@ -89,28 +89,27 @@ public class ANCService {
     private PmtctHtsRepository pmtctHtsRepository;
 
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
-        String hostpitalNumber = this.getHospitalNumber(ancRequestDto.getPersonDto());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancRequestDto.getPerson_uuid(), facilityId, 0);
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancRequestDto.getPatient_uuid(), facilityId, 0);
         if (persons.isPresent()) {
             Person person = persons.get();
 
             // Check for existing ANC to prevent duplicates
-            Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
-                    person.getUuid(), ancRequestDto.getPmtctCycleId(), 0L);
+            Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
+                    person.getUuid(), ancRequestDto.getPmtctCycleUuid(), 0L);
 
             ANC anc;
-            if (existingAnc.isPresent()) {
+            boolean isExistingAnc = existingAnc.isPresent();
+            if (isExistingAnc) {
                 anc = existingAnc.get();
                 anc.setLastModifiedBy(user.getUserName());
                 anc.setLastModifiedDate(LocalDateTime.now());
             } else {
                 anc = new ANC();
                 anc.setUuid(UUID.randomUUID().toString());
-                anc.setPersonUuid(person.getUuid());
-                anc.setHospitalNumber(hostpitalNumber);
+                anc.setPatientUuid(person.getUuid());
                 anc.setArchived(0L);
                 anc.setFacilityId(person.getFacilityId());
                 anc.setCreatedDate(LocalDateTime.now());
@@ -119,52 +118,70 @@ public class ANCService {
                 anc.setLastModifiedBy(user.getUserName());
             }
 
-            anc.setAncNo(ancRequestDto.getAncNo());
-            anc.setFirstAncDate(ancRequestDto.getFirstAncDate());
-            anc.setGravida(ancRequestDto.getGravida());
-            anc.setParity(ancRequestDto.getParity());
-            anc.setLMP(ancRequestDto.getLMP());
-            anc.setExpectedDeliveryDate(ancRequestDto.getExpectedDeliveryDate());
-            anc.setGAWeeks(ancRequestDto.getGAWeeks());
-            anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
-            anc.setTestedSyphilis(ancRequestDto.getTestedSyphilis());
-            anc.setTestResultSyphilis(ancRequestDto.getTestResultSyphilis());
-            anc.setTreatedSyphilis(ancRequestDto.getTreatedSyphilis());
-            anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
-            anc.setReferredSyphilisTreatment(ancRequestDto.getReferredSyphilisTreatment());
-            anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
-            anc.setPmtctCycleId(ancRequestDto.getPmtctCycleId());
-            try{
-                LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
-
-                anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
-                anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
-                anc.setNextAppointmentDate(nad);
-            }catch(Exception e){}
-
-
-            PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
-            if (pmtctHtsInfo != null) {
-                JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
-                anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
-
-            }
-
-            PartnerNotification partnerNotification = ancRequestDto.getPartnerNotification();
-            if (partnerNotification != null) {
-                JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
-                anc.setPartnerNotification(partnerNotificationInfoJsonNode);
+            if (isExistingAnc) {
+                // For existing records, only update fields that are NOT null to prevent wiping saved data
+                if (ancRequestDto.getAncNo() != null) anc.setAncNo(ancRequestDto.getAncNo());
+                if (ancRequestDto.getDateOfEnrollment() != null) anc.setDateOfEnrollment(ancRequestDto.getDateOfEnrollment());
+                if (ancRequestDto.getGravida() != null) anc.setGravida(ancRequestDto.getGravida());
+                if (ancRequestDto.getParity() != null) anc.setParity(ancRequestDto.getParity());
+                if (ancRequestDto.getLMP() != null) anc.setLMP(ancRequestDto.getLMP());
+                if (ancRequestDto.getGAWeeks() != null) anc.setGAWeeks(ancRequestDto.getGAWeeks());
+                if (ancRequestDto.getSourceOfReferral() != null) anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
+                if (ancRequestDto.getCommunitySetting() != null) anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
+                if (ancRequestDto.getPmtctCycleUuid() != null) anc.setPmtctCycleUuid(ancRequestDto.getPmtctCycleUuid());
+                if (ancRequestDto.getVitalSigns() != null) anc.setVitalSigns(ancRequestDto.getVitalSigns());
+                if (ancRequestDto.getCounselling() != null) anc.setCounselling(ancRequestDto.getCounselling());
+                if (ancRequestDto.getSyphilisInfo() != null) anc.setSyphilisInfo(ancRequestDto.getSyphilisInfo());
+                if (ancRequestDto.getHepatitisBInfo() != null) anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
+                if (ancRequestDto.getHepatitisCInfo() != null) anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
+                if (ancRequestDto.getUrinalysis() != null) anc.setUrinalysis(ancRequestDto.getUrinalysis());
+                if (ancRequestDto.getHbPcv() != null) anc.setHbPcv(ancRequestDto.getHbPcv());
+                if (ancRequestDto.getBloodSugarGdm() != null) anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
+                if (ancRequestDto.getLlinGiven() != null) anc.setLlinGiven(ancRequestDto.getLlinGiven());
+                if (ancRequestDto.getIptDose() != null) anc.setIptDose(ancRequestDto.getIptDose());
+                if (ancRequestDto.getHematinicsGiven() != null) anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
+                if (ancRequestDto.getTdImmunization() != null) anc.setTdImmunization(ancRequestDto.getTdImmunization());
+                if (ancRequestDto.getAssociatedProblems() != null) anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                if (ancRequestDto.getOutcomeOfVisit() != null) anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
+                if (ancRequestDto.getReferralReason() != null) anc.setReferralReason(ancRequestDto.getReferralReason());
+                if (ancRequestDto.getTransportationOut() != null) anc.setTransportationOut(ancRequestDto.getTransportationOut());
+            } else {
+                anc.setAncNo(ancRequestDto.getAncNo());
+                anc.setDateOfEnrollment(ancRequestDto.getDateOfEnrollment());
+                anc.setGravida(ancRequestDto.getGravida());
+                anc.setParity(ancRequestDto.getParity());
+                anc.setLMP(ancRequestDto.getLMP());
+                anc.setGAWeeks(ancRequestDto.getGAWeeks());
+                anc.setSourceOfReferral(ancRequestDto.getSourceOfReferral());
+                anc.setCommunitySetting(ancRequestDto.getCommunitySetting());
+                anc.setPmtctCycleUuid(ancRequestDto.getPmtctCycleUuid());
+                anc.setVitalSigns(ancRequestDto.getVitalSigns());
+                anc.setCounselling(ancRequestDto.getCounselling());
+                anc.setSyphilisInfo(ancRequestDto.getSyphilisInfo());
+                anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
+                anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
+                anc.setUrinalysis(ancRequestDto.getUrinalysis());
+                anc.setHbPcv(ancRequestDto.getHbPcv());
+                anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
+                anc.setLlinGiven(ancRequestDto.getLlinGiven());
+                anc.setIptDose(ancRequestDto.getIptDose());
+                anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
+                anc.setTdImmunization(ancRequestDto.getTdImmunization());
+                anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
+                anc.setReferralReason(ancRequestDto.getReferralReason());
+                anc.setTransportationOut(ancRequestDto.getTransportationOut());
             }
             ancRepository.save(anc);
 
         } else {
 
-            String personUuid = this.createPerson(ancRequestDto.getPersonDto());
-            if (personUuid != null) {
+            String patientUuid = this.createPerson(ancRequestDto.getPersonDto());
+            if (patientUuid != null) {
 
                 // Check for existing ANC to prevent duplicates
-                Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
-                        personUuid, ancRequestDto.getPmtctCycleId(), 0L);
+                Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
+                        patientUuid, ancRequestDto.getPmtctCycleUuid(), 0L);
 
                 ANC anc;
                 if (existingAnc.isPresent()) {
@@ -174,50 +191,66 @@ public class ANCService {
                 } else {
                     anc = new ANC();
                     anc.setUuid(UUID.randomUUID().toString());
-                    anc.setHospitalNumber(hostpitalNumber);
                     anc.setArchived(0L);
                     anc.setCreatedDate(LocalDateTime.now());
                     anc.setLastModifiedDate(LocalDateTime.now());
                     anc.setCreatedBy(user.getUserName());
                     anc.setLastModifiedBy(user.getUserName());
-                    anc.setPersonUuid(personUuid);
+                    anc.setPatientUuid(patientUuid);
                 }
 
-                anc.setAncNo(ancRequestDto.getAncNo());
-                anc.setFirstAncDate(ancRequestDto.getFirstAncDate());
-                anc.setGravida(ancRequestDto.getGravida());
-                anc.setParity(ancRequestDto.getParity());
-                anc.setLMP(ancRequestDto.getLMP());
+                if (existingAnc.isPresent()) {
+                    // For existing records, only update fields that are NOT null to prevent wiping saved data
+                    if (ancRequestDto.getAncNo() != null) anc.setAncNo(ancRequestDto.getAncNo());
+                    if (ancRequestDto.getDateOfEnrollment() != null) anc.setDateOfEnrollment(ancRequestDto.getDateOfEnrollment());
+                    if (ancRequestDto.getGravida() != null) anc.setGravida(ancRequestDto.getGravida());
+                    if (ancRequestDto.getParity() != null) anc.setParity(ancRequestDto.getParity());
+                    if (ancRequestDto.getLMP() != null) anc.setLMP(ancRequestDto.getLMP());
+                    if (ancRequestDto.getGAWeeks() != null) anc.setGAWeeks(ancRequestDto.getGAWeeks());
+                    if (ancRequestDto.getPmtctCycleUuid() != null) anc.setPmtctCycleUuid(ancRequestDto.getPmtctCycleUuid());
+                    if (ancRequestDto.getVitalSigns() != null) anc.setVitalSigns(ancRequestDto.getVitalSigns());
+                    if (ancRequestDto.getCounselling() != null) anc.setCounselling(ancRequestDto.getCounselling());
+                    if (ancRequestDto.getSyphilisInfo() != null) anc.setSyphilisInfo(ancRequestDto.getSyphilisInfo());
+                    if (ancRequestDto.getHepatitisBInfo() != null) anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
+                    if (ancRequestDto.getHepatitisCInfo() != null) anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
+                    if (ancRequestDto.getUrinalysis() != null) anc.setUrinalysis(ancRequestDto.getUrinalysis());
+                    if (ancRequestDto.getHbPcv() != null) anc.setHbPcv(ancRequestDto.getHbPcv());
+                    if (ancRequestDto.getBloodSugarGdm() != null) anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
+                    if (ancRequestDto.getLlinGiven() != null) anc.setLlinGiven(ancRequestDto.getLlinGiven());
+                    if (ancRequestDto.getIptDose() != null) anc.setIptDose(ancRequestDto.getIptDose());
+                    if (ancRequestDto.getHematinicsGiven() != null) anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
+                    if (ancRequestDto.getTdImmunization() != null) anc.setTdImmunization(ancRequestDto.getTdImmunization());
+                    if (ancRequestDto.getAssociatedProblems() != null) anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                    if (ancRequestDto.getOutcomeOfVisit() != null) anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
+                    if (ancRequestDto.getReferralReason() != null) anc.setReferralReason(ancRequestDto.getReferralReason());
+                    if (ancRequestDto.getTransportationOut() != null) anc.setTransportationOut(ancRequestDto.getTransportationOut());
+                } else {
+                    anc.setAncNo(ancRequestDto.getAncNo());
+                    anc.setDateOfEnrollment(ancRequestDto.getDateOfEnrollment());
+                    anc.setGravida(ancRequestDto.getGravida());
+                    anc.setParity(ancRequestDto.getParity());
+                    anc.setLMP(ancRequestDto.getLMP());
+                    anc.setGAWeeks(ancRequestDto.getGAWeeks());
+                    anc.setPmtctCycleUuid(ancRequestDto.getPmtctCycleUuid());
+                    anc.setVitalSigns(ancRequestDto.getVitalSigns());
+                    anc.setCounselling(ancRequestDto.getCounselling());
+                    anc.setSyphilisInfo(ancRequestDto.getSyphilisInfo());
+                    anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
+                    anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
+                    anc.setUrinalysis(ancRequestDto.getUrinalysis());
+                    anc.setHbPcv(ancRequestDto.getHbPcv());
+                    anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
+                    anc.setLlinGiven(ancRequestDto.getLlinGiven());
+                    anc.setIptDose(ancRequestDto.getIptDose());
+                    anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
+                    anc.setTdImmunization(ancRequestDto.getTdImmunization());
+                    anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                    anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
+                    anc.setReferralReason(ancRequestDto.getReferralReason());
+                    anc.setTransportationOut(ancRequestDto.getTransportationOut());
+                }
                 try {
-                    LocalDate eed = this.calculateEDD(ancRequestDto.getLMP());
-                    anc.setExpectedDeliveryDate(eed);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                anc.setGAWeeks(ancRequestDto.getGAWeeks());
-                anc.setHivDiognosicTime(ancRequestDto.getHivDiognosicTime());
-                anc.setPmtctCycleId(ancRequestDto.getPmtctCycleId());
-                try{
-                    LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
-
-                    anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
-                    anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
-                    anc.setNextAppointmentDate(nad);
-                }catch(Exception e){}
-
-                PmtctHtsInfo pmtctHtsInfo = ancRequestDto.getPmtctHtsInfo();
-                if (pmtctHtsInfo != null) {
-                    JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
-                    anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
-
-                }
-                PartnerNotification partnerNotification = ancRequestDto.getPartnerNotification();
-                if (partnerNotification != null) {
-                    JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
-                    anc.setPartnerNotification(partnerNotificationInfoJsonNode);
-                }
-                try {
-                    Optional<Person> persons1 = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(hostpitalNumber, facilityId, 0);
+                    Optional<Person> persons1 = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(patientUuid, facilityId, 0);
                     if (persons1.isPresent()) {
                         Person person = persons1.get();
                         anc.setFacilityId(person.getFacilityId());
@@ -282,7 +315,7 @@ public class ANCService {
         User user = (User) currentUser.get();
         Long facilityId = 0L;
         ancList.forEach(anc -> {
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(anc.getPersonUuid(), user.getCurrentOrganisationUnitId(), 0);
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(anc.getPatientUuid(), user.getCurrentOrganisationUnitId(), 0);
             Person person = new Person();
             if (persons.isPresent()) {
                 person = persons.get();
@@ -294,22 +327,23 @@ public class ANCService {
 
     }
 
-    private ANC getExistAnc(Long id) {
+    private ANC getExistAnc(String id) {
         return ancRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(VisitService.class, "errorMessage", "No visit was found with given Id " + id));
     }
 
-    public ANCRequestDto viewANCById(Long id) {
-        ANC anc = this.ancRepository.getANCById(id);
+    public ANCRequestDto viewANCById(String id) {
+        ANC anc = this.ancRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(ANC.class, "id", "" + id));
         return entityToDto(anc);
     }
 
-    public void  updateGAFromPMTCT(String personUuid, Integer GaAge)
+    public void  updateGAFromPMTCT(String patientUuid, Integer GaAge)
     {
 
 
-        Optional <ANC> ancRecord = this.ancRepository.findANCByPersonUuid(personUuid);
+        Optional <ANC> ancRecord = this.ancRepository.findANCByPatientUuid(patientUuid);
         if(ancRecord.isPresent())
         {
             ANC AncResult = ancRecord.get();
@@ -320,13 +354,12 @@ public class ANCService {
     }
 
 
-    public ANCRequestDto updateAnc(Long id, ANCRequestDto ancRequestDto) {
+    public ANCRequestDto updateAnc(String id, ANCRequestDto ancRequestDto) {
         ANC exist = getExistAnc(id);
 
         ANC anc = convertDtoToEntity(ancRequestDto);
-        anc.setId(id);
+        anc.setUuid(id);
         anc.setFacilityId(exist.getFacilityId());
-        anc.setHospitalNumber(exist.getHospitalNumber());
         anc.setLastModifiedDate(LocalDateTime.now());
         anc.setLastModifiedBy(exist.getLastModifiedBy());
         anc.setArchived(exist.getArchived());
@@ -334,46 +367,44 @@ public class ANCService {
         anc.setCreatedBy(exist.getCreatedBy());
         anc.setCreatedDate(exist.getCreatedDate());
         anc.setUuid(exist.getUuid());
-        anc.setPersonUuid(exist.getPersonUuid());
+        anc.setPatientUuid(exist.getPatientUuid());
         anc.setAncSetting(ancRequestDto.getAncSetting());
         anc.setPreviouslyKnownHivStatus(ancRequestDto.getPreviouslyKnownHivStatus());
         anc.setCurrentlyOnArt(ancRequestDto.getCurrentlyOnArt());
-        anc.setDateOfHepatitisB(ancRequestDto.getDateOfHepatitisB());
-        anc.setHepatitisB(ancRequestDto.getHepatitisB());
-        anc.setTestedHepatitisB(ancRequestDto.getTestedHepatitisB());
-        anc.setTreatedHepatitisB(ancRequestDto.getTreatedHepatitisB());
-        anc.setReferredHepatitisB(ancRequestDto.getReferredHepatitisB());
-        anc.setDateOfHepatitisC(ancRequestDto.getDateOfHepatitisC());
-        anc.setHepatitisC(ancRequestDto.getHepatitisC());
-        anc.setTestedHepatitisC(ancRequestDto.getTestedHepatitisC());
-        anc.setTreatedHepatitisC(ancRequestDto.getTreatedHepatitisC());
-        anc.setReferredHepatitisC(ancRequestDto.getReferredHepatitisC());
         anc.setFacilityEnrolledIn(ancRequestDto.getFacilityEnrolledIn());
+        anc.setVitalSigns(ancRequestDto.getVitalSigns());
+        anc.setCounselling(ancRequestDto.getCounselling());
+        anc.setSyphilisInfo(ancRequestDto.getSyphilisInfo());
+        anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
+        anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
+        anc.setUrinalysis(ancRequestDto.getUrinalysis());
+        anc.setHbPcv(ancRequestDto.getHbPcv());
+        anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
+        anc.setLlinGiven(ancRequestDto.getLlinGiven());
+        anc.setIptDose(ancRequestDto.getIptDose());
+        anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
+        anc.setTdImmunization(ancRequestDto.getTdImmunization());
+        anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+        anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
+        anc.setReferralReason(ancRequestDto.getReferralReason());
+        anc.setTransportationOut(ancRequestDto.getTransportationOut());
 
         //check if the patient is on pmtct page
 
-        System.out.println(exist.getPersonUuid());
+        System.out.println(exist.getPatientUuid());
 
-        boolean  hasPmtctRecord = pmtctEnrollmentRepository.checkPatientOnPMTCT(exist.getPersonUuid());
+        boolean  hasPmtctRecord = pmtctEnrollmentRepository.checkPatientOnPMTCT(exist.getPatientUuid());
 
 //        if(hasPmtctRecord){
-//            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPersonUuid());
-//            LocalDate PmtctEnrollmentDate = pmtctEnrollmentRepository.getPmtctEnrollmentDate(exist.getPersonUuid());
+//            pmtctEnrollmentRepository.updateLmp(ancRequestDto.getLMP(), exist.getPatientUuid());
+//            LocalDate PmtctEnrollmentDate = pmtctEnrollmentRepository.getPmtctEnrollmentDate(exist.getPatientUuid());
 //
 //            //calculate the GA
 //             Long gestationalAge =    ChronoUnit.WEEKS.between(ancRequestDto.getLMP(), PmtctEnrollmentDate);
 //            // update the gestational age on the pmtct table
-//            pmtctEnrollmentRepository.updateTheGA(gestationalAge, exist.getPersonUuid());
+//            pmtctEnrollmentRepository.updateTheGA(gestationalAge, exist.getPatientUuid());
 
 
-        try{
-            LocalDate nad = this.calculateNAD(ancRequestDto.getFirstAncDate());
-
-            anc.setDefaultDays(this.defaultDate(anc.getLastVisitDate(), ancRequestDto.getFirstAncDate()));
-            anc.setLastVisitDate(ancRequestDto.getFirstAncDate());
-            anc.setNextAppointmentDate(nad);
-        }catch(Exception e){}
-        //pmtctVisit.setArchived(0);
         ancRepository.save(anc);
         return ancRequestDto;
     }
@@ -382,39 +413,46 @@ public class ANCService {
     public ANCRespondDto convertANCtoANCRespondDto(ANC anc, Person person) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
         ancRespondDto.setAncNo(anc.getAncNo());
-        ancRespondDto.setId(anc.getId());
-        ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
+        ancRespondDto.setAncUuid(anc.getUuid());
+        ancRespondDto.setDateOfEnrollment(anc.getDateOfEnrollment());
         ancRespondDto.setGravida(anc.getGravida());
         ancRespondDto.setParity(anc.getParity());
         ancRespondDto.setLMP(anc.getLMP());
-        ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         ancRespondDto.setGAWeeks(anc.getGAWeeks());
-        ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-        ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
-        //ancRespondDto.setSourceOfReferral(anc.getSourceOfReferral());
-        ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
-        ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-        ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
         ancRespondDto.setPartnerInformation(anc.getPartnerInformation());
         ancRespondDto.setSource(anc.getSource());
-        //ancRespondDto.setPersonDto(getDtoFromPerson(person));
-
+        ancRespondDto.setVitalSigns(anc.getVitalSigns());
+        ancRespondDto.setCounselling(anc.getCounselling());
+        ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+        ancRespondDto.setHepatitisBInfo(anc.getHepatitisBInfo());
+        ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
+        ancRespondDto.setUrinalysis(anc.getUrinalysis());
+        ancRespondDto.setHbPcv(anc.getHbPcv());
+        ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
+        ancRespondDto.setLlinGiven(anc.getLlinGiven());
+        ancRespondDto.setIptDose(anc.getIptDose());
+        ancRespondDto.setHematinicsGiven(anc.getHematinicsGiven());
+        ancRespondDto.setTdImmunization(anc.getTdImmunization());
+        ancRespondDto.setAssociatedProblems(anc.getAssociatedProblems());
+        ancRespondDto.setOutcomeOfVisit(anc.getOutcomeOfVisit());
+        ancRespondDto.setReferralReason(anc.getReferralReason());
+        ancRespondDto.setTransportationOut(anc.getTransportationOut());
 
         return ancRespondDto;
 
     }
 
     @SneakyThrows
-    public ANC getSingleAnc(Long id) {
+    public ANC getSingleAnc(String id) {
         return this.ancRepository.findById(id)
                 .orElseThrow(() -> new Exception("ANC NOT FOUND"));
 
     }
 
     @SneakyThrows
-    public ANC getAncByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId) {
-        return this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L)
-                .orElseThrow(() -> new Exception("ANC NOT FOUND for personUuid=" + personUuid + " and pmtctCycleId=" + pmtctCycleId));
+    public ANC getAncByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid) {
+        return this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L)
+                .orElse(null);
     }
 
     public int calculateAge(LocalDate dob) {
@@ -441,7 +479,7 @@ public class ANCService {
                 pmtctPersonDto.setSurname(person.getSurname());
                 pmtctPersonDto.setContactPoint(person.getContactPoint());
                 try {
-                    Optional<ANC> ancs = ancRepository.findByHospitalNumber(person.getHospitalNumber());
+                    Optional<ANC> ancs = ancRepository.findANCByPatientUuid(person.getUuid());
                     if (ancs.isPresent()) {
                         pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
                     } else {
@@ -600,7 +638,7 @@ public class ANCService {
                     pmtctPersonDto.setContactPoint(person.getContactPoint());
 
                 }
-                Optional<ANC> ancs = ancRepository.findByHospitalNumberAndArchived(person.getHospitalNumber(), 0L);
+                Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(person.getUuid(), 0L);
                 if (ancs.isPresent()) {
                     pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
                 } else {
@@ -651,9 +689,9 @@ public class ANCService {
         return personResponseDto;
     }
 
-    public String myRecentAncNo(String personUuid) {
+    public String myRecentAncNo(String patientUuid) {
         String ancNo = "";
-        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
+        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid, 0L);
         if (ancs.isPresent()) {
             ancNo = ancs.get().getAncNo();
         } else {
@@ -662,9 +700,9 @@ public class ANCService {
         return ancNo;
     }
 
-    public boolean activeOnANC(String personUuid) {
+    public boolean activeOnANC(String patientUuid) {
         boolean ancNo = false;
-        Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndArchived(personUuid, 0L);
+        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid, 0L);
         if (ancs.isPresent()) {
             ancNo = true;
         } else {
@@ -799,7 +837,7 @@ public class ANCService {
                     User user = currentUser.get();
                     facilityId = user.getCurrentOrganisationUnitId();
                 }
-                Optional<Person> persons = this.personRepository.getPersonByHospitalNumberAndFacilityId(anc.getHospitalNumber(), facilityId);
+                Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(anc.getPatientUuid(), facilityId, 0);
                 Person person = new Person();
                 if (persons.isPresent()) {
                     person = persons.get();
@@ -823,7 +861,7 @@ public class ANCService {
                     User user = currentUser.get();
                     facilityId = user.getCurrentOrganisationUnitId();
                 }
-                Optional<Person> persons = this.personRepository.getPersonByHospitalNumberAndFacilityId(anc.getHospitalNumber(), facilityId);
+                Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(anc.getPatientUuid(), facilityId, 0);
                 Person person = new Person();
                 if (persons.isPresent()) {
                     person = persons.get();
@@ -848,15 +886,15 @@ public class ANCService {
     public ANCRespondDto ANCEnrollement(ANCEnrollementRequestDto ancEnrollementRequestDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancEnrollementRequestDto.getPerson_uuid(), user.getCurrentOrganisationUnitId(), 0);
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancEnrollementRequestDto.getPatient_uuid(), user.getCurrentOrganisationUnitId(), 0);
         Person person = new Person();
         ANC anc;
         if (persons.isPresent()) {
             person = persons.get();
 
             // Check for existing ANC to prevent duplicates
-            Optional<ANC> existingAnc = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(
-                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleId(), 0L);
+            Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
+                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleUuid(), 0L);
 
             if (existingAnc.isPresent()) {
                 anc = existingAnc.get();
@@ -869,8 +907,7 @@ public class ANCService {
                 anc.setCreatedDate(LocalDateTime.now());
                 anc.setLastModifiedDate(LocalDateTime.now());
                 anc.setUuid(UUID.randomUUID().toString());
-                anc.setPersonUuid(person.getUuid());
-                anc.setHospitalNumber(person.getHospitalNumber());
+                anc.setPatientUuid(person.getUuid());
                 anc.setArchived(0L);
                 anc.setFacilityId(person.getFacilityId());
                 anc.setStatus("NV");
@@ -878,61 +915,35 @@ public class ANCService {
             }
 
             anc.setAncNo(ancEnrollementRequestDto.getAncNo());
-            anc.setFirstAncDate(ancEnrollementRequestDto.getFirstAncDate());
+            anc.setDateOfEnrollment(ancEnrollementRequestDto.getDateOfEnrollment());
             anc.setGravida(ancEnrollementRequestDto.getGravida());
             anc.setParity(ancEnrollementRequestDto.getParity());
             anc.setLMP(ancEnrollementRequestDto.getLMP());
-            anc.setExpectedDeliveryDate(ancEnrollementRequestDto.getExpectedDeliveryDate());
             anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
-            anc.setHivDiognosicTime(ancEnrollementRequestDto.getHivDiognosicTime());
             anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
             anc.setPreviouslyKnownHivStatus(ancEnrollementRequestDto.getPreviouslyKnownHivStatus());
             anc.setCurrentlyOnArt(ancEnrollementRequestDto.getCurrentlyOnArt());
-            anc.setDateOfHepatitisB(ancEnrollementRequestDto.getDateOfHepatitisB());
-            anc.setHepatitisB(ancEnrollementRequestDto.getHepatitisB());
-            anc.setTestedHepatitisB(ancEnrollementRequestDto.getTestedHepatitisB());
-            anc.setTreatedHepatitisB(ancEnrollementRequestDto.getTreatedHepatitisB());
-            anc.setReferredHepatitisB(ancEnrollementRequestDto.getReferredHepatitisB());
-            anc.setDateOfHepatitisC(ancEnrollementRequestDto.getDateOfHepatitisC());
-            anc.setHepatitisC(ancEnrollementRequestDto.getHepatitisC());
-            anc.setTestedHepatitisC(ancEnrollementRequestDto.getTestedHepatitisC());
-            anc.setTreatedHepatitisC(ancEnrollementRequestDto.getTreatedHepatitisC());
-            anc.setReferredHepatitisC(ancEnrollementRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
-            anc.setPmtctCycleId(ancEnrollementRequestDto.getPmtctCycleId());
-
-            try{
-                LocalDate nad = this.calculateNAD(ancEnrollementRequestDto.getFirstAncDate());
-
-                anc.setDefaultDays(this.defaultDate(ancEnrollementRequestDto.getFirstAncDate(), ancEnrollementRequestDto.getFirstAncDate()));
-                anc.setLastVisitDate(ancEnrollementRequestDto.getFirstAncDate());
-                anc.setNextAppointmentDate(nad);
-            }catch(Exception e){}
-            anc.setTestedSyphilis(ancEnrollementRequestDto.getTestedSyphilis());
-            anc.setTestResultSyphilis(ancEnrollementRequestDto.getTestResultSyphilis());
-            anc.setTreatedSyphilis(ancEnrollementRequestDto.getTreatedSyphilis());
-            //anc.setSourceOfReferral(ancEnrollementRequestDto.getSourceOfReferral());
-            anc.setReferredSyphilisTreatment(ancEnrollementRequestDto.getReferredSyphilisTreatment());
-            try {
-                LocalDate eed = this.calculateEDD(ancEnrollementRequestDto.getLMP());
-                anc.setExpectedDeliveryDate(eed);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            anc.setAncAttendance(ancEnrollementRequestDto.getAncAttendance());
+            anc.setPmtctCycleUuid(ancEnrollementRequestDto.getPmtctCycleUuid());
             anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
-            PmtctHtsInfo pmtctHtsInfo = ancEnrollementRequestDto.getPmtctHtsInfo();
-            if (pmtctHtsInfo != null) {
-                JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
-                anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
-
-            }
-
-            PartnerNotification partnerNotification = ancEnrollementRequestDto.getPartnerNotification();
-            if (partnerNotification != null) {
-                JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
-                anc.setPartnerNotification(partnerNotificationInfoJsonNode);
-            }
+            anc.setVitalSigns(ancEnrollementRequestDto.getVitalSigns());
+            anc.setCounselling(ancEnrollementRequestDto.getCounselling());
+            anc.setSyphilisInfo(ancEnrollementRequestDto.getSyphilisInfo());
+            anc.setHepatitisBInfo(ancEnrollementRequestDto.getHepatitisBInfo());
+            anc.setHepatitisCInfo(ancEnrollementRequestDto.getHepatitisCInfo());
+            anc.setUrinalysis(ancEnrollementRequestDto.getUrinalysis());
+            anc.setHbPcv(ancEnrollementRequestDto.getHbPcv());
+            anc.setBloodSugarGdm(ancEnrollementRequestDto.getBloodSugarGdm());
+            anc.setLlinGiven(ancEnrollementRequestDto.getLlinGiven());
+            anc.setIptDose(ancEnrollementRequestDto.getIptDose());
+            anc.setHematinicsGiven(ancEnrollementRequestDto.getHematinicsGiven());
+            anc.setTdImmunization(ancEnrollementRequestDto.getTdImmunization());
+            anc.setAssociatedProblems(ancEnrollementRequestDto.getAssociatedProblems());
+            anc.setOutcomeOfVisit(ancEnrollementRequestDto.getOutcomeOfVisit());
+            anc.setReferralReason(ancEnrollementRequestDto.getReferralReason());
+            anc.setTransportationOut(ancEnrollementRequestDto.getTransportationOut());
         } else {
             anc = new ANC();
         }
@@ -940,8 +951,8 @@ public class ANCService {
         ANC savedAnc = ancRepository.save(anc);
 
         // Update pregnancy cycle status to ACTIVE
-        if (ancEnrollementRequestDto.getPmtctCycleId() != null) {
-            pmtctPregnancyCycleService.updatePmtctStatusToActive(ancEnrollementRequestDto.getPmtctCycleId());
+        if (ancEnrollementRequestDto.getPmtctCycleUuid() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(ancEnrollementRequestDto.getPmtctCycleUuid());
         }
 
         return getANCRespondDtoFromPersonAndAnc(person, savedAnc);
@@ -949,8 +960,7 @@ public class ANCService {
 
     public ANCRespondDto getANCRespondDtoFromPersonAndAnc(Person persons, ANC anc) {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
-        ancRespondDto.setId(anc.getId());
-        ancRespondDto.setHospitalNumber(anc.getHospitalNumber());
+        ancRespondDto.setAncUuid(anc.getUuid());
         ancRespondDto.setAncNo(anc.getAncNo());
         ancRespondDto.setFullname(this.getFullName(persons.getFirstName(), persons.getOtherName(), persons.getSurname()));
         ancRespondDto.setAncUuid(anc.getUuid());
@@ -959,33 +969,42 @@ public class ANCService {
         ancRespondDto.setPersonId(persons.getId());
         ancRespondDto.setSex(persons.getSex());
         ancRespondDto.setContactPoint(persons.getContactPoint());
-        ancRespondDto.setFirstAncDate(anc.getFirstAncDate());
+        ancRespondDto.setDateOfEnrollment(anc.getDateOfEnrollment());
         ancRespondDto.setGravida(anc.getGravida());
         ancRespondDto.setParity(anc.getParity());
         ancRespondDto.setLMP(anc.getLMP());
-        ancRespondDto.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         ancRespondDto.setGAWeeks(anc.getGAWeeks());
-        ancRespondDto.setHivDiognosicTime(anc.getHivDiognosicTime());
-        ancRespondDto.setTreatedSyphilis(anc.getTreatedSyphilis());
-        //ancRespondDto.setSourceOfReferral(anc.getSourceOfReferral());
-        ancRespondDto.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
         ancRespondDto.setAncSetting(anc.getAncSetting());
         ancRespondDto.setCommunitySetting(anc.getCommunitySetting());
-
-        ancRespondDto.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-        ancRespondDto.setPartnerNotification(anc.getPartnerNotification());
-        ancRespondDto.setPerson_uuid(persons.getUuid());
+        ancRespondDto.setAncAttendance(anc.getAncAttendance());
+        ancRespondDto.setPatient_uuid(persons.getUuid());
         ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
         ancRespondDto.setSource(anc.getSource());
+        ancRespondDto.setVitalSigns(anc.getVitalSigns());
+        ancRespondDto.setCounselling(anc.getCounselling());
+        ancRespondDto.setSyphilisInfo(anc.getSyphilisInfo());
+        ancRespondDto.setHepatitisBInfo(anc.getHepatitisBInfo());
+        ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
+        ancRespondDto.setUrinalysis(anc.getUrinalysis());
+        ancRespondDto.setHbPcv(anc.getHbPcv());
+        ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
+        ancRespondDto.setLlinGiven(anc.getLlinGiven());
+        ancRespondDto.setIptDose(anc.getIptDose());
+        ancRespondDto.setHematinicsGiven(anc.getHematinicsGiven());
+        ancRespondDto.setTdImmunization(anc.getTdImmunization());
+        ancRespondDto.setAssociatedProblems(anc.getAssociatedProblems());
+        ancRespondDto.setOutcomeOfVisit(anc.getOutcomeOfVisit());
+        ancRespondDto.setReferralReason(anc.getReferralReason());
+        ancRespondDto.setTransportationOut(anc.getTransportationOut());
         return ancRespondDto;
     }
 
     public ANCRespondDto newANCRegistration(ANCWithPersonRequestDto ancWithPersonRequestDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
-        String personUuid = createPerson(ancWithPersonRequestDto.getPersonDto());
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(personUuid, user.getCurrentOrganisationUnitId(), 0);
+        String patientUuid = createPerson(ancWithPersonRequestDto.getPersonDto());
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(patientUuid, user.getCurrentOrganisationUnitId(), 0);
         Person person = new Person();
 
         ANC anc = new ANC();
@@ -993,74 +1012,46 @@ public class ANCService {
             person = persons.get();
 
             anc.setAncNo(ancWithPersonRequestDto.getAncNo());
-            anc.setFirstAncDate(ancWithPersonRequestDto.getFirstAncDate());
+            anc.setDateOfEnrollment(ancWithPersonRequestDto.getDateOfEnrollment());
             anc.setGravida(ancWithPersonRequestDto.getGravida());
             anc.setParity(ancWithPersonRequestDto.getParity());
             anc.setLMP(ancWithPersonRequestDto.getLMP());
-            anc.setExpectedDeliveryDate(ancWithPersonRequestDto.getExpectedDeliveryDate());
             anc.setGAWeeks(ancWithPersonRequestDto.getGAWeeks());
-            anc.setHivDiognosicTime(ancWithPersonRequestDto.getHivDiognosicTime());
             anc.setCreatedBy(user.getUserName());
             anc.setLastModifiedBy(user.getUserName());
             anc.setCreatedDate(LocalDateTime.now());
             anc.setLastModifiedDate(LocalDateTime.now());
             anc.setUuid(UUID.randomUUID().toString());
-            anc.setPersonUuid(person.getUuid());
+            anc.setPatientUuid(person.getUuid());
             anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
-            anc.setHospitalNumber(person.getHospitalNumber());
             anc.setArchived(0L);
             anc.setFacilityId(person.getFacilityId());
             anc.setAncSetting(ancWithPersonRequestDto.getAncSetting());
             anc.setStatus("NV");
             anc.setPreviouslyKnownHivStatus(ancWithPersonRequestDto.getPreviouslyKnownHivStatus());
             anc.setCurrentlyOnArt(ancWithPersonRequestDto.getCurrentlyOnArt());
-            anc.setDateOfHepatitisB(ancWithPersonRequestDto.getDateOfHepatitisB());
-            anc.setHepatitisB(ancWithPersonRequestDto.getHepatitisB());
-            anc.setTestedHepatitisB(ancWithPersonRequestDto.getTestedHepatitisB());
-            anc.setTreatedHepatitisB(ancWithPersonRequestDto.getTreatedHepatitisB());
-            anc.setReferredHepatitisB(ancWithPersonRequestDto.getReferredHepatitisB());
-            anc.setDateOfHepatitisC(ancWithPersonRequestDto.getDateOfHepatitisC());
-            anc.setHepatitisC(ancWithPersonRequestDto.getHepatitisC());
-            anc.setTestedHepatitisC(ancWithPersonRequestDto.getTestedHepatitisC());
-            anc.setTreatedHepatitisC(ancWithPersonRequestDto.getTreatedHepatitisC());
-            anc.setReferredHepatitisC(ancWithPersonRequestDto.getReferredHepatitisC());
             anc.setFacilityEnrolledIn(ancWithPersonRequestDto.getFacilityEnrolledIn());
             anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
             anc.setSource(ancWithPersonRequestDto.getSource());
-            try{
-                LocalDate nad = this.calculateNAD(ancWithPersonRequestDto.getFirstAncDate());
-
-                anc.setDefaultDays(this.defaultDate(ancWithPersonRequestDto.getFirstAncDate(), ancWithPersonRequestDto.getFirstAncDate()));
-                anc.setLastVisitDate(ancWithPersonRequestDto.getFirstAncDate());
-                anc.setNextAppointmentDate(nad);
-            }catch(Exception e){}
-            try {
-                LocalDate eed = this.calculateEDD(ancWithPersonRequestDto.getLMP());
-                //System.out.println("@ invocation "+ eed);
-                anc.setExpectedDeliveryDate(eed);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
-            anc.setTestedSyphilis(ancWithPersonRequestDto.getTestedSyphilis());
-            anc.setTestResultSyphilis(ancWithPersonRequestDto.getTestResultSyphilis());
-            anc.setTreatedSyphilis(ancWithPersonRequestDto.getTreatedSyphilis());
             anc.setSourceOfReferral(ancWithPersonRequestDto.getSourceOfReferral());
-            anc.setReferredSyphilisTreatment(ancWithPersonRequestDto.getReferredSyphilisTreatment());
-            anc.setCommunitySetting(ancWithPersonRequestDto.getCommunitySetting());
+            anc.setVitalSigns(ancWithPersonRequestDto.getVitalSigns());
+            anc.setCounselling(ancWithPersonRequestDto.getCounselling());
+            anc.setSyphilisInfo(ancWithPersonRequestDto.getSyphilisInfo());
+            anc.setHepatitisBInfo(ancWithPersonRequestDto.getHepatitisBInfo());
+            anc.setHepatitisCInfo(ancWithPersonRequestDto.getHepatitisCInfo());
+            anc.setUrinalysis(ancWithPersonRequestDto.getUrinalysis());
+            anc.setHbPcv(ancWithPersonRequestDto.getHbPcv());
+            anc.setBloodSugarGdm(ancWithPersonRequestDto.getBloodSugarGdm());
+            anc.setLlinGiven(ancWithPersonRequestDto.getLlinGiven());
+            anc.setIptDose(ancWithPersonRequestDto.getIptDose());
+            anc.setHematinicsGiven(ancWithPersonRequestDto.getHematinicsGiven());
+            anc.setTdImmunization(ancWithPersonRequestDto.getTdImmunization());
+            anc.setAssociatedProblems(ancWithPersonRequestDto.getAssociatedProblems());
+            anc.setOutcomeOfVisit(ancWithPersonRequestDto.getOutcomeOfVisit());
+            anc.setReferralReason(ancWithPersonRequestDto.getReferralReason());
+            anc.setTransportationOut(ancWithPersonRequestDto.getTransportationOut());
 
-            PmtctHtsInfo pmtctHtsInfo = ancWithPersonRequestDto.getPmtctHtsInfo();
-            if (pmtctHtsInfo != null) {
-                JsonNode pmtctHtsInfoInfoJsonNode = mapper.valueToTree(pmtctHtsInfo);
-                anc.setPmtctHtsInfo(pmtctHtsInfoInfoJsonNode);
-
-            }
-
-            PartnerNotification partnerNotification = ancWithPersonRequestDto.getPartnerNotification();
-            if (partnerNotification != null) {
-                JsonNode partnerNotificationInfoJsonNode = mapper.valueToTree(partnerNotification);
-                anc.setPartnerNotification(partnerNotificationInfoJsonNode);
-            }
         }
         return getANCRespondDtoFromPersonAndAnc(person, ancRepository.save(anc));
     }
@@ -1073,7 +1064,7 @@ public class ANCService {
         pmtctWithPersonRespondDto.setSex(person.getSex());
         pmtctWithPersonRespondDto.setFullName(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
         pmtctWithPersonRespondDto.setPersonId(person.getPersonId());
-        pmtctWithPersonRespondDto.setPerson_uuid(person.getPersonUuid());
+        pmtctWithPersonRespondDto.setPatient_uuid(person.getPatientUuid());
         pmtctWithPersonRespondDto.setId(person.getId());
         pmtctWithPersonRespondDto.setUuid(person.getUuid());
         pmtctWithPersonRespondDto.setAddress(parseJsonString(person.getAddress()));
@@ -1082,20 +1073,19 @@ public class ANCService {
         pmtctWithPersonRespondDto.setPregnancyCount(person.getPregnancyCount());
 
         // Get latest pregnancy cycle ID and use it to fetch enrollment data
-        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
+        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPatientUuid(person.getPatientUuid());
 
         if (latestCycle.isPresent()) {
-            Long cycleId = latestCycle.get().getId();
-            pmtctWithPersonRespondDto.setPmtctCycleId(cycleId);
+            String cycleUuid = latestCycle.get().getUuid();
+            pmtctWithPersonRespondDto.setPmtctCycleUuid(cycleUuid);
 
-            // Use cycle ID to get enrollment data for the latest pregnancy cycle
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+            // Use cycle UUID to get enrollment data for the latest pregnancy cycle
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
 
             if (enrollment.isPresent()) {
                 PMTCTEnrollment enrollmentData = enrollment.get();
                 // Set all enrollment-related data from the latest cycle enrollment
                 pmtctWithPersonRespondDto.setPmtctEnrollmentDate(enrollmentData.getPmtctEnrollmentDate());
-                pmtctWithPersonRespondDto.setAncNo(enrollmentData.getAncNo());
                 pmtctWithPersonRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
                 pmtctWithPersonRespondDto.setArtStartTime(enrollmentData.getArtStartTime());
                 pmtctWithPersonRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
@@ -1103,22 +1093,13 @@ public class ANCService {
                 pmtctWithPersonRespondDto.setPmtctRegStatus(true);
                 pmtctWithPersonRespondDto.setHivStatus(enrollmentData.getHivStatus());
 
-                // Get ANC data for the latest cycle using person_uuid and pmtct_cycle_id
-                Optional<ANC> ancs = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(person.getPersonUuid(), cycleId, 0L);
+                // Get ANC data for the latest cycle — source ancNo from ANC (authoritative source)
+                Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(person.getPatientUuid(), cycleUuid, 0L);
                 if(ancs.isPresent()) {
                     ANC anc = ancs.get();
+                    pmtctWithPersonRespondDto.setAncNo(anc.getAncNo());
                     pmtctWithPersonRespondDto.setGravida(anc.getGravida());
                     pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
-                } else {
-                    // Fallback: If no ANC found by cycle ID, try by ancNo if available
-                    if (enrollmentData.getAncNo() != null) {
-                        Optional<ANC> ancsByAncNo = ancRepository.getByAncNoAndArchived(enrollmentData.getAncNo(), 0L);
-                        if(ancsByAncNo.isPresent()) {
-                            ANC anc = ancsByAncNo.get();
-                            pmtctWithPersonRespondDto.setGravida(anc.getGravida());
-                            pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
-                        }
-                    }
                 }
             } else {
                 // No enrollment found for the latest cycle
@@ -1148,9 +1129,9 @@ public class ANCService {
         ANCRespondDto ancRespondDto = new ANCRespondDto();
 
         // Set basic person information
-        ancRespondDto.setHospitalNumber(person.getHospitalNumber());
         ancRespondDto.setFullname(this.getFullName(person.getFirstName(), person.getOtherName(), person.getSurname()));
-        ancRespondDto.setPerson_uuid(person.getPersonUuid());
+        ancRespondDto.setHospitalNumber(person.getHospitalNumber());
+        ancRespondDto.setPatient_uuid(person.getPatientUuid());
         ancRespondDto.setPersonId(person.getPersonId());
         ancRespondDto.setAddress(parseJsonString(person.getAddress()));
         ancRespondDto.setContactPoint(parseJsonString(person.getContactPoint()));
@@ -1159,14 +1140,14 @@ public class ANCService {
         ancRespondDto.setAge(this.calculateAge(person.getDateOfBirth()));
         ancRespondDto.setPregnancyCount(person.getPregnancyCount());
 
-        // Set ANC-specific fields directly from the query result (latest ANC record for latest pmtctCycleId)
+        // Set ANC-specific fields directly from the query result (latest ANC record for latest pmtctCycleUuid)
         ancRespondDto.setId(person.getPersonId());
         ancRespondDto.setAncNo(person.getAncNo());
         ancRespondDto.setAncUuid(person.getAncUuid());
         ancRespondDto.setAncSetting(person.getAncSetting());
         ancRespondDto.setCommunitySetting(person.getCommunitySetting());
         ancRespondDto.setCurrentlyOnArt(person.getCurrentlyOnArt());
-        ancRespondDto.setFirstAncDate(person.getFirstAncDate());
+        ancRespondDto.setDateOfEnrollment(person.getDateOfEnrollment());
         ancRespondDto.setGAWeeks(person.getGaweeks());
         ancRespondDto.setGravida(person.getGravida());
         ancRespondDto.setLMP(person.getLmp());
@@ -1176,14 +1157,14 @@ public class ANCService {
         ancRespondDto.setStaticHivStatus(person.getStaticHivStatus());
         ancRespondDto.setArtStartDate(person.getArtStartDate());
 
-        // Set pmtctCycleId from the query result
-        Long pmtctCycleId = person.getPmtctCycleId();
-        ancRespondDto.setPmtctCycleId(pmtctCycleId);
+        // Set pmtctCycleUuid from the query result
+        String pmtctCycleUuid = person.getPmtctCycleUuid();
+        ancRespondDto.setPmtctCycleUuid(pmtctCycleUuid);
 
-        // Check if person has a valid pmtctCycleId (means they have an active ANC enrollment)
-        if (pmtctCycleId != null) {
+        // Check if person has a valid pmtctCycleUuid (means they have an active ANC enrollment)
+        if (pmtctCycleUuid != null) {
             // Get enrollment data for additional fields not in the ANC query
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(pmtctCycleId, 0L);
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(pmtctCycleUuid, 0L);
 
             if (enrollment.isPresent()) {
                 PMTCTEnrollment enrollmentData = enrollment.get();
@@ -1197,12 +1178,13 @@ public class ANCService {
                 // Get delivery status for the latest cycle
                 boolean deliveryStatus = Boolean.FALSE;
                 try {
-                    deliveryStatus = this.getDeliveryStatus(person.getAncNo());
+                    Optional<Delivery> deliveryOpt = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(person.getPatientUuid(), pmtctCycleUuid);
+                    deliveryStatus = deliveryOpt.isPresent();
                 } catch (Exception e) { }
                 ancRespondDto.setDeliveryStatus(deliveryStatus);
 
                 // Get PMTCT enrollment details for the latest cycle
-                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByAncNo(person.getAncNo());
+                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByPatientUuid(person.getPatientUuid());
                 ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
             } else {
                 // No enrollment found for the latest cycle
@@ -1212,7 +1194,7 @@ public class ANCService {
             // Get dynamic HIV status
             String dynamicHivStatus = "Unknown";
             try {
-                dynamicHivStatus = this.getDynamicHivStatus(person.getPersonUuid());
+                dynamicHivStatus = this.getDynamicHivStatus(person.getPatientUuid());
             } catch (Exception e) { }
             ancRespondDto.setDynamicHivStatus(dynamicHivStatus);
         } else {
@@ -1229,19 +1211,17 @@ public class ANCService {
 //    }
 
     public boolean activeOnPMTCT(String ancNo) {
-        boolean active = false;
-        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByAncNo(ancNo);//.findANCByPersonUuidAndArchived(personUuid, 0L);
-        if (pmtctEnrollment.isPresent()) {
-            active = true;
-        } else {
-            active = false;
+        // Resolve ancNo to patientUuid via ANC, then check enrollment by patientUuid
+        Optional<ANC> ancOpt = ancRepository.getByAncNo(ancNo);
+        if (ancOpt.isPresent()) {
+            return activeOnPMTCTByPatientUuid(ancOpt.get().getPatientUuid());
         }
-        return active;
+        return false;
     }
 
-//    public boolean activeOnPMTCTByPersonUuid(String personUuid) {
+//    public boolean activeOnPMTCTByPatientUuid(String patientUuid) {
 //        boolean active = false;
-//        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);//.findANCByPersonUuidAndArchived(personUuid, 0L);
+//        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPatientUuid(patientUuid);//.findANCByPatientUuidAndArchived(patientUuid, 0L);
 //        if (pmtctEnrollment.isPresent()) {
 //            active = true;
 //        } else {
@@ -1250,12 +1230,12 @@ public class ANCService {
 //        return active;
 //    }
 
-    public boolean activeOnPMTCTByPersonUuid(String personUuid) {
-        List<PMTCTEnrollment> pmtctEnrollments = pmtctEnrollmentReporsitory.getAllByPersonUuid(personUuid);
+    public boolean activeOnPMTCTByPatientUuid(String patientUuid) {
+        List<PMTCTEnrollment> pmtctEnrollments = pmtctEnrollmentReporsitory.getAllByPatientUuid(patientUuid);
         return pmtctEnrollments.stream().findFirst().isPresent();
     }
 
-    private ANC getExistingANC(Long id) {
+    private ANC getExistingANC(String id) {
         return ancRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ANC.class, "id", "" + id));
@@ -1263,28 +1243,19 @@ public class ANCService {
 
     public void graduateFromANC(ANC anc, String visitStatus) {
         ANC existingAnc = this.getExistingANC(anc.getId());
-        existingAnc.setFirstAncDate(anc.getFirstAncDate());
+        existingAnc.setDateOfEnrollment(anc.getDateOfEnrollment());
         existingAnc.setGravida(anc.getGravida());
         existingAnc.setParity(anc.getParity());
         existingAnc.setLMP(anc.getLMP());
-        existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         existingAnc.setGAWeeks(anc.getGAWeeks());
-        existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
-        existingAnc.setTestedSyphilis(anc.getTestedSyphilis());
-        existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
-        existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
         existingAnc.setCommunitySetting(anc.getCommunitySetting());
-        existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
-        existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-        existingAnc.setPartnerNotification(anc.getPartnerNotification());
-        existingAnc.setPersonUuid(anc.getPersonUuid());
+        existingAnc.setPatientUuid(anc.getPatientUuid());
         // existingAnc.setArchived(1L); // Removed: This was auto-archiving ANC records when graduating
         existingAnc.setStatus(visitStatus);
         existingAnc.setStaticHivStatus(anc.getStaticHivStatus());
 
-        existingAnc.setHospitalNumber(anc.getHospitalNumber());
-        existingAnc.setUuid(anc.getUuid());
+                existingAnc.setUuid(anc.getUuid());
         existingAnc.setAncNo(anc.getAncNo());
         existingAnc.setCreatedBy(anc.getCreatedBy());
         existingAnc.setCreatedBy(anc.getCreatedBy());
@@ -1299,34 +1270,17 @@ public class ANCService {
 
     public void updateANC(ANC anc, String visitStatus, LocalDate visitDate) {
         ANC existingAnc = this.getExistingANC(anc.getId());
-        existingAnc.setFirstAncDate(anc.getFirstAncDate());
+        existingAnc.setDateOfEnrollment(anc.getDateOfEnrollment());
         existingAnc.setGravida(anc.getGravida());
         existingAnc.setParity(anc.getParity());
         existingAnc.setLMP(anc.getLMP());
-        existingAnc.setExpectedDeliveryDate(anc.getExpectedDeliveryDate());
         existingAnc.setGAWeeks(anc.getGAWeeks());
-        existingAnc.setHivDiognosicTime(anc.getHivDiognosicTime());
-        existingAnc.setTestedSyphilis(anc.getTestedSyphilis());
-        existingAnc.setTestResultSyphilis(anc.getTestResultSyphilis());
-        existingAnc.setTreatedSyphilis(anc.getTreatedSyphilis());
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
         existingAnc.setCommunitySetting(anc.getCommunitySetting());
-        existingAnc.setReferredSyphilisTreatment(anc.getReferredSyphilisTreatment());
-        existingAnc.setPmtctHtsInfo(anc.getPmtctHtsInfo());
-        existingAnc.setPartnerNotification(anc.getPartnerNotification());
-        existingAnc.setPersonUuid(anc.getPersonUuid());
+        existingAnc.setPatientUuid(anc.getPatientUuid());
         existingAnc.setArchived(0L);
         existingAnc.setStatus(visitStatus);
         existingAnc.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
-        try{
-            LocalDate nad = this.calculateNAD(visitDate);
-
-            existingAnc.setDefaultDays(this.defaultDate(existingAnc.getLastVisitDate(), visitDate));
-            existingAnc.setLastVisitDate(visitDate);
-            existingAnc.setNextAppointmentDate(nad);
-        }catch(Exception e){}
-
-        existingAnc.setHospitalNumber(anc.getHospitalNumber());
         existingAnc.setUuid(anc.getUuid());
         existingAnc.setAncNo(anc.getAncNo());
         existingAnc.setCreatedBy(anc.getCreatedBy());
@@ -1365,7 +1319,7 @@ public class ANCService {
         return partnersArray;
     }
 
-    public PartnerInformation addPartnerToAnc(Long ancId, PartnerInformation partnerInformation) {
+    public PartnerInformation addPartnerToAnc(String ancId, PartnerInformation partnerInformation) {
         ANC anc = this.getExistingANC(ancId);
         ArrayNode partnersArray = getPartnersArray(anc);
         // Assign a unique partnerId
@@ -1377,7 +1331,7 @@ public class ANCService {
         return partnerInformation;
     }
 
-    public PartnerInformation updatePartnerInAnc(Long ancId, String partnerId, PartnerInformation partnerInformation) {
+    public PartnerInformation updatePartnerInAnc(String ancId, String partnerId, PartnerInformation partnerInformation) {
         ANC anc = this.getExistingANC(ancId);
         ArrayNode partnersArray = getPartnersArray(anc);
         int index = findPartnerIndex(partnersArray, partnerId);
@@ -1402,17 +1356,17 @@ public class ANCService {
         return -1;
     }
 
-    public PartnerInformation updateAncWithPartnerInfo(Long id, PartnerInformation partnerInformation) {
+    public PartnerInformation updateAncWithPartnerInfo(String id, PartnerInformation partnerInformation) {
         // kept for backward compat - delegates to addPartnerToAnc
         return addPartnerToAnc(id, partnerInformation);
     }
 
 
-    String getDynamicHivStatus(String personUuid) {
+    String getDynamicHivStatus(String patientUuid) {
         List<String> allStatuses = new ArrayList<>();
 
         // 1. Check hiv_enrollment table - if exists, patient is positive
-        Optional<String> hivEnrollmentUuid = ancRepository.findInHivEnrollmentByUuid(personUuid);
+        Optional<String> hivEnrollmentUuid = ancRepository.findInHivEnrollmentByUuid(patientUuid);
         if (hivEnrollmentUuid.isPresent()) {
             allStatuses.add("Positive");
         }
@@ -1422,7 +1376,7 @@ public class ANCService {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             if (currentUser.isPresent()) {
                 Optional<HtsClientProjection> htsOptional = ancRepository
-                        .getHtsRecordByPersonsUuidAAndFacilityId(personUuid, currentUser.get()
+                        .getHtsRecordByPersonsUuidAAndFacilityId(patientUuid, currentUser.get()
                                 .getCurrentOrganisationUnitId());
                 if (htsOptional.isPresent() && htsOptional.get().getHivTestResult() != null) {
                     allStatuses.add(htsOptional.get().getHivTestResult());
@@ -1432,7 +1386,7 @@ public class ANCService {
 
         // 3. Check pmtct_anc table for static_hiv_status
         try {
-            Optional<String> ancStaticHivStatus = ancRepository.findStaticHivStatusByPersonUuid(personUuid);
+            Optional<String> ancStaticHivStatus = ancRepository.findStaticHivStatusByPatientUuid(patientUuid);
             if (ancStaticHivStatus.isPresent() && ancStaticHivStatus.get() != null) {
                 allStatuses.add(ancStaticHivStatus.get());
             }
@@ -1440,7 +1394,7 @@ public class ANCService {
 
         // 4. Check pmtct_enrollment table for hiv_status
         try {
-            Optional<String> pmtctEnrollmentHivStatus = pmtctEnrollmentRepository.findHivStatusByPersonUuid(personUuid);
+            Optional<String> pmtctEnrollmentHivStatus = pmtctEnrollmentRepository.findHivStatusByPatientUuid(patientUuid);
             if (pmtctEnrollmentHivStatus.isPresent() && pmtctEnrollmentHivStatus.get() != null) {
                 allStatuses.add(pmtctEnrollmentHivStatus.get());
             }
@@ -1448,7 +1402,7 @@ public class ANCService {
 
         // 5. Check pmtct_hts table for maternal retesting results
         try {
-            Optional<String> pmtctHtsResult = pmtctHtsRepository.findLatestFinalResult(personUuid);
+            Optional<String> pmtctHtsResult = pmtctHtsRepository.findLatestFinalResult(patientUuid);
             if (pmtctHtsResult.isPresent() && pmtctHtsResult.get() != null) {
                 allStatuses.add(pmtctHtsResult.get());
             }
@@ -1486,24 +1440,15 @@ public class ANCService {
     }
 
     boolean getDeliveryStatus(String ancNo) {
-        boolean deliveryStatus = Boolean.FALSE;
-        Delivery delivery = new Delivery();
-        try{
-            delivery = this.deliveryRepository.getDeliveryByAncNo(ancNo);
-
-        }catch (Exception e){}
-
-        if(delivery == null) deliveryStatus = Boolean.FALSE;
-        else deliveryStatus = Boolean.TRUE;
-
-        return deliveryStatus;
-    }
-
-    public LocalDate calculateEDD(LocalDate lmd) {
-        LocalDate date = lmd;
-        date = date.plusMonths(9);
-        date = date.plusDays(7);
-        return date;
+        // Resolve ancNo to patientUuid via ANC, then check delivery by patientUuid
+        Optional<ANC> ancOpt = ancRepository.getByAncNo(ancNo);
+        if (ancOpt.isPresent()) {
+            try {
+                Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPatientUuid(ancOpt.get().getPatientUuid());
+                return delivery.isPresent();
+            } catch (Exception e) {}
+        }
+        return false;
     }
 
     public int calculateGA(LocalDate lmd) {
@@ -1534,16 +1479,21 @@ public class ANCService {
         return LMP;
     }
 
-    public LocalDate getLMPFromPMTCT(String personUuid, Long pmtctCycleId) {
-        LocalDate LMP = LocalDate.now();
-
-        // Get enrollment for the specific cycle
-        Optional<PMTCTEnrollment> pmtct = this.pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
-
+    public LocalDate getLMPFromPMTCT(String patientUuid, String pmtctCycleUuid) {
+        // Try PMTCT enrollment first
+        Optional<PMTCTEnrollment> pmtct = this.pmtctEnrollmentReporsitory.getByPatientUuidAndPmtctCycleId(patientUuid, pmtctCycleUuid);
         if(pmtct.isPresent() && pmtct.get().getLmp() != null) {
-            LMP = pmtct.get().getLmp();
+            return pmtct.get().getLmp();
         }
-        return LMP;
+
+        // Fallback: check ANC record for this cycle
+        Optional<ANC> anc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
+        if(anc.isPresent() && anc.get().getLMP() != null) {
+            return anc.get().getLMP();
+        }
+
+        // No LMP found — return null so callers can handle gracefully
+        return null;
     }
 
     public int calculateGA2(String hospitalNumber, LocalDate visitDate) {
@@ -1555,7 +1505,7 @@ public class ANCService {
 
     public LocalDate getDOB(String hospitalNumber) {
         LocalDate DOB = LocalDate.now();
-        Optional<Infant> infants = this.infantRepository.findInfantByHospitalNumber(hospitalNumber);
+        Optional<Infant> infants = this.infantRepository.findInfantByInfantHospitalNumber(hospitalNumber);
         if (infants.isPresent())
             DOB = infants.get().getDateOfDelivery();
         return DOB;
@@ -1565,7 +1515,7 @@ public class ANCService {
 //        Optional<ANC> anc = ancRepository.getByAncNo(ancNo);
 //        ANCRespondDto ancRespondDto = new ANCRespondDto()
 //        if(anc.isPresent()){
-//            String puuid = anc.get().getPersonUuid();
+//            String puuid = anc.get().getPatientUuid();
 //            Optional<User> currentUser = this.userService.getUserWithRoles();
 //            User user = (User) currentUser.get();
 //            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(puuid, user.getCurrentOrganisationUnitId(), 0);
@@ -1579,13 +1529,13 @@ public class ANCService {
 //        return ancRespondDto;
 //    }
 
-    public void deleteANC(Long id) {
+    public void deleteANC(String id) {
         ANC existingANC = this.getSingleAnc(id);
         existingANC.setArchived(1L);
         ancRepository.save(existingANC);
     }
 
-    public void deletePartnerFromAnc(Long ancId, String partnerId) {
+    public void deletePartnerFromAnc(String ancId, String partnerId) {
         ANC anc = this.getExistingANC(ancId);
         ArrayNode partnersArray = getPartnersArray(anc);
         int index = findPartnerIndex(partnersArray, partnerId);
@@ -1597,50 +1547,36 @@ public class ANCService {
         ancRepository.save(anc);
     }
 
-    public void deletePartnerInfo(Long id) {
+    public void deletePartnerInfo(String id) {
         // kept for backward compat - deletes all partners
         ANC anc = this.getExistingANC(id);
         anc.setPartnerInformation(mapper.createArrayNode());
         ancRepository.save(anc);
     }
 
-    public int defaultDate (LocalDate day1, LocalDate day2){
-        int age = 0;
-        if((day1 == null) || (day2 == null)){age = 0;}
-        else {
-            age = (int) ChronoUnit.MONTHS.between(day1, day2);
-            if (age <= 0) age = 0;
-        }
-        return age;
-    }
-    public LocalDate calculateNAD(LocalDate lmd) {
-        LocalDate date = lmd;
-        date = date.plusMonths(1);
-        return date;
-    }
-
-    public int calculateGaFromPmtct(String personUuid, LocalDate visitDate, Long pmtctCycleId) {
-        LocalDate lmp = getLMPFromPMTCT(personUuid, pmtctCycleId);
+    public int calculateGaFromPmtct(String patientUuid, LocalDate visitDate, String pmtctCycleUuid) {
+        LocalDate lmp = getLMPFromPMTCT(patientUuid, pmtctCycleUuid);
+        if (lmp == null) return 0;
         int ga = (int) ChronoUnit.WEEKS.between(lmp, visitDate);
         if (ga < 0) ga = 0;
         return ga;
     }
 
-    public boolean isInfantRisk(String personUuid, Long pmtctCycleId) {
-        List<InfantPCRAlert> highRiskInfants = getHighRiskInfantDetails(personUuid, pmtctCycleId);
+    public boolean isInfantRisk(String patientUuid, String pmtctCycleUuid) {
+        List<InfantPCRAlert> highRiskInfants = getHighRiskInfantDetails(patientUuid, pmtctCycleUuid);
         return !highRiskInfants.isEmpty();
     }
 
-    public List<InfantPCRAlert> getHighRiskInfantDetails(String personUuid, Long pmtctCycleId) {
+    public List<InfantPCRAlert> getHighRiskInfantDetails(String patientUuid, String pmtctCycleUuid) {
         List<InfantPCRAlert> highRiskInfants = new ArrayList<>();
 
-        // Validate pmtctCycleId
-        if (pmtctCycleId == null) {
+        // Validate pmtctCycleUuid
+        if (pmtctCycleUuid == null) {
             return highRiskInfants;
         }
 
         // Get all infants for this mother and cycle
-        List<Infant> infants = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+        List<Infant> infants = infantRepository.getAllInfantByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
 
         if (infants == null || infants.isEmpty()) {
             return highRiskInfants;
@@ -1650,7 +1586,7 @@ public class ANCService {
         List<String> highRiskReasons = new ArrayList<>();
 
         // Mother enrolled on ART after 36 weeks gestation or postpartum or at L&D
-        String motherTimeOfART = pmtctEnrollmentRepository.getMotherARTInitial(personUuid, pmtctCycleId);
+        String motherTimeOfART = pmtctEnrollmentRepository.getMotherARTInitial(patientUuid, pmtctCycleUuid);
         if (motherTimeOfART != null) {
             if ("TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_DURING_PREGNANCY_>_36_WEEKS_GESTATION_PERIOD".equals(motherTimeOfART)) {
                 highRiskReasons.add("Mother enrolled on ART after 36 weeks gestation");
@@ -1664,13 +1600,13 @@ public class ANCService {
         }
 
         // Rupture of membranes < 4hrs before delivery
-        String rupOfMembrane = pmtctEnrollmentRepository.checkRuptureMembraneAt4hrs(personUuid, pmtctCycleId);
+        String rupOfMembrane = pmtctEnrollmentRepository.checkRuptureMembraneAt4hrs(patientUuid, pmtctCycleUuid);
         if (rupOfMembrane != null && "ROM_DELIVERY_INTERVAL_<4HRS".equals(rupOfMembrane)) {
             highRiskReasons.add("Rupture of Membrane < 4 hours before delivery");
         }
 
         // NVP + AZT selected as ARV prophylaxis for infant
-        String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(personUuid, pmtctCycleId);
+        String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(patientUuid, pmtctCycleUuid);
         if (nvpAndAZT != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
             highRiskReasons.add("NVP+AZT selected as ARV prophylaxis");
         }
@@ -1679,7 +1615,7 @@ public class ANCService {
         if (!highRiskReasons.isEmpty()) {
             for (Infant infant : infants) {
                 InfantPCRAlert alert = new InfantPCRAlert();
-                alert.setInfantHospitalNo(infant.getHospitalNumber());
+                alert.setInfantHospitalNo(infant.getInfantHospitalNumber());
                 alert.setDeliveryDate(infant.getDateOfDelivery());
 
                 // Build alert message from reasons
@@ -1693,21 +1629,21 @@ public class ANCService {
         return highRiskInfants;
     }
 
-    public ANCEnrollmentCheckDto checkANCEnrollmentByPersonUuid(String personUuid, Long pmtctCycleId) {
+    public ANCEnrollmentCheckDto checkANCEnrollmentByPatientUuid(String patientUuid, String pmtctCycleUuid) {
         ANCEnrollmentCheckDto response = new ANCEnrollmentCheckDto();
 
         // Get the ANC record for this patient and cycle
-        Optional<ANC> ancOptional = ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L);
+        Optional<ANC> ancOptional = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
 
         if (ancOptional.isPresent()) {
             ANC anc = ancOptional.get();
             response.setHasAncEnrollment(true);
-            response.setFirstAncDate(anc.getFirstAncDate());
+            response.setDateOfEnrollment(anc.getDateOfEnrollment());
             response.setLmp(anc.getLMP());
             response.setAncNo(anc.getAncNo());
         } else {
             response.setHasAncEnrollment(false);
-            response.setFirstAncDate(null);
+            response.setDateOfEnrollment(null);
             response.setLmp(null);
             response.setAncNo(null);
         }
@@ -1866,10 +1802,67 @@ public class ANCService {
         Long infantExitDenominator = pmtctEnrollmentRepository.getInfantExitDenominator(facilityId);
         if (infantExitDenominator == null) infantExitDenominator = 0L;
 
+        // Key PMTCT Indicators - Pregnancy Cycles
+        Long totalPregnancyCycles = pmtctEnrollmentRepository.getTotalPregnancyCycles(facilityId);
+        if (totalPregnancyCycles == null) totalPregnancyCycles = 0L;
+
+        Long activePregnancyCycles = pmtctEnrollmentRepository.getActivePregnancyCycles(facilityId);
+        if (activePregnancyCycles == null) activePregnancyCycles = 0L;
+
+        Long closedPregnancyCycles = pmtctEnrollmentRepository.getClosedPregnancyCycles(facilityId);
+        if (closedPregnancyCycles == null) closedPregnancyCycles = 0L;
+
+        // Key PMTCT Indicators - Visits
+        Long totalANCVisits = pmtctEnrollmentRepository.getTotalANCVisits(facilityId);
+        if (totalANCVisits == null) totalANCVisits = 0L;
+
+        Long totalMotherVisits = pmtctEnrollmentRepository.getTotalMotherVisits(facilityId);
+        if (totalMotherVisits == null) totalMotherVisits = 0L;
+
+        // Infant Information Summary
+        Long totalInfantsRegistered = pmtctEnrollmentRepository.getTotalInfantsRegistered(facilityId);
+        if (totalInfantsRegistered == null) totalInfantsRegistered = 0L;
+
+        Long infantsAlive = pmtctEnrollmentRepository.getInfantsAlive(facilityId);
+        if (infantsAlive == null) infantsAlive = 0L;
+
+        Long infantsOnARV = pmtctEnrollmentRepository.getInfantsOnARV(facilityId);
+        if (infantsOnARV == null) infantsOnARV = 0L;
+
+        Long infantsWithPCRTest = pmtctEnrollmentRepository.getInfantsWithPCRTest(facilityId);
+        if (infantsWithPCRTest == null) infantsWithPCRTest = 0L;
+
+        Long infantsPCRPositive = pmtctEnrollmentRepository.getInfantsPCRPositive(facilityId);
+        if (infantsPCRPositive == null) infantsPCRPositive = 0L;
+
+        Long infantsPCRNegative = pmtctEnrollmentRepository.getInfantsPCRNegative(facilityId);
+        if (infantsPCRNegative == null) infantsPCRNegative = 0L;
+
+        Long infantsWithRapidTest = pmtctEnrollmentRepository.getInfantsWithRapidTest(facilityId);
+        if (infantsWithRapidTest == null) infantsWithRapidTest = 0L;
+
+        Long infantsDeceased = pmtctEnrollmentRepository.getInfantsDeceased(facilityId);
+        if (infantsDeceased == null) infantsDeceased = 0L;
+
         return PMTCTStatisticsDto.builder()
                 .totalPatients(totalPatients)
                 .ancPatients(ancPatients)
                 .pmtctPatients(pmtctPatients)
+                // Key PMTCT Indicators
+                .totalPregnancyCycles(totalPregnancyCycles)
+                .activePregnancyCycles(activePregnancyCycles)
+                .closedPregnancyCycles(closedPregnancyCycles)
+                .totalANCVisits(totalANCVisits)
+                .totalMotherVisits(totalMotherVisits)
+                // Infant Information Summary
+                .totalInfantsRegistered(totalInfantsRegistered)
+                .infantsAlive(infantsAlive)
+                .infantsOnARV(infantsOnARV)
+                .infantsWithPCRTest(infantsWithPCRTest)
+                .infantsPCRPositive(infantsPCRPositive)
+                .infantsPCRNegative(infantsPCRNegative)
+                .infantsWithRapidTest(infantsWithRapidTest)
+                .infantsDeceased(infantsDeceased)
                 .pmtctViralLoadNumerator(vlNumerator)
                 .pmtctViralLoadDenominator(vlDenominator)
                 .pmtctViralLoadUptakePercentage(vlPercentage)

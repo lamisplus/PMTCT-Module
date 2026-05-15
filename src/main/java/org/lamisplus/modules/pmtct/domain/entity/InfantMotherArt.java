@@ -1,6 +1,8 @@
 package org.lamisplus.modules.pmtct.domain.entity;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedBy;
@@ -21,24 +23,25 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-public class InfantMotherArt implements Serializable, Persistable<Long>
+public class InfantMotherArt implements Serializable, Persistable<String>
 {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Getter(AccessLevel.NONE)
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
     private LocalDate visitDate;
     private String ancNumber;
     private String  motherArtInitiationTime;
     private Long regimenTypeId;
     private Long regimenId;
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String  uuid;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
+    @Column(name = "mother_patient_uuid")
+    private String motherPatientUuid;
     private Long archived;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private Long facilityId;
     @Column(name = "created_date", updatable = false)
     @CreatedDate
@@ -62,7 +65,12 @@ public class InfantMotherArt implements Serializable, Persistable<Long>
     }
 
     @Override
+    public String getId() {
+        return this.uuid;
+    }
+
+    @Override
     public boolean isNew() {
-        return id == null;
+        return uuid == null;
     }
 }

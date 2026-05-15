@@ -15,6 +15,7 @@ import org.lamisplus.modules.pmtct.domain.entity.*;
 //import org.lamisplus.modules.pmtct.projection.PatientPerson;
 import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
 
+import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
@@ -41,6 +42,7 @@ public class PmtctHtsService {
     private final PersonService personService;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
+    private final ANCRepository ancRepository;
 
 
     public PmtctHtsReponseDTO save(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
@@ -64,12 +66,8 @@ public class PmtctHtsService {
         pmtctHtsReponseDTO.setTestingType(pmtctHts.getTestingType());
         pmtctHtsReponseDTO.setSyphilis(pmtctHts.getSyphilis());
         pmtctHtsReponseDTO.setRetesting(pmtctHts.getRetesting());
-        pmtctHtsReponseDTO.setTieBreaker(pmtctHts.getTieBreaker());
-        pmtctHtsReponseDTO.setConfirmatoryTest2(pmtctHts.getConfirmatoryTest2());
-        pmtctHtsReponseDTO.setTieBreaker2(pmtctHts.getTieBreaker2());
         pmtctHtsReponseDTO.setFinalResult(pmtctHts.getFinalResult());
 
-        pmtctHtsReponseDTO.setAncNo(pmtctHts.getAncNo());
         pmtctHtsReponseDTO.setSource(pmtctHts.getSource());
         pmtctHtsReponseDTO.setPregnancyStatusAtEntry(pmtctHts.getPregnancyStatusAtEntry());
         pmtctHtsReponseDTO.setPreviouslyKnownHivPositive(pmtctHts.getPreviouslyKnownHivPositive());
@@ -91,12 +89,24 @@ public class PmtctHtsService {
             User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctHts.getPersonUuid(), facilityId, 0);
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctHts.getPatientUuid(), facilityId, 0);
             if (persons.isPresent()) {
-                System.out.println("Doc check me out here 1");
                 Person person = persons.get();
                 pmtctHtsReponseDTO.setHospitalNumber(person.getHospitalNumber());
-                pmtctHtsReponseDTO.setPersonUuid(person.getUuid());
+                pmtctHtsReponseDTO.setPatientUuid(person.getUuid());
+                pmtctHtsReponseDTO.setFirstName(person.getFirstName());
+                pmtctHtsReponseDTO.setSurname(person.getSurname());
+                pmtctHtsReponseDTO.setOtherName(person.getOtherName());
+                pmtctHtsReponseDTO.setSex(person.getSex());
+                pmtctHtsReponseDTO.setDateOfBirth(person.getDateOfBirth());
+                pmtctHtsReponseDTO.setAge(calculateAge(person.getDateOfBirth()));
+                pmtctHtsReponseDTO.setFullName(person.getFullName());
+                if (person.getAddress() != null) {
+                    pmtctHtsReponseDTO.setAddress(person.getAddress().toString());
+                }
+                if (person.getContactPoint() != null) {
+                    pmtctHtsReponseDTO.setContactPoint(person.getContactPoint().toString());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -124,16 +134,14 @@ public class PmtctHtsService {
         pmtctHts.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
         pmtctHts.setTestingType(pmtctHtsRequestDTO.getTestingType());
         pmtctHts.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
-        pmtctHts.setHospitalNumber(pmtctHtsRequestDTO.getHospitalNumber());
         pmtctHts.setArchived(0L);
-        pmtctHts.setPersonUuid(pmtctHtsRequestDTO.getPersonUuid());
-        pmtctHts.setAncNo(pmtctHtsRequestDTO.getAncNo());
+        pmtctHts.setPatientUuid(pmtctHtsRequestDTO.getPatientUuid());
         pmtctHts.setRetesting(pmtctHtsRequestDTO.getRetesting());
         pmtctHts.setTieBreaker(pmtctHtsRequestDTO.getTieBreaker());
         pmtctHts.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
         pmtctHts.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
         pmtctHts.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
-        pmtctHts.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
+        pmtctHts.setPmtctCycleUuid(pmtctHtsRequestDTO.getPmtctCycleUuid());
         pmtctHts.setFacilityId(facilityId);
         pmtctHts.setCreatedBy(user.getUserName());
         pmtctHts.setLastModifiedBy(user.getUserName());
@@ -159,8 +167,8 @@ public class PmtctHtsService {
         PmtctHts savedHts = this.pmtctHtsRepository.save(pmtctHts);
 
         // Update pregnancy cycle status to ACTIVE
-        if (pmtctHtsRequestDTO.getPmtctCycleId() != null) {
-            pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleId());
+        if (pmtctHtsRequestDTO.getPmtctCycleUuid() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleUuid());
         }
 
         return savedHts;
@@ -169,7 +177,7 @@ public class PmtctHtsService {
 //
 
 
-    public PmtctHtsRequestDTO updatePmtctHts(Long id, PmtctHtsRequestDTO pmtctHtsRequestDTO)
+    public PmtctHtsRequestDTO updatePmtctHts(String id, PmtctHtsRequestDTO pmtctHtsRequestDTO)
     {
 
 
@@ -189,13 +197,12 @@ public class PmtctHtsService {
             pmtctEnrollment1.setSyphilis(pmtctHtsRequestDTO.getSyphilis());
             pmtctEnrollment1.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
             pmtctEnrollment1.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
-            pmtctEnrollment1.setAncNo(pmtctHtsRequestDTO.getAncNo());
             pmtctEnrollment1.setRetesting(pmtctHtsRequestDTO.getRetesting());
             pmtctEnrollment1.setTieBreaker(pmtctHtsRequestDTO.getTieBreaker());
             pmtctEnrollment1.setConfirmatoryTest2(pmtctHtsRequestDTO.getConfirmatoryTest2());
             pmtctEnrollment1.setTieBreaker2(pmtctHtsRequestDTO.getTieBreaker2());
             pmtctEnrollment1.setFinalResult(pmtctHtsRequestDTO.getFinalResult());
-            pmtctEnrollment1.setPmtctCycleId(pmtctHtsRequestDTO.getPmtctCycleId());
+            pmtctEnrollment1.setPmtctCycleUuid(pmtctHtsRequestDTO.getPmtctCycleUuid());
             pmtctEnrollment1.setPregnancyStatusAtEntry(pmtctHtsRequestDTO.getPregnancyStatusAtEntry());
             pmtctEnrollment1.setPreviouslyKnownHivPositive(pmtctHtsRequestDTO.getPreviouslyKnownHivPositive());
             pmtctEnrollment1.setEnrolledOnArt(pmtctHtsRequestDTO.getEnrolledOnArt());
@@ -222,8 +229,8 @@ public class PmtctHtsService {
             this.pmtctHtsRepository.save(pmtctEnrollment1);
 
             // Update pregnancy cycle status to ACTIVE
-            if (pmtctHtsRequestDTO.getPmtctCycleId() != null) {
-                pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleId());
+            if (pmtctHtsRequestDTO.getPmtctCycleUuid() != null) {
+                pmtctPregnancyCycleService.updatePmtctStatusToActive(pmtctHtsRequestDTO.getPmtctCycleUuid());
             }
 
 
@@ -233,7 +240,7 @@ public class PmtctHtsService {
 
 
 
-    public void deletePmtctHtsRecord(Long id) throws Exception {
+    public void deletePmtctHtsRecord(String id) throws Exception {
         PmtctHts existingRec = this.pmtctHtsRepository.findById(id)
                 .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
         existingRec.setArchived(1L);
@@ -241,12 +248,12 @@ public class PmtctHtsService {
     }
 
 
-    public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(Long id) {
+    public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(String id) {
         return convertEntitytoRespondDto(pmtctHtsRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(PmtctHts.class, "Id", id+ "") ));
     }
 
-    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String personUuid) {
-        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentById(personUuid);
+    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String patientUuid) {
+        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentById(patientUuid);
 
         if (entity == null) {
             return null;
@@ -255,8 +262,8 @@ public class PmtctHtsService {
         return convertEntitytoRespondDto(entity);
     }
 
-    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String personUuid, Long pmtctCycleId) {
-        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentByIdAndCycleId(personUuid, pmtctCycleId);
+    public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String patientUuid, String pmtctCycleUuid) {
+        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentByIdAndCycleId(patientUuid, pmtctCycleUuid);
 
         if (entity == null) {
             return null;
@@ -265,24 +272,24 @@ public class PmtctHtsService {
         return convertEntitytoRespondDto(entity);
     }
 
-    public  String  getLatestConfirmatoryResult(String personUuid) {
-        return pmtctHtsRepository.findLatestFinalResult(personUuid).orElse("");
+    public  String  getLatestConfirmatoryResult(String patientUuid) {
+        return pmtctHtsRepository.findLatestFinalResult(patientUuid).orElse("");
     }
 
-    public  String  getLatestConfirmatoryResult(String personUuid, Long pmtctCycleId) {
-        return pmtctHtsRepository.findLatestFinalResultByPersonUuidAndCycleId(personUuid, pmtctCycleId).orElse("");
+    public  String  getLatestConfirmatoryResult(String patientUuid, String pmtctCycleUuid) {
+        return pmtctHtsRepository.findLatestFinalResultByPatientUuidAndCycleId(patientUuid, pmtctCycleUuid).orElse("");
     }
 
 
 
-    public boolean confirmIfDateExist(String personUuid, LocalDate dateOfHivTest) {
-        return pmtctHtsRepository.findIfDateExist(personUuid, dateOfHivTest);
+    public boolean confirmIfDateExist(String patientUuid, LocalDate dateOfHivTest) {
+        return pmtctHtsRepository.findIfDateExist(patientUuid, dateOfHivTest);
     }
 //
 
-    public HivRetestStatusResponse getHivRetestStatus(String personUuid) {
+    public HivRetestStatusResponse getHivRetestStatus(String patientUuid) {
 
-        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultList(personUuid);
+        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultList(patientUuid);
 
         if (results.isEmpty()) {
             return HivRetestStatusResponse.builder()
@@ -310,9 +317,9 @@ public class PmtctHtsService {
         return determineStatus(testResult, testDate);
     }
 
-    public HivRetestStatusResponse getHivRetestStatus(String personUuid, Long pmtctCycleId) {
+    public HivRetestStatusResponse getHivRetestStatus(String patientUuid, String pmtctCycleUuid) {
 
-        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultListByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultListByPatientUuidAndCycleId(patientUuid, pmtctCycleUuid);
 
         if (results.isEmpty()) {
             return HivRetestStatusResponse.builder()
@@ -426,24 +433,35 @@ public class PmtctHtsService {
         PmtctHtsReponseDTO htsResponseDto = new PmtctHtsReponseDTO();
 
         // Set basic person information
-        htsResponseDto.setPersonUuid(person.getPersonUuid());
+        htsResponseDto.setPatientUuid(person.getPatientUuid());
         htsResponseDto.setPersonId(person.getPersonId());
         htsResponseDto.setHospitalNumber(person.getHospitalNumber());
+        htsResponseDto.setFirstName(person.getFirstName());
+        htsResponseDto.setSurname(person.getSurname());
+        htsResponseDto.setOtherName(person.getOtherName());
         htsResponseDto.setAge(calculateAge(person.getDateOfBirth()));
         htsResponseDto.setSex(person.getSex());
         htsResponseDto.setDateOfBirth(person.getDateOfBirth());
         htsResponseDto.setPregnancyCount(person.getPregnancyCount());
         htsResponseDto.setFullName(person.getFullName());
+        htsResponseDto.setAddress(person.getAddress());
+        htsResponseDto.setContactPoint(person.getContactPoint());
 
         // Get latest pregnancy cycle ID and use it to fetch HTS and enrollment data
-        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPersonUuid(person.getPersonUuid());
+        Optional<PmtctPregnancyCycle> latestCycle = pmtctPregnancyCycleRepository.findLatestByPatientUuid(person.getPatientUuid());
 
         if (latestCycle.isPresent()) {
-            Long cycleId = latestCycle.get().getId();
-            htsResponseDto.setPmtctCycleId(cycleId);
+            String cycleUuid = latestCycle.get().getUuid();
+            htsResponseDto.setPmtctCycleUuid(cycleUuid);
+
+            // Get ANC record for the patient to populate ancNo
+            Optional<ANC> ancOpt = ancRepository.findANCByPatientUuid(person.getPatientUuid());
+            if (ancOpt.isPresent()) {
+                htsResponseDto.setAncNo(ancOpt.get().getAncNo());
+            }
 
             // Get HTS record for the latest cycle
-            Optional<PmtctHts> pmtctHtsOptional = pmtctHtsRepository.findByPmtctCycleIdAndArchived(cycleId, 0L);
+            Optional<PmtctHts> pmtctHtsOptional = pmtctHtsRepository.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
 
             if (pmtctHtsOptional.isPresent()) {
                 PmtctHts pmtctHts = pmtctHtsOptional.get();
@@ -461,15 +479,32 @@ public class PmtctHtsService {
                 htsResponseDto.setSyphilis(pmtctHts.getSyphilis());
                 htsResponseDto.setRetesting(pmtctHts.getRetesting());
                 htsResponseDto.setFinalResult(pmtctHts.getFinalResult());
+
+                // PMTCT Register fields
+                htsResponseDto.setPregnancyStatusAtEntry(pmtctHts.getPregnancyStatusAtEntry());
+                htsResponseDto.setPreviouslyKnownHivPositive(pmtctHts.getPreviouslyKnownHivPositive());
+                htsResponseDto.setEnrolledOnArt(pmtctHts.getEnrolledOnArt());
+                htsResponseDto.setTypeOfHivTest(pmtctHts.getTypeOfHivTest());
+                htsResponseDto.setHivEarlyDetect(pmtctHts.getHivEarlyDetect());
+                htsResponseDto.setHivEarlyDetectViralLoad(pmtctHts.getHivEarlyDetectViralLoad());
+                htsResponseDto.setConfirmatoryFromSpokes(pmtctHts.getConfirmatoryFromSpokes());
+                htsResponseDto.setInitiatedOnProphylaxis(pmtctHts.getInitiatedOnProphylaxis());
+                htsResponseDto.setTbReferred(pmtctHts.getTbReferred());
+                htsResponseDto.setSyphilisInfo(pmtctHts.getSyphilisInfo());
+                htsResponseDto.setHbvInfo(pmtctHts.getHbvInfo());
+                htsResponseDto.setPartnerInfo(pmtctHts.getPartnerInfo());
+                htsResponseDto.setTbScreeningStatus(pmtctHts.getTbScreeningStatus());
+                htsResponseDto.setPmtctTestEntryPoint(pmtctHts.getPmtctTestEntryPoint());
+                htsResponseDto.setViralLoadMonitoring(pmtctHts.getViralLoadMonitoring());
+                htsResponseDto.setSource(pmtctHts.getSource());
             }
 
-            // Use cycle ID to get enrollment data for the latest pregnancy cycle
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleId, 0L);
+            // Use cycle UUID to get enrollment data for the latest pregnancy cycle
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
 
             if (enrollment.isPresent()) {
                 PMTCTEnrollment enrollmentData = enrollment.get();
                 htsResponseDto.setPmtctRegStatus(true);
-                htsResponseDto.setAncNo(enrollmentData.getAncNo());
                 htsResponseDto.setArtStartDate(enrollmentData.getArtStartDate());
                 htsResponseDto.setEntryPoint(enrollmentData.getEntryPoint());
                 htsResponseDto.setTbStatus(enrollmentData.getTbStatus());

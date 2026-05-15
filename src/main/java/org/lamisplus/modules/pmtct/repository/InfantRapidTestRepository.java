@@ -9,30 +9,30 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-public interface InfantRapidTestRepository  extends CommonJpaRepository<InfantRapidAntiBodyTest, Long>{
+public interface InfantRapidTestRepository  extends CommonJpaRepository<InfantRapidAntiBodyTest, String>{
 
 
     Optional<InfantRapidAntiBodyTest> findByUniqueUuid(String uniqueUuid);
 
     @Query(value = "SELECT unique_uuid FROM public.pmtct_infant_visit \n" +
             "WHERE infant_hospital_number = ?1 and archived = 0 and visit_date =(  \n" +
-            "\t\t SELECT  MAX(visit_date) FROM public.pmtct_infant_visit  WHERE infant_hospital_number = ?1 and mother_person_uuid = CAST(?2 AS VARCHAR) and archived = 0 \t\n" +
+            "\t\t SELECT  MAX(visit_date) FROM public.pmtct_infant_visit  WHERE infant_hospital_number = ?1 and mother_patient_uuid = CAST(?2 AS VARCHAR) and archived = 0 \t\n" +
             ")", nativeQuery = true)
     String getLastInfantVisit (String infantHospitalNumber, String motherUuid);
 
     @Query(value = "SELECT unique_uuid FROM public.pmtct_infant_visit " +
-            "WHERE infant_hospital_number = ?1 AND mother_person_uuid = CAST(?2 AS VARCHAR) AND pmtct_cycle_id = ?3 AND archived = 0 " +
+            "WHERE infant_hospital_number = ?1 AND mother_patient_uuid = CAST(?2 AS VARCHAR) AND pmtct_cycle_uuid = ?3 AND archived = 0 " +
             "ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)
-    String getLastInfantVisitByCycle(String infantHospitalNumber, String motherUuid, Long pmtctCycleId);
+    String getLastInfantVisitByCycle(String infantHospitalNumber, String motherUuid, String pmtctCycleUuid);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_rapid_antibody WHERE unique_uuid = CAST(?1 AS VARCHAR) AND archived = 0 ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)
     InfantRapidAntiBodyTest getLastInfantRapid (String lastVistUuid);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_rapid_antibody WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND date_of_test = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    InfantRapidAntiBodyTest getLatestByMotherPersonUuidAndDateOfTest(String motherPersonUuid, LocalDate dateOfTest);
+    @Query(value = "SELECT * FROM public.pmtct_infant_rapid_antibody WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND date_of_test = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantRapidAntiBodyTest getLatestByMotherPatientUuidAndDateOfTest(String motherPatientUuid, LocalDate dateOfTest);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_rapid_antibody WHERE unique_uuid = CAST(?1 AS VARCHAR) AND mother_person_uuid = CAST(?2 AS VARCHAR) AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    InfantRapidAntiBodyTest getByUniqueUuidAndMotherPersonUuid(String uniqueUuid, String motherPersonUuid);
+    @Query(value = "SELECT * FROM public.pmtct_infant_rapid_antibody WHERE unique_uuid = CAST(?1 AS VARCHAR) AND mother_patient_uuid = CAST(?2 AS VARCHAR) AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantRapidAntiBodyTest getByUniqueUuidAndMotherPatientUuid(String uniqueUuid, String motherPatientUuid);
 }
 
 

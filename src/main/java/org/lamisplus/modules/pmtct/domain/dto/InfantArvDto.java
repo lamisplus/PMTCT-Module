@@ -4,12 +4,14 @@ import java.time.LocalDate;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.io.Serializable;
 @Data
+@NoArgsConstructor
 public class InfantArvDto implements Serializable
 {
     private String source;
-    private Long id;
+    private String id;
     private Long infantId;
 
     private LocalDate visitDate;
@@ -26,7 +28,7 @@ public class InfantArvDto implements Serializable
     private String  uniqueUuid;
     private LocalDate dateOfCtx;
     private LocalDate dateOfArv;
-    private Long pmtctCycleId;
-    private String motherPersonUuid;
+    private String pmtctCycleUuid;
+    private String motherPatientUuid;
 
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.*;
+import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.lamisplus.modules.pmtct.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,11 +41,20 @@ public class PMTCTController {
 
     private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
+    private final PmtctVisitRepository pmtctVisitRepository;
+
+    @GetMapping(value = "anc-visit-count")
+    public ResponseEntity<Integer> getAncVisitCount(
+            @RequestParam String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctVisitRepository.getMotherVisitsWithPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid));
+    }
+
     @PostMapping(value = "anc-enrollement")
     public ResponseEntity<?> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
-        if (ancEnrollementRequestDto.getPmtctCycleId() == null) {
+        if (ancEnrollementRequestDto.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle id is required\"}");
+                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
         }
         return ResponseEntity.ok(ancService.ANCEnrollement(ancEnrollementRequestDto));
     }
@@ -65,20 +75,22 @@ public class PMTCTController {
 
 
     @GetMapping("{id}")
-    public ResponseEntity<ANC> getSingleANC(@PathVariable Long id) {
+    public ResponseEntity<ANC> getSingleANC(@PathVariable String id) {
         return ResponseEntity.ok(ancService.getSingleAnc(id));
     }
 
     @GetMapping(value = "get-anc-by-person")
-    public ResponseEntity<ANC> getANCByPersonUuidAndCycleId(
-            @RequestParam String personUuid,
-            @RequestParam Long pmtctCycleId) {
-        return ResponseEntity.ok(ancService.getAncByPersonUuidAndCycleId(personUuid, pmtctCycleId));
+    public ResponseEntity<ANC> getANCByPatientUuidAndCycleId(
+            @RequestParam String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        ANC anc = ancService.getAncByPatientUuidAndCycleId(patientUuid, pmtctCycleUuid);
+        if (anc == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(anc);
     }
 
 //    @GetMapping(value = "check-for-infant-high-risk")
-//    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PersonUuid) {
-//        return ResponseEntity.ok(ancService.isAtRisk(PersonUuid));
+//    public ResponseEntity<Boolean> checkForInfantRiskStatus(@PathVariable long PatientUuid) {
+//        return ResponseEntity.ok(ancService.isAtRisk(PatientUuid));
 //    }
 
 
@@ -132,28 +144,33 @@ public class PMTCTController {
 //    }
 //
     @PostMapping(value = "/pmtct-enrollment")
-    public PMTCTEnrollmentRespondDto pmtctEnrollment(@Valid @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
-        return this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto);
+    public ResponseEntity<?> pmtctEnrollment(@Valid @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+        try {
+            return ResponseEntity.ok(this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping("/art/")
-    public List<PatientArtData> patientArtData(@RequestParam String PersonUuid) {
+    public List<PatientArtData> patientArtData(@RequestParam String PatientUuid) {
         Long facility = organizationService.getCurrentUserOrganization();
-        return pmtctEnrollmentService.getArtDate(PersonUuid, facility);
+        return pmtctEnrollmentService.getArtDate(PatientUuid, facility);
     }
 
     //uncomment
 
     @GetMapping("/vl-result/")
-    public List<SingleResultProjectionDTO> vlResultOnDate(@RequestParam String PersonUuid,
+    public List<SingleResultProjectionDTO> vlResultOnDate(@RequestParam String PatientUuid,
                                                           @RequestParam String dateResultReceived) {
         Long facility = organizationService.getCurrentUserOrganization();
-        return pmtctEnrollmentService.getVlResult(PersonUuid, dateResultReceived);
+        return pmtctEnrollmentService.getVlResult(PatientUuid, dateResultReceived);
     }
 
     //    @GetMapping("{id}")
-//    public ResponseEntity<PatientArtData>  getPatientArtData (@PathVariable String PersonUuid) {
-//        return ResponseEntity.ok(pmtctEnrollmentService.getArtDate(PersonUuid));
+//    public ResponseEntity<PatientArtData>  getPatientArtData (@PathVariable String PatientUuid) {
+//        return ResponseEntity.ok(pmtctEnrollmentService.getArtDate(PatientUuid));
 //    }
 //    @GetMapping(value = "/get-all-pmtct-enrollment")
 //    public ResponseEntity<List<PMTCTEnrollmentRespondDto>> getAllPmtctEnrollment() {
@@ -206,70 +223,81 @@ public class PMTCTController {
     }
 
     @PutMapping(value = "update-mother-visit/{id}")
-    public ResponseEntity<PmtctVisitResponseDto> updateMotherVisit(@PathVariable("id") Long id, @RequestBody PmtctVisitRequestDto pmtctVisitRequestDtoPmtctVisit) {
+    public ResponseEntity<PmtctVisitResponseDto> updateMotherVisit(@PathVariable("id") String id, @RequestBody PmtctVisitRequestDto pmtctVisitRequestDtoPmtctVisit) {
         return ResponseEntity.ok(pmtctVisitService.updatePmtctVisit(id, pmtctVisitRequestDtoPmtctVisit));
     }
 
     @GetMapping(value = "view-mother-visit/{id}")
-    public ResponseEntity<PmtctVisitResponseDto> viewMotherVisit(@PathVariable("id") Long id) {
+    public ResponseEntity<PmtctVisitResponseDto> viewMotherVisit(@PathVariable("id") String id) {
         return ResponseEntity.ok(pmtctVisitService.viewPmtctVisit(id));
     }
 
 
-    @GetMapping(value = "get-delivery-date/{personUuid}")
-    public ResponseEntity<String> getDeliveryDate(@PathVariable("personUuid") String personUuid, @RequestParam("pmtctCycleId") Long pmtctCycleId) {
-        return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(personUuid, pmtctCycleId));
+    @GetMapping(value = "get-delivery-date/{patientUuid}")
+    public ResponseEntity<String> getDeliveryDate(@PathVariable("patientUuid") String patientUuid, @RequestParam("pmtctCycleUuid") String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getDeliveryDate(patientUuid, pmtctCycleUuid));
     }
 
-    @GetMapping(value = "get-initial-visit-date/{personUuid}")
-    public ResponseEntity<LocalDate> getInitialVisitDate(@PathVariable("personUuid") String personUuid, @RequestParam("pmtctCycleId") Long pmtctCycleId) {
-        return ResponseEntity.ok(pmtctEnrollmentService.getInitialVisitDate(personUuid, pmtctCycleId));
+    @GetMapping(value = "get-initial-visit-date/{patientUuid}")
+    public ResponseEntity<LocalDate> getInitialVisitDate(@PathVariable("patientUuid") String patientUuid, @RequestParam("pmtctCycleUuid") String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getInitialVisitDate(patientUuid, pmtctCycleUuid));
     }
 
-    @GetMapping(value = "get-latest-art-regimen/{personUuid}")
-    public ResponseEntity<String> getLatestArtRegimen(@PathVariable("personUuid") String personUuid) {
-        return ResponseEntity.ok(pmtctVisitService.getLatestArtRegimenFromPharmacy(personUuid));
+    @GetMapping(value = "get-latest-art-regimen/{patientUuid}")
+    public ResponseEntity<String> getLatestArtRegimen(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(pmtctVisitService.getLatestArtRegimenFromPharmacy(patientUuid));
     }
 
-    @GetMapping(value = "is-cycle-closed/{cycleId}")
-    public ResponseEntity<Boolean> isCycleClosed(@PathVariable("cycleId") Long cycleId) {
-        return ResponseEntity.ok(pmtctPregnancyCycleService.isCycleClosed(cycleId));
+    @GetMapping(value = "is-cycle-closed/{cycleUuid}")
+    public ResponseEntity<Boolean> isCycleClosed(@PathVariable("cycleUuid") String cycleUuid) {
+        return ResponseEntity.ok(pmtctPregnancyCycleService.isCycleClosed(cycleUuid));
     }
 
-    @GetMapping(value = "check-unsuppressed-vl/{personUuid}")
+    @PutMapping(value = "reopen-cycle/{cycleUuid}")
+    public ResponseEntity<String> reopenCycle(@PathVariable("cycleUuid") String cycleUuid) {
+        pmtctPregnancyCycleService.reopenCycle(cycleUuid);
+        return ResponseEntity.ok("Cycle re-opened successfully");
+    }
+
+    @GetMapping(value = "check-unsuppressed-vl/{patientUuid}")
     public ResponseEntity<Boolean> checkUnsuppressedVl(
-            @PathVariable("personUuid") String personUuid) {
-        return ResponseEntity.ok(pmtctVisitService.isViralLoadUnsuppressed(personUuid));
+            @PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(pmtctVisitService.isViralLoadUnsuppressed(patientUuid));
     }
 
 
     @PutMapping(value = "update-anc/{id}")
-    public ResponseEntity<ANCRequestDto> updateANC(@PathVariable("id") Long id, @RequestBody ANCRequestDto ancRequestDto) {
+    public ResponseEntity<ANCRequestDto> updateANC(@PathVariable("id") String id, @RequestBody ANCRequestDto ancRequestDto) {
         return ResponseEntity.ok(ancService.updateAnc(id, ancRequestDto));
     }
 
     @GetMapping(value = "view-anc/{id}")
-    public ResponseEntity<ANCRequestDto> viewANC(@PathVariable("id") Long id) {
+    public ResponseEntity<ANCRequestDto> viewANC(@PathVariable("id") String id) {
         return ResponseEntity.ok(ancService.viewANCById(id));
     }
 
     @PutMapping(value = "update-pmtct-enrollment/{id}")
-    public ResponseEntity<PMTCTEnrollmentRequestDto> updatePmtctEnrollment(@PathVariable("id") Long id, @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
-        return ResponseEntity.ok(pmtctEnrollmentService.updatePMTCTEnrollment(id, pmtctEnrollmentRequestDto));
+    public ResponseEntity<?> updatePmtctEnrollment(@PathVariable("id") String id, @RequestBody PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
+        try {
+            return ResponseEntity.ok(pmtctEnrollmentService.updatePMTCTEnrollment(id, pmtctEnrollmentRequestDto));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping(value = "view-pmtct-enrollment/{id}")
-    public ResponseEntity<PMTCTEnrollmentRespondDto> viewPmtctEnrollment(@PathVariable("id") Long id) {
+    public ResponseEntity<PMTCTEnrollmentRespondDto> viewPmtctEnrollment(@PathVariable("id") String id) {
         return ResponseEntity.ok(pmtctEnrollmentService.viewPMTCTEnrollmentById(id));
     }
 
     @PutMapping(value = "update-delivery/{id}")
-    public ResponseEntity<DeliveryRequestDto> updateDelivery(@PathVariable("id") Long id, @RequestBody DeliveryRequestDto deliveryRequestDto) {
+    public ResponseEntity<DeliveryRequestDto> updateDelivery(@PathVariable("id") String id, @RequestBody DeliveryRequestDto deliveryRequestDto) {
         return ResponseEntity.ok(deliveryService.updateDelivery(id, deliveryRequestDto));
     }
 
     @GetMapping(value = "view-delivery/{id}")
-    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") Long id) {
+    public ResponseEntity<Delivery> viewDelivery(@PathVariable("id") String id) {
         return ResponseEntity.ok(deliveryService.getSingleDelivery(id));
     }
 
@@ -278,9 +306,14 @@ public class PMTCTController {
         return ResponseEntity.ok(deliveryService.getSingleDelivery2(ancNo));
     }
 
-    @GetMapping(value = "view-delivery-with-uuid/{personUuid}/{pmtctCycleId}")
-    public ResponseEntity<Delivery> viewDeliveryWithUuid(@PathVariable("personUuid") String personUuid, @PathVariable("pmtctCycleId") Long pmtctCycleId) {
-        return ResponseEntity.ok(deliveryService.getSingleDeliveryWithUuid(personUuid,pmtctCycleId));
+    @GetMapping(value = "view-delivery-with-uuid/{patientUuid}/{pmtctCycleUuid}")
+    public ResponseEntity<Delivery> viewDeliveryWithUuid(@PathVariable("patientUuid") String patientUuid, @PathVariable("pmtctCycleUuid") String pmtctCycleUuid) {
+        return ResponseEntity.ok(deliveryService.getSingleDeliveryWithUuid(patientUuid,pmtctCycleUuid));
+    }
+
+    @GetMapping(value = "view-latest-delivery/{patientUuid}")
+    public ResponseEntity<Delivery> viewLatestDelivery(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(deliveryService.getLatestDeliveryByPatientUuid(patientUuid));
     }
 
     @GetMapping(value = "activities/{ancNo}")
@@ -288,11 +321,11 @@ public class PMTCTController {
         return ancAcivityTracker.getANCActivities(ancNo);
     }
 
-    @GetMapping(value = "getAllActivities/{personUuid}")
-    public List<ActivityTracker> getAllActivitiesByPersonUuid(
-            @PathVariable("personUuid") String personUuid,
-            @RequestParam Long pmtctCycleId) {
-        return ancAcivityTracker.getAllActivities(personUuid, pmtctCycleId);
+    @GetMapping(value = "getAllActivities/{patientUuid}")
+    public List<ActivityTracker> getAllActivitiesByPatientUuid(
+            @PathVariable("patientUuid") String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ancAcivityTracker.getAllActivities(patientUuid, pmtctCycleUuid);
     }
 
     @PostMapping(value = "add-infants")
@@ -301,27 +334,32 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant/{id}")
-    public ResponseEntity<Infant> viewInfant(@PathVariable("id") Long id) {
+    public ResponseEntity<Infant> viewInfant(@PathVariable("id") String id) {
         return ResponseEntity.ok(infantService.getSingleInfant(id));
     }
 
+    @GetMapping(value = "get-infant-dto/{id}")
+    public ResponseEntity<InfantDto> getInfantDtoById(@PathVariable("id") String id) {
+        return ResponseEntity.ok(infantService.getInfantDtoById(id));
+    }
+
     @PutMapping(value = "update-infant/{id}")
-    public ResponseEntity<InfantDtoUpdateResponse> updateInfant(@PathVariable("id") Long id, @RequestBody InfantDto infantDto) {
+    public ResponseEntity<InfantDtoUpdateResponse> updateInfant(@PathVariable("id") String id, @RequestBody InfantDto infantDto) {
         return ResponseEntity.ok(infantService.updateInfant(id, infantDto));
     }
 
     @PostMapping(value = "add-partnerinformation-in-anc/{id}")
-    public PartnerInformation addPartnerInformation(@PathVariable("id") Long id, @RequestBody PartnerInformation partnerInformation) {
+    public PartnerInformation addPartnerInformation(@PathVariable("id") String id, @RequestBody PartnerInformation partnerInformation) {
         return ancService.addPartnerToAnc(id, partnerInformation);
     }
 
     @PutMapping(value = "update-partnerinformation-in-anc/{id}/{partnerId}")
-    public PartnerInformation updatePartnerInformation(@PathVariable("id") Long id, @PathVariable("partnerId") String partnerId, @RequestBody PartnerInformation partnerInformation) {
+    public PartnerInformation updatePartnerInformation(@PathVariable("id") String id, @PathVariable("partnerId") String partnerId, @RequestBody PartnerInformation partnerInformation) {
         return ancService.updatePartnerInAnc(id, partnerId, partnerInformation);
     }
 
     @PutMapping(value = "delete-partnerinformation-in-anc/{id}")
-    public void deletePartnerInformation(@PathVariable("id") Long id) {
+    public void deletePartnerInformation(@PathVariable("id") String id) {
         ancService.deletePartnerInfo(id);
     }
 
@@ -332,19 +370,19 @@ public class PMTCTController {
         return ResponseEntity.ok(infantService.getInfantByAncNo(ancNo));
     }
 
-//    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-//    public ResponseEntity<List<Infant>> getInfantByMotherPersonUuid(@PathVariable("personUuid") String personUuid) {
-//        System.out.println("personUuid "+ personUuid);
+//    @GetMapping(value = "get-infant-by-mother-person-uuid/{patientUuid}")
+//    public ResponseEntity<List<Infant>> getInfantByMotherPatientUuid(@PathVariable("patientUuid") String patientUuid) {
+//        System.out.println("patientUuid "+ patientUuid);
 //
-//        return ResponseEntity.ok (infantService.getInfantWithMotherPersonUuid(personUuid));
+//        return ResponseEntity.ok (infantService.getInfantWithMotherPatientUuid(patientUuid));
 //    }
 
-    @GetMapping(value = "get-infant-by-mother-person-uuid/{personUuid}")
-    public ResponseEntity<List<InfantDto>> getInfantByMotherPersonUuid(
-            @PathVariable("personUuid") String personUuid,
-            @RequestParam Long pmtctCycleId) {
+    @GetMapping(value = "get-infant-by-mother-person-uuid/{patientUuid}")
+    public ResponseEntity<List<InfantDto>> getInfantByMotherPatientUuid(
+            @PathVariable("patientUuid") String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
 
-        return ResponseEntity.ok(infantService.getSingleInfantByPersonUUID(personUuid, pmtctCycleId));
+        return ResponseEntity.ok(infantService.getSingleInfantByPersonUUID(patientUuid, pmtctCycleUuid));
     }
 
     @GetMapping(value = "/all-infants")
@@ -366,7 +404,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infantvisit/{id}")
-    public ResponseEntity<InfantVisitationConsolidatedDto> viewInfantVisit(@PathVariable("id") Long id) {
+    public ResponseEntity<InfantVisitationConsolidatedDto> viewInfantVisit(@PathVariable("id") String id) {
         return ResponseEntity.ok(infantVisitService.getSingleInfantVisit(id));
     }
 
@@ -381,7 +419,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant-prc/{id}")
-    public ResponseEntity<InfantPCRTest> viewInfantPCRTest(@PathVariable("id") Long id) {
+    public ResponseEntity<InfantPCRTest> viewInfantPCRTest(@PathVariable("id") String id) {
         return ResponseEntity.ok(infantVisitService.getSingleInfantPCRTest(id));
     }
 
@@ -396,7 +434,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant-avr/{id}")
-    public ResponseEntity<InfantArv> viewInfantArv(@PathVariable("id") Long id) {
+    public ResponseEntity<InfantArv> viewInfantArv(@PathVariable("id") String id) {
         return ResponseEntity.ok(infantVisitService.getSingleInfantArv(id));
     }
 
@@ -411,7 +449,7 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "view-infant-mother-art/{id}")
-    public ResponseEntity<InfantMotherArt> viewInfantMotherArt(@PathVariable("id") Long id) {
+    public ResponseEntity<InfantMotherArt> viewInfantMotherArt(@PathVariable("id") String id) {
         return ResponseEntity.ok(infantVisitService.getSingleInfantMotherArt(id));
     }
 
@@ -419,8 +457,6 @@ public class PMTCTController {
 
     @PostMapping(value = "infant-visit-consolidated")
     public ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@Valid @RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
-        if (infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months() != null)
-            this.infantService.updateInfant(infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantHospitalNumber(), infantVisitationConsolidatedDto.getInfantVisitRequestDto().getInfantOutcomeAt18Months());
         return ResponseEntity.ok(infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto()));
     }
 
@@ -431,16 +467,16 @@ public class PMTCTController {
 
     @GetMapping(value = "get-summary-chart")
     public SummaryChart getSummaryChart(
-            @RequestParam("personUuid") String personUuid,
-            @RequestParam Long pmtctCycleId) {
-        return ancAcivityTracker.getPmtctSummaryChart(personUuid, pmtctCycleId);
+            @RequestParam("patientUuid") String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ancAcivityTracker.getPmtctSummaryChart(patientUuid, pmtctCycleUuid);
     }
 
-    @GetMapping(value = "get-pmtct-summary-chart/{personUuid}")
+    @GetMapping(value = "get-pmtct-summary-chart/{patientUuid}")
     public SummaryChart getPmtctSummaryChart(
-            @PathVariable("personUuid") String personUuid,
-            @RequestParam Long pmtctCycleId) {
-        return ancAcivityTracker.getPmtctSummaryChart(personUuid, pmtctCycleId);
+            @PathVariable("patientUuid") String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ancAcivityTracker.getPmtctSummaryChart(patientUuid, pmtctCycleUuid);
     }
 
     @GetMapping(value = "/calculate-ga/{lmp}")
@@ -455,10 +491,10 @@ public class PMTCTController {
 
     @GetMapping(value = "/calculate-ga-from-person")
     public int calculateGaFromPmtct(
-            @RequestParam("personUuid") String personUuid,
+            @RequestParam("patientUuid") String patientUuid,
             @RequestParam("visitDate") LocalDate visitDate,
-            @RequestParam("pmtctCycleId") Long pmtctCycleId) {
-        return ancService.calculateGaFromPmtct(personUuid, visitDate, pmtctCycleId);
+            @RequestParam("pmtctCycleUuid") String pmtctCycleUuid) {
+        return ancService.calculateGaFromPmtct(patientUuid, visitDate, pmtctCycleUuid);
     }
 
     @GetMapping(value = "/calculate-ga3")
@@ -474,19 +510,19 @@ public class PMTCTController {
 
 
     @DeleteMapping(value = "/delete/delivery/{id}")
-    public ResponseEntity<String> deleteDelivery(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteDelivery(@PathVariable("id") String id) {
         this.deliveryService.deleteDelivery(id);
         return ResponseEntity.accepted().build();
     }
 
     @DeleteMapping(value = "/delete/anc/{id}")
-    public ResponseEntity<String> deleteANC(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteANC(@PathVariable("id") String id) {
         this.ancService.deleteANC(id);
         return ResponseEntity.accepted().build();
     }
 
     @DeleteMapping(value = "/delete/pmtct/{id}")
-    public ResponseEntity<String> deletePMTCT(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deletePMTCT(@PathVariable("id") String id) {
         this.pmtctEnrollmentService.deletePMTCT(id);
         return ResponseEntity.accepted().build();
     }
@@ -497,42 +533,42 @@ public class PMTCTController {
     }
 
     @DeleteMapping(value = "/delete/infantvisit/{id}")
-    public ResponseEntity<String> deleteInfantVisit(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteInfantVisit(@PathVariable("id") String id) {
         this.infantVisitService.DeleteInfantVisit(id);
         return ResponseEntity.accepted().build();
     }
 
     @DeleteMapping(value = "/delete/mothervisit/{id}")
-    public ResponseEntity<String> deleteMotherVisit(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteMotherVisit(@PathVariable("id") String id) {
         this.pmtctVisitService.deleteMotherVisit(id);
         return ResponseEntity.accepted().build();
     }
 
     @DeleteMapping(value = "/delete/infantinfo/{id}")
-    public ResponseEntity<String> deleteInfantInfo(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteInfantInfo(@PathVariable("id") String id) {
         this.infantService.deleteInfant(id);
         return ResponseEntity.accepted().build();
     }
 
     @DeleteMapping(value = "delete/partnerinfo/{id}/{partnerId}")
-    public ResponseEntity<String> deletePartnerInfo(@PathVariable("id") Long id, @PathVariable("partnerId") String partnerId) {
+    public ResponseEntity<String> deletePartnerInfo(@PathVariable("id") String id, @PathVariable("partnerId") String partnerId) {
         ancService.deletePartnerFromAnc(id, partnerId);
         return ResponseEntity.accepted().build();
     }
 
     @GetMapping(value = "hiv-status")
-    public ResponseEntity<String> getClientHivStatus(@RequestParam String hospitalNumber, @RequestParam String personUuid) {
-        return ResponseEntity.ok(pmtctEnrollmentService.getHIVStatus(hospitalNumber, personUuid));
+    public ResponseEntity<String> getClientHivStatus(@RequestParam String hospitalNumber, @RequestParam String patientUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.getHIVStatus(hospitalNumber, patientUuid));
     }
 
     @GetMapping(value = "get-latest-pcr")
-    public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber, @RequestParam Long pmtctCycleId) {
-        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber, pmtctCycleId));
+    public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber, @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber, pmtctCycleUuid));
     }
 
     @GetMapping(value = "get-latest-rapid-test")
-    public ResponseEntity<InfantRapidAntiBodyTestDto> getLastRapidTest(@RequestParam String infantHospitalNumber, @RequestParam String motherUuid, @RequestParam Long pmtctCycleId) {
-        return ResponseEntity.ok(infantService.getLatestRapidTest(infantHospitalNumber, motherUuid, pmtctCycleId));
+    public ResponseEntity<InfantRapidAntiBodyTestDto> getLastRapidTest(@RequestParam String infantHospitalNumber, @RequestParam String motherUuid, @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(infantService.getLatestRapidTest(infantHospitalNumber, motherUuid, pmtctCycleUuid));
     }
 
 //
@@ -542,8 +578,8 @@ public class PMTCTController {
 //    }
 
     @GetMapping(value = "is-on-pmtct")
-    public boolean getPatientOnPMTCT(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
-        return   pmtctEnrollmentService.checkPatientOnPMTCT(personUuid, pmtctCycleId);
+    public boolean getPatientOnPMTCT(@RequestParam String patientUuid, @RequestParam String pmtctCycleUuid) {
+        return   pmtctEnrollmentService.checkPatientOnPMTCT(patientUuid, pmtctCycleUuid);
     }
 
     @GetMapping(value = "is-on-hts")
@@ -565,9 +601,9 @@ public class PMTCTController {
 
     @PostMapping(value = "/pmtct-hts-enrollment")
     public ResponseEntity<?> pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
-        if (pmtctHtsRequestDTO.getPmtctCycleId() == null) {
+        if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle id is required\"}");
+                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
         }
         return ResponseEntity.ok(this.pmtctHtsService.save(pmtctHtsRequestDTO));
     }
@@ -575,7 +611,7 @@ public class PMTCTController {
 
 
     @DeleteMapping(value = "/delete/pmtct-hts/{id}")
-    public ResponseEntity<String> deletePmtctHts(@PathVariable("id") Long id) throws Exception {
+    public ResponseEntity<String> deletePmtctHts(@PathVariable("id") String id) throws Exception {
         this.pmtctHtsService.deletePmtctHtsRecord(id);
         return ResponseEntity.accepted().build();
     }
@@ -583,28 +619,28 @@ public class PMTCTController {
 
 
     @GetMapping(value = "view-pmtct-hts-enrollment/{id}")
-    public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") Long id) {
+    public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") String id) {
         return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
     }
 
-    @GetMapping(value = "get-latest-pmtct-hts-enrollment/{personUuid}")
+    @GetMapping(value = "get-latest-pmtct-hts-enrollment/{patientUuid}")
     public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSEnrollmentById(
-            @PathVariable("personUuid") String personUuid,
-            @RequestParam Long pmtctCycleId) {
-        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(personUuid, pmtctCycleId));
+            @PathVariable("patientUuid") String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(patientUuid, pmtctCycleUuid));
     }
 
-    @GetMapping(value = "get-latest-pmtct-hts-by-person-uuid/{personUuid}")
-    public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSByPersonUuid(
-            @PathVariable("personUuid") String personUuid) {
-        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(personUuid));
+    @GetMapping(value = "get-latest-pmtct-hts-by-person-uuid/{patientUuid}")
+    public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSByPatientUuid(
+            @PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(patientUuid));
     }
 
     @PutMapping(value = "update-pmtct-hts-enrollment/{id}")
-    public ResponseEntity<?> updatePmtctHtsRecord(@PathVariable("id") Long id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
-        if (pmtctHtsRequestDTO.getPmtctCycleId() == null) {
+    public ResponseEntity<?> updatePmtctHtsRecord(@PathVariable("id") String id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
+        if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle id is required\"}");
+                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
         }
         return ResponseEntity.ok(pmtctHtsService.updatePmtctHts(id, pmtctHtsRequestDTO));
     }
@@ -614,16 +650,16 @@ public class PMTCTController {
 
     @GetMapping(value = "get-confirmatory-latest-result")
     public  ResponseEntity<String>  getPmtctHtsConfirmatoryTest(
-            @RequestParam String personUuid,
-            @RequestParam(required = false) Long pmtctCycleId) {
+            @RequestParam String patientUuid,
+            @RequestParam(required = false) String pmtctCycleUuid) {
 
         String result;
 
-        // If pmtctCycleId is not provided, fetch the latest cycle
-        if (pmtctCycleId == null) {
-            result = pmtctHtsService.getLatestConfirmatoryResult(personUuid);
+        // If pmtctCycleUuid is not provided, fetch the latest cycle
+        if (pmtctCycleUuid == null) {
+            result = pmtctHtsService.getLatestConfirmatoryResult(patientUuid);
         } else {
-            result = pmtctHtsService.getLatestConfirmatoryResult(personUuid, pmtctCycleId);
+            result = pmtctHtsService.getLatestConfirmatoryResult(patientUuid, pmtctCycleUuid);
         }
 
         return ResponseEntity.ok(result);
@@ -633,43 +669,43 @@ public class PMTCTController {
 
 
     @GetMapping(value = "get-latest-maternal-outcome")
-    public  ResponseEntity<String>  getLatestMaternalOutcome(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
-        return ResponseEntity.ok(pmtctVisitService.getLatestMaternalOutcome(personUuid, pmtctCycleId));
+    public  ResponseEntity<String>  getLatestMaternalOutcome(@RequestParam String patientUuid, @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctVisitService.getLatestMaternalOutcome(patientUuid, pmtctCycleUuid));
     }
 
 
-    @GetMapping(value = "check-for-infant-high-risk/{personUuid}")
+    @GetMapping(value = "check-for-infant-high-risk/{patientUuid}")
     public List<InfantPCRAlert> checkForInfantRiskStatus(
-            @PathVariable String personUuid,
-            @RequestParam Long pmtctCycleId) {
+            @PathVariable String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
 
-        return ancService.getHighRiskInfantDetails(personUuid, pmtctCycleId);
+        return ancService.getHighRiskInfantDetails(patientUuid, pmtctCycleUuid);
     }
 
 
-    @GetMapping(value = "check-for-infant-pcr-alert/{personUuid}")
+    @GetMapping(value = "check-for-infant-pcr-alert/{patientUuid}")
     public List<InfantPCRAlert> getHEIPrompt(
-            @PathVariable String personUuid,
-            @RequestParam Long pmtctCycleId) {
+            @PathVariable String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
 
-        return pmtctEnrollmentService.checkHEIPrompt(personUuid, pmtctCycleId);
+        return pmtctEnrollmentService.checkHEIPrompt(patientUuid, pmtctCycleUuid);
     }
 
 
 
     @GetMapping(value = "check-if-date-exist")
-    public boolean checkifDateExist(@RequestParam String personUuid,  @RequestParam LocalDate dateOfHivTest) {
+    public boolean checkifDateExist(@RequestParam String patientUuid,  @RequestParam LocalDate dateOfHivTest) {
 
 
-        return pmtctHtsService.confirmIfDateExist(personUuid, dateOfHivTest);
+        return pmtctHtsService.confirmIfDateExist(patientUuid, dateOfHivTest);
     }
 
     @GetMapping(value = "get-hiv-retest-status")
     public  ResponseEntity<HivRetestStatusResponse>  getStatusBaseOnLastRetesting(
-            @RequestParam String personUuid,
-            @RequestParam Long pmtctCycleId) {
+            @RequestParam String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
 
-        HivRetestStatusResponse response = pmtctHtsService.getHivRetestStatus(personUuid, pmtctCycleId);
+        HivRetestStatusResponse response = pmtctHtsService.getHivRetestStatus(patientUuid, pmtctCycleUuid);
 
         return ResponseEntity.ok(response);
 
@@ -677,9 +713,9 @@ public class PMTCTController {
 
     @PostMapping(value = "pregnancy-cycle")
     public ResponseEntity<?> createPregnancyCycle(@RequestBody PmtctPregnancyCycleRequestDto requestDto) {
-        if (requestDto.getPersonUuid() == null || requestDto.getPersonUuid().trim().isEmpty()) {
+        if (requestDto.getPatientUuid() == null || requestDto.getPatientUuid().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"person_uuid is not provided\"}");
+                    .body("{\"message\": \"patient_uuid is not provided\"}");
         }
 
         PmtctPregnancyCycleResponseDto response = pmtctPregnancyCycleService.save(requestDto);
@@ -687,13 +723,13 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "get-latest-pregnancy-cycle")
-    public ResponseEntity<?> getLatestPregnancyCycle(@RequestParam String personUuid) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<?> getLatestPregnancyCycle(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"person_uuid is required\"}");
+                    .body("{\"message\": \"patient_uuid is required\"}");
         }
 
-        PmtctPregnancyCycleResponseDto cycle = pmtctPregnancyCycleService.getLatestCycleByPersonUuid(personUuid);
+        PmtctPregnancyCycleResponseDto cycle = pmtctPregnancyCycleService.getLatestCycleByPatientUuid(patientUuid);
 
         if (cycle == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -704,44 +740,44 @@ public class PMTCTController {
     }
 
     @GetMapping(value = "pregnancy-cycles")
-    public ResponseEntity<?> getAllPregnancyCycles(@RequestParam String personUuid) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<?> getAllPregnancyCycles(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"person_uuid is required\"}");
+                    .body("{\"message\": \"patient_uuid is required\"}");
         }
 
-        List<PmtctPregnancyCycleResponseDto> cycles = pmtctPregnancyCycleService.getAllCyclesByPersonUuid(personUuid);
+        List<PmtctPregnancyCycleResponseDto> cycles = pmtctPregnancyCycleService.getAllCyclesByPatientUuid(patientUuid);
 
         return ResponseEntity.ok(cycles);
     }
 
     @GetMapping(value = "check-anc-enrollment")
-    public ResponseEntity<ANCEnrollmentCheckDto> checkANCEnrollment(@RequestParam String personUuid, @RequestParam Long pmtctCycleId) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<ANCEnrollmentCheckDto> checkANCEnrollment(@RequestParam String patientUuid, @RequestParam String pmtctCycleUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        ANCEnrollmentCheckDto response = ancService.checkANCEnrollmentByPersonUuid(personUuid, pmtctCycleId);
+        ANCEnrollmentCheckDto response = ancService.checkANCEnrollmentByPatientUuid(patientUuid, pmtctCycleUuid);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "check-pmtct-validation-dates")
-    public ResponseEntity<PMTCTValidationDto> checkPMTCTValidationDates(@RequestParam String personUuid) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<PMTCTValidationDto> checkPMTCTValidationDates(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        PMTCTValidationDto response = pmtctEnrollmentService.getPMTCTValidationDates(personUuid);
+        PMTCTValidationDto response = pmtctEnrollmentService.getPMTCTValidationDates(patientUuid);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "validate-enrollment")
-    public ResponseEntity<EnrollmentValidationDto> validateEnrollment(@RequestParam String personUuid) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<EnrollmentValidationDto> validateEnrollment(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        EnrollmentValidationDto response = pmtctPregnancyCycleService.validateEnrollment(personUuid);
+        EnrollmentValidationDto response = pmtctPregnancyCycleService.validateEnrollment(patientUuid);
         return ResponseEntity.ok(response);
     }
 
@@ -749,19 +785,19 @@ public class PMTCTController {
     public ResponseEntity<Boolean> isInfantVisitDateExists(
             @RequestParam String hospitalNumber,
             @RequestParam LocalDate visitDate,
-            @RequestParam(required = false) Long excludeId) {
+            @RequestParam(required = false) String excludeId) {
         boolean exists = infantVisitService.isInfantVisitDateExists(hospitalNumber, visitDate, excludeId);
         return ResponseEntity.ok(exists);
     }
 
     @GetMapping(value = "get-historical-hiv-status")
-    public ResponseEntity<String> getHistoricalHivStatus(@RequestParam String personUuid) {
-        if (personUuid == null || personUuid.trim().isEmpty()) {
+    public ResponseEntity<String> getHistoricalHivStatus(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("person_uuid is required");
+                    .body("patient_uuid is required");
         }
 
-        String hivStatus = pmtctPregnancyCycleService.getHistoricalHivStatus(personUuid);
+        String hivStatus = pmtctPregnancyCycleService.getHistoricalHivStatus(patientUuid);
 
         if (hivStatus == null) {
             return ResponseEntity.ok("");

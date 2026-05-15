@@ -1,7 +1,9 @@
 package org.lamisplus.modules.pmtct.domain.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedBy;
@@ -21,15 +23,15 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-public class PmtctVisit implements Serializable, Persistable<Long>
+public class PmtctVisit implements Serializable, Persistable<String>
 {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Getter(AccessLevel.NONE)
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
-    private String ancNo;
-    private String hospitalNumber;
-    private String personUuid;
+    @Column(name = "patient_uuid")
+    private String patientUuid;
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String uuid;
     private String entryPoint;
     private String currentStatus;
@@ -37,13 +39,13 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private Double sfhLength;
     private String currentArtStatus;
     private String mothersArtRegimen;
+    private String regimenLineId;
     private String currentHbvStatus;
     private String nameOfHbvDrug;
     private String currentSyphilisStatus;
     private String nameOfSyphilisDrug;
     private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
-    private LocalDate dateOfDelivery;
     private String fpCounseling;
     private String fpMethod;
     private String timeOfViralLoad;
@@ -60,9 +62,8 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     private String  maternalOutcome;
     private LocalDate dateOfMaternalOutcome;
     private String visitStatus;
-    private String transferTo;
     private LocalDate nextAppointmentDate;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private Long archived;
     private String signature;
     private Long facilityId;
@@ -79,6 +80,35 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     @LastModifiedBy
     private String lastModifiedBy;
     private String source;
+    private String visitType;
+    private Double height;
+    private Double systolic;
+    private Double diastolic;
+    private Integer gaWeeks;
+    private String numberOfAncVisits;
+    private String ancAttendance;
+    private String counsellingHts;
+    private String counsellingFgm;
+    private String counsellingFp;
+    private String counsellingMaternalNutrition;
+    private String counsellingEarlyBf;
+    private String counsellingExclusiveBf;
+    private String hbPcv;
+    private String bloodSugarGdm;
+    private String urinalysisSugar;
+    private String urinalysisProteins;
+    private String llinGiven;
+    private String iptDose;
+    private String hematinicsGiven;
+    private String tdImmunization;
+    private String associatedProblems;
+    private String referralReason;
+    private String transportationOut;
+    @Column(name = "hepatitis_c_test_result")
+    private String hepatitisCTestResult;
+    @Column(name = "referred_for_hcv")
+    private String referredForHcv;
+    private String outcomeOfVisit;
 
     @PrePersist
     public void prePersist() {
@@ -88,8 +118,13 @@ public class PmtctVisit implements Serializable, Persistable<Long>
     }
 
     @Override
+    public String getId() {
+        return this.uuid;
+    }
+
+    @Override
     public boolean isNew() {
-        return id == null;
+        return uuid == null;
     }
 
 }

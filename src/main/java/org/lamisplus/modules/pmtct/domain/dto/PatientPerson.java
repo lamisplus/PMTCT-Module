@@ -9,9 +9,9 @@ public interface PatientPerson {
    String getSex();
    int getAge();
    String getUuid();
-   long getId();
+   Long getId();
 
-   long getPersonId();
+   Long getPersonId();
 
    String getFirstName();
    String getSurname();
@@ -23,7 +23,7 @@ public interface PatientPerson {
    String getEntryPoint();
    LocalDate getArtStartDate();
    String getHivStatus();
-   String getPersonUuid();
+   String getPatientUuid();
    String getAncNo();
    String getTbStatus();
    Long getPregnancyCount();
@@ -33,7 +33,7 @@ public interface PatientPerson {
    String getCommunitySetting();
    String getCurrentlyOnArt();
    String getDynamicHivStatus();
-   LocalDate getFirstAncDate();
+   LocalDate getDateOfEnrollment();
    Integer getGaweeks();
    Integer getGravida();
    LocalDate getLmp();
@@ -41,7 +41,7 @@ public interface PatientPerson {
    String getPreviouslyKnownHivStatus();
    String getReferredSyphilisTreatment();
    String getStaticHivStatus();
-   Long getPmtctCycleId();
+   String getPmtctCycleUuid();
    String getAncUuid();
 
 }

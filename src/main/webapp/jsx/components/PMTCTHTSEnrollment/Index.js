@@ -121,7 +121,7 @@ const PmtctHts = (props) => {
                 surname: "",
                 uuid: ""
               },
-              personUuid: "",
+              patientUuid: "",
               postTestCounselingKnowledgeAssessment: {},
               pregnant: "",
               previouslyTested: true,

@@ -3,10 +3,11 @@ package org.lamisplus.modules.pmtct.domain.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.lamisplus.modules.pmtct.domain.entity.enums.PmtctType;
+
 import org.springframework.data.domain.Persistable;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,25 +25,25 @@ import java.time.LocalDate;
 @Table(name = "pmtct_enrollment",  schema = "public")
 @Data
 @NoArgsConstructor
-public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
+public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Serializable, Persistable<String> {
     @Column(name = "pmtct_enrollment_date")
     private LocalDate pmtctEnrollmentDate;
     private Integer gravida;
+    @JsonProperty("gaweeks")
+    @Column(name = "gaweeks")
     private Integer gAWeeks;
     public String entryPoint;
     public LocalDate artStartDate;
     private String artStartTime;
     private String tbStatus;
-    private String pmtctType;
-    private String personUuid;
+    @Column(name = "patient_uuid")
+    private String patientUuid;
     private Long archived;
     public String hivStatus;
-    private String hospitalNumber;
     private LocalDate lmp;
-    private String  motherArtInitiationTime;
+
     private Long regimenTypeId;
     private String regimenId;
-    private String hepatitisB;
     private String urinalysis;
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
@@ -51,12 +52,11 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     @Column(columnDefinition = "jsonb")
     private SyphilisDetailsDto syphilisDetails;
     private String timeOfHivDiagnosis;
-    private String dateOfDelivery;
-    private String expectedDeliveryDate;
+    private LocalDate dateOfDelivery;
+    private LocalDate expectedDeliveryDate;
     private String modeOfDelivery;
     private String modeOfDeliveryOther;
-    private String ancNo;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private String source;
 
     @PrePersist
@@ -68,6 +68,6 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
 
     @Override
     public boolean isNew() {
-        return getId() == null;
+        return getUuid() == null;
     }
 }

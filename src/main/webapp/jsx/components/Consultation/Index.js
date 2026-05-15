@@ -1,11 +1,7 @@
-import React, { useState, Fragment, useEffect, useMemo } from "react";
-import axios from "axios";
-import { Row, Col, Card, Tab, Tabs } from "react-bootstrap";
+import React, { useState, Fragment, useEffect } from "react";
+import { Row, Col, Card } from "react-bootstrap";
 import ConsultationPage from "./Home";
-import InfantVisit from "./InfantVisit";
-import { url as baseUrl, token as token } from "./../../../api";
 import { convertMaternalCodeToValue } from "../../utils";
-import { usePermissions } from "../../../hooks/usePermissions";
 
 const divStyle = {
   borderRadius: "2px",
@@ -13,48 +9,10 @@ const divStyle = {
 };
 
 const ClinicVisitPage = (props) => {
-  const { hasPermission, hasRDErole } = usePermissions();
-
-  const [key, setKey] = useState("home");
   const patientObj = props.patientObj;
-  const [aliveChild, setAliveChild] = useState(0);
   const [showMaternalVisit, setShowMaternalVisit] = useState(true);
 
-  const permissions = useMemo(
-    () => ({
-      canSeeChildFollowUp: hasPermission("child_follow_up_register"),
-      genPermission: hasRDErole || hasPermission("child_follow_up_register"),
-    }),
-    [hasPermission, hasRDErole],
-  );
-
-  const DeliveryInfo = () => {
-    let personUuid = props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid
-        ? props.patientObj.personUuid
-        : props.patientObj.uuid;
-    axios
-      .get(
-        `${baseUrl}pmtct/anc/view-delivery-with-uuid/${personUuid}/${props?.latestPmtctCycle.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      )
-      .then((response) => {
-        setAliveChild(
-          response.data && response.data.numberOfInfantsAlive
-            ? response.data.numberOfInfantsAlive
-            : 0,
-        );
-      })
-      .catch((error) => {
-      });
-    // }
-  };
-
   useEffect(() => {
-    setKey(props.activeContent.activeTab);
     if (props.activeContent.actionType === "create") {
       if (
         props.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||
@@ -65,65 +23,33 @@ const ClinicVisitPage = (props) => {
         props.maternalOutcome === "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"
       ) {
         setShowMaternalVisit(false);
-        //  setKey("child")
       } else {
         setShowMaternalVisit(true);
       }
     } else {
       setShowMaternalVisit(true);
     }
-
-    DeliveryInfo();
   }, [props.patientObj.id, props.activeContent.activeTab]);
-  ///GET Delivery Object
 
   return (
     <Fragment>
       <Row>
         <Col xl={12}>
-          <Card style={divStyle}>
-            <Card.Body>
-              {/* <!-- Nav tabs --> */}
-              <div className="custom-tab-1">
-                <Tabs
-                  id="controlled-tab-example"
-                  activeKey={key}
-                  onSelect={(k) => setKey(k)}
-                  className="mb-3"
-                >
-                  {/*  */}
-                  <Tab eventKey="home" title="MOTHER FOLLOW UP VISIT ">
-                    {showMaternalVisit ? (
-                      <ConsultationPage
-                        patientObj={patientObj}
-                        setActiveContent={props.setActiveContent}
-                        activeContent={props.activeContent}
-                        latestPmtctCycle={props?.latestPmtctCycle}
-                      />
-                    ) : (
-                      <p>
-                        Maternal outcome:{" "}
-                        {props.maternalOutcome &&
-                          convertMaternalCodeToValue(props.maternalOutcome)}
-                      </p>
-                    )}
-                  </Tab>
-                  {aliveChild !== 0 &&
-                    aliveChild > 0 &&
-                    permissions.genPermission && (
-                      <Tab eventKey="child" title="CHILD FOLLOW UP VISIT">
-                        <InfantVisit
-                          patientObj={patientObj}
-                          setActiveContent={props.setActiveContent}
-                          activeContent={props.activeContent}
-                          latestPmtctCycle={props?.latestPmtctCycle}
-                        />
-                      </Tab>
-                    )}
-                </Tabs>
-              </div>
-            </Card.Body>
-          </Card>
+              {showMaternalVisit ? (
+                <ConsultationPage
+                  patientObj={patientObj}
+                  setActiveContent={props.setActiveContent}
+                  activeContent={props.activeContent}
+                  latestPmtctCycle={props?.latestPmtctCycle}
+                  motherVisitType={props.motherVisitType}
+                />
+              ) : (
+                <p>
+                  Maternal outcome:{" "}
+                  {props.maternalOutcome &&
+                    convertMaternalCodeToValue(props.maternalOutcome)}
+                </p>
+              )}
         </Col>
       </Row>
     </Fragment>

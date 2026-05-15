@@ -20,10 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 //@Embeddable
 public class InfantRapidAntiBodyTest implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
     private String rapidTestType;
     @Column(name="anc_number")
@@ -33,12 +30,13 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String result;
     @Column(name = "unique_uuid")
     private String  uniqueUuid;
-    @Column(name = "uuid")
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String uuid;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
+    @Column(name = "mother_patient_uuid")
+    private String motherPatientUuid;
     private Long archived;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private Long facilityId;
 
     @Column(name = "created_date", updatable = false)

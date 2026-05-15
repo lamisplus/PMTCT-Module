@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class InfantVisitResponseDto implements Serializable
 {
-    private Long id;
+    private String id;
     private String fullname;
     private int age;
     private LocalDate visitDate;
@@ -25,6 +25,10 @@ public class InfantVisitResponseDto implements Serializable
     private String ageAtCtx;
     private String infantOutcomeAt18Months;
     private String uniqueUuid;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private String source;
+    private String infantOutcomeSubOption;
+    private LocalDate dateLinkedToArtClinic;
+    private String artEnrollmentNo;
+    private String comments;
 }

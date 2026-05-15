@@ -155,7 +155,7 @@ const PmtctHtsForm = (props) => {
     id: "",
   });
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
-    personUuid: patientObj.personUuid ? patientObj.personUuid : patientObj?.uuid,
+    patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
     maternalOutcome: "",
     entryPoint: locationState.entrypointValue,
     hivStatus: patientObj?.dynamicHivStatus || "",
@@ -223,7 +223,7 @@ const PmtctHtsForm = (props) => {
       props.onEnrollPatient && lastPmtctHtsRecord?.id
         ? "RETESTING"
         : props?.PmtctHtsRetestingType.toUpperCase(),
-    personUuid: props.personUuid,
+    patientUuid: props.patientUuid,
     ancNo: props?.patientObj?.ancNo,
     finalResult: "",
     source: "WEB",
@@ -383,13 +383,13 @@ const PmtctHtsForm = (props) => {
   };
   //get the person last record on PMTCT HTS if exist
 
-  const getLastPmtctHtsRecord = (personUuid) => {
-    const pmtctCycleId = props.latestPmtctCycle?.id;
+  const getLastPmtctHtsRecord = (patientUuid) => {
+    const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
 
-    if (pmtctCycleId) {
+    if (pmtctCycleUuid) {
        axios
          .get(
-           `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
+           `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
            { headers: { Authorization: `Bearer ${token}` } }
          )
          .then((response) => {
@@ -417,12 +417,12 @@ const PmtctHtsForm = (props) => {
 
 
   const getLastPmtctHtsByPersonUuid= () => {
-    const pmtctCycleId = props.latestPmtctCycle?.id;
+    const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
 
-    if (pmtctCycleId) {
+    if (pmtctCycleUuid) {
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.personUuid}?pmtctCycleId=${pmtctCycleId}`,
+          `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${props.patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
@@ -524,7 +524,7 @@ const PmtctHtsForm = (props) => {
       getARTStartDate();
       getHIVStatus(
         props?.patientObj?.identifier?.identifier[0]?.value,
-        props.personUuid
+        props.patientUuid
       );
     }
   }, [props?.activeContent]);
@@ -539,14 +539,14 @@ const PmtctHtsForm = (props) => {
         setPayload({
           dateOfHivTest: response.data.dateOfHivTest,
           testEntryPoint: response.data.testEntryPoint,
-          testSetting: response.data.testSetting,
-          stageOfPregnancy: response.data.stageOfPregnancy,
-          hospitalNumber: response.data.hospitalNumber,
+          testSetting: response.data.testSetting || "",
+          stageOfPregnancy: response.data.stageOfPregnancy || "",
+          hospitalNumber: response.data.hospitalNumber || "",
           syphilis: response.data.syphilisInfo?.testResult || response.data.syphilis || "",
           hepatitisB: response.data.hbvInfo?.testResult || response.data.hepatitisB || "",
-          hepatitisC: response.data.hepatitisC,
-          testingType: response.data.testingType,
-          personUuid: props.personUuid,
+          hepatitisC: response.data.hepatitisC || "",
+          testingType: response.data.testingType || "",
+          patientUuid: props.patientUuid,
           ancNo: response.data.ancNo,
           finalResult: response.data.finalResult || "",
           source: "WEB",
@@ -665,8 +665,8 @@ const PmtctHtsForm = (props) => {
             ? props?.patientObj.person_Uuud
             : props?.patientObj?.personUuud
             ? props?.patientObj?.personUuud
-            : props?.patientObj?.person_uuid
-            ? props?.patientObj?.person_uuid
+            : props?.patientObj?.patient_uuid
+            ? props?.patientObj?.patient_uuid
             : props?.patientObj?.uuid
         }`,
         {
@@ -956,7 +956,7 @@ const PmtctHtsForm = (props) => {
   const getHIVStatus = (hospitalNumber, uuid) => {
     axios
       .get(
-        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&personUuid=${uuid}`,
+        `${baseUrl}pmtct/anc/hiv-status?hospitalNumber=${hospitalNumber}&patientUuid=${uuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -976,7 +976,7 @@ const PmtctHtsForm = (props) => {
     setCheckingForTheDate(true);
     axios
       .get(
-        `${baseUrl}pmtct/anc/check-if-date-exist?personUuid=${props.personUuid}&dateOfHivTest=${dateOfHivTest}&`,
+        `${baseUrl}pmtct/anc/check-if-date-exist?patientUuid=${props.patientUuid}&dateOfHivTest=${dateOfHivTest}&`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -1040,7 +1040,7 @@ const PmtctHtsForm = (props) => {
       temp.testSetting = payload.testSetting ? "" : "This field is required";
 
       payload.testSetting !== "" &&
-        payload.testSetting.includes("_ANC") &&
+        (payload.testSetting || "").includes("_ANC") &&
         (temp.stageOfPregnancy = payload.stageOfPregnancy
           ? ""
           : "This field is required");
@@ -1153,7 +1153,7 @@ const PmtctHtsForm = (props) => {
   }
 
   function validateAncEnrollmentDate(newTestDate) {
-    const ancEnrollmentDate = props?.patientObj?.firstAncDate;
+    const ancEnrollmentDate = props?.patientObj?.dateOfEnrollment;
     const isRetesting = payload.testingType === "RETESTING";
     const hasPreviousRetesting = lastPmtctHtsRecord?.id;
 
@@ -1221,7 +1221,7 @@ const PmtctHtsForm = (props) => {
       if (props.onEnrollPatient) {
               
       let payload2 = {
-        personUuid: props.personUuid,
+        patientUuid: props.patientUuid,
         maternalOutcome: "",
         entryPoint: locationState.entrypointValue,
         hivStatus: payload.finalResult,
@@ -1377,7 +1377,7 @@ const PmtctHtsForm = (props) => {
       props.onEnrollPatient 
     ) {
       const checkIfCycleIsCreated = await createCycle();
-      payload.pmtctCycleId = checkIfCycleIsCreated?.response?.id;
+      payload.pmtctCycleUuid = checkIfCycleIsCreated?.response?.uuid;
 
       if (!checkIfCycleIsCreated?.status) {
         toast.error("Failed to create cycle", {
@@ -1386,7 +1386,7 @@ const PmtctHtsForm = (props) => {
         return; // Exit if cycle creation fails
       }
     } else {
-      payload.pmtctCycleId = props?.latestPmtctCycle?.id;
+      payload.pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
     }
 
 
@@ -1432,7 +1432,7 @@ const PmtctHtsForm = (props) => {
           age: props?.patientAge,
           hivStatus: props?.patientObj?.dynamicHivStatus,
           ancNo: props?.patientObj?.ancNo,
-          personUuid: props.personUuid,
+          patientUuid: props.patientUuid,
         };
         props.handleRoute(data);
       } else {
@@ -1460,36 +1460,35 @@ const PmtctHtsForm = (props) => {
           <form>
             <div className="row">
               <div
-                className="card-header mb-3 "
+                className="card-header mb-3"
                 style={{
-                  backgroundColor: "#ffffff",
-                  color: "#1a202c",
-                  fontWeight: "bolder",
-                  borderRadius: "0.2rem",
+                  background: "#fff",
+                  borderRadius: "0",
+                  padding: "14px 20px",
                   marginTop: "-20px",
-                  borderLeft: "4px solid #014d88",
+                  border: "none",
                   borderBottom: "2px solid #e2e8f0",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                  boxShadow: "none",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px",
                 }}
               >
-                <h5 className="card-title" style={{ color: "#014d88", fontWeight: "700", marginBottom: "4px" }}>
+                <h5 style={{ color: "#0f172a", fontWeight: "700", marginBottom: "0", fontSize: "15px" }}>
                   {payload.testingType === "PMTCT-HTS"
-                    ? " PMTCT HTS"
+                    ? "PMTCT HTS"
                     : "Retesting"}
                 </h5>
                 {props?.entrypointValue && (
                   <span style={{
                     display: "inline-block",
-                    backgroundColor: "#e8f0fe",
-                    color: "#014d88",
-                    padding: "3px 10px",
-                    borderRadius: "12px",
-                    fontSize: "12px",
+                    backgroundColor: "#f1f5f9",
+                    color: "#475569",
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    fontSize: "11px",
                     fontWeight: "600",
-                    border: "1px solid #ccdcf0"
                   }}>
                     Entry Point:{" "}
-                    <b>
+                    <b style={{ color: "#0f172a" }}>
                       {props.entrypointValue === "PMTCT_ENTRY_POINT_ANC"
                         ? "ANC"
                         : props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"
@@ -1510,7 +1509,7 @@ const PmtctHtsForm = (props) => {
                   padding: "15px 10px",
                   backgroundColor: "#f8f9fa"
                 }}>
-                  <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                  <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                     <PersonIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Patient Information
                   </h6>
                   <div className="row">
@@ -1528,7 +1527,7 @@ const PmtctHtsForm = (props) => {
                             onChange={handleInputChange}
                             value={payload.dateOfHivTest}
                             min={
-                              patientObj.ancNo ? props?.patientObj?.firstAncDate : ""
+                              patientObj.ancNo ? props?.patientObj?.dateOfEnrollment : ""
                             }
                             max={moment(new Date()).format("YYYY-MM-DD")}
                             disabled={disabledField}
@@ -1588,7 +1587,7 @@ const PmtctHtsForm = (props) => {
                     padding: "15px 10px",
                     backgroundColor: "#f8f9fa"
                   }}>
-                    <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <AssignmentIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Test Details
                     </h6>
                     <div className="row">
@@ -1650,7 +1649,7 @@ const PmtctHtsForm = (props) => {
                           )}
                         </FormGroup>
                       </div>
-                      {payload.testSetting.includes("_ANC") && (
+                      {(payload.testSetting || "").includes("_ANC") && (
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
                             <Label>
@@ -1716,7 +1715,7 @@ const PmtctHtsForm = (props) => {
                     padding: "15px 10px",
                     backgroundColor: "#f8f9fa"
                   }}>
-                    <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <HistoryIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV History
                     </h6>
                     <div className="row">
@@ -1774,7 +1773,7 @@ const PmtctHtsForm = (props) => {
                     padding: "15px 10px",
                     backgroundColor: "#f8f9fa"
                   }}>
-                    <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Diagnostic Testing
                     </h6>
                     <div className="row">
@@ -2036,7 +2035,7 @@ const PmtctHtsForm = (props) => {
                     padding: "15px 10px",
                     backgroundColor: "#f8f9fa"
                   }}>
-                    <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <ReplayIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV Re-testing
                     </h6>
                     <div className="row">
@@ -2119,7 +2118,7 @@ const PmtctHtsForm = (props) => {
                       padding: "15px 10px",
                       backgroundColor: "#f8f9fa"
                     }}>
-                      <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                      <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                         <HealingIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Syphilis
                       </h6>
                       <div className="row">
@@ -2198,7 +2197,7 @@ const PmtctHtsForm = (props) => {
                       padding: "15px 10px",
                       backgroundColor: "#f8f9fa"
                     }}>
-                      <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                      <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                         <HealingIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Hepatitis B
                       </h6>
                       <div className="row">
@@ -2340,7 +2339,7 @@ const PmtctHtsForm = (props) => {
                       padding: "15px 10px",
                       backgroundColor: "#f8f9fa"
                     }}>
-                      <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                      <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                         <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />TB
                       </h6>
                       <div className="row">
@@ -2402,7 +2401,7 @@ const PmtctHtsForm = (props) => {
                       padding: "15px 10px",
                       backgroundColor: "#f8f9fa"
                     }}>
-                      <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                      <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                         <PeopleIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Partner Notification Services
                       </h6>
                       <div className="row">
@@ -2529,7 +2528,7 @@ const PmtctHtsForm = (props) => {
                     padding: "15px 10px",
                     backgroundColor: "#f8f9fa"
                   }}>
-                    <h6 style={{ backgroundColor: "#f0f4f8", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <TimelineIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Viral Load Monitoring
                     </h6>
                     <div className="row">

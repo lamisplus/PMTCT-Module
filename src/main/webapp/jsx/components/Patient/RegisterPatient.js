@@ -196,7 +196,7 @@ const UserRegistration = (props) => {
     gaweeks: "",
     gravida: "",
     expectedDeliveryDate: "",
-    firstAncDate: "",
+    dateOfEnrollment: "",
     lmp: "",
     parity: "",
     hivDiognosicTime: "",
@@ -972,7 +972,7 @@ const UserRegistration = (props) => {
             // console.log(objValues);
 
             //
-            objValues.person_uuid = retrievedPatient.personUuid;
+            objValues.patient_uuid = retrievedPatient.patientUuid;
             objValues.source = "WEB";
 
             const response = await axios.post(
@@ -1106,7 +1106,7 @@ const UserRegistration = (props) => {
               entryPoint: locationState.entrypointValue
                 ? locationState.entrypointValue
                 : props.entrypointValue,
-              personUuid: retrievedPatient.personUuid,
+              patientUuid: retrievedPatient.patientUuid,
               source: "WEB",
             };
             const response = await axios.post(
@@ -1288,7 +1288,7 @@ const UserRegistration = (props) => {
     }
 
     if (
-      e.target.name === "firstAncDate" &&
+      e.target.name === "dateOfEnrollment" &&
       e.target.value !== "" &&
       objValues.lmp !== ""
     ) {
@@ -1304,7 +1304,7 @@ const UserRegistration = (props) => {
       }
     } else if (e.target.name === "lmp" && e.target.value !== "") {
       let response = calculateGestationalAge(
-        objValues.firstAncDate,
+        objValues.dateOfEnrollment,
         e.target.value
       );
 
@@ -1383,18 +1383,14 @@ const UserRegistration = (props) => {
   return (
     <>
       <ToastContainer autoClose={3000} hideProgressBar />
-      <div
-        className="row page-titles mx-0"
-        style={{ marginTop: "0px", marginBottom: "-10px" }}
-      >
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item active">
-            <h4>
-              {" "}
-              <Link to={"/"}>PMTCT /</Link> Patient Registration
-            </h4>
-          </li>
-        </ol>
+      <div style={{ padding: "10px 24px 6px", marginBottom: "4px" }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+          <Link to={"/"} style={{ color: "#64748b", textDecoration: "none", fontWeight: "500" }}>
+            PMTCT
+          </Link>
+          <span style={{ color: "#cbd5e1", fontSize: "11px" }}>/</span>
+          <span style={{ color: "#0f172a", fontWeight: "600" }}>Patient Registration</span>
+        </nav>
       </div>
       <Link
         to={{
@@ -2665,17 +2661,17 @@ const UserRegistration = (props) => {
                             onKeyPress={(e) => {
                               e.preventDefault();
                             }}
-                            name="firstAncDate"
-                            id="firstAncDate"
+                            name="dateOfEnrollment"
+                            id="dateOfEnrollment"
                             onChange={handleInputChange}
-                            value={objValues.firstAncDate}
+                            value={objValues.dateOfEnrollment}
                             min={basicInfo.dateOfRegistration}
                             max={moment(new Date()).format("YYYY-MM-DD")}
                           />
                         </InputGroup>
-                        {errors.firstAncDate !== "" ? (
+                        {errors.dateOfEnrollment !== "" ? (
                           <span className={classes.error}>
-                            {errors.firstAncDate}
+                            {errors.dateOfEnrollment}
                           </span>
                         ) : (
                           ""
@@ -2761,8 +2757,8 @@ const UserRegistration = (props) => {
                             value={objValues.lmp}
                             // max={moment(new Date()).format("YYYY-MM-DD")}
                             max={
-                              objValues.firstAncDate
-                                ? objValues.firstAncDate
+                              objValues.dateOfEnrollment
+                                ? objValues.dateOfEnrollment
                                 : moment(new Date()).format("YYYY-MM-DD")
                             }
                           />
@@ -3003,9 +2999,9 @@ const UserRegistration = (props) => {
                                 max={moment(new Date()).format("YYYY-MM-DD")}
                               />
                             </InputGroup>
-                            {/* {errors.firstAncDate !== "" ? (
+                            {/* {errors.dateOfEnrollment !== "" ? (
                             <span className={classes.error}>
-                              {errors.firstAncDate}
+                              {errors.dateOfEnrollment}
                             </span>
                           ) : (
                             ""
@@ -3139,9 +3135,9 @@ const UserRegistration = (props) => {
                                 max={moment(new Date()).format("YYYY-MM-DD")}
                               />
                             </InputGroup>
-                            {/* {errors.firstAncDate !== "" ? (
+                            {/* {errors.dateOfEnrollment !== "" ? (
                             <span className={classes.error}>
-                              {errors.firstAncDate}
+                              {errors.dateOfEnrollment}
                             </span>
                           ) : (
                             ""

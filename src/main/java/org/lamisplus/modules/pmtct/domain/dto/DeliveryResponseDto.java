@@ -1,5 +1,6 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -8,14 +9,13 @@ import java.time.LocalDate;
 @Data
 public class DeliveryResponseDto implements Serializable {
     private Long id;
-    private String hospitalNumber;
     private String uuid;
-    private String ancNo;
     private String fullName;
     private int age;
     private Long facilityId;
     private LocalDate dateOfDelivery;
     private String bookingStatus;
+    @JsonProperty("gaweeks")
     private Integer gAWeeks;
     private String romDeliveryInterval;
     private String modeOfDelivery;
@@ -30,13 +30,21 @@ public class DeliveryResponseDto implements Serializable {
     private String deliveryTime;
     private String onArt;
     public String artStartedLdWard;
+    @JsonProperty("hbstatus")
     private String HBStatus;
+    @JsonProperty("hcstatus")
     private String HCStatus;
     private String referalSource;
-    private String personUuid;
+    private String patientUuid;
     private String placeOfDelivery;
     private Integer numberOfInfantsAlive;
     private Integer numberOfInfantsDead;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private String source;
+
+    private DeliveryLabourDetailsDto labourDetails;
+    private DeliveryMaternalInterventionsDto maternalInterventions;
+    private DeliveryBabyInfoDto babyInfo;
+    private DeliveryNewbornCareDto newbornCare;
+    private DeliveryPostpartumInfoDto postpartumInfo;
 }

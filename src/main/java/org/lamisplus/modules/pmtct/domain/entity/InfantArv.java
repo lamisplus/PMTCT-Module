@@ -1,6 +1,8 @@
 package org.lamisplus.modules.pmtct.domain.entity;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -20,10 +22,9 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-public class InfantArv implements Serializable, Persistable<Long> {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+public class InfantArv implements Serializable, Persistable<String> {
+    @Getter(AccessLevel.NONE)
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
 
     private LocalDate visitDate;
@@ -32,6 +33,8 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private String infantArvType;
     private String infantArvTime;
     private String arvDeliveryPoint;
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String uuid;
     private String ageAtCtx;
     @Column(name = "timing_of_avr_after_72hours")
@@ -45,10 +48,10 @@ public class InfantArv implements Serializable, Persistable<Long> {
     private LocalDate dateOfArv;
     private Long infantId;
     private String otherProphylaxisType;
-    @Column(name = "mother_person_uuid")
-    private String motherPersonUuid;
+    @Column(name = "mother_patient_uuid")
+    private String motherPatientUuid;
     private Long archived;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private Long facilityId;
 
     @Column(name = "created_date", updatable = false)
@@ -76,7 +79,12 @@ public class InfantArv implements Serializable, Persistable<Long> {
     }
 
     @Override
+    public String getId() {
+        return this.uuid;
+    }
+
+    @Override
     public boolean isNew() {
-        return id == null;
+        return uuid == null;
     }
 }

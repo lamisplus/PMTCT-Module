@@ -5,4 +5,8 @@ import java.time.LocalDate;
 public interface PatientArtData {
 
     LocalDate getArtStartDate();
+    Long getRegimenTypeId();
+    Long getRegimenId();
+    String getRegimenName();
+    String getUniqueArtNumber();
 }

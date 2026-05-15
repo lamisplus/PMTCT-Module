@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ANCEnrollmentCheckDto {
     private boolean hasAncEnrollment;
-    private LocalDate firstAncDate;
+    private LocalDate dateOfEnrollment;
     private LocalDate lmp;
     private String ancNo;
 }

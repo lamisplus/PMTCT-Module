@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRTest, Long>
+public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCRTest, String>
 {
 
     List<InfantPCRTest> findByAncNumber (String ancNo);
@@ -26,8 +26,8 @@ public  interface InfantPCRTestRepository  extends CommonJpaRepository<InfantPCR
             "            WHERE infant_hospital_number = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantPCRTest getLastPCR (String infantHospitalNumber);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    InfantPCRTest getLastPCRByCycle(String infantHospitalNumber, Long pmtctCycleId);
+    @Query(value = "SELECT * FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantPCRTest getLastPCRByCycle(String infantHospitalNumber, String pmtctCycleUuid);
 
     @Query(value = "SELECT COUNT(*) > 0  FROM public.pmtct_infant_pcr WHERE infant_hospital_number = ?1  AND test_type = 'INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT'", nativeQuery = true)
     boolean checkPcrExist (String infantHospitalNumber);

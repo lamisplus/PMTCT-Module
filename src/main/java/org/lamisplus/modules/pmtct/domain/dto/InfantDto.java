@@ -6,6 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 @Data
 @Builder
 public class InfantDto implements Serializable
@@ -17,17 +18,21 @@ public class InfantDto implements Serializable
     private String middleName;
     private String surname;
     private String sex;
-    private String nin;
-    private Long id;
-    private String hospitalNumber;
+    private String id;
+    private String infantHospitalNumber;
     private String uuid;
-    private String ancNo;
-    private String infantOutcomeAt18Months;
-    private String personUuid;
+    private String infantPatientUuid;
+    private String patientUuid;
     private Double bodyWeight;
+    private Double length;
     private String ctxStatus;
-    @NotNull(message = "pmtctCycleId is required")
-    private Long pmtctCycleId;
+    @NotNull(message = "pmtctCycleUuid is required")
+    private String pmtctCycleUuid;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
+    private String birthOutcome;
+    private String entryPoint;
+    private String entryPointOther;
+    private InfantSyphilisProphylaxisDto syphilisProphylaxis;
+    private List<InfantHbvVaccinationDto> hbvVaccinations;
 }

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long>
+public interface InfantArvRepository extends CommonJpaRepository<InfantArv, String>
 {
     List<InfantArv> findByAncNumber (String ancNo);
     List<InfantArv> findByInfantHospitalNumber  (String hospitalNumber);
@@ -32,8 +32,8 @@ public interface InfantArvRepository extends CommonJpaRepository<InfantArv, Long
     @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantArv getLatestByHospitalNumberAndVisitDate(String hospitalNumber, LocalDate visitDate);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND unique_uuid IS NULL AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    InfantArv getLatestByUuidAndHospitalNumberAndVisitDate(String motherPersonUuid, String hospitalNumber, LocalDate visitDate);
+    @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND unique_uuid IS NULL AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantArv getLatestByUuidAndHospitalNumberAndVisitDate(String motherPatientUuid, String hospitalNumber, LocalDate visitDate);
 
     @Query(value = "SELECT * FROM public.pmtct_infant_arv WHERE unique_uuid = CAST(?1 AS VARCHAR) AND infant_hospital_number = ?2 AND visit_date = ?3 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantArv getByUniqueUuidAndHospitalNumberAndVisitDate(String uniqueUuid, String hospitalNumber, LocalDate visitDate);

@@ -14,6 +14,7 @@ import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
+import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class PmtctPregnancyCycleService {
     private final ANCRepository ancRepository;
     private final PmtctHtsRepository pmtctHtsRepository;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentRepository;
+    private final PmtctVisitRepository pmtctVisitRepository;
 
     private String mapEntryPoint(String entryPoint) {
         if (entryPoint == null) {
@@ -52,7 +54,7 @@ public class PmtctPregnancyCycleService {
 
     public PmtctPregnancyCycleResponseDto save(PmtctPregnancyCycleRequestDto requestDto) {
         // Check if the patient already has an inactive record
-        Optional<PmtctPregnancyCycle> existingInactiveCycle = pregnancyCycleRepository.findInactiveByPersonUuid(requestDto.getPersonUuid());
+        Optional<PmtctPregnancyCycle> existingInactiveCycle = pregnancyCycleRepository.findInactiveByPatientUuid(requestDto.getPatientUuid());
 
         if (existingInactiveCycle.isPresent()) {
             // Return the existing inactive record instead of creating a new one
@@ -65,12 +67,10 @@ public class PmtctPregnancyCycleService {
         Long facilityId = user.getCurrentOrganisationUnitId();
 
         PmtctPregnancyCycle pregnancyCycle = new PmtctPregnancyCycle();
-        pregnancyCycle.setPersonUuid(requestDto.getPersonUuid());
+        pregnancyCycle.setPatientUuid(requestDto.getPatientUuid());
         pregnancyCycle.setMaternalOutcome(requestDto.getMaternalOutcome());
         pregnancyCycle.setEntryPoint(mapEntryPoint(requestDto.getEntryPoint()));
-        pregnancyCycle.setHivStatus(requestDto.getHivStatus());
         pregnancyCycle.setPregnancyOutcome(requestDto.getPregnancyOutcome());
-        pregnancyCycle.setNumberOfInfants(requestDto.getNumberOfInfants());
         pregnancyCycle.setPmtctStatus(requestDto.getPmtctStatus());
         pregnancyCycle.setFacilityId(facilityId);
         pregnancyCycle.setCreatedBy(user.getUserName());
@@ -92,13 +92,13 @@ public class PmtctPregnancyCycleService {
         return responseDto;
     }
 
-    public PmtctPregnancyCycleResponseDto getLatestCycleByPersonUuid(String personUuid) {
-        Optional<PmtctPregnancyCycle> latestCycle = pregnancyCycleRepository.findLatestByPersonUuid(personUuid);
+    public PmtctPregnancyCycleResponseDto getLatestCycleByPatientUuid(String patientUuid) {
+        Optional<PmtctPregnancyCycle> latestCycle = pregnancyCycleRepository.findLatestByPatientUuid(patientUuid);
         return latestCycle.map(this::convertToResponseDto).orElse(null);
     }
 
-    public void updatePmtctStatusToActive(Long cycleId) {
-        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
+    public void updatePmtctStatusToActive(String cycleUuid) {
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleUuid);
         if (cycleOptional.isPresent()) {
             PmtctPregnancyCycle cycle = cycleOptional.get();
             cycle.setPmtctStatus("ACTIVE");
@@ -115,15 +115,17 @@ public class PmtctPregnancyCycleService {
         "MATERNAL_OUTCOME_TRANSFERRED_OUT",
         "MATERNAL_OUTCOME_DIED",
         "MATERNAL_OUTCOME_DEAD",
+        "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
+        "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
         "MATERNAL_OUTCOME_COMPLETED_PMTCT"
     );
 
-    public void updateMaternalOutcome(Long cycleId, String maternalOutcome, String visitStatus) {
-        if (cycleId == null) {
+    public void updateMaternalOutcome(String cycleUuid, String maternalOutcome, String visitStatus) {
+        if (cycleUuid == null) {
             return;
         }
 
-        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleUuid);
         if (cycleOptional.isPresent()) {
             PmtctPregnancyCycle cycle = cycleOptional.get();
 
@@ -131,9 +133,12 @@ public class PmtctPregnancyCycleService {
             if (maternalOutcome != null) {
                 cycle.setMaternalOutcome(maternalOutcome);
 
-                // Close the MIP Card if terminal outcome
-                if (TERMINAL_OUTCOMES.contains(maternalOutcome)) {
+                // Close or re-open the MIP Card based on outcome (case-insensitive check)
+                String normalizedOutcome = maternalOutcome.trim().toUpperCase();
+                if (TERMINAL_OUTCOMES.contains(maternalOutcome) || TERMINAL_OUTCOMES.contains(normalizedOutcome)) {
                     cycle.setIsClosed(true);
+                } else {
+                    cycle.setIsClosed(false);
                 }
             }
 
@@ -151,15 +156,57 @@ public class PmtctPregnancyCycleService {
         }
     }
 
-    public boolean isCycleClosed(Long cycleId) {
-        if (cycleId == null) return false;
-        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleId);
-        return cycleOptional.map(c -> Boolean.TRUE.equals(c.getIsClosed())).orElse(false);
+    public boolean isCycleClosed(String cycleUuid) {
+        if (cycleUuid == null) return false;
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleUuid);
+        if (!cycleOptional.isPresent()) return false;
+
+        PmtctPregnancyCycle cycle = cycleOptional.get();
+        if (!Boolean.TRUE.equals(cycle.getIsClosed())) return false;
+
+        // Verify the maternal outcome is actually terminal.
+        // If is_closed=true but outcome is non-terminal (e.g. Alive), auto-correct the flag.
+        String outcome = cycle.getMaternalOutcome();
+        if (outcome != null && !TERMINAL_OUTCOMES.contains(outcome) && !TERMINAL_OUTCOMES.contains(outcome.trim().toUpperCase())) {
+            cycle.setIsClosed(false);
+            pregnancyCycleRepository.save(cycle);
+            return false;
+        }
+
+        // Cross-check with the latest visit's maternal outcome.
+        // The cycle's maternal_outcome may be stale if a newer visit was saved
+        // before the updateMaternalOutcome logic was in place.
+        Optional<String> latestVisitOutcome = pmtctVisitRepository.findLatestMaternalOutcomeByCycleUuid(cycleUuid);
+        if (latestVisitOutcome.isPresent()) {
+            String visitOutcome = latestVisitOutcome.get();
+            if (visitOutcome != null && !visitOutcome.isEmpty()
+                && !TERMINAL_OUTCOMES.contains(visitOutcome)
+                && !TERMINAL_OUTCOMES.contains(visitOutcome.trim().toUpperCase())) {
+                // Latest visit has a non-terminal outcome — auto-correct the cycle
+                cycle.setIsClosed(false);
+                cycle.setMaternalOutcome(visitOutcome);
+                pregnancyCycleRepository.save(cycle);
+                return false;
+            }
+        }
+
+        return true;
     }
 
+    public void reopenCycle(String cycleUuid) {
+        Optional<PmtctPregnancyCycle> cycleOptional = pregnancyCycleRepository.findById(cycleUuid);
+        if (cycleOptional.isPresent()) {
+            PmtctPregnancyCycle cycle = cycleOptional.get();
+            cycle.setIsClosed(false);
+            cycle.setLastModifiedDate(LocalDateTime.now());
+            Optional<User> currentUser = userService.getUserWithRoles();
+            currentUser.ifPresent(user -> cycle.setLastModifiedBy(user.getUserName()));
+            pregnancyCycleRepository.save(cycle);
+        }
+    }
 
-    public List<PmtctPregnancyCycleResponseDto> getAllCyclesByPersonUuid(String personUuid) {
-        List<PmtctPregnancyCycle> cycles = pregnancyCycleRepository.findAllByPersonUuid(personUuid);
+    public List<PmtctPregnancyCycleResponseDto> getAllCyclesByPatientUuid(String patientUuid) {
+        List<PmtctPregnancyCycle> cycles = pregnancyCycleRepository.findAllByPatientUuid(patientUuid);
         return cycles.stream()
                 .map(this::convertToResponseDto)
                 .collect(java.util.stream.Collectors.toList());
@@ -169,11 +216,11 @@ public class PmtctPregnancyCycleService {
      * Validates if a patient can enroll in a new ANC/PMTCT cycle
      * Checks the last pregnancy cycle's maternal outcome and closure status
      */
-    public EnrollmentValidationDto validateEnrollment(String personUuid) {
+    public EnrollmentValidationDto validateEnrollment(String patientUuid) {
         EnrollmentValidationDto validation = new EnrollmentValidationDto();
 
         // Get the latest pregnancy cycle
-        Optional<PmtctPregnancyCycle> latestCycleOptional = pregnancyCycleRepository.findLatestByPersonUuid(personUuid);
+        Optional<PmtctPregnancyCycle> latestCycleOptional = pregnancyCycleRepository.findLatestByPatientUuid(patientUuid);
 
         // If no previous cycle exists, allow enrollment directly
         if (!latestCycleOptional.isPresent()) {
@@ -243,11 +290,11 @@ public class PmtctPregnancyCycleService {
     /**
      * Checks if a patient has ever been HIV positive in any ANC, HTS, or Enrollment record
      * This method is called by the frontend to auto-populate HIV status
-     * @param personUuid The patient's UUID
+     * @param patientUuid The patient's UUID
      * @return The HIV status ("POSITIVE" or null)
      */
-    public String getHistoricalHivStatus(String personUuid) {
-        if (personUuid == null || personUuid.isEmpty()) {
+    public String getHistoricalHivStatus(String patientUuid) {
+        if (patientUuid == null || patientUuid.isEmpty()) {
             return null;
         }
 
@@ -260,7 +307,7 @@ public class PmtctPregnancyCycleService {
         // Check PMTCT HTS records for positive result
         List<PmtctHts> htsRecords = pmtctHtsRepository.findAll();
         for (PmtctHts hts : htsRecords) {
-            if (personUuid.equals(hts.getPersonUuid()) &&
+            if (patientUuid.equals(hts.getPatientUuid()) &&
                 hts.getArchived() != null && hts.getArchived() == 0L &&
                 facilityId.equals(hts.getFacilityId())) {
                 String finalResult = hts.getFinalResult();
@@ -273,7 +320,7 @@ public class PmtctPregnancyCycleService {
         // Check PMTCT Enrollment records for positive HIV status
         List<PMTCTEnrollment> enrollments = pmtctEnrollmentRepository.findAll();
         for (PMTCTEnrollment enrollment : enrollments) {
-            if (personUuid.equals(enrollment.getPersonUuid()) &&
+            if (patientUuid.equals(enrollment.getPatientUuid()) &&
                 enrollment.getArchived() != null && enrollment.getArchived() == 0L &&
                 facilityId.equals(enrollment.getFacilityId())) {
                 String hivStatus = enrollment.getHivStatus();
@@ -284,7 +331,7 @@ public class PmtctPregnancyCycleService {
         }
 
         // Check ANC records for positive HIV status
-        Optional<ANC> ancOptional = ancRepository.findLatestANCByPersonUuidAndArchived(personUuid, 0L);
+        Optional<ANC> ancOptional = ancRepository.findLatestANCByPatientUuidAndArchived(patientUuid, 0L);
         if (ancOptional.isPresent()) {
             ANC anc = ancOptional.get();
             if (facilityId.equals(anc.getFacilityId())) {

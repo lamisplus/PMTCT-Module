@@ -49,8 +49,8 @@ public class PmtctVisitService {
 
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         // Block new visit creation if MIP Card cycle is closed
-        if (pmtctVisitRequestDto.getPmtctCycleId() != null &&
-            pmtctPregnancyCycleService.isCycleClosed(pmtctVisitRequestDto.getPmtctCycleId())) {
+        if (pmtctVisitRequestDto.getPmtctCycleUuid() != null &&
+            pmtctPregnancyCycleService.isCycleClosed(pmtctVisitRequestDto.getPmtctCycleUuid())) {
             throw new RuntimeException("This MIP Card has been closed. No further visit records can be created.");
         }
 
@@ -65,16 +65,15 @@ public class PmtctVisitService {
         pmtctVisit.setSfhLength(pmtctVisitRequestDto.getSfhLength());
         pmtctVisit.setCurrentArtStatus(pmtctVisitRequestDto.getCurrentArtStatus());
         pmtctVisit.setMothersArtRegimen(pmtctVisitRequestDto.getMothersArtRegimen());
+        pmtctVisit.setRegimenLineId(pmtctVisitRequestDto.getRegimenLineId());
         pmtctVisit.setCurrentHbvStatus(pmtctVisitRequestDto.getCurrentHbvStatus());
         pmtctVisit.setNameOfHbvDrug(pmtctVisitRequestDto.getNameOfHbvDrug());
         pmtctVisit.setCurrentSyphilisStatus(pmtctVisitRequestDto.getCurrentSyphilisStatus());
         pmtctVisit.setNameOfSyphilisDrug(pmtctVisitRequestDto.getNameOfSyphilisDrug());
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
-        pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
-        pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(UUID.randomUUID().toString());
-        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEntryPoint());
         pmtctVisit.setCreatedBy(user.getUserName());
         pmtctVisit.setLastModifiedBy(user.getUserName());
         pmtctVisit.setFpCounseling(pmtctVisitRequestDto.getFpCounseling());
@@ -95,11 +94,10 @@ public class PmtctVisitService {
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
-        pmtctVisit.setPmtctCycleId(pmtctVisitRequestDto.getPmtctCycleId());
+        pmtctVisit.setPmtctCycleUuid(pmtctVisitRequestDto.getPmtctCycleUuid());
         pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
-        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
+        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfMaternalOutcome());
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
-        pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(
             pmtctVisitRequestDto.getNextAppointmentDate() != null
                 ? pmtctVisitRequestDto.getNextAppointmentDate()
@@ -108,42 +106,68 @@ public class PmtctVisitService {
         pmtctVisit.setArchived(0L);
         pmtctVisit.setSignature(pmtctVisitRequestDto.getSignature());
         pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
+        pmtctVisit.setHepatitisCTestResult(pmtctVisitRequestDto.getHepatitisCTestResult());
+        pmtctVisit.setReferredForHcv(pmtctVisitRequestDto.getReferredForHcv());
+        pmtctVisit.setOutcomeOfVisit(pmtctVisitRequestDto.getOutcomeOfVisit());
+        // Map shared fields (vital signs, counselling, lab tests, interventions)
+        pmtctVisit.setVisitType(pmtctVisitRequestDto.getVisitType());
+        pmtctVisit.setHeight(pmtctVisitRequestDto.getHeight());
+        pmtctVisit.setSystolic(pmtctVisitRequestDto.getSystolic());
+        pmtctVisit.setDiastolic(pmtctVisitRequestDto.getDiastolic());
+        pmtctVisit.setGaWeeks(pmtctVisitRequestDto.getGaWeeks());
+        pmtctVisit.setNumberOfAncVisits(pmtctVisitRequestDto.getNumberOfAncVisits());
+        pmtctVisit.setAncAttendance(pmtctVisitRequestDto.getAncAttendance());
+        pmtctVisit.setCounsellingHts(pmtctVisitRequestDto.getCounsellingHts());
+        pmtctVisit.setCounsellingFgm(pmtctVisitRequestDto.getCounsellingFgm());
+        pmtctVisit.setCounsellingFp(pmtctVisitRequestDto.getCounsellingFp());
+        pmtctVisit.setCounsellingMaternalNutrition(pmtctVisitRequestDto.getCounsellingMaternalNutrition());
+        pmtctVisit.setCounsellingEarlyBf(pmtctVisitRequestDto.getCounsellingEarlyBf());
+        pmtctVisit.setCounsellingExclusiveBf(pmtctVisitRequestDto.getCounsellingExclusiveBf());
+        pmtctVisit.setHbPcv(pmtctVisitRequestDto.getHbPcv());
+        pmtctVisit.setBloodSugarGdm(pmtctVisitRequestDto.getBloodSugarGdm());
+        pmtctVisit.setUrinalysisSugar(pmtctVisitRequestDto.getUrinalysisSugar());
+        pmtctVisit.setUrinalysisProteins(pmtctVisitRequestDto.getUrinalysisProteins());
+        pmtctVisit.setLlinGiven(pmtctVisitRequestDto.getLlinGiven());
+        pmtctVisit.setIptDose(pmtctVisitRequestDto.getIptDose());
+        pmtctVisit.setHematinicsGiven(pmtctVisitRequestDto.getHematinicsGiven());
+        pmtctVisit.setTdImmunization(pmtctVisitRequestDto.getTdImmunization());
+        pmtctVisit.setAssociatedProblems(pmtctVisitRequestDto.getAssociatedProblems());
+        pmtctVisit.setReferralReason(pmtctVisitRequestDto.getReferralReason());
+        pmtctVisit.setTransportationOut(pmtctVisitRequestDto.getTransportationOut());
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             System.out.println("facilityId = "+facilityId);
-            System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
+            System.out.println("pmtctVisitRequestDto.getPatientUuid() = "+pmtctVisitRequestDto.getPatientUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPatientUuid(), facilityId, 0);
             if (persons.isPresent()) {
                 Person person = persons.get();
-                pmtctVisit.setHospitalNumber(person.getHospitalNumber());
-                pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                pmtctVisit.setPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                 //System.out.println("visitStatus = " + visitStatus);
                 if (visitStatus != null) {
-                    System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
-                    Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
+                    // Use cycle-filtered lookup to avoid modifying ANC from a different pregnancy cycle
+                    String cycleUuid = pmtctVisitRequestDto.getPmtctCycleUuid();
+                    Optional<ANC> ancs = (cycleUuid != null)
+                            ? ancRepository.findANCByPatientUuidAndCycleIdAndArchived(pmtctVisitRequestDto.getPatientUuid(), cycleUuid, 0L)
+                            : ancRepository.findANCByPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                     if(ancs.isPresent()) {
                         ANC anc = ancs.get();
                         if (visitStatus.contains("_IN")) {
-
                             ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
                         } else {
                             ancService.graduateFromANC(anc, visitStatus);
                         }
                     }
-
                 }
-
-
             }
         } catch (Exception e) { e.printStackTrace(); }
 
         PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
 
         // Update maternal_outcome and visit_status in pregnancy cycle if provided
-        if (savedVisit.getPmtctCycleId() != null &&
+        if (savedVisit.getPmtctCycleUuid() != null &&
             (savedVisit.getMaternalOutcome() != null || savedVisit.getVisitStatus() != null)) {
             pmtctPregnancyCycleService.updateMaternalOutcome(
-                savedVisit.getPmtctCycleId(),
+                savedVisit.getPmtctCycleUuid(),
                 savedVisit.getMaternalOutcome(),
                 savedVisit.getVisitStatus()
             );
@@ -152,29 +176,28 @@ public class PmtctVisitService {
         return savedVisit;
     }
 
-    public PmtctVisit convertRequestDtoToEntityUpdate(Long id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
+    public PmtctVisit convertRequestDtoToEntityUpdate(String id,PmtctVisitRequestDto pmtctVisitRequestDto,PmtctVisit existingVisit) {
         PmtctVisit pmtctVisit = new PmtctVisit();
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = currentUser.get();
 
-        pmtctVisit.setId(id);
+        pmtctVisit.setUuid(id);
         pmtctVisit.setFacilityId(existingVisit.getFacilityId());
         pmtctVisit.setCurrentStatus(pmtctVisitRequestDto.getCurrentStatus());
         pmtctVisit.setWeight(pmtctVisitRequestDto.getWeight());
         pmtctVisit.setSfhLength(pmtctVisitRequestDto.getSfhLength());
         pmtctVisit.setCurrentArtStatus(pmtctVisitRequestDto.getCurrentArtStatus());
         pmtctVisit.setMothersArtRegimen(pmtctVisitRequestDto.getMothersArtRegimen());
+        pmtctVisit.setRegimenLineId(pmtctVisitRequestDto.getRegimenLineId());
         pmtctVisit.setCurrentHbvStatus(pmtctVisitRequestDto.getCurrentHbvStatus());
         pmtctVisit.setNameOfHbvDrug(pmtctVisitRequestDto.getNameOfHbvDrug());
         pmtctVisit.setCurrentSyphilisStatus(pmtctVisitRequestDto.getCurrentSyphilisStatus());
         pmtctVisit.setNameOfSyphilisDrug(pmtctVisitRequestDto.getNameOfSyphilisDrug());
         pmtctVisit.setDateOfInitialVisit(pmtctVisitRequestDto.getDateOfInitialVisit());
         pmtctVisit.setDateOfVisit(pmtctVisitRequestDto.getDateOfVisit());
-        pmtctVisit.setDateOfDelivery(pmtctVisitRequestDto.getDateOfDelivery());
-        pmtctVisit.setAncNo(pmtctVisitRequestDto.getAncNo());
         pmtctVisit.setUuid(existingVisit.getUuid());
-        pmtctVisit.setPersonUuid(existingVisit.getPersonUuid());
-        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEnteryPoint());
+        pmtctVisit.setPatientUuid(existingVisit.getPatientUuid());
+        pmtctVisit.setEntryPoint(pmtctVisitRequestDto.getEntryPoint());
         pmtctVisit.setCreatedBy(existingVisit.getCreatedBy());
         pmtctVisit.setCreatedDate(existingVisit.getCreatedDate());
         pmtctVisit.setLastModifiedBy(user.getUserName());
@@ -196,11 +219,10 @@ public class PmtctVisitService {
         pmtctVisit.setDsd(pmtctVisitRequestDto.getDsd());
         pmtctVisit.setDsdOption(pmtctVisitRequestDto.getDsdOption());
         pmtctVisit.setDsdModel(pmtctVisitRequestDto.getDsdModel());
-        pmtctVisit.setPmtctCycleId(pmtctVisitRequestDto.getPmtctCycleId());
+        pmtctVisit.setPmtctCycleUuid(pmtctVisitRequestDto.getPmtctCycleUuid());
         pmtctVisit.setMaternalOutcome(pmtctVisitRequestDto.getMaternalOutcome());
-        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfmeternalOutcome());
+        pmtctVisit.setDateOfMaternalOutcome(pmtctVisitRequestDto.getDateOfMaternalOutcome());
         pmtctVisit.setVisitStatus(pmtctVisitRequestDto.getVisitStatus());
-        pmtctVisit.setTransferTo(pmtctVisitRequestDto.getTransferTo());
         pmtctVisit.setNextAppointmentDate(
             pmtctVisitRequestDto.getNextAppointmentDate() != null
                 ? pmtctVisitRequestDto.getNextAppointmentDate()
@@ -208,44 +230,69 @@ public class PmtctVisitService {
         );
         pmtctVisit.setSignature(pmtctVisitRequestDto.getSignature());
         pmtctVisit.setSource(pmtctVisitRequestDto.getSource());
+        pmtctVisit.setHepatitisCTestResult(pmtctVisitRequestDto.getHepatitisCTestResult());
+        pmtctVisit.setReferredForHcv(pmtctVisitRequestDto.getReferredForHcv());
+        pmtctVisit.setOutcomeOfVisit(pmtctVisitRequestDto.getOutcomeOfVisit());
+        pmtctVisit.setVisitType(pmtctVisitRequestDto.getVisitType());
+        pmtctVisit.setHeight(pmtctVisitRequestDto.getHeight());
+        pmtctVisit.setSystolic(pmtctVisitRequestDto.getSystolic());
+        pmtctVisit.setDiastolic(pmtctVisitRequestDto.getDiastolic());
+        pmtctVisit.setGaWeeks(pmtctVisitRequestDto.getGaWeeks());
+        pmtctVisit.setNumberOfAncVisits(pmtctVisitRequestDto.getNumberOfAncVisits());
+        pmtctVisit.setAncAttendance(pmtctVisitRequestDto.getAncAttendance());
+        pmtctVisit.setCounsellingHts(pmtctVisitRequestDto.getCounsellingHts());
+        pmtctVisit.setCounsellingFgm(pmtctVisitRequestDto.getCounsellingFgm());
+        pmtctVisit.setCounsellingFp(pmtctVisitRequestDto.getCounsellingFp());
+        pmtctVisit.setCounsellingMaternalNutrition(pmtctVisitRequestDto.getCounsellingMaternalNutrition());
+        pmtctVisit.setCounsellingEarlyBf(pmtctVisitRequestDto.getCounsellingEarlyBf());
+        pmtctVisit.setCounsellingExclusiveBf(pmtctVisitRequestDto.getCounsellingExclusiveBf());
+        pmtctVisit.setHbPcv(pmtctVisitRequestDto.getHbPcv());
+        pmtctVisit.setBloodSugarGdm(pmtctVisitRequestDto.getBloodSugarGdm());
+        pmtctVisit.setUrinalysisSugar(pmtctVisitRequestDto.getUrinalysisSugar());
+        pmtctVisit.setUrinalysisProteins(pmtctVisitRequestDto.getUrinalysisProteins());
+        pmtctVisit.setLlinGiven(pmtctVisitRequestDto.getLlinGiven());
+        pmtctVisit.setIptDose(pmtctVisitRequestDto.getIptDose());
+        pmtctVisit.setHematinicsGiven(pmtctVisitRequestDto.getHematinicsGiven());
+        pmtctVisit.setTdImmunization(pmtctVisitRequestDto.getTdImmunization());
+        pmtctVisit.setAssociatedProblems(pmtctVisitRequestDto.getAssociatedProblems());
+        pmtctVisit.setReferralReason(pmtctVisitRequestDto.getReferralReason());
+        pmtctVisit.setTransportationOut(pmtctVisitRequestDto.getTransportationOut());
         pmtctVisit.setArchived(existingVisit.getArchived() != null ? existingVisit.getArchived() : 0L);
         String visitStatus = pmtctVisitRequestDto.getVisitStatus();
         try {
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
-            System.out.println("pmtctVisitRequestDto.getPersonUuid() = "+pmtctVisitRequestDto.getPersonUuid());
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPersonUuid(), facilityId, 0);
+            System.out.println("pmtctVisitRequestDto.getPatientUuid() = "+pmtctVisitRequestDto.getPatientUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisitRequestDto.getPatientUuid(), facilityId, 0);
             if (persons.isPresent()) {
                 Person person = persons.get();
-                pmtctVisit.setHospitalNumber(person.getHospitalNumber());
-                pmtctVisit.setPersonUuid(pmtctVisitRequestDto.getPersonUuid());
+                pmtctVisit.setPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                 //System.out.println("visitStatus = " + visitStatus);
                 if (visitStatus != null) {
-                    System.out.println("Hummm we still get here "+ pmtctVisitRequestDto.getAncNo());
-                    Optional<ANC> ancs = ancRepository.getByAncNo(pmtctVisitRequestDto.getAncNo());
+                    // Use cycle-filtered lookup to avoid modifying ANC from a different pregnancy cycle
+                    String cycleUuid = pmtctVisitRequestDto.getPmtctCycleUuid();
+                    Optional<ANC> ancs = (cycleUuid != null)
+                            ? ancRepository.findANCByPatientUuidAndCycleIdAndArchived(pmtctVisitRequestDto.getPatientUuid(), cycleUuid, 0L)
+                            : ancRepository.findANCByPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                     if(ancs.isPresent()) {
                         ANC anc = ancs.get();
                         if (visitStatus.contains("_IN")) {
-
                             ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
                         } else {
                             ancService.graduateFromANC(anc, visitStatus);
                         }
                     }
-
                 }
-
-
             }
         } catch (Exception e) { e.printStackTrace(); }
 
         PmtctVisit savedVisit = this.pmtctVisitRepository.save(pmtctVisit);
 
         // Update maternal_outcome and visit_status in pregnancy cycle if provided
-        if (savedVisit.getPmtctCycleId() != null &&
+        if (savedVisit.getPmtctCycleUuid() != null &&
             (savedVisit.getMaternalOutcome() != null || savedVisit.getVisitStatus() != null)) {
             pmtctPregnancyCycleService.updateMaternalOutcome(
-                savedVisit.getPmtctCycleId(),
+                savedVisit.getPmtctCycleUuid(),
                 savedVisit.getMaternalOutcome(),
                 savedVisit.getVisitStatus()
             );
@@ -258,20 +305,19 @@ public class PmtctVisitService {
     public PmtctVisitResponseDto convertEntitytoRespondDto(PmtctVisit pmtctVisit) {
         PmtctVisitResponseDto pmtctVisitResponseDto = new PmtctVisitResponseDto();
         pmtctVisitResponseDto.setId(pmtctVisit.getId());
-        pmtctVisitResponseDto.setAncNo(pmtctVisit.getAncNo());
         pmtctVisitResponseDto.setCurrentStatus(pmtctVisit.getCurrentStatus());
         pmtctVisitResponseDto.setWeight(pmtctVisit.getWeight());
         pmtctVisitResponseDto.setSfhLength(pmtctVisit.getSfhLength());
         pmtctVisitResponseDto.setCurrentArtStatus(pmtctVisit.getCurrentArtStatus());
         pmtctVisitResponseDto.setMothersArtRegimen(pmtctVisit.getMothersArtRegimen());
+        pmtctVisitResponseDto.setRegimenLineId(pmtctVisit.getRegimenLineId());
         pmtctVisitResponseDto.setCurrentHbvStatus(pmtctVisit.getCurrentHbvStatus());
         pmtctVisitResponseDto.setNameOfHbvDrug(pmtctVisit.getNameOfHbvDrug());
         pmtctVisitResponseDto.setCurrentSyphilisStatus(pmtctVisit.getCurrentSyphilisStatus());
         pmtctVisitResponseDto.setNameOfSyphilisDrug(pmtctVisit.getNameOfSyphilisDrug());
         pmtctVisitResponseDto.setDateOfInitialVisit(pmtctVisit.getDateOfInitialVisit());
         pmtctVisitResponseDto.setDateOfVisit(pmtctVisit.getDateOfVisit());
-        pmtctVisitResponseDto.setDateOfDelivery(pmtctVisit.getDateOfDelivery());
-        pmtctVisitResponseDto.setEnteryPoint(pmtctVisit.getEntryPoint());
+        pmtctVisitResponseDto.setEntryPoint(pmtctVisit.getEntryPoint());
         pmtctVisitResponseDto.setFpCounseling(pmtctVisit.getFpCounseling());
         pmtctVisitResponseDto.setFpMethod(pmtctVisit.getFpMethod());
         pmtctVisitResponseDto.setDateOfViralLoad(pmtctVisit.getDateOfViralLoad());
@@ -288,29 +334,54 @@ public class PmtctVisitService {
         pmtctVisitResponseDto.setDsdOption(pmtctVisit.getDsdOption());
         pmtctVisitResponseDto.setDsdModel(pmtctVisit.getDsdModel());
         pmtctVisitResponseDto.setMaternalOutcome(pmtctVisit.getMaternalOutcome());
-        pmtctVisitResponseDto.setDateOfmeternalOutcome(pmtctVisit.getDateOfMaternalOutcome());
+        pmtctVisitResponseDto.setDateOfMaternalOutcome(pmtctVisit.getDateOfMaternalOutcome());
         pmtctVisitResponseDto.setVisitStatus(pmtctVisit.getVisitStatus());
-        pmtctVisitResponseDto.setTransferTo(pmtctVisit.getTransferTo());
         pmtctVisitResponseDto.setNextAppointmentDate(pmtctVisit.getNextAppointmentDate());
-        pmtctVisitResponseDto.setPmtctCycleId(pmtctVisit.getPmtctCycleId());
+        pmtctVisitResponseDto.setPmtctCycleUuid(pmtctVisit.getPmtctCycleUuid());
         pmtctVisitResponseDto.setSignature(pmtctVisit.getSignature());
         pmtctVisitResponseDto.setSource(pmtctVisit.getSource());
+        pmtctVisitResponseDto.setHepatitisCTestResult(pmtctVisit.getHepatitisCTestResult());
+        pmtctVisitResponseDto.setReferredForHcv(pmtctVisit.getReferredForHcv());
+        pmtctVisitResponseDto.setOutcomeOfVisit(pmtctVisit.getOutcomeOfVisit());
+        pmtctVisitResponseDto.setVisitType(pmtctVisit.getVisitType());
+        pmtctVisitResponseDto.setHeight(pmtctVisit.getHeight());
+        pmtctVisitResponseDto.setSystolic(pmtctVisit.getSystolic());
+        pmtctVisitResponseDto.setDiastolic(pmtctVisit.getDiastolic());
+        pmtctVisitResponseDto.setGaWeeks(pmtctVisit.getGaWeeks());
+        pmtctVisitResponseDto.setNumberOfAncVisits(pmtctVisit.getNumberOfAncVisits());
+        pmtctVisitResponseDto.setAncAttendance(pmtctVisit.getAncAttendance());
+        pmtctVisitResponseDto.setCounsellingHts(pmtctVisit.getCounsellingHts());
+        pmtctVisitResponseDto.setCounsellingFgm(pmtctVisit.getCounsellingFgm());
+        pmtctVisitResponseDto.setCounsellingFp(pmtctVisit.getCounsellingFp());
+        pmtctVisitResponseDto.setCounsellingMaternalNutrition(pmtctVisit.getCounsellingMaternalNutrition());
+        pmtctVisitResponseDto.setCounsellingEarlyBf(pmtctVisit.getCounsellingEarlyBf());
+        pmtctVisitResponseDto.setCounsellingExclusiveBf(pmtctVisit.getCounsellingExclusiveBf());
+        pmtctVisitResponseDto.setHbPcv(pmtctVisit.getHbPcv());
+        pmtctVisitResponseDto.setBloodSugarGdm(pmtctVisit.getBloodSugarGdm());
+        pmtctVisitResponseDto.setUrinalysisSugar(pmtctVisit.getUrinalysisSugar());
+        pmtctVisitResponseDto.setUrinalysisProteins(pmtctVisit.getUrinalysisProteins());
+        pmtctVisitResponseDto.setLlinGiven(pmtctVisit.getLlinGiven());
+        pmtctVisitResponseDto.setIptDose(pmtctVisit.getIptDose());
+        pmtctVisitResponseDto.setHematinicsGiven(pmtctVisit.getHematinicsGiven());
+        pmtctVisitResponseDto.setTdImmunization(pmtctVisit.getTdImmunization());
+        pmtctVisitResponseDto.setAssociatedProblems(pmtctVisit.getAssociatedProblems());
+        pmtctVisitResponseDto.setReferralReason(pmtctVisit.getReferralReason());
+        pmtctVisitResponseDto.setTransportationOut(pmtctVisit.getTransportationOut());
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
             System.out.println("facilityId = "+facilityId);
-            System.out.println("pmtctVisit.getPersonUuid() = "+pmtctVisit.getPersonUuid());
-            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisit.getPersonUuid(), facilityId, 0);
+            System.out.println("pmtctVisit.getPatientUuid() = "+pmtctVisit.getPatientUuid());
+            Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisit.getPatientUuid(), facilityId, 0);
             if (persons.isPresent()) {
                 System.out.println("Doc check me out here 1");
                 Person person = persons.get();
-                pmtctVisitResponseDto.setHospitalNumber(person.getHospitalNumber());
-                pmtctVisitResponseDto.setFullName(this.getFullName(pmtctVisit.getPersonUuid()));
+                pmtctVisitResponseDto.setFullName(this.getFullName(pmtctVisit.getPatientUuid()));
                 pmtctVisitResponseDto.setSex(person.getSex());
-                pmtctVisitResponseDto.setAge(this.calculateAge(pmtctVisit.getPersonUuid()));
+                pmtctVisitResponseDto.setAge(this.calculateAge(pmtctVisit.getPatientUuid()));
                 pmtctVisitResponseDto.setDateOfBirth(person.getDateOfBirth());
-                pmtctVisitResponseDto.setPersonUuid(person.getUuid());
+                pmtctVisitResponseDto.setPatientUuid(person.getUuid());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -370,24 +441,30 @@ public class PmtctVisitService {
         return PmtctVisitResponseDtoList;
     }
     @SneakyThrows
-    public PmtctVisit getSinglePmtctVisit(Long id) {
+    public PmtctVisit getSinglePmtctVisit(String id) {
         return this.pmtctVisitRepository.findById(id)
                 .orElseThrow(() -> new Exception("ANC NOT FOUND"));
     }
 
     public List<PmtctVisitResponseDto> getVisitByAncNo(String ancNo) {
-        List<PmtctVisit> pmtctVisitList = this.pmtctVisitRepository.findByAncNoOrderByDateOfVisitDesc(ancNo);
+        // Look up ANC by ancNo to get patientUuid, then find visits by patientUuid
+        Optional<ANC> ancOpt = ancRepository.getByAncNo(ancNo);
+        if (!ancOpt.isPresent()) {
+            return new ArrayList<>();
+        }
+        String patientUuid = ancOpt.get().getPatientUuid();
+        List<PmtctVisit> pmtctVisitList = this.pmtctVisitRepository.getANCVisitsByPatientUuid(patientUuid, java.time.LocalDate.of(9999, 12, 31));
         List<PmtctVisitResponseDto> PmtctVisitResponseDtoList = new ArrayList<>();
         pmtctVisitList.forEach(pmtctVisit -> PmtctVisitResponseDtoList.add(convertEntitytoRespondDto(pmtctVisit)));
         return PmtctVisitResponseDtoList;
     }
 
-    private PmtctVisit getExistVisit(Long id) {
+    private PmtctVisit getExistVisit(String id) {
         return pmtctVisitRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(VisitService.class, "errorMessage", "No visit was found with given Id " + id));
     }
-    public PmtctVisitResponseDto updatePmtctVisit(Long id, PmtctVisitRequestDto pmtctVisitRequestDto) {
+    public PmtctVisitResponseDto updatePmtctVisit(String id, PmtctVisitRequestDto pmtctVisitRequestDto) {
         PmtctVisit existVisit = getExistVisit(id);
         PmtctVisit pmtctVisit = convertRequestDtoToEntityUpdate( id, pmtctVisitRequestDto,existVisit);
         //pmtctVisit.setId(id);
@@ -396,29 +473,29 @@ public class PmtctVisitService {
         return convertEntitytoRespondDto(pmtctVisit);
     }
 
-    public PmtctVisitResponseDto viewPmtctVisit(Long id) {
+    public PmtctVisitResponseDto viewPmtctVisit(String id) {
         PmtctVisit pmtctVisit = getExistVisit(id);
         return convertEntitytoRespondDto(pmtctVisit);
     }
 
 
-    public void deleteMotherVisit(Long id) {
+    public void deleteMotherVisit(String id) {
         PmtctVisit exist = this.getSinglePmtctVisit(id);
         exist.setArchived(1L);
         this.pmtctVisitRepository.save(exist);
     }
 
 
-    public  String  getLatestMaternalOutcome(String personUuid, Long pmtctCycleId) {
-        return pmtctVisitRepository.findLatestMaternalOutcomeByCycle(personUuid, pmtctCycleId).orElse("");
+    public  String  getLatestMaternalOutcome(String patientUuid, String pmtctCycleUuid) {
+        return pmtctVisitRepository.findLatestMaternalOutcomeByCycle(patientUuid, pmtctCycleUuid).orElse("");
     }
 
-    public String getLatestArtRegimenFromPharmacy(String personUuid) {
-        return pmtctVisitRepository.findLatestArtRegimenFromPharmacy(personUuid).orElse("");
+    public String getLatestArtRegimenFromPharmacy(String patientUuid) {
+        return pmtctVisitRepository.findLatestArtRegimenFromPharmacy(patientUuid).orElse("");
     }
 
-    public boolean isViralLoadUnsuppressed(String personUuid) {
-        Optional<Long> vlResult = pmtctVisitRepository.findLatestViralLoadResult(personUuid);
+    public boolean isViralLoadUnsuppressed(String patientUuid) {
+        Optional<Long> vlResult = pmtctVisitRepository.findLatestViralLoadResult(patientUuid);
         return vlResult.isPresent() && vlResult.get() >= 1000;
     }
 }

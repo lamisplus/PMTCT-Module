@@ -77,6 +77,21 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
     infantExitHivNegative: 0,
     infantExitHivUnknown: 0,
     infantExitDenominator: 0,
+    // Key PMTCT Indicators
+    totalPregnancyCycles: 0,
+    activePregnancyCycles: 0,
+    closedPregnancyCycles: 0,
+    totalANCVisits: 0,
+    totalMotherVisits: 0,
+    // Infant Information Summary
+    totalInfantsRegistered: 0,
+    infantsAlive: 0,
+    infantsOnARV: 0,
+    infantsWithPCRTest: 0,
+    infantsPCRPositive: 0,
+    infantsPCRNegative: 0,
+    infantsWithRapidTest: 0,
+    infantsDeceased: 0,
   });
 
   const [dashboardData, setDashboardData] = useState({
@@ -164,7 +179,52 @@ const PMTCTDashboard = ({ onNavigateToMenu }) => {
 
       // Set statistics from the endpoint
       if (statisticsResponse.data) {
-        setStatistics(statisticsResponse.data);
+        const data = statisticsResponse.data;
+        setStatistics(data);
+
+        // Map statistics to dashboardData so all widgets display correctly
+        setDashboardData((prev) => ({
+          ...prev,
+          motherStatistics: {
+            ...prev.motherStatistics,
+            totalFemalePatients: data.totalPatients || 0,
+            totalANCPatients: data.ancPatients || 0,
+            totalPMTCTPatients: data.pmtctPatients || 0,
+          },
+          pmtctIndicators: {
+            totalPregnancyCycles: data.totalPregnancyCycles || 0,
+            activePregnancyCycles: data.activePregnancyCycles || 0,
+            closedPregnancyCycles: data.closedPregnancyCycles || 0,
+            totalANCVisits: data.totalANCVisits || 0,
+            totalMotherVisits: data.totalMotherVisits || 0,
+            mothersLostToFollowUp: data.pmtctExitLostToFollowUp || 0,
+            mothersTransferredOut: data.pmtctExitTransferredOut || 0,
+            mothersDeceased: data.pmtctExitDead || 0,
+          },
+          infantStatistics: {
+            totalInfantsRegistered: data.totalInfantsRegistered || 0,
+            infantsAlive: data.infantsAlive || 0,
+            infantsOnARV: data.infantsOnARV || 0,
+            infantsWithPCRTest: data.infantsWithPCRTest || 0,
+            infantsPCRPositive: data.infantsPCRPositive || 0,
+            infantsPCRNegative: data.infantsPCRNegative || 0,
+            infantsWithRapidTest: data.infantsWithRapidTest || 0,
+            infantsDeceased: data.infantsDeceased || 0,
+          },
+          infantMetrics: {
+            ...prev.infantMetrics,
+            infantsTested: data.infantTested || 0,
+            totalInfantsRegistered: data.totalInfantsRegistered || 0,
+            positiveInfants: data.infantPositiveNumerator || 0,
+            negativeInfants: data.infantNegativeNumerator || 0,
+            infantsOnART: data.infantsOnARV || 0,
+            exitTracking: {
+              hivPositive: data.infantExitHivPositive || 0,
+              hivNegative: data.infantExitHivNegative || 0,
+              hivUnknown: data.infantExitHivUnknown || 0,
+            },
+          },
+        }));
       }
 
       setLoading(false);

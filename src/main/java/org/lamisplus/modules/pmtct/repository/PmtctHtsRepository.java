@@ -11,46 +11,49 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> {
+public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String> {
 
-    Optional<PmtctHts> findRecordByPersonUuid(String personUuid);
-
-
-    List<PmtctHts> findByPersonUuid(String personUuid);
+    Optional<PmtctHts> findRecordByPatientUuid(String patientUuid);
 
 
-    @Query(value = "SELECT * FROM pmtct_hts where person_uuid=?1 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
-    List<PmtctHts> findByPersonUuidAndUnarchived(String personUuid);
-
-    @Query(value = "SELECT * FROM pmtct_hts where person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
-    List<PmtctHts> findByPersonUuidAndPmtctCycleIdAndUnarchived(String personUuid, Long pmtctCycleId);
+    List<PmtctHts> findByPatientUuid(String patientUuid);
 
 
+    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
+    List<PmtctHts> findByPatientUuidAndUnarchived(String patientUuid);
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where person_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
-    Optional<String> findLatestFinalResult(String personUuid);
-
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
-    Optional<String> findLatestFinalResultByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
-
-    @Query(value = "SELECT * FROM pmtct_hts WHERE person_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
-    PmtctHts findLatestPMTCTHTSEnrollmentById(String personUuid);
-
-    @Query(value = "SELECT * FROM pmtct_hts WHERE person_uuid=?1 AND pmtct_cycle_id=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
-    PmtctHts findLatestPMTCTHTSEnrollmentByIdAndCycleId(String personUuid, Long pmtctCycleId);
-
-    @Query(value = "SELECT * FROM pmtct_hts WHERE pmtct_cycle_id = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<PmtctHts> findByPmtctCycleIdAndArchived(Long pmtctCycleId, Long archived);
-
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE person_uuid=?1 AND date_of_hiv_test =?2 AND archived = 0 ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
-    boolean findIfDateExist(String personUuid, LocalDate dateOfHivTest);
+    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
+    List<PmtctHts> findByPatientUuidAndPmtctCycleIdAndUnarchived(String patientUuid, String pmtctCycleUuid);
 
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE person_uuid =?1 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    List<Object[]> findLatestHivTestResultList(String personUuid);
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE person_uuid =?1 AND pmtct_cycle_id =?2 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    List<Object[]> findLatestHivTestResultListByPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
+    Optional<String> findLatestFinalResult(String patientUuid);
+
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
+    Optional<String> findLatestFinalResultByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid);
+
+    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    PmtctHts findLatestPMTCTHTSEnrollmentById(String patientUuid);
+
+    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    PmtctHts findLatestPMTCTHTSEnrollmentByIdAndCycleId(String patientUuid, String pmtctCycleUuid);
+
+    @Query(value = "SELECT * FROM pmtct_hts WHERE pmtct_cycle_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<PmtctHts> findByPmtctCycleIdAndArchived(String pmtctCycleUuid, Long archived);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND date_of_hiv_test =?2 AND archived = 0 ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
+    boolean findIfDateExist(String patientUuid, LocalDate dateOfHivTest);
+
+    @Query(value = "SELECT MIN(date_of_hiv_test) FROM pmtct_hts WHERE patient_uuid = ?1 AND archived = 0 AND (COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') IN ('Positive', 'reactive'))", nativeQuery = true)
+    LocalDate findEarliestPositiveHivTestDate(String patientUuid);
+
+
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    List<Object[]> findLatestHivTestResultList(String patientUuid);
+
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND pmtct_cycle_uuid =?2 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    List<Object[]> findLatestHivTestResultListByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid);
 
 
     @Query(
@@ -58,7 +61,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                     "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
-                            "  pp.uuid AS personUuid, " +
+                            "  pp.uuid AS patientUuid, " +
                             "  ph.uuid AS uuid, " +
                             "  ph.id AS personId, " +
                             "  pp.sex, " +
@@ -72,19 +75,19 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                             "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
                             "  COALESCE( ( " +
                             "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_hts " +
                             "  WHERE archived = ?1 " +
-                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
-                            ") ph ON pp.uuid = ph.person_uuid " +
-                            "  AND ph.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
+                            ") ph ON pp.uuid = ph.patient_uuid " +
+                            "  AND ph.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
                             "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
@@ -100,11 +103,11 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?1 " +
-                            "  AND ph.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.patient_uuid AND ph.archived = ?1 " +
+                            "  AND ph.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
@@ -120,7 +123,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                     "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
-                            "  pp.uuid AS personUuid, " +
+                            "  pp.uuid AS patientUuid, " +
                             "  ph.uuid AS uuid, " +
                             "  ph.id AS personId, " +
                             "  pp.sex, " +
@@ -134,19 +137,19 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
                             "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
                             "  COALESCE( ( " +
                             "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_hts " +
                             "  WHERE archived = ?2 " +
-                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
-                            ") ph ON pp.uuid = ph.person_uuid " +
-                            "  AND ph.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
+                            ") ph ON pp.uuid = ph.patient_uuid " +
+                            "  AND ph.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
                             "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
@@ -169,11 +172,11 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, Long> 
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.person_uuid AND ph.archived = ?2 " +
-                            "  AND ph.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "INNER JOIN pmtct_hts ph ON pp.uuid = ph.patient_uuid AND ph.archived = ?2 " +
+                            "  AND ph.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "WHERE (" +
                             "   pp.first_name ILIKE ?1 OR " +

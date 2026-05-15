@@ -10,7 +10,7 @@
          Populate NULL facility_id in all PMTCT tables
          by looking up the value from patient_person table.
 
-         Tables using person_uuid (mother tables):
+         Tables using patient_uuid (mother tables):
            1. pmtct_enrollment
            2. pmtct_anc
            3. pmtct_delivery
@@ -18,7 +18,7 @@
            5. pmtct_hts
            6. pmtct_pregnancy_cycle
 
-         Tables using mother_person_uuid (infant tables):
+         Tables using mother_patient_uuid (infant tables):
            7. pmtct_infant_information
            8. pmtct_infant_visit
            9. pmtct_infant_pcr
@@ -39,7 +39,7 @@
             UPDATE pmtct_enrollment pe
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE pe.person_uuid = pp.uuid
+            WHERE pe.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (pe.facility_id IS NULL);
         </sql>
@@ -54,7 +54,7 @@
             UPDATE pmtct_anc pa
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE pa.person_uuid = pp.uuid
+            WHERE pa.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (pa.facility_id IS NULL);
         </sql>
@@ -69,7 +69,7 @@
             UPDATE pmtct_delivery pd
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE pd.person_uuid = pp.uuid
+            WHERE pd.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (pd.facility_id IS NULL);
         </sql>
@@ -84,7 +84,7 @@
             UPDATE pmtct_mother_visitation mv
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE mv.person_uuid = pp.uuid
+            WHERE mv.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (mv.facility_id IS NULL);
         </sql>
@@ -99,7 +99,7 @@
             UPDATE pmtct_hts ph
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ph.person_uuid = pp.uuid
+            WHERE ph.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ph.facility_id IS NULL);
         </sql>
@@ -114,7 +114,7 @@
             UPDATE pmtct_pregnancy_cycle pc
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE pc.person_uuid = pp.uuid
+            WHERE pc.patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (pc.facility_id IS NULL);
         </sql>
@@ -129,7 +129,7 @@
             UPDATE pmtct_infant_information ii
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ii.mother_person_uuid = pp.uuid
+            WHERE ii.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ii.facility_id IS NULL);
         </sql>
@@ -144,7 +144,7 @@
             UPDATE pmtct_infant_visit iv
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE iv.mother_person_uuid = pp.uuid
+            WHERE iv.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (iv.facility_id IS NULL);
         </sql>
@@ -159,7 +159,7 @@
             UPDATE pmtct_infant_pcr ip
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ip.mother_person_uuid = pp.uuid
+            WHERE ip.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ip.facility_id IS NULL);
         </sql>
@@ -174,7 +174,7 @@
             UPDATE pmtct_infant_arv ia
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ia.mother_person_uuid = pp.uuid
+            WHERE ia.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ia.facility_id IS NULL);
         </sql>
@@ -189,7 +189,7 @@
             UPDATE pmtct_infant_mother_art ima
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ima.mother_person_uuid = pp.uuid
+            WHERE ima.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ima.facility_id IS NULL);
         </sql>
@@ -204,7 +204,7 @@
             UPDATE pmtct_infant_rapid_antibody ira
             SET facility_id = pp.facility_id
             FROM patient_person pp
-            WHERE ira.mother_person_uuid = pp.uuid
+            WHERE ira.mother_patient_uuid = pp.uuid
               AND pp.facility_id IS NOT NULL
               AND (ira.facility_id IS NULL);
         </sql>

@@ -1,8 +1,10 @@
 package org.lamisplus.modules.pmtct.domain.entity;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
@@ -13,60 +15,72 @@ import java.time.LocalDate;
 @Table(name = "pmtct_anc",  schema = "public")
 @Data
 @NoArgsConstructor
-public class ANC extends PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
-    private LocalDate firstAncDate;
+public class ANC extends PMTCTTransactionalEntity implements Serializable, Persistable<String> {
+    private String ancNo;
+    private LocalDate dateOfEnrollment;
     private Integer gravida;
     private Integer parity;
+    @JsonProperty("lmp")
     private LocalDate LMP;
-    private LocalDate expectedDeliveryDate;
+    @JsonProperty("gaweeks")
+    @Column(name = "gaweeks")
     private Integer gAWeeks;
-    private String hivDiognosicTime;
-    private String testedSyphilis;
-    private String testResultSyphilis;
-    private String treatedSyphilis;
-    private String referredSyphilisTreatment;
-    @Type(type = "jsonb-node")
-    @Column(columnDefinition = "jsonb")
-    private JsonNode pmtctHtsInfo;
-    @Type(type = "jsonb-node")
-    @Column(columnDefinition = "jsonb")
-    private JsonNode partnerNotification;
-    private String personUuid;
+    private String patientUuid;
     private Long archived;
     private String status;
     private String staticHivStatus;
     private String sourceOfReferral;
-    private LocalDate lastVisitDate;
-    private LocalDate nextAppointmentDate;
-    private Integer defaultDays;
     private String ancSetting;
     private String communitySetting;
 
     private String previouslyKnownHivStatus;
     private String currentlyOnArt;
-    private LocalDate  dateOfHepatitisB;
-    private String  hepatitisB;
-    private String testedHepatitisB;
-    private String treatedHepatitisB;
-    private String referredHepatitisB;
-
-    private LocalDate  dateOfHepatitisC;
-    private String  hepatitisC;
-    private String testedHepatitisC;
-    private String treatedHepatitisC;
-    private String referredHepatitisC;
     private String facilityEnrolledIn;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private String source;
+    private String ancAttendance;
 
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private VitalSignsDto vitalSigns;
 
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private CounsellingDto counselling;
+
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private SyphilisInfoDto syphilisInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "hepatitis_b_info", columnDefinition = "jsonb")
+    private HepatitisBDto hepatitisBInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "hepatitis_c_info", columnDefinition = "jsonb")
+    private HepatitisCDto hepatitisCInfo;
+
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private UrinalysisDto urinalysis;
+
+    private String hbPcv;
+    private String bloodSugarGdm;
+    private String llinGiven;
+    private String iptDose;
+    private String hematinicsGiven;
+    private String tdImmunization;
+    private String associatedProblems;
+    private String outcomeOfVisit;
+    private String referralReason;
+    private String transportationOut;
 
     @Type(type = "jsonb-node")
     @Column(columnDefinition = "jsonb")
     private JsonNode partnerInformation;
     @Override
     public boolean isNew() {
-        return getId() == null;
+        return getUuid() == null;
     }
 
 

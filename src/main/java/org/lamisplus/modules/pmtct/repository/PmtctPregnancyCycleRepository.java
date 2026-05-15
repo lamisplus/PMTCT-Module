@@ -9,18 +9,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PmtctPregnancyCycleRepository extends CommonJpaRepository<PmtctPregnancyCycle, Long> {
+public interface PmtctPregnancyCycleRepository extends CommonJpaRepository<PmtctPregnancyCycle, String> {
 
-    Optional<PmtctPregnancyCycle> findByPersonUuidAndArchivedAndIsClosed(String personUuid, Long archived, Boolean isClosed);
+    Optional<PmtctPregnancyCycle> findByPatientUuidAndArchivedAndIsClosed(String patientUuid, Long archived, Boolean isClosed);
 
-    List<PmtctPregnancyCycle> findByPersonUuidAndArchived(String personUuid, Long archived);
+    List<PmtctPregnancyCycle> findByPatientUuidAndArchived(String patientUuid, Long archived);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC", nativeQuery = true)
-    List<PmtctPregnancyCycle> findAllByPersonUuid(String personUuid);
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = 0 ORDER BY created_date DESC", nativeQuery = true)
+    List<PmtctPregnancyCycle> findAllByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<PmtctPregnancyCycle> findLatestByPersonUuid(String personUuid);
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+    Optional<PmtctPregnancyCycle> findLatestByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE person_uuid = ?1 AND pmtct_status = 'INACTIVE' AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<PmtctPregnancyCycle> findInactiveByPersonUuid(String personUuid);
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND pmtct_status = 'INACTIVE' AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+    Optional<PmtctPregnancyCycle> findInactiveByPatientUuid(String patientUuid);
 }

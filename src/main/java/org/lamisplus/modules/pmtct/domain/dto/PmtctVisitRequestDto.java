@@ -1,5 +1,6 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,21 +22,21 @@ import java.util.List;
 public class PmtctVisitRequestDto implements Serializable {
     @NotNull(message = "Source is required")
     private String source;
-    private Long id;
-    private String ancNo;
-    private String enteryPoint;
+    private String id;
+    @JsonProperty("enteryPoint")
+    private String entryPoint;
     private String currentStatus;
     private Double weight;
     private Double sfhLength;
     private String currentArtStatus;
     private String mothersArtRegimen;
+    private String regimenLineId;
     private String currentHbvStatus;
     private String nameOfHbvDrug;
     private String currentSyphilisStatus;
     private String nameOfSyphilisDrug;
     private LocalDate dateOfInitialVisit;
     private LocalDate dateOfVisit;
-    private LocalDate dateOfDelivery;
     private String fpCounseling;
     private String fpMethod;
     private String timeOfViralLoad;
@@ -50,12 +51,39 @@ public class PmtctVisitRequestDto implements Serializable {
     private String dsdOption;
     private String dsdModel;
     private String  maternalOutcome;
-    private LocalDate dateOfmeternalOutcome;
+    @JsonProperty("dateOfmeternalOutcome")
+    private LocalDate dateOfMaternalOutcome;
     private String visitStatus;
-    private String transferTo;
     private LocalDate nextAppointmentDate;
     private String signature;
-    private String personUuid;
-    @NotNull(message = "pmtctCycleId is required")
-    private Long pmtctCycleId;
+    private String patientUuid;
+    @NotNull(message = "pmtctCycleUuid is required")
+    private String pmtctCycleUuid;
+    private String visitType;
+    private Double height;
+    private Double systolic;
+    private Double diastolic;
+    private Integer gaWeeks;
+    private String numberOfAncVisits;
+    private String ancAttendance;
+    private String counsellingHts;
+    private String counsellingFgm;
+    private String counsellingFp;
+    private String counsellingMaternalNutrition;
+    private String counsellingEarlyBf;
+    private String counsellingExclusiveBf;
+    private String hbPcv;
+    private String bloodSugarGdm;
+    private String urinalysisSugar;
+    private String urinalysisProteins;
+    private String llinGiven;
+    private String iptDose;
+    private String hematinicsGiven;
+    private String tdImmunization;
+    private String associatedProblems;
+    private String referralReason;
+    private String transportationOut;
+    private String hepatitisCTestResult;
+    private String referredForHcv;
+    private String outcomeOfVisit;
 }

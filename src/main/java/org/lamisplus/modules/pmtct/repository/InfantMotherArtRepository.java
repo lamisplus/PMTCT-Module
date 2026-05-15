@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface InfantMotherArtRepository extends CommonJpaRepository<InfantMotherArt, Long>
+public interface InfantMotherArtRepository extends CommonJpaRepository<InfantMotherArt, String>
 {
     List<InfantMotherArt> findByAncNumber (String ancNo);
     Optional<InfantMotherArt> findByAncNumberAndVisitDate(String ancNo, LocalDate visitDate);
@@ -23,6 +23,6 @@ public interface InfantMotherArtRepository extends CommonJpaRepository<InfantMot
     @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE unique_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantMotherArt getByUniqueUuidAndVisitDate(String uniqueUuid, LocalDate visitDate);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    InfantMotherArt getLatestByMotherPersonUuidAndVisitDate(String motherPersonUuid, LocalDate visitDate);
+    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    InfantMotherArt getLatestByMotherPatientUuidAndVisitDate(String motherPatientUuid, LocalDate visitDate);
 }

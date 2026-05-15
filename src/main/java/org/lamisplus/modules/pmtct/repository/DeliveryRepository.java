@@ -9,31 +9,22 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.util.Optional;
 
-public interface DeliveryRepository extends CommonJpaRepository<Delivery, Long>
+public interface DeliveryRepository extends CommonJpaRepository<Delivery, String>
 {
     //Delivery getDeliveryById(Long id);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Delivery getDeliveryByAncNo(String ancNo);
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Delivery getDeliveryByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Delivery getDeliveryByPersonUuid(String personUuid);
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Delivery getDeliveryByPatientUuidAndPmtctCycleUuid(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Delivery getDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<Delivery> findDeliveryByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<Delivery> findDeliveryByPersonUuid(String personUuid);
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<Delivery> findDeliveryByPatientUuidAndPmtctCycleUuid(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<Delivery> findDeliveryByPersonUuidAndPmtctCycleId(String personUuid, Long pmtctCycleId);
-
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<Delivery> findDeliveryByAncNo(String ancNo);
-
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE hospital_number = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<Delivery> findDeliveryByHospitalNumber(String hospitalNumber);
-
-    @Query(value = "SELECT date_of_delivery FROM public.pmtct_delivery WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    LocalDate getLatestDeliveryDate(String personUuid);
+    @Query(value = "SELECT date_of_delivery FROM public.pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    LocalDate getLatestDeliveryDate(String patientUuid);
 }

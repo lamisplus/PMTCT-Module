@@ -1,5 +1,6 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ public class PMTCTEnrollmentWithPersonRespondDto implements Serializable {
     private String ancNo;
     private LocalDate pmtctEnrollmentDate;
     private Integer gravida;
+    @JsonProperty("gaweeks")
     private Integer gAWeeks;
     private String entryPoint;
     private LocalDate artStartDate;
@@ -23,7 +25,7 @@ public class PMTCTEnrollmentWithPersonRespondDto implements Serializable {
     private int age;
     private String uuid;
     private String fullname;
-    private String person_uuid;
+    private String patient_uuid;
     private Object address;
     private  Object contactPoint;
     private LocalDate dateOfBirth;
@@ -34,6 +36,6 @@ public class PMTCTEnrollmentWithPersonRespondDto implements Serializable {
     private String dateOfDelivery;
     private String expectedDeliveryDate;
     private Long pregnancyCount;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
 
 }

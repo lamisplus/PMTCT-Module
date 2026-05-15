@@ -61,14 +61,14 @@ public class DeliveryService
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
 
-        // Set pmtctCycleId - this is now compulsory
-        if (deliveryRequestDto.getPmtctCycleId() == null) {
-            throw new IllegalArgumentException("pmtctCycleId is required for delivery");
+        // Set pmtctCycleUuid - this is now compulsory
+        if (deliveryRequestDto.getPmtctCycleUuid() == null) {
+            throw new IllegalArgumentException("pmtctCycleUuid is required for delivery");
         }
 
         // Check if a delivery already exists for this person + cycle to prevent duplicates
         Optional<Delivery> existingDelivery = this.deliveryRepository
-                .findDeliveryByPersonUuidAndPmtctCycleId(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
+                .findDeliveryByPatientUuidAndPmtctCycleUuid(deliveryRequestDto.getPatientUuid(), deliveryRequestDto.getPmtctCycleUuid());
 
         Delivery delivery;
         if (existingDelivery.isPresent()) {
@@ -79,59 +79,92 @@ public class DeliveryService
         } else {
             // Create new delivery
             delivery = new Delivery();
-            delivery.setPersonUuid(deliveryRequestDto.getPersonUuid());
+            delivery.setPatientUuid(deliveryRequestDto.getPatientUuid());
             delivery.setUuid(UUID.randomUUID().toString());
             delivery.setCreatedBy(user.getUserName());
             delivery.setCreatedDate(LocalDateTime.now());
             delivery.setLastModifiedBy(user.getUserName());
             delivery.setLastModifiedDate(LocalDateTime.now());
-            delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+            delivery.setPmtctCycleUuid(deliveryRequestDto.getPmtctCycleUuid());
             delivery.setSource(deliveryRequestDto.getSource());
 
-            Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
+            Optional<PMTCTEnrollment> pmtctOptional = this.pmtctEnrollmentReporsitory.getByPatientUuidAndPmtctCycleId(deliveryRequestDto.getPatientUuid(), deliveryRequestDto.getPmtctCycleUuid());
 
             if(pmtctOptional.isPresent()) {
                 PMTCTEnrollment pmtct = pmtctOptional.get();
-                delivery.setHospitalNumber(pmtct.getHospitalNumber());
                 delivery.setFacilityId(pmtct.getFacilityId());
             } else {
                 throw new RuntimeException("PMTCT enrollment is required before delivery can be saved");
             }
         }
 
-        delivery.setAncNo(deliveryRequestDto.getAncNo());
-        delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
-        delivery.setBookingStatus(deliveryRequestDto.getBookingStatus());
-        delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
-        delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
-        delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
-        delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
-        delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
-        delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
-        delivery.setMaternalOutcome(deliveryRequestDto.getMaternalOutcome());
-        delivery.setChildGivenArvWithin72(deliveryRequestDto.getChildGivenArvWithin72());
-        delivery.setChildStatus(deliveryRequestDto.getChildStatus());
-        delivery.setHivExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs());
-        delivery.setNonHbvExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getNonHbvExposedInfantGivenHbWithin24hrs());
-        delivery.setDeliveryTime(deliveryRequestDto.getDeliveryTime());
-        delivery.setOnArt(deliveryRequestDto.getOnArt());
-        delivery.setArtStartedLdWard(deliveryRequestDto.getArtStartedLdWard());
-        delivery.setHBStatus(deliveryRequestDto.getHBStatus());
-        delivery.setHCStatus(deliveryRequestDto.getHCStatus());
-        delivery.setReferalSource(deliveryRequestDto.getReferalSource());
-        delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
-        delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
-        delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+        if (existingDelivery.isPresent()) {
+            // For existing records, only update fields that are NOT null to prevent wiping saved data
+            if (deliveryRequestDto.getDateOfDelivery() != null) delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
+            if (deliveryRequestDto.getBookingStatus() != null) delivery.setBookingStatus(deliveryRequestDto.getBookingStatus());
+            if (deliveryRequestDto.getGAWeeks() != null) delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
+            if (deliveryRequestDto.getRomDeliveryInterval() != null) delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
+            if (deliveryRequestDto.getModeOfDelivery() != null) delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            if (deliveryRequestDto.getEpisiotomy() != null) delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
+            if (deliveryRequestDto.getVaginalTear() != null) delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
+            if (deliveryRequestDto.getFeedingDecision() != null) delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
+            if (deliveryRequestDto.getMaternalOutcome() != null) delivery.setMaternalOutcome(deliveryRequestDto.getMaternalOutcome());
+            if (deliveryRequestDto.getChildGivenArvWithin72() != null) delivery.setChildGivenArvWithin72(deliveryRequestDto.getChildGivenArvWithin72());
+            if (deliveryRequestDto.getChildStatus() != null) delivery.setChildStatus(deliveryRequestDto.getChildStatus());
+            if (deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs() != null) delivery.setHivExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs());
+            if (deliveryRequestDto.getNonHbvExposedInfantGivenHbWithin24hrs() != null) delivery.setNonHbvExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getNonHbvExposedInfantGivenHbWithin24hrs());
+            if (deliveryRequestDto.getDeliveryTime() != null) delivery.setDeliveryTime(deliveryRequestDto.getDeliveryTime());
+            if (deliveryRequestDto.getOnArt() != null) delivery.setOnArt(deliveryRequestDto.getOnArt());
+            if (deliveryRequestDto.getArtStartedLdWard() != null) delivery.setArtStartedLdWard(deliveryRequestDto.getArtStartedLdWard());
+            if (deliveryRequestDto.getHBStatus() != null) delivery.setHBStatus(deliveryRequestDto.getHBStatus());
+            if (deliveryRequestDto.getHCStatus() != null) delivery.setHCStatus(deliveryRequestDto.getHCStatus());
+            if (deliveryRequestDto.getReferalSource() != null) delivery.setReferalSource(deliveryRequestDto.getReferalSource());
+            if (deliveryRequestDto.getNumberOfInfantsAlive() != null) delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
+            if (deliveryRequestDto.getNumberOfInfantsDead() != null) delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
+            if (deliveryRequestDto.getPlaceOfDelivery() != null) delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+            if (deliveryRequestDto.getLabourDetails() != null) delivery.setLabourDetails(deliveryRequestDto.getLabourDetails());
+            if (deliveryRequestDto.getMaternalInterventions() != null) delivery.setMaternalInterventions(deliveryRequestDto.getMaternalInterventions());
+            if (deliveryRequestDto.getBabyInfo() != null) delivery.setBabyInfo(deliveryRequestDto.getBabyInfo());
+            if (deliveryRequestDto.getNewbornCare() != null) delivery.setNewbornCare(deliveryRequestDto.getNewbornCare());
+            if (deliveryRequestDto.getPostpartumInfo() != null) delivery.setPostpartumInfo(deliveryRequestDto.getPostpartumInfo());
+        } else {
+            delivery.setDateOfDelivery(deliveryRequestDto.getDateOfDelivery());
+            delivery.setBookingStatus(deliveryRequestDto.getBookingStatus());
+            delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
+            delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
+            delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
+            delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
+            delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
+            delivery.setMaternalOutcome(deliveryRequestDto.getMaternalOutcome());
+            delivery.setChildGivenArvWithin72(deliveryRequestDto.getChildGivenArvWithin72());
+            delivery.setChildStatus(deliveryRequestDto.getChildStatus());
+            delivery.setHivExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getHivExposedInfantGivenHbWithin24hrs());
+            delivery.setNonHbvExposedInfantGivenHbWithin24hrs(deliveryRequestDto.getNonHbvExposedInfantGivenHbWithin24hrs());
+            delivery.setDeliveryTime(deliveryRequestDto.getDeliveryTime());
+            delivery.setOnArt(deliveryRequestDto.getOnArt());
+            delivery.setArtStartedLdWard(deliveryRequestDto.getArtStartedLdWard());
+            delivery.setHBStatus(deliveryRequestDto.getHBStatus());
+            delivery.setHCStatus(deliveryRequestDto.getHCStatus());
+            delivery.setReferalSource(deliveryRequestDto.getReferalSource());
+            delivery.setNumberOfInfantsAlive(deliveryRequestDto.getNumberOfInfantsAlive());
+            delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
+            delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
+            delivery.setLabourDetails(deliveryRequestDto.getLabourDetails());
+            delivery.setMaternalInterventions(deliveryRequestDto.getMaternalInterventions());
+            delivery.setBabyInfo(deliveryRequestDto.getBabyInfo());
+            delivery.setNewbornCare(deliveryRequestDto.getNewbornCare());
+            delivery.setPostpartumInfo(deliveryRequestDto.getPostpartumInfo());
+        }
 
         return this.deliveryRepository.save(delivery);
     }
     public DeliveryResponseDto convertEntitytoRespondDto(Delivery delivery) {
         DeliveryResponseDto deliveryResponseDto = new DeliveryResponseDto();
-        deliveryResponseDto.setId(delivery.getId());
-        deliveryResponseDto.setAncNo(delivery.getAncNo());
-        deliveryResponseDto.setHospitalNumber(delivery.getHospitalNumber());
-        deliveryResponseDto.setFullName(getFullName(delivery.getPersonUuid()));
-        deliveryResponseDto.setAge(calculateAge(delivery.getPersonUuid()));
+        // id field is no longer the primary key; uuid is the PK now
+        // deliveryResponseDto.setId(delivery.getId());
+        deliveryResponseDto.setFullName(getFullName(delivery.getPatientUuid()));
+        deliveryResponseDto.setAge(calculateAge(delivery.getPatientUuid()));
         deliveryResponseDto.setUuid(delivery.getUuid());
         deliveryResponseDto.setDateOfDelivery(delivery.getDateOfDelivery());
         deliveryResponseDto.setBookingStatus(delivery.getBookingStatus());
@@ -152,13 +185,19 @@ public class DeliveryService
         deliveryResponseDto.setHCStatus(delivery.getHCStatus());
         deliveryResponseDto.setReferalSource(delivery.getReferalSource());
         deliveryResponseDto.setFacilityId(delivery.getFacilityId());
-        deliveryResponseDto.setPersonUuid(delivery.getPersonUuid());
+        deliveryResponseDto.setPatientUuid(delivery.getPatientUuid());
         deliveryResponseDto.setPlaceOfDelivery(delivery.getPlaceOfDelivery());
-        deliveryResponseDto.setPmtctCycleId(delivery.getPmtctCycleId());
+        deliveryResponseDto.setPmtctCycleUuid(delivery.getPmtctCycleUuid());
         deliveryResponseDto.setSource(delivery.getSource());
         deliveryResponseDto.setNumberOfInfantsAlive(delivery.getNumberOfInfantsAlive());
         deliveryResponseDto.setNumberOfInfantsDead(delivery.getNumberOfInfantsDead());
         deliveryResponseDto.setNonHbvExposedInfantGivenHbWithin24hrs(delivery.getNonHbvExposedInfantGivenHbWithin24hrs());
+
+        deliveryResponseDto.setLabourDetails(delivery.getLabourDetails());
+        deliveryResponseDto.setMaternalInterventions(delivery.getMaternalInterventions());
+        deliveryResponseDto.setBabyInfo(delivery.getBabyInfo());
+        deliveryResponseDto.setNewbornCare(delivery.getNewbornCare());
+        deliveryResponseDto.setPostpartumInfo(delivery.getPostpartumInfo());
 
         return deliveryResponseDto;
     }
@@ -211,28 +250,34 @@ public class DeliveryService
     }
 
     @SneakyThrows
-    public Delivery getSingleDelivery(Long id) {
+    public Delivery getSingleDelivery(String id) {
         return this.deliveryRepository.findById(id)
                 .orElseThrow(() -> new Exception("Delivery NOT FOUND"));
     }
 
 
     public Delivery getSingleDelivery2(String ancNo) {
-        Delivery deliveryOptional= deliveryRepository.getDeliveryByAncNo(ancNo);
-        Delivery delivery = new Delivery();
-        if (deliveryOptional != null) {
-            delivery =  deliveryOptional;
+        // Look up ANC by ancNo to get patientUuid, then find delivery by patientUuid
+        Optional<ANC> ancOpt = ancRepository.getByAncNo(ancNo);
+        if (ancOpt.isPresent()) {
+            Delivery deliveryOptional = deliveryRepository.getDeliveryByPatientUuid(ancOpt.get().getPatientUuid());
+            if (deliveryOptional != null) {
+                return deliveryOptional;
+            }
         }
-        return delivery;
+        return new Delivery();
     }
 
     public Delivery viewDeliveryById(String id) {
-
-        return deliveryRepository
-                .findDeliveryByAncNo(id)
-                .orElseThrow(() -> new EntityNotFoundException(Delivery.class, "errorMessage", "Delivery NOT FOUND "+ id));
-        //Optional<Delivery> delivery =id this.deliveryRepository.findById(id);
-       // return delivery.get();
+        // Resolve ancNo to patientUuid via ANC, then look up delivery by patientUuid
+        Optional<ANC> ancOpt = ancRepository.getByAncNo(id);
+        if (ancOpt.isPresent()) {
+            Optional<Delivery> delivery = deliveryRepository.findDeliveryByPatientUuid(ancOpt.get().getPatientUuid());
+            if (delivery.isPresent()) {
+                return delivery.get();
+            }
+        }
+        throw new EntityNotFoundException(Delivery.class, "errorMessage", "Delivery NOT FOUND "+ id);
     }
     // pmtctEnrollmentRequestDto
 //    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto) {
@@ -245,9 +290,9 @@ public class DeliveryService
 //    }
 
 
-    public void  updateDateOfDeliveryFromPMTCT(String personUuid, Long pmtctCycleId, String deliveryDate, Integer ga)
+    public void  updateDateOfDeliveryFromPMTCT(String patientUuid, String pmtctCycleUuid, String deliveryDate, Integer ga)
     {
-        Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        Optional <Delivery> deliverys = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(patientUuid, pmtctCycleUuid);
         if(deliverys.isPresent())
         {
             Delivery delivery = deliverys.get();
@@ -260,7 +305,7 @@ public class DeliveryService
 
 
 
-    public DeliveryRequestDto updateDelivery(Long id, DeliveryRequestDto deliveryRequestDto)
+    public DeliveryRequestDto updateDelivery(String id, DeliveryRequestDto deliveryRequestDto)
     {
         Optional <Delivery> deliverys = this.deliveryRepository.findById(id);
         if(deliverys.isPresent())
@@ -288,18 +333,24 @@ public class DeliveryService
             delivery.setNumberOfInfantsDead(deliveryRequestDto.getNumberOfInfantsDead());
             delivery.setPlaceOfDelivery(deliveryRequestDto.getPlaceOfDelivery());
 
-            // Update pmtctCycleId if provided
-            if (deliveryRequestDto.getPmtctCycleId() != null) {
-                delivery.setPmtctCycleId(deliveryRequestDto.getPmtctCycleId());
+            delivery.setLabourDetails(deliveryRequestDto.getLabourDetails());
+            delivery.setMaternalInterventions(deliveryRequestDto.getMaternalInterventions());
+            delivery.setBabyInfo(deliveryRequestDto.getBabyInfo());
+            delivery.setNewbornCare(deliveryRequestDto.getNewbornCare());
+            delivery.setPostpartumInfo(deliveryRequestDto.getPostpartumInfo());
+
+            // Update pmtctCycleUuid if provided
+            if (deliveryRequestDto.getPmtctCycleUuid() != null) {
+                delivery.setPmtctCycleUuid(deliveryRequestDto.getPmtctCycleUuid());
             }
 
             delivery.setLastModifiedDate(LocalDateTime.now());
             delivery.setLastModifiedBy(userService.getUserWithRoles().get().getUserName());
             //check if the chld has been created
 
-            boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPersonUuid());
+            boolean hasChild =  infantRepository.checkInfant(deliveryRequestDto.getPatientUuid());
             if(hasChild){
-                infantRepository.updateDeliveryDate(deliveryRequestDto.getDateOfDelivery(), deliveryRequestDto.getPersonUuid(), deliveryRequestDto.getPmtctCycleId());
+                infantRepository.updateDeliveryDate(deliveryRequestDto.getDateOfDelivery(), deliveryRequestDto.getPatientUuid(), deliveryRequestDto.getPmtctCycleUuid());
             }
 
 
@@ -311,14 +362,18 @@ public class DeliveryService
         return deliveryRequestDto;
     }
 
-    public void deleteDelivery(Long id) {
+    public void deleteDelivery(String id) {
         Delivery existingDelivery = getSingleDelivery(id);
         existingDelivery.setArchived(1L);
         this.deliveryRepository.save(existingDelivery);
     }
 
-    public Delivery getSingleDeliveryWithUuid(String personUuid, Long pmtctCycleId) {
-        return deliveryRepository.getDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+    public Delivery getSingleDeliveryWithUuid(String patientUuid, String pmtctCycleUuid) {
+        return deliveryRepository.getDeliveryByPatientUuidAndPmtctCycleUuid(patientUuid, pmtctCycleUuid);
+    }
+
+    public Delivery getLatestDeliveryByPatientUuid(String patientUuid) {
+        return deliveryRepository.getDeliveryByPatientUuid(patientUuid);
     }
 
     /**
@@ -329,13 +384,13 @@ public class DeliveryService
      * - is_closed is set to true if maternal outcome is DEAD, LOST_TO_FOLLOW_UP, or TRANSFERRED_OUT
      */
     private void updatePregnancyCycle(DeliveryRequestDto deliveryRequestDto) {
-        if (deliveryRequestDto.getPmtctCycleId() == null) {
-            // If no pmtctCycleId, we cannot update the pregnancy cycle
+        if (deliveryRequestDto.getPmtctCycleUuid() == null) {
+            // If no pmtctCycleUuid, we cannot update the pregnancy cycle
             return;
         }
 
         try {
-            Optional<PmtctPregnancyCycle> cycleOptional = pmtctPregnancyCycleRepository.findById(deliveryRequestDto.getPmtctCycleId());
+            Optional<PmtctPregnancyCycle> cycleOptional = pmtctPregnancyCycleRepository.findById(deliveryRequestDto.getPmtctCycleUuid());
 
             if (cycleOptional.isPresent()) {
                 PmtctPregnancyCycle cycle = cycleOptional.get();
@@ -347,9 +402,11 @@ public class DeliveryService
                     // Check if maternal outcome requires closing the pregnancy cycle
                     String maternalOutcome = deliveryRequestDto.getMaternalOutcome().trim().toUpperCase();
                     if (maternalOutcome.equals("MATERNAL_OUTCOME_DEAD") ||
+                        maternalOutcome.equals("MATERNAL_OUTCOME_DIED") ||
                         maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP") ||
                         maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP") ||
-                        maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT")) {
+                        maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT") ||
+                        maternalOutcome.equals("MATERNAL_OUTCOME_COMPLETED_PMTCT")) {
                         cycle.setIsClosed(true);
                     } else {
                         cycle.setIsClosed(false);
@@ -359,11 +416,6 @@ public class DeliveryService
                 // Update pregnancy_outcome with childStatus from delivery
                 if (deliveryRequestDto.getChildStatus() != null) {
                     cycle.setPregnancyOutcome(deliveryRequestDto.getChildStatus());
-                }
-
-                // Update number_of_infants with numberOfInfantsAlive from delivery
-                if (deliveryRequestDto.getNumberOfInfantsAlive() != null) {
-                    cycle.setNumberOfInfants(deliveryRequestDto.getNumberOfInfantsAlive());
                 }
 
                 // Update last modified information

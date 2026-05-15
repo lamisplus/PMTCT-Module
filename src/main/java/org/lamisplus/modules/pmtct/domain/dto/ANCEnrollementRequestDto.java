@@ -3,8 +3,8 @@ package org.lamisplus.modules.pmtct.domain.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.lamisplus.modules.patient.domain.dto.PersonDto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -15,43 +15,43 @@ import java.time.LocalDate;
 public class ANCEnrollementRequestDto{
     @NotNull(message = "Source is required")
     private String source;
-    private Long id;
+    private String id;
     private String ancNo;
     private String ancSetting;
     private String communitySetting;
+    private String ancAttendance;
 
-    private LocalDate firstAncDate; // is the enrollmentDate from frontend
+    private LocalDate dateOfEnrollment;
     private Integer gravida;
     private Integer parity;
+    @JsonProperty("lmp")
     private LocalDate LMP;
-    private LocalDate expectedDeliveryDate;
+    @JsonProperty("gaweeks")
     private Integer gAWeeks;
-    private String hivDiognosicTime;
     private String staticHivStatus;
-    private String testedSyphilis;
-    private String testResultSyphilis;
-    private String treatedSyphilis;
-    private String referredSyphilisTreatment;
-    private PmtctHtsInfo pmtctHtsInfo;
-    private PartnerNotification partnerNotification;
-   // private String sourceOfReferral;
-    private final String person_uuid;
+    private final String patient_uuid;
     private String previouslyKnownHivStatus;
     private String currentlyOnArt;
-    private LocalDate  dateOfHepatitisB;
-    private String  hepatitisB;
-    private String testedHepatitisB;
-    private String treatedHepatitisB;
-    private String referredHepatitisB;
-
-    private LocalDate  dateOfHepatitisC;
-    private String  hepatitisC;
-    private String testedHepatitisC;
-    private String treatedHepatitisC;
-    private String referredHepatitisC;
     private String facilityEnrolledIn;
 
-    @NotNull(message = "pmtctCycleId is required")
-    private Long pmtctCycleId;
+    @NotNull(message = "pmtctCycleUuid is required")
+    private String pmtctCycleUuid;
+
+    private VitalSignsDto vitalSigns;
+    private CounsellingDto counselling;
+    private SyphilisInfoDto syphilisInfo;
+    private HepatitisBDto hepatitisBInfo;
+    private HepatitisCDto hepatitisCInfo;
+    private UrinalysisDto urinalysis;
+    private String hbPcv;
+    private String bloodSugarGdm;
+    private String llinGiven;
+    private String iptDose;
+    private String hematinicsGiven;
+    private String tdImmunization;
+    private String associatedProblems;
+    private String outcomeOfVisit;
+    private String referralReason;
+    private String transportationOut;
 
 }

@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
+public interface ANCRepository extends CommonJpaRepository<ANC, String> {
     @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = CAST(?1 AS VARCHAR) AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     ANC findByAncNoAndArchived(String ancNo, Long archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findANCByPersonUuid(String PersonUuid);
+    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findANCByPatientUuid(String PatientUuid);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> getByAncNoAndArchived(String ancNo, Long archived);
@@ -28,19 +28,14 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 
     List<ANC> findByArchived(Long archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE hospital_number = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findByHospitalNumberAndArchived(String hospitalNumber, Long archived);
+    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findANCByPatientUuidAndArchived(String patientUuid, Long archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findANCByPersonUuidAndArchived(String personUuid, Long archived);
+    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findLatestANCByPatientUuidAndArchived(String patientUuid, Long archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findLatestANCByPersonUuidAndArchived(String personUuid, Long archived);
-
-    @Query(value = "SELECT * FROM pmtct_anc WHERE person_uuid = ?1 AND pmtct_cycle_id = ?2 AND archived = ?3 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findANCByPersonUuidAndCycleIdAndArchived(String personUuid, Long pmtctCycleId, Long archived);
-
-    Optional<ANC> findByHospitalNumber(String hospitalNumber);
+    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = ?3 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<ANC> findANCByPatientUuidAndCycleIdAndArchived(String patientUuid, String pmtctCycleUuid, Long archived);
 
     @Query(value = "SELECT count(*) FROM pmtct_anc pa", nativeQuery = true)
     Integer getTotalAnc();
@@ -55,21 +50,21 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
     @Query(value = "SELECT uuid FROM hiv_enrollment where person_uuid=?1", nativeQuery = true)
     Optional<String> findInHivEnrollmentByUuid(String uuid);
 
-    @Query(value = "SELECT static_hiv_status FROM pmtct_anc WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<String> findStaticHivStatusByPersonUuid(String personUuid);
+    @Query(value = "SELECT static_hiv_status FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    Optional<String> findStaticHivStatusByPatientUuid(String patientUuid);
 
-    /*@Query(value = "SELECT id, client_code AS clientCode, date_visit AS dateVisit, hc.person_uuid AS personUuid, " +
+    /*@Query(value = "SELECT id, client_code AS clientCode, date_visit AS dateVisit, hc.patient_uuid AS patientUuid, " +
             "uuid, (CASE WHEN hiv_test_result2 IS NULL OR hiv_test_result2='' THEN hiv_test_result " +
             " ELSE hiv_test_result2 END)  AS hivTestResult FROM hts_client hc " +
-            " INNER JOIN (SELECT person_uuid, MAX(date_visit) max_date " +
+            " INNER JOIN (SELECT patient_uuid, MAX(date_visit) max_date " +
             " FROM hts_client " +
             " WHERE archived=0 " +
-            " GROUP BY person_uuid) p ON p.person_uuid=hc.person_uuid " +
-            " AND p.max_date=hc.date_visit WHERE hc.person_uuid = ?1 and hc.facility_id =?2 ORDER BY id DESC", nativeQuery = true)
+            " GROUP BY patient_uuid) p ON p.patient_uuid=hc.patient_uuid " +
+            " AND p.max_date=hc.date_visit WHERE hc.patient_uuid = ?1 and hc.facility_id =?2 ORDER BY id DESC", nativeQuery = true)
     List<HtsClientProjection> getHtsRecordsByPersonsUuidAAndFacilityId(String puuid, Long facilityId);*/
 
 
-    @Query(value = "SELECT id, client_code AS clientCode, date_visit AS dateVisit, hc.person_uuid AS personUuid, " +
+    @Query(value = "SELECT id, client_code AS clientCode, date_visit AS dateVisit, hc.person_uuid AS patientUuid, " +
             "uuid, (CASE WHEN hiv_test_result2 IS NULL OR hiv_test_result2='' THEN hiv_test_result " +
             " ELSE hiv_test_result2 END)  AS hivTestResult FROM hts_client hc " +
             " INNER JOIN (SELECT person_uuid, MAX(date_visit) max_date " +
@@ -80,7 +75,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
     Optional<HtsClientProjection> getHtsRecordByPersonsUuidAAndFacilityId(String puuid, Long facilityId);
 
     //    @Query(
-//            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE (first_name ilike ?1 OR surname ilike ?1 OR other_name ilike ?1 OR full_name ilike ?1 OR pp.hospital_number ilike ?1) AND pp.archived=?2 AND pp.facility_id=?3 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
+//            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS patientUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.patient_uuid and pa.archived=0) WHERE (first_name ilike ?1 OR surname ilike ?1 OR other_name ilike ?1 OR full_name ilike ?1 OR pp.hospital_number ilike ?1) AND pp.archived=?2 AND pp.facility_id=?3 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
 //            nativeQuery = true
 //    )
     @Query(
@@ -89,7 +84,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                     "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
-                            "  pp.uuid AS personUuid, " +
+                            "  pp.uuid AS patientUuid, " +
                             "  pa.uuid AS uuid, " +
                             "  pa.uuid AS ancUuid, " +
                             "  pa.id AS personId, " +
@@ -106,31 +101,31 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  pa.anc_setting AS ancSetting, " +
                             "  pa.community_setting AS communitySetting, " +
                             "  pa.currently_on_art AS currentlyOnArt, " +
-                            "  pa.first_anc_date AS firstAncDate, " +
+                            "  pa.date_of_enrollment AS dateOfEnrollment, " +
                             "  pa.gaweeks AS gaweeks, " +
                             "  pa.gravida AS gravida, " +
                             "  pa.lmp AS lmp, " +
                             "  pa.parity AS parity, " +
                             "  pa.previously_known_hiv_status AS previouslyKnownHivStatus, " +
-                            "  pa.referred_syphilis_treatment AS referredSyphilisTreatment, " +
+                            "  NULL AS referredSyphilisTreatment, " +
                             "  pa.static_hiv_status AS staticHivStatus, " +
-                            "  pa.pmtct_cycle_id AS pmtctCycleId, " +
+                            "  pa.pmtct_cycle_uuid AS pmtctCycleUuid, " +
                             "  COALESCE(( " +
                             "     SELECT COUNT(*) " +
                             "     FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_anc " +
                             "  WHERE archived = ?2 " +
-                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
-                            ") pa ON pp.uuid = pa.person_uuid " +
-                            "  AND pa.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
+                            ") pa ON pp.uuid = pa.patient_uuid " +
+                            "  AND pa.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
                             "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
@@ -154,11 +149,11 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?2 " +
-                            "  AND pa.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?2 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = ?2 " +
+                            "  AND pa.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "WHERE ( " +
                             "   pp.first_name ILIKE ?1 OR " +
@@ -177,7 +172,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
 
 
     //    @Query(
-//            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS personUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.person_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
+//            value = "SELECT date_of_birth AS dateOfBirth, pp.id AS id, pp.uuid AS patientUuid, pa.uuid AS uuid, pa.id AS personId, sex, first_name AS firstName, surname, other_name AS otherName, full_name AS fullName, pp.hospital_number AS hospitalNumber, CAST(address AS TEXT) AS address, CAST(contact_point AS TEXT) AS contactPoint FROM patient_person pp INNER JOIN pmtct_anc pa ON (pp.uuid=pa.patient_uuid and pa.archived=0) WHERE pp.archived=?1 AND pp.facility_id=?2 AND pp.sex ilike 'FEMALE' AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10 ) ORDER BY pa.id desc",
 //            nativeQuery = true
     @Query(
             value =
@@ -185,7 +180,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                     "SELECT DISTINCT ON (pp.uuid) " +
                             "  pp.date_of_birth AS dateOfBirth, " +
                             "  pp.id AS id, " +
-                            "  pp.uuid AS personUuid, " +
+                            "  pp.uuid AS patientUuid, " +
                             "  pa.uuid AS uuid, " +
                             "  pa.uuid AS ancUuid, " +
                             "  pa.id AS personId, " +
@@ -202,30 +197,30 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
                             "  pa.anc_setting AS ancSetting, " +
                             "  pa.community_setting AS communitySetting, " +
                             "  pa.currently_on_art AS currentlyOnArt, " +
-                            "  pa.first_anc_date AS firstAncDate, " +
+                            "  pa.date_of_enrollment AS dateOfEnrollment, " +
                             "  pa.gaweeks AS gaweeks, " +
                             "  pa.gravida AS gravida, " +
                             "  pa.lmp AS lmp, " +
                             "  pa.parity AS parity, " +
                             "  pa.previously_known_hiv_status AS previouslyKnownHivStatus, " +
-                            "  pa.referred_syphilis_treatment AS referredSyphilisTreatment, " +
+                            "  NULL AS referredSyphilisTreatment, " +
                             "  pa.static_hiv_status AS staticHivStatus, " +
-                            "  pa.pmtct_cycle_id AS pmtctCycleId, " +
+                            "  pa.pmtct_cycle_uuid AS pmtctCycleUuid, " +
                             "  COALESCE( ( " +
                             "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
-                            "  SELECT DISTINCT ON (person_uuid, pmtct_cycle_id) * " +
+                            "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_anc " +
                             "  WHERE archived = ?1 " +
-                            "  ORDER BY person_uuid, pmtct_cycle_id, id DESC " +
-                            ") pa ON pp.uuid = pa.person_uuid " +
-                            "  AND pa.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
+                            ") pa ON pp.uuid = pa.patient_uuid " +
+                            "  AND pa.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
                             "  SELECT DISTINCT ON (person_uuid) person_uuid, visit_date " +
@@ -242,11 +237,11 @@ public interface ANCRepository extends CommonJpaRepository<ANC, Long> {
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.person_uuid AND pa.archived = ?1 " +
-                            "  AND pa.pmtct_cycle_id = ( " +
-                            "    SELECT ppc.id FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.person_uuid = pp.uuid AND ppc.archived = ?1 " +
-                            "    ORDER BY ppc.id DESC LIMIT 1 " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = ?1 " +
+                            "  AND pa.pmtct_cycle_uuid = ( " +
+                            "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +

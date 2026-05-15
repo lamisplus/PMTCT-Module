@@ -45,7 +45,7 @@ function SubMenu(props) {
   // Use selectedCycleId from props if available, otherwise use local state
   const selectedCycleId = props.selectedCycleId !== undefined && props.selectedCycleId !== null
     ? props.selectedCycleId
-    : (allPmtctCycleRecord.length > 0 ? allPmtctCycleRecord[0].id : null);
+    : (allPmtctCycleRecord.length > 0 ? allPmtctCycleRecord[0].uuid : null);
 
 
   // Use isOnPMTCT from props if provided, otherwise use local state
@@ -82,21 +82,21 @@ function SubMenu(props) {
   };
 
       const getAllPmtctCycle = async () => {
-        const personUuid = patientObj.person_uuid
-          ? patientObj.person_uuid
-          : patientObj.personUuid
-          ? patientObj.personUuid
+        const patientUuid = patientObj.patient_uuid
+          ? patientObj.patient_uuid
+          : patientObj.patientUuid
+          ? patientObj.patientUuid
           : patientObj.uuid;
 
         await axios
-          .get(`${baseUrl}pmtct/anc/pregnancy-cycles?personUuid=${personUuid}`, {
+          .get(`${baseUrl}pmtct/anc/pregnancy-cycles?patientUuid=${patientUuid}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
             setAllPmtctCycleRecord(response.data);
             // Set the first cycle as default if available and no cycle is currently selected
             if (response.data && response.data.length > 0) {
-              const firstCycleId = response.data[0].id;
+              const firstCycleId = response.data[0].uuid;
               // Only set default if parent hasn't provided a selectedCycleId
               if (props.selectedCycleId === undefined || props.selectedCycleId === null) {
                 handleCycleChange(firstCycleId);
@@ -108,13 +108,10 @@ function SubMenu(props) {
           });
       }; 
   
-  let mentalStatus = false;
-  let initialEvaluationStatus = false;
   useEffect(() => {
     getLatestConfirmatoryResult();
     getAllPmtctCycle();
 
-    Observation();
     gender =
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
@@ -126,6 +123,9 @@ function SubMenu(props) {
       let isNegativeOutcome=negativeOutcome.includes(props.maternalOutcome)
 
       setCloseCycle(!isNegativeOutcome)
+    } else {
+      // No maternal outcome for this cycle — allow all actions
+      setCloseCycle(true)
     }
   }, [props]);
 
@@ -134,40 +134,11 @@ function SubMenu(props) {
    
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
-    // Only update if setIsOnPMTCT is passed from parent
-    if (props.setIsOnPMTCT) {
-      props.setIsOnPMTCT(props?.patientObj?.pmtctRegStatus ||  props?.patientObj?.isOnPmtct);
-    }
+    // isOnPMTCT is now driven by RecentHistory.checkForPmtctEnrollment (cycle-aware)
+    // Do not override it here with the patient-level prop, which is not cycle-specific
   }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus, selectedCycleId]);
 
 
-  //Get list of RegimenLine
-  const Observation = () => {
-    axios
-      .get(
-        `${baseUrl}observation/person/${
-          props.patientObj.id ? props.patientObj.id : props.patientObj.personId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        const observation = response.data;
-        const mental = observation.filter((x) => x.type === "mental health");
-        const evaluation = observation.filter(
-          (x) => x.type === "initial evaluation"
-        );
-        if (mental.length > 1) {
-          mentalStatus = true;
-        }
-        if (evaluation.length > 1) {
-          initialEvaluationStatus = true;
-        }
-      })
-      .catch((error) => {
-        //console.log(error);
-      });
-  };
   const loadAncPnc = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "anc-pnc", actionType: "create", id: "", obj: {} });
   };
@@ -176,6 +147,12 @@ function SubMenu(props) {
   };
   const onClickConsultation = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "consultation", actionType: "create", id: "", obj: {}, activeTab: "home" });
+    if (props.setMotherVisitType) props.setMotherVisitType("MOTHER_VISIT");
+  };
+
+  const onClickAncRevisit = () => {
+    props.setActiveContent({ ...props.activeContent, route: "consultation", actionType: "create", id: "", obj: {}, activeTab: "home" });
+    if (props.setMotherVisitType) props.setMotherVisitType("ANC_REVISIT");
   };
 
     const onClickPmtctHts= (type) => {
@@ -199,15 +176,15 @@ function SubMenu(props) {
   //
 
   
-  const getLatestConfirmatoryResult = async(pmtctCycleId) => {
-    let thePmtctCycleId = pmtctCycleId || props.latestPmtctCycle?.id;
-    if (thePmtctCycleId) {
-      const personUuid =
-        props.patientObj.person_uuid || props.patientObj.personUuid;
+  const getLatestConfirmatoryResult = async(pmtctCycleUuid) => {
+    let thePmtctCycleUuid = pmtctCycleUuid || props.latestPmtctCycle?.uuid;
+    if (thePmtctCycleUuid) {
+      const patientUuid =
+        props.patientObj.patient_uuid || props.patientObj.patientUuid;
 
 
 
-      const url = `${baseUrl}pmtct/anc/get-confirmatory-latest-result?personUuid=${personUuid}&pmtctCycleId=${thePmtctCycleId}`;
+      const url = `${baseUrl}pmtct/anc/get-confirmatory-latest-result?patientUuid=${patientUuid}&pmtctCycleUuid=${thePmtctCycleUuid}`;
 
       await axios
         .get(url, {
@@ -230,8 +207,11 @@ function SubMenu(props) {
           console.error("Error fetching confirmatory result:", error);
           setMenuReady(true);
         });
+    } else {
+      // No cycle UUID available yet — still allow menu to render
+      setMenuReady(true);
     }
-  
+
   };
 const showRetestingMenu = (patientHivStatus) => {
 
@@ -293,55 +273,83 @@ const showRetestingMenu = (patientHivStatus) => {
   }
 };
 
+  const activeRoute = props.activeContent?.route || "recent-history";
+
+  const menuItemStyle = (route) => ({
+    color: "#fff",
+    fontWeight: activeRoute === route ? "700" : "600",
+    fontSize: "12.5px",
+    borderRadius: "7px",
+    margin: "0 1px",
+    padding: "8px 14px",
+    background: activeRoute === route ? "rgba(255,255,255,0.15)" : "transparent",
+    boxShadow: "none",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  });
+
   return (
     <div>
-      <Menu size="large" color={"black"} inverted>
-        <Menu.Item onClick={() => onClickHome()}> Home</Menu.Item>
+      <Menu size="large" secondary style={{
+        background: "#1e293b",
+        borderRadius: "10px",
+        padding: "4px 5px",
+        border: "none",
+        marginBottom: 0,
+        minHeight: "auto",
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}>
+        <Menu.Item onClick={() => onClickHome()} style={menuItemStyle("recent-history")}>
+          Home
+        </Menu.Item>
 
         {menuReady && (
           <>
             {showRetesting && retestingStatus === "pmtct-hts" && (
-              <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")}>
-                {" "}
-                PMTCT HTS{" "}
+              <Menu.Item onClick={() => onClickPmtctHts("pmtct-hts")} style={menuItemStyle("pmtct-hts")}>
+                PMTCT HTS
               </Menu.Item>
             )}
 
-            {["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) && (
+            {/* ANC Revisit — available for ALL women with ANC enrollment, before delivery */}
+            {patientObj?.ancNo && !deliveryStatus && closeCycle && (
+              <Menu.Item onClick={() => onClickAncRevisit()} style={menuItemStyle("anc-revisit")}>
+                ANC Revisit
+              </Menu.Item>
+            )}
+
+            {(["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) || isOnPMTCT === true) && (
               <>
                 {isOnPMTCT !== true ? (
                   <>
-                    <>
-                      {permissions.genAndPmtct && (
-                        <Menu.Item onClick={() => loadAncPnc()}>
-                         Mother Clinical Information
-                        </Menu.Item>
-                      )}
-                    </>
+                    {permissions.genAndPmtct && (
+                      <Menu.Item onClick={() => loadAncPnc()} style={menuItemStyle("anc-pnc")}>
+                        Mother Clinical Information
+                      </Menu.Item>
+                    )}
                   </>
                 ) : (
                   <>
                     {closeCycle && (
                       <>
-                        <Menu.Item onClick={() => onClickConsultation()}>
-                          Follow Up Visit
+                        <Menu.Item onClick={() => onClickConsultation()} style={menuItemStyle("consultation")}>
+                          Mother Follow Up Visit
                         </Menu.Item>
 
                         {!deliveryStatus && (
-                          <Menu.Item onClick={() => loadLabourDelivery()}>
+                          <Menu.Item onClick={() => loadLabourDelivery()} style={menuItemStyle("labour-delivery")}>
                             Labour and Delivery
                           </Menu.Item>
                         )}
-                        {patientObj?.ancNo && (
-                          <Menu.Item onClick={() => onClickPartner()}>
-                            {" "}
+                        {/* {patientObj?.ancNo && (
+                          <Menu.Item onClick={() => onClickPartner()} style={menuItemStyle("partners")}>
                             Partners
                           </Menu.Item>
-                        )}
-                        {/* )} */}
-                        <Menu.Item onClick={() => onClickInfant()}>
-                          {" "}
-                          Infant Information- MIP2
+                        )} */}
+                        <Menu.Item onClick={() => onClickInfant()} style={menuItemStyle("infants")}>
+                          Infant Information
                         </Menu.Item>
                       </>
                     )}
@@ -350,40 +358,44 @@ const showRetestingMenu = (patientHivStatus) => {
               </>
             )}
             {showRetesting && retestingStatus === "retesting" && (
-              <Menu.Item onClick={() => onClickPmtctHts("retesting")}>
-                Retesting{" "}
+              <Menu.Item onClick={() => onClickPmtctHts("retesting")} style={menuItemStyle("pmtct-hts")}>
+                Retesting
               </Menu.Item>
             )}
           </>
         )}
 
-        <Menu.Item onClick={() => loadPatientHistory()}>History</Menu.Item>
+        <Menu.Item onClick={() => loadPatientHistory()} style={menuItemStyle("patient-history")}>
+          History
+        </Menu.Item>
 
         <Menu.Menu position="right" style={{ marginLeft: "auto" }}>
           {allPmtctCycleRecord && allPmtctCycleRecord.length > 0 && (
             <Dropdown
               item
-              text={`Pregnancy Cycle ${
+              text={<span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>{`Pregnancy Cycle ${
                 selectedCycleId
                   ? allPmtctCycleRecord?.length -
                     allPmtctCycleRecord.findIndex(
-                      (c) => c.id === selectedCycleId
+                      (c) => c.uuid === selectedCycleId
                     )
                   : 1
-              }`}
+              }`}</span>}
               style={{
-                borderLeft: "2px solid rgba(255,255,255,0.3)",
-                paddingLeft: "15px",
+                borderLeft: "1px solid rgba(255,255,255,0.15)",
+                paddingLeft: "14px",
+                color: "#fff",
+                fontWeight: "600",
+                fontSize: "12.5px",
               }}
             >
               <Dropdown.Menu>
-                <Dropdown.Divider />
                 {allPmtctCycleRecord.map((cycle, index) => (
                   <Dropdown.Item
-                    key={cycle.id}
-                    value={cycle.id}
-                    active={selectedCycleId === cycle.id}
-                    onClick={() => handleCycleChange(cycle.id)}
+                    key={cycle.uuid}
+                    value={cycle.uuid}
+                    active={selectedCycleId === cycle.uuid}
+                    onClick={() => handleCycleChange(cycle.uuid)}
                   >
                     <div>
                       <strong>

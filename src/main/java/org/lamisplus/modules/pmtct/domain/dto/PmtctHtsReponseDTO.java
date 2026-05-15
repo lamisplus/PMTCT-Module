@@ -14,7 +14,7 @@ public class PmtctHtsReponseDTO {
     private String testEntryPoint;
     private String testSetting;
     private String stageOfPregnancy;
-    private String personUuid;
+    private String patientUuid;
     private String hospitalNumber;
     private String uuid;
     private Long archived;
@@ -22,15 +22,11 @@ public class PmtctHtsReponseDTO {
     private String syphilis;
     private String hepatitisB;
     private String hepatitisC;
-    private String ancNo;
     private HivTestDto initialHivTest;
     private HivTestDto confirmatoryHivTest;
-    private HivTestDto tieBreaker;
     private HivTestDto retesting;
-    private HivTestDto confirmatoryTest2;
-    private HivTestDto tieBreaker2;
     private String finalResult;
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
 
     // New PMTCT Register fields
     private String pregnancyStatusAtEntry;
@@ -48,12 +44,20 @@ public class PmtctHtsReponseDTO {
     private String tbScreeningStatus;
     private String pmtctTestEntryPoint;
     private String viralLoadMonitoring;
+
+    // Person / patient card fields
     private Long personId;
+    private String firstName;
+    private String surname;
+    private String otherName;
     private String sex;
     private Integer age;
     private LocalDate dateOfBirth;
     private Long pregnancyCount;
     private String fullName;
+    private String address;
+    private String contactPoint;
+    private String ancNo;
     private String hivStatus;
     private Boolean pmtctRegStatus;
     private String entryPoint;

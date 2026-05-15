@@ -13,242 +13,198 @@
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-anc">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_anc" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_anc" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_anc" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_anc ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_anc
-                ADD CONSTRAINT fk_anc_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_anc_pregnancy_cycle ON pmtct_anc(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-enrollment">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_enrollment" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_enrollment" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_enrollment" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_enrollment ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_enrollment
-                ADD CONSTRAINT fk_enrollment_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_enrollment_pregnancy_cycle ON pmtct_enrollment(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-delivery">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_delivery" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_delivery" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_delivery" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_delivery ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_delivery
-                ADD CONSTRAINT fk_delivery_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_delivery_pregnancy_cycle ON pmtct_delivery(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-mother-visitation">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_mother_visitation" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_mother_visitation" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_mother_visitation" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_mother_visitation ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_mother_visitation
-                ADD CONSTRAINT fk_visit_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_visit_pregnancy_cycle ON pmtct_mother_visitation(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-info">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_information" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_information" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_information" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_information ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_information
-                ADD CONSTRAINT fk_infant_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_infant_pregnancy_cycle ON pmtct_infant_information(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-mother-art">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_mother_art" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_mother_art" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_mother_art" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_mother_art ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_mother_art
-                ADD CONSTRAINT fk_mother_art_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_mother_art_pregnancy_cycle ON pmtct_infant_mother_art(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-arv">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_arv" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_arv" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_arv" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_arv ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_arv
-                ADD CONSTRAINT fk_infant_arv_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_infant_arv_pregnancy_cycle ON pmtct_infant_arv(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-pcr">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_pcr" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_pcr" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_pcr" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_pcr ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_pcr
-                ADD CONSTRAINT fk_infant_pcr_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_infant_pcr_pregnancy_cycle ON pmtct_infant_pcr(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-visit">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_visit" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_visit" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_visit" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_visit ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_visit
-                ADD CONSTRAINT fk_infant_visit_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_infant_visit_pregnancy_cycle ON pmtct_infant_visit(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-infant-rapid-antibody">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_infant_rapid_antibody" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_infant_rapid_antibody" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_rapid_antibody ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_infant_rapid_antibody
-                ADD CONSTRAINT fk_infant_rapid_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_infant_rapid_pregnancy_cycle ON pmtct_infant_rapid_antibody(pmtct_cycle_id);
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-cycle-id-hts">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="pmtct_hts" columnName="pmtct_cycle_id" />
-            </not>
+            <and>
+                <not><columnExists tableName="pmtct_hts" columnName="pmtct_cycle_id" /></not>
+                <not><columnExists tableName="pmtct_hts" columnName="pmtct_cycle_uuid" /></not>
+            </and>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_hts ADD COLUMN pmtct_cycle_id bigint;
-            ALTER TABLE pmtct_hts
-                ADD CONSTRAINT fk_hts_pregnancy_cycle
-                    FOREIGN KEY (pmtct_cycle_id)
-                        REFERENCES pmtct_pregnancy_cycle(id)
-                        ON DELETE CASCADE;
             CREATE INDEX IF NOT EXISTS idx_hts_pregnancy_cycle ON pmtct_hts(pmtct_cycle_id);
         </sql>
     </changeSet>
 
 
     <!-- ========================================
-         SECTION 2: Prerequisite columns - mother_person_uuid
+         SECTION 2: Prerequisite columns - mother_patient_uuid
          Add to 4 infant tables
          ======================================== -->
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-mother-uuid-infant-arv">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_patient_uuid" />
             </not>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_arv
-                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+                ADD COLUMN mother_patient_uuid character varying COLLATE pg_catalog."default";
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-mother-uuid-infant-mother-art">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_patient_uuid" />
             </not>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_mother_art
-                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+                ADD COLUMN mother_patient_uuid character varying COLLATE pg_catalog."default";
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-mother-uuid-infant-pcr">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_patient_uuid" />
             </not>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_pcr
-                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+                ADD COLUMN mother_patient_uuid character varying COLLATE pg_catalog."default";
         </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-add-mother-uuid-infant-rapid-antibody">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_patient_uuid" />
             </not>
         </preConditions>
         <sql>
             ALTER TABLE pmtct_infant_rapid_antibody
-                ADD COLUMN mother_person_uuid character varying COLLATE pg_catalog."default";
+                ADD COLUMN mother_patient_uuid character varying COLLATE pg_catalog."default";
         </sql>
     </changeSet>
 
@@ -348,27 +304,27 @@
 
 
     <!-- ========================================
-         SECTION 4: Data migration - Populate mother_person_uuid
+         SECTION 4: Data migration - Populate mother_patient_uuid
          ======================================== -->
 
     <!-- Migrate pmtct_infant_arv: Using unique_uuid to join with infant_visit -->
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-arv-1">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_arv" columnName="unique_uuid" />
-                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_patient_uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_arv ia
-            SET mother_person_uuid = iv.mother_person_uuid
+            SET mother_patient_uuid = iv.mother_patient_uuid
             FROM pmtct_infant_visit iv
             WHERE ia.unique_uuid = iv.unique_uuid
               AND ia.unique_uuid IS NOT NULL
               AND ia.unique_uuid != ''
-              AND iv.mother_person_uuid IS NOT NULL
-              AND ia.mother_person_uuid IS NULL;
+              AND iv.mother_patient_uuid IS NOT NULL
+              AND ia.mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -376,16 +332,16 @@
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-arv-2">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_arv" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_arv" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_arv" columnName="uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_arv
-            SET mother_person_uuid = uuid
+            SET mother_patient_uuid = uuid
             WHERE (unique_uuid IS NULL OR unique_uuid = '')
               AND uuid IS NOT NULL
-              AND mother_person_uuid IS NULL;
+              AND mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -393,20 +349,20 @@
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-pcr-1">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_pcr" columnName="unique_uuid" />
-                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_patient_uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_pcr ip
-            SET mother_person_uuid = iv.mother_person_uuid
+            SET mother_patient_uuid = iv.mother_patient_uuid
             FROM pmtct_infant_visit iv
             WHERE ip.unique_uuid = iv.unique_uuid
               AND ip.unique_uuid IS NOT NULL
               AND ip.unique_uuid != ''
-              AND iv.mother_person_uuid IS NOT NULL
-              AND ip.mother_person_uuid IS NULL;
+              AND iv.mother_patient_uuid IS NOT NULL
+              AND ip.mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -414,16 +370,16 @@
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-pcr-2">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_pcr" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_pcr" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_pcr" columnName="uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_pcr
-            SET mother_person_uuid = uuid
+            SET mother_patient_uuid = uuid
             WHERE (unique_uuid IS NULL OR unique_uuid = '')
               AND uuid IS NOT NULL
-              AND mother_person_uuid IS NULL;
+              AND mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -431,20 +387,20 @@
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-mother-art">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_mother_art" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_mother_art" columnName="unique_uuid" />
-                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_patient_uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_mother_art ima
-            SET mother_person_uuid = iv.mother_person_uuid
+            SET mother_patient_uuid = iv.mother_patient_uuid
             FROM pmtct_infant_visit iv
             WHERE ima.unique_uuid = iv.unique_uuid
               AND ima.unique_uuid IS NOT NULL
               AND ima.unique_uuid != ''
-              AND iv.mother_person_uuid IS NOT NULL
-              AND ima.mother_person_uuid IS NULL;
+              AND iv.mother_patient_uuid IS NOT NULL
+              AND ima.mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -452,20 +408,20 @@
     <changeSet failOnError="false" author="system" id="2026-03-04-cycle-migration-populate-mother-uuid-infant-rapid-antibody">
         <preConditions onFail="MARK_RAN">
             <and>
-                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_rapid_antibody" columnName="mother_patient_uuid" />
                 <columnExists tableName="pmtct_infant_rapid_antibody" columnName="unique_uuid" />
-                <columnExists tableName="pmtct_infant_visit" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_infant_visit" columnName="mother_patient_uuid" />
             </and>
         </preConditions>
         <sql>
             UPDATE pmtct_infant_rapid_antibody ira
-            SET mother_person_uuid = iv.mother_person_uuid
+            SET mother_patient_uuid = iv.mother_patient_uuid
             FROM pmtct_infant_visit iv
             WHERE ira.unique_uuid = iv.unique_uuid
               AND ira.unique_uuid IS NOT NULL
               AND ira.unique_uuid != ''
-              AND iv.mother_person_uuid IS NOT NULL
-              AND ira.mother_person_uuid IS NULL;
+              AND iv.mother_patient_uuid IS NOT NULL
+              AND ira.mother_patient_uuid IS NULL;
         </sql>
     </changeSet>
 
@@ -482,12 +438,10 @@
         <comment>Create ONE pregnancy cycle per patient who does not already have one</comment>
         <sql>
             INSERT INTO pmtct_pregnancy_cycle (
-                person_uuid,
+                patient_uuid,
                 maternal_outcome,
                 entry_point,
-                hiv_status,
                 pregnancy_outcome,
-                number_of_infants,
                 pmtct_status,
                 facility_id,
                 created_by,
@@ -500,17 +454,17 @@
             )
             WITH
                 all_patients AS (
-                    SELECT DISTINCT person_uuid
+                    SELECT DISTINCT patient_uuid
                     FROM pmtct_anc
-                    WHERE person_uuid IS NOT NULL
+                    WHERE patient_uuid IS NOT NULL
                     UNION
-                    SELECT DISTINCT person_uuid
+                    SELECT DISTINCT patient_uuid
                     FROM pmtct_enrollment
-                    WHERE person_uuid IS NOT NULL
+                    WHERE patient_uuid IS NOT NULL
                 ),
                 latest_anc AS (
-                    SELECT DISTINCT ON (person_uuid)
-                    person_uuid,
+                    SELECT DISTINCT ON (patient_uuid)
+                    patient_uuid,
                     id,
                     anc_no,
                     static_hiv_status,
@@ -522,15 +476,13 @@
                     last_modified_date,
                     archived
                 FROM pmtct_anc
-                WHERE person_uuid IS NOT NULL
-                ORDER BY person_uuid, created_date DESC NULLS LAST, id DESC
+                WHERE patient_uuid IS NOT NULL
+                ORDER BY patient_uuid, created_date DESC NULLS LAST, id DESC
                 ),
                 latest_enrollment AS (
-                SELECT DISTINCT ON (person_uuid)
-                    person_uuid,
+                SELECT DISTINCT ON (patient_uuid)
+                    patient_uuid,
                     id,
-                    anc_no,
-                    hiv_status,
                     entry_point,
                     facility_id,
                     created_by,
@@ -539,30 +491,30 @@
                     last_modified_date,
                     archived
                 FROM pmtct_enrollment
-                WHERE person_uuid IS NOT NULL
-                ORDER BY person_uuid, created_date DESC NULLS LAST, id DESC
+                WHERE patient_uuid IS NOT NULL
+                ORDER BY patient_uuid, created_date DESC NULLS LAST, id DESC
                 ),
                 latest_hts AS (
-                SELECT DISTINCT ON (person_uuid)
-                    person_uuid,
+                SELECT DISTINCT ON (patient_uuid)
+                    patient_uuid,
                     final_result
                 FROM pmtct_hts
-                WHERE person_uuid IS NOT NULL
-                ORDER BY person_uuid, id DESC
+                WHERE patient_uuid IS NOT NULL
+                ORDER BY patient_uuid, id DESC
                 ),
                 latest_delivery AS (
-                SELECT DISTINCT ON (person_uuid)
-                    person_uuid,
+                SELECT DISTINCT ON (patient_uuid)
+                    patient_uuid,
                     child_status,
                     maternal_outcome,
                     number_of_infants_alive,
                     number_of_infants_dead
                 FROM pmtct_delivery
-                WHERE person_uuid IS NOT NULL
-                ORDER BY person_uuid, created_date DESC NULLS LAST, id DESC
+                WHERE patient_uuid IS NOT NULL
+                ORDER BY patient_uuid, created_date DESC NULLS LAST, id DESC
                 )
             SELECT
-                ap.person_uuid,
+                ap.patient_uuid,
                 d.maternal_outcome as maternal_outcome,
                 CASE
                     WHEN a.id IS NOT NULL THEN 'ANC'
@@ -572,13 +524,7 @@
                     WHEN e.entry_point IS NOT NULL THEN e.entry_point
                     ELSE 'ANC'
                     END as entry_point,
-                COALESCE(
-                        e.hiv_status,
-                        hts.final_result,
-                        a.static_hiv_status
-                ) as hiv_status,
                 d.child_status as pregnancy_outcome,
-                COALESCE(d.number_of_infants_alive, 0) + COALESCE(d.number_of_infants_dead, 0) as number_of_infants,
                 'ACTIVE' as pmtct_status,
                 COALESCE(a.facility_id, e.facility_id) as facility_id,
                 COALESCE(a.created_by, e.created_by) as created_by,
@@ -596,17 +542,17 @@
                     ELSE FALSE
                     END as is_closed
             FROM all_patients ap
-                     LEFT JOIN latest_anc a ON ap.person_uuid = a.person_uuid
-                     LEFT JOIN latest_enrollment e ON ap.person_uuid = e.person_uuid
-                     LEFT JOIN latest_hts hts ON ap.person_uuid = hts.person_uuid
-                     LEFT JOIN latest_delivery d ON ap.person_uuid = d.person_uuid
+                     LEFT JOIN latest_anc a ON ap.patient_uuid = a.patient_uuid
+                     LEFT JOIN latest_enrollment e ON ap.patient_uuid = e.patient_uuid
+                     LEFT JOIN latest_hts hts ON ap.patient_uuid = hts.patient_uuid
+                     LEFT JOIN latest_delivery d ON ap.patient_uuid = d.patient_uuid
             WHERE NOT EXISTS (
                 SELECT 1 FROM pmtct_pregnancy_cycle pc
-                WHERE pc.person_uuid = ap.person_uuid
+                WHERE pc.patient_uuid = ap.patient_uuid
             )
             AND EXISTS (
                 SELECT 1 FROM patient_person pp
-                WHERE pp.uuid = ap.person_uuid
+                WHERE pp.uuid = ap.patient_uuid
             );
         </sql>
     </changeSet>
@@ -616,7 +562,8 @@
         <preConditions onFail="MARK_RAN">
             <and>
                 <tableExists tableName="pmtct_pregnancy_cycle" />
-                <columnExists tableName="pmtct_infant_information" columnName="mother_person_uuid" />
+                <columnExists tableName="pmtct_pregnancy_cycle" columnName="number_of_infants" />
+                <columnExists tableName="pmtct_infant_information" columnName="mother_patient_uuid" />
             </and>
         </preConditions>
         <sql>
@@ -624,14 +571,14 @@
             SET number_of_infants = infant_count.total
                 FROM (
                 SELECT
-                    i.mother_person_uuid,
+                    i.mother_patient_uuid,
                     COUNT(DISTINCT i.id) as total,
                     MIN(i.created_date) as first_created
                 FROM pmtct_infant_information i
-                WHERE i.mother_person_uuid IS NOT NULL
-                GROUP BY i.mother_person_uuid
+                WHERE i.mother_patient_uuid IS NOT NULL
+                GROUP BY i.mother_patient_uuid
             ) infant_count
-            WHERE pc.person_uuid = infant_count.mother_person_uuid
+            WHERE pc.patient_uuid = infant_count.mother_patient_uuid
               AND ABS(EXTRACT(EPOCH FROM (infant_count.first_created - pc.created_date))) &lt; 31536000
               AND infant_count.total > COALESCE(pc.number_of_infants, 0);
         </sql>
@@ -654,7 +601,7 @@
             UPDATE pmtct_anc a
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE a.person_uuid = pc.person_uuid
+            WHERE a.patient_uuid = pc.patient_uuid
               AND a.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -670,7 +617,7 @@
             UPDATE pmtct_enrollment e
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE e.person_uuid = pc.person_uuid
+            WHERE e.patient_uuid = pc.patient_uuid
               AND e.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -686,7 +633,7 @@
             UPDATE pmtct_delivery d
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE d.person_uuid = pc.person_uuid
+            WHERE d.patient_uuid = pc.patient_uuid
               AND d.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -702,7 +649,7 @@
             UPDATE pmtct_mother_visitation mv
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE mv.person_uuid = pc.person_uuid
+            WHERE mv.patient_uuid = pc.patient_uuid
               AND mv.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -718,7 +665,7 @@
             UPDATE pmtct_infant_information ii
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE ii.mother_person_uuid = pc.person_uuid
+            WHERE ii.mother_patient_uuid = pc.patient_uuid
               AND ii.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -734,8 +681,8 @@
             UPDATE pmtct_infant_mother_art ima
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE ima.mother_person_uuid = pc.person_uuid
-              AND ima.mother_person_uuid IS NOT NULL
+            WHERE ima.mother_patient_uuid = pc.patient_uuid
+              AND ima.mother_patient_uuid IS NOT NULL
               AND ima.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -751,8 +698,8 @@
             UPDATE pmtct_infant_arv ia
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE ia.mother_person_uuid = pc.person_uuid
-              AND ia.mother_person_uuid IS NOT NULL
+            WHERE ia.mother_patient_uuid = pc.patient_uuid
+              AND ia.mother_patient_uuid IS NOT NULL
               AND ia.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -768,8 +715,8 @@
             UPDATE pmtct_infant_pcr ip
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE ip.mother_person_uuid = pc.person_uuid
-              AND ip.mother_person_uuid IS NOT NULL
+            WHERE ip.mother_patient_uuid = pc.patient_uuid
+              AND ip.mother_patient_uuid IS NOT NULL
               AND ip.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -785,7 +732,7 @@
             UPDATE pmtct_infant_visit iv
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE iv.mother_person_uuid = pc.person_uuid
+            WHERE iv.mother_patient_uuid = pc.patient_uuid
               AND iv.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -801,8 +748,8 @@
             UPDATE pmtct_infant_rapid_antibody ira
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE ira.mother_person_uuid = pc.person_uuid
-              AND ira.mother_person_uuid IS NOT NULL
+            WHERE ira.mother_patient_uuid = pc.patient_uuid
+              AND ira.mother_patient_uuid IS NOT NULL
               AND ira.pmtct_cycle_id IS NULL;
         </sql>
     </changeSet>
@@ -818,8 +765,75 @@
             UPDATE pmtct_hts h
             SET pmtct_cycle_id = pc.id
                 FROM pmtct_pregnancy_cycle pc
-            WHERE h.person_uuid = pc.person_uuid
+            WHERE h.patient_uuid = pc.patient_uuid
               AND h.pmtct_cycle_id IS NULL;
+        </sql>
+    </changeSet>
+
+
+    <!-- ========================================
+         SECTION 7: Populate pmtct_cycle_uuid
+         Backfill UUID from pmtct_cycle_id for all tables
+         ======================================== -->
+
+    <changeSet failOnError="false" id="2026-05-14-populate-cycle-uuid-all-tables" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_pregnancy_cycle" />
+        </preConditions>
+        <sql>
+            -- Mother tables: join on patient_uuid (works whether pmtct_cycle_id exists or not)
+            UPDATE pmtct_anc a SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE a.patient_uuid = pc.patient_uuid AND a.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_enrollment e SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE e.patient_uuid = pc.patient_uuid AND e.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_delivery d SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE d.patient_uuid = pc.patient_uuid AND d.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_hts h SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE h.patient_uuid = pc.patient_uuid AND h.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_mother_visitation mv SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE mv.patient_uuid = pc.patient_uuid AND mv.pmtct_cycle_uuid IS NULL;
+            -- Infant tables: join on mother_patient_uuid
+            UPDATE pmtct_infant_information ii SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE ii.mother_patient_uuid = pc.patient_uuid AND ii.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_infant_visit iv SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE iv.mother_patient_uuid = pc.patient_uuid AND iv.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_infant_arv ia SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE ia.mother_patient_uuid = pc.patient_uuid AND ia.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_infant_pcr ip SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE ip.mother_patient_uuid = pc.patient_uuid AND ip.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_infant_mother_art ima SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE ima.mother_patient_uuid = pc.patient_uuid AND ima.pmtct_cycle_uuid IS NULL;
+            UPDATE pmtct_infant_rapid_antibody ira SET pmtct_cycle_uuid = pc.uuid FROM pmtct_pregnancy_cycle pc WHERE ira.mother_patient_uuid = pc.patient_uuid AND ira.pmtct_cycle_uuid IS NULL;
+        </sql>
+    </changeSet>
+
+
+    <!-- ========================================
+         SECTION 8: Cleanup - Drop orphaned pmtct_cycle_id
+         On fresh DBs this is a no-op (column was never re-added).
+         On old DBs where Section 1 previously re-added it, this cleans up.
+         ======================================== -->
+
+    <changeSet failOnError="false" id="2026-05-14-cleanup-drop-pmtct-cycle-id" author="system">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="pmtct_cycle_id" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_enrollment DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_delivery DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_hts DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_information DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_visit DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_arv DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_pcr DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_mother_art DROP COLUMN IF EXISTS pmtct_cycle_id;
+            ALTER TABLE pmtct_infant_rapid_antibody DROP COLUMN IF EXISTS pmtct_cycle_id;
+        </sql>
+    </changeSet>
+
+    <!-- Cleanup: Drop orphaned person_uuid from pmtct_delivery (created on fresh DBs by add-new-columns.xml) -->
+    <changeSet failOnError="false" id="2026-05-14-cleanup-drop-orphan-person-uuid-delivery" author="system">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="pmtct_delivery" columnName="person_uuid" />
+                <columnExists tableName="pmtct_delivery" columnName="patient_uuid" />
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery DROP CONSTRAINT IF EXISTS pmtct_delivery_person_uuid_fk;
+            ALTER TABLE pmtct_delivery DROP COLUMN IF EXISTS person_uuid;
         </sql>
     </changeSet>
 

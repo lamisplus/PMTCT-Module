@@ -113,11 +113,11 @@ const Labourpartner = (props) => {
   });
   useEffect(() => {
     GET_CODESETS()
-    // Fetch ANC id using personUuid + pmtctCycleId
-    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
-    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id || props.patientObj.pmtctCycleId;
-    if (personUuid && pmtctCycleId) {
-      axios.get(`${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
+    // Fetch ANC id using patientUuid + pmtctCycleUuid
+    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
+    const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid || props.patientObj.pmtctCycleUuid;
+    if (patientUuid && pmtctCycleUuid) {
+      axios.get(`${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       ).then((response) => {
         setAncId(response.data.id);
@@ -441,7 +441,7 @@ const Labourpartner = (props) => {
                           borderRadius: "0.25rem",
                         }}
                         onChange={handleInputChangepartnerDto}
-                        // min={props.patientObj.firstAncDate}
+                        // min={props.patientObj.dateOfEnrollment}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                         disabled={disabledField}

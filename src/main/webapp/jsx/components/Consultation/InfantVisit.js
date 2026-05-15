@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Grid, Segment, Label, List } from "semantic-ui-react";
-// Page titie
 import {
+  Card,
+  CardBody,
   FormGroup,
   Label as FormLabelName,
   Input,
@@ -12,6 +12,13 @@ import { url as baseUrl, token } from "../../../api";
 import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
+import ChildCareIcon from "@material-ui/icons/ChildCare";
+import LocalHospitalIcon from "@material-ui/icons/LocalHospital";
+import HealingIcon from "@material-ui/icons/Healing";
+import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
+import EventIcon from "@material-ui/icons/Event";
+import AssessmentIcon from "@material-ui/icons/Assessment";
+import FavoriteIcon from "@material-ui/icons/Favorite";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
@@ -81,6 +88,29 @@ const style = {
   px: 4,
   pb: 3,
 };
+
+const sectionContainerStyle = {
+  border: "1px solid #e0e0e0",
+  borderRadius: "0.35rem",
+  padding: "15px 10px",
+  backgroundColor: "#f8f9fa",
+};
+
+const sectionHeaderStyle = {
+  backgroundColor: "transparent",
+  color: "#2d3748",
+  padding: "8px 12px",
+  fontWeight: "bold",
+  marginBottom: "12px",
+};
+
+const sectionIconStyle = {
+  fontSize: "16px",
+  color: "#014d88",
+  marginRight: "6px",
+  verticalAlign: "text-bottom",
+};
+
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
   const [open, setOpen] = React.useState(false);
@@ -114,6 +144,8 @@ const ClinicVisit = (props) => {
   const [visitDateStatus, setVisitDateStatus] = useState(false);
   const [showRapidTest, setshowRapidTest] = useState(false);
   const [disableRapidField, setDisableRapidField] = useState(false);
+  const [infantRecordClosed, setInfantRecordClosed] = useState(false);
+  const [infantClosedOutcome, setInfantClosedOutcome] = useState("");
 
   const [ageAtTestList, setAtTestList] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -183,10 +215,10 @@ const ClinicVisit = (props) => {
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     // ageAtCtx: "",
-    personUuid: props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid
-      ? props.patientObj.personUuid
+    patientUuid: props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid
+      ? props.patientObj.patientUuid
       : "",
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
@@ -196,11 +228,15 @@ const ClinicVisit = (props) => {
     visitDate: "",
     visitStatus: "",
     infantOutcomeAt18Months: "",
+    infantOutcomeSubOption: "",
+    dateLinkedToArtClinic: "",
+    artEnrollmentNo: "",
+    comments: "",
     id: "",
     uuid: "",
     uniqueUuid: "",
     ctxStatus:  "" ,
-    pmtctCycleId: props?.latestPmtctCycle?.id,
+    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
   });
   const [infantArvDto, setInfantArvDto] = useState({
     ageAtCtx: "" ,
@@ -216,24 +252,30 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     dateOfCtx: "",
-    pmtctCycleId: props?.latestPmtctCycle?.id,
-    motherPersonUuid: props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid,
+    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid,
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
+    motherCurrentArtStatus: "",
     // motherArtRegimen: "",
     regimenTypeId: "",
     regimenId: "",
+    whyArtUnknown: "",
+    syphilisTreatmentReferral: "",
+    syphilisTreatmentStartDate: "",
+    hbvTreatmentProphylaxis: "",
+    hbvTreatmentStartDate: "",
     id: "",
     uuid: "",
     uniqueUuid: "",
-    pmtctCycleId: props?.latestPmtctCycle?.id,
-    motherPersonUuid: props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid,
+    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid,
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -249,10 +291,10 @@ const ClinicVisit = (props) => {
     id: "",
     uuid: "",
     uniqueUuid: "",
-    pmtctCycleId: props?.latestPmtctCycle?.id,
-    motherPersonUuid: props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid,
+    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid,
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -263,11 +305,25 @@ const ClinicVisit = (props) => {
     ancNumber: props.patientObj.ancNo,
     uniqueUuid: "",
     uuid: "",
-    pmtctCycleId: props?.latestPmtctCycle?.id,
-    motherPersonUuid: props.patientObj.person_uuid
-      ? props.patientObj.person_uuid
-      : props.patientObj.personUuid,
+    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid,
   });
+
+  const [hbvVaccinationDto, setHbvVaccinationDto] = useState({
+    firstDoseBirthDoseDate: "",
+    timingOfVaccination: "",
+    secondDoseDate: "",
+    thirdDoseDate: "",
+  });
+
+  const handleInputChangeHbvVaccinationDto = (e) => {
+    setHbvVaccinationDto({
+      ...hbvVaccinationDto,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   //Vital signs clinical decision support
   const [vitalClinicalSupport, setVitalClinicalSupport] = useState({
@@ -277,7 +333,7 @@ const ClinicVisit = (props) => {
   const [expectedPCR, setExpectedPCR] = useState("");
   const [pcrMessage, setPcrMessage] = useState("");
 
-  const [infantRapidTestList, setInfantRapidTestList] = useState([]);
+  const [infantRapidTestList, setInfantRapidTestList] = useState(["First Rapid Antibody", "Second Rapid Antibody"]);
 
 
 
@@ -379,14 +435,14 @@ const ClinicVisit = (props) => {
     }
   };
   const filterOutTheChosenChildForView = (child) => {
-    let personUuid= props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : props.patientObj.personUuid
-            ? props.patientObj.personUuid
+    let patientUuid= props.patientObj.patient_uuid
+            ? props.patientObj.patient_uuid
+            : props.patientObj.patientUuid
+            ? props.patientObj.patientUuid
             : props.patientObj.uuid
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${props?.latestPmtctCycle?.id}`,
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${patientUuid}?pmtctCycleUuid=${props?.latestPmtctCycle?.uuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -401,7 +457,7 @@ const ClinicVisit = (props) => {
         getLatestPCR(resultInfo[0].hospitalNumber);
         getLatestRapidTest(
           resultInfo[0].hospitalNumber,
-          resultInfo[0].personUuid
+          resultInfo[0].patientUuid
         );
         setChoosenInfant(resultInfo[0]);
       })
@@ -468,10 +524,15 @@ const ClinicVisit = (props) => {
     let deliveryDate = moment(choosenInfant.dateOfDelivery);
     let vistDate  = moment(visitDate);
 
-    //child is 9 month, rapid test = +ve
-    if(vistDate.diff(deliveryDate, 'months') === 9 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_POSITIVE"  && !latestPCR?.results){
-      setRapidResultMessage("Kindly undergo PCR for confirmation ")
-      
+    // If rapid test is positive, prompt for confirmatory PCR
+    if(vistDate.diff(deliveryDate, 'months') >= 18 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_POSITIVE"  && !latestPCR?.results){
+      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a Confirmatory PCR test.")
+      // Re-activate confirmatory PCR in dropdown
+      const newPCRList = pcrTypeFullRef.current || [];
+      const confirmatoryPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR");
+      if (confirmatoryPCR.length > 0) {
+        setPcrType(confirmatoryPCR);
+      }
     }
 
   }
@@ -497,15 +558,9 @@ const ClinicVisit = (props) => {
 
     let hasDonePCRTest = choosenInfant?.infantPCRTestDto?.id ? true : false
 
-        if(childAge  >= 9 && hasDonePCRTest){
+        if(childAge  >= 18 && hasDonePCRTest){
           setshowRapidTest(true)
-
-            if(childAge >= 18){
           setInfantRapidTestList(["First Rapid Antibody", "Second Rapid Antibody"])
-            }else{
-            setInfantRapidTestList(["First Rapid Antibody"])
-
-            }
 
         }else{
           setshowRapidTest(false)
@@ -601,10 +656,6 @@ const ClinicVisit = (props) => {
    GET_CODESETS();
 
     AdultRegimenLine();
-    InfantInfo();
-
-
-
 
     if (
       props.activeContent.id &&
@@ -616,6 +667,19 @@ const ClinicVisit = (props) => {
       setDisabledField(
         props.activeContent.actionType === "view" ? true : false
       );
+    }
+
+    // Auto-select infant when coming from "Follow Up Visit" in infant list
+    if (
+      props.activeContent.actionType === "create" &&
+      props.activeContent.obj &&
+      props.activeContent.obj.infantHospitalNumber
+    ) {
+      const infantObj = {
+        ...props.activeContent.obj,
+        hospitalNumber: props.activeContent.obj.infantHospitalNumber,
+      };
+      GetInfantDetail(infantObj);
     }
   }, [props.patientObj.hospitalNumber, props.activeContent]);
   //GEt visit information
@@ -646,6 +710,8 @@ const ClinicVisit = (props) => {
         }
         if (response.data.infantRapidAntiBodyTestDto) {
           setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
+          // Ensure rapid test section is visible when viewing/updating a visit that has rapid test data
+          setshowRapidTest(false);
         }
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
 
@@ -684,14 +750,14 @@ const ClinicVisit = (props) => {
   };
   ///GET LIST OF Infants
   const InfantInfo = () => {
-    let personUuid= props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : props.patientObj.personUuid
-            ? props.patientObj.personUuid
+    let patientUuid= props.patientObj.patient_uuid
+            ? props.patientObj.patient_uuid
+            : props.patientObj.patientUuid
+            ? props.patientObj.patientUuid
             : props.patientObj.uuid
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${props?.latestPmtctCycle.id}`,
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${patientUuid}?pmtctCycleUuid=${props?.latestPmtctCycle.uuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -726,7 +792,7 @@ const ClinicVisit = (props) => {
 
               // Fetch only the latest PCR test for this infant
               axios
-              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}&pmtctCycleId=${props?.latestPmtctCycle?.id}`, {
+              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}&pmtctCycleUuid=${props?.latestPmtctCycle?.uuid}`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
               .then((response) => {
@@ -789,7 +855,7 @@ const ClinicVisit = (props) => {
 
     const getLatestRapidTest=(infantHospitalNo, motherUuid)=>{
           axios
-          .get(`${baseUrl}pmtct/anc/get-latest-rapid-test?infantHospitalNumber=${infantHospitalNo}&motherUuid=${motherUuid}&pmtctCycleId=${props?.latestPmtctCycle?.id}`, {
+          .get(`${baseUrl}pmtct/anc/get-latest-rapid-test?infantHospitalNumber=${infantHospitalNo}&motherUuid=${motherUuid}&pmtctCycleUuid=${props?.latestPmtctCycle?.uuid}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
@@ -929,13 +995,21 @@ const ClinicVisit = (props) => {
       setChoosenInfant({...choosenInfant,ctxStatus:  e.target.value})
       setErrors({ ...temp, [e.target.name]: "" , dateOfCtx: ""});
 
+    }else if(e.target.name === "infantOutcomeAt18Months"){
+      setInfantVisitRequestDto({
+        ...infantVisitRequestDto,
+        [e.target.name]: e.target.value,
+        infantOutcomeSubOption: "",
+        dateLinkedToArtClinic: "",
+        artEnrollmentNo: "",
+      });
     }else{
       setInfantVisitRequestDto({
         ...infantVisitRequestDto,
         [e.target.name]: e.target.value,
       });
     }
- 
+
   };
 
 
@@ -976,20 +1050,46 @@ const ClinicVisit = (props) => {
 
   const handleInputChangeInfantMotherArtDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
-    //console.log(e.target.name),
-    setInfantMotherArtDto({
-      ...infantMotherArtDto,
-      [e.target.name]: e.target.value,
-    });
+    if (e.target.name === "syphilisTreatmentReferral" && e.target.value !== "Treated") {
+      setInfantMotherArtDto({
+        ...infantMotherArtDto,
+        [e.target.name]: e.target.value,
+        syphilisTreatmentStartDate: "",
+      });
+    } else if (e.target.name === "hbvTreatmentProphylaxis" && e.target.value !== "New on Prophylaxis" && e.target.value !== "Prior on HBV treatment") {
+      setInfantMotherArtDto({
+        ...infantMotherArtDto,
+        [e.target.name]: e.target.value,
+        hbvTreatmentStartDate: "",
+      });
+    } else if (e.target.name === "motherArtInitiationTime" && e.target.value && e.target.value.includes("NONE")) {
+      setInfantMotherArtDto({
+        ...infantMotherArtDto,
+        [e.target.name]: e.target.value,
+      });
+    } else {
+      setInfantMotherArtDto({
+        ...infantMotherArtDto,
+        [e.target.name]: e.target.value,
+      });
+    }
   };
 
   const handleInputChangeRapidTestDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
-    //console.log(e.target.name),
     setInfantRapidTestDTO({
       ...infantRapidTestDTO,
       [e.target.name]: e.target.value,
     });
+    // Re-activate Confirmatory PCR when rapid test result is Positive
+    if (e.target.name === "result" && e.target.value === "INFANT_PCR_RESULT_POSITIVE") {
+      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a Confirmatory PCR test.");
+      const newPCRList = pcrTypeFullRef.current || [];
+      const confirmatoryPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR");
+      if (confirmatoryPCR.length > 0) {
+        setPcrType(confirmatoryPCR);
+      }
+    }
   };
   const handleInputChangeInfantPCRTestDto = (e) => {
     setErrors({ ...temp, [e.target.name]: "" });
@@ -1068,6 +1168,7 @@ const ClinicVisit = (props) => {
       objValues.infantRapidAntiBodyTestDto.source = objValues.source;
       objValues.infantVisitRequestDto = infantVisitRequestDto;
       objValues.infantVisitRequestDto.source = objValues.source;
+      objValues.infantVisitHbvVaccinationDto = hbvVaccinationDto;
 
       if (props.activeContent && props.activeContent.actionType  === "update") {
         //Perform operation for updation action
@@ -1192,6 +1293,7 @@ const ClinicVisit = (props) => {
   };
   //Get list of RegimenLine
   const RegimenType = (id) => {
+    if (!id) return;
     axios
       .get(`${baseUrl}hiv/regimen/types/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -1204,11 +1306,31 @@ const ClinicVisit = (props) => {
         //console.log(error);
       });
   };
+  // Define final outcome values that close the record
+  const FINAL_OUTCOMES_THAT_CLOSE = [
+    "INFANT_OUTCOME_AT_18_MONTHS_HIV_POSITIVE",
+    "INFANT_OUTCOME_AT_18_MONTHS_HIV_NEGATIVE",
+    "INFANT_OUTCOME_AT_18_MONTHS_DIED",
+  ];
+  // Sub-options that also count as final closures (under UNKNOWN)
+  const FINAL_SUB_OPTIONS = ["Transferred out", "Lost to Follow-up", "Died"];
+
   function GetInfantDetail(obj) {
 
     setChoosenInfant(obj);
     getLatestPCR(obj.hospitalNumber)
-    getLatestRapidTest(obj.hospitalNumber, obj.personUuid)
+    getLatestRapidTest(obj.hospitalNumber, obj.patientUuid)
+
+    // Check if the infant record has a final outcome (record closure)
+    const outcome = obj.infantOutcomeAt18Months || obj.infantOutcomeAt18_months || "";
+    if (outcome && FINAL_OUTCOMES_THAT_CLOSE.some(o => outcome.toUpperCase().includes(o.replace("INFANT_OUTCOME_AT_18_MONTHS_", "")))) {
+      setInfantRecordClosed(true);
+      setInfantClosedOutcome(outcome);
+      setShowInfantVist(false);
+    } else {
+      setInfantRecordClosed(false);
+      setInfantClosedOutcome("");
+    }
     // ARV fields should come from backend (infant visit response), not from registration
     // setInfantVisitRequestDto({...infantVisitRequestDto, ctxStatus: obj.ctxStatus})
     let weeks = calculateAgeInWeek(obj.dateOfDelivery);
@@ -1256,66 +1378,83 @@ const ClinicVisit = (props) => {
   }
   return (
     <div>
-      <h2>Clinic Follow-up Visit</h2>
-      <Grid columns="equal">
-        <Grid.Column>
-          <Segment>
-            <Label as="a" color="blue" ribbon>
-              Infant's
-            </Label>
-            <br />
-            <List celled>
-              <List.Item>
-                Given Name
-                <span className="float-end">
-                  <b>Hospital Number</b>
-                </span>
-              </List.Item>
-            </List>
-            {infants &&
-              infants.map((row) => (
-                <List celled>
-                  <List.Item
-                    onClick={() => GetInfantDetail(row)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Label as="a" color="blue">
-                      {row.firstName}
-                    </Label>
-                    <Label as="a" color="teal" className="float-end" tag>
-                      {row.hospitalNumber}
-                    </Label>
-                  </List.Item>
-                </List>
-              ))}
-          </Segment>
-        </Grid.Column>
-        <Grid.Column width={12}>
-          <Segment>
-            <Label
-              as="a"
-              color="blue"
-              style={{ width: "106%", height: "35px" }}
-              ribbon
-            >
-              <h4 style={{ color: "#fff" }}>
-                Infant Clinic Visit -{" "}
-                {infantVisitRequestDto &&
-                infantVisitRequestDto.infantHospitalNumber
-                  ? infantVisitRequestDto.infantHospitalNumber
-                  : " "}
-              </h4>
-            </Label>
-            <br />
-            <br />
-            {!showInfantVist && <div style={{ marginBottom: "30px" }}>
+      <Card>
+        <CardBody>
+          <h2>Clinic Follow-up Visit</h2>
+
+          {/* === Infant Demographics Card === */}
+          {choosenInfant && choosenInfant.hospitalNumber && (
+            <div style={{
+              border: "1px solid #014d88",
+              borderRadius: "0.5rem",
+              padding: "16px 20px",
+              marginBottom: "20px",
+              backgroundColor: "#eef2ff",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            }}>
+              <h6 style={{ color: "#014d88", fontWeight: "bold", marginBottom: "12px", fontSize: "14px" }}>
+                <ChildCareIcon style={{ fontSize: "16px", marginRight: "6px", verticalAlign: "text-bottom" }} />
+                Infant Information
+              </h6>
+              <div className="row">
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Hospital No.</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{infantVisitRequestDto.infantHospitalNumber || "---"}</div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Surname</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{choosenInfant.surname || "---"}</div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Firstname</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{choosenInfant.firstName || "---"}</div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Sex</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                    {choosenInfant.sex === "SEX_FEMALE" ? "Female" : choosenInfant.sex === "SEX_MALE" ? "Male" : choosenInfant.sex || "---"}
+                  </div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Date of Birth</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                    {choosenInfant.dateOfDelivery ? moment(choosenInfant.dateOfDelivery).format("DD-MM-YYYY") : "---"}
+                  </div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Mother ANC No.</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{props.patientObj.ancNo || "---"}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+            {infantRecordClosed && (
+              <div style={{ backgroundColor: "#f8d7da", border: "1px solid #f5c6cb", borderRadius: "4px", padding: "15px", marginBottom: "20px" }}>
+                <h4 style={{ color: "#721c24", margin: 0 }}>
+                  This infant record has been closed.
+                </h4>
+                <p style={{ color: "#721c24", margin: "5px 0 0 0" }}>
+                  A final outcome has been recorded for this infant. No further updates to prophylaxis, PCR, or outcome fields are permitted.
+                </p>
+              </div>
+            )}
+            {!showInfantVist && !infantRecordClosed && <div style={{ marginBottom: "30px" }}>
               <p style={{ fontSize: "16px" }}>Child's HIV Status: <span style={{ color: "red" }}>Positive</span></p>
 
               <div style={{ color: "red" , display: 'flex', alignItems: 'center', fontSize: '25px'}}><div style={{  display: "flex", justifyContent: "center",alignItems: "center",width: "50px", height: "50px" , borderRadius: "50%", textAlign: "center", fontSize: "30px", padding: '10px', marginRight: '10px', backgroundColor: "pink"}}>!</div>Kindly fill ART form</div>
             </div>
           }
 
+          <div className="row">
+
+          {/* === Visit Information === */}
           { showInfantVist &&  <>
+          <div className="col-md-12 mb-3 mt-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <EventIcon style={sectionIconStyle} />Visit Information
+              </h6>
             <div className="row">
               <div className="form-group mb-3 col-md-6">
                 <FormGroup>
@@ -1323,7 +1462,7 @@ const ClinicVisit = (props) => {
                     Date of Visit <span style={{ color: "red" }}> *</span>
                   </FormLabelName>
                   <Input
-                    type="date"                     
+                    type="date"
                       onKeyPress={(e)=>{e.preventDefault()}}
                     name="visitDate"
                     id="visitDate"
@@ -1333,10 +1472,10 @@ const ClinicVisit = (props) => {
                       borderRadius: "0.25rem",
                     }}
                     onChange={handleInputChangeInfantVisitRequestDto}
-                    // min={props.patientObj.firstAncDate}
+                    // min={props.patientObj.dateOfEnrollment}
                     min={choosenInfant.dateOfDelivery}
                     max={moment(new Date()).format("YYYY-MM-DD")}
-                    
+
                     //min={patientObj.pmtctEnrollmentRespondDto.pmtctEnrollmentDate}
                     required
                     disabled={disabledField}
@@ -1350,154 +1489,6 @@ const ClinicVisit = (props) => {
                     <span className={classes.error}>
                       {"Visit Date already exist"}
                     </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName>
-                    Date of Birth <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="date"             
-                     onKeyPress={(e)=>{e.preventDefault()}}
-                    name="dateOfBirth"
-                    id="dateOfBirth"
-                    value={choosenInfant.dateOfDelivery}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChangeInfantVisitRequestDto}
-                    disabled
-                    required
-                  />
-                </FormGroup>
-              </div>
-
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName>
-                    Infant Hospital Number{" "}
-                    <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="text"
-                    name="infantHospitalNumber"
-                    id="infantHospitalNumber"
-                    value={infantVisitRequestDto.infantHospitalNumber}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChangeInfantVisitRequestDto}
-                    disabled
-                  />
-                  {errors.infantHospitalNumber !== "" ? (
-                    <span className={classes.error}>
-                      {errors.infantHospitalNumber}
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName>
-                    Surname
-                    <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <Input
-                    type="text"
-                    name="surname"
-                    id="surname"
-                    value={choosenInfant.surname}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChangeInfantVisitRequestDto}
-                    disabled
-                  />
-                </FormGroup>
-              </div>
-              {choosenInfant.firstName && (
-                <div className="form-group mb-3 col-md-6">
-                  <FormGroup>
-                    <FormLabelName>
-                      Firstname
-                      <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <Input
-                      type="text"
-                      name="surname"
-                      id="surname"
-                      value={choosenInfant.firstName}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.25rem",
-                      }}
-                      onChange={handleInputChangeInfantVisitRequestDto}
-                      disabled
-                    />
-                  </FormGroup>
-                </div>
-              )}
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName>
-                    Sex <span style={{ color: "red" }}> *</span>
-                  </FormLabelName>
-                  <InputGroup>
-                    <Input
-                      type="select"
-                      name="sex"
-                      id="sex"
-                      onChange={handleInputChangeInfantVisitRequestDto}
-                      value={choosenInfant.sex}
-                      disabled
-                    >
-                      <option value="">Select </option>
-
-                      {genders.map((value) => (
-                        <option key={value.id} value={value.code}>
-                          {value.display}
-                        </option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-                  {errors.sex !== "" ? (
-                    <span className={classes.error}>{errors.sex}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-
-              <div className="form-group mb-3 col-md-6">
-                <FormGroup>
-                  <FormLabelName>
-                    Mother ANC number
-                    {/* <span style={{ color: "red" }}> *</span> */}
-                  </FormLabelName>
-                  <Input
-                    type="text"
-                    name="ancNumber"
-                    id="ancNumber"
-                    value={props.patientObj.ancNo}
-                    // value={infantVisitRequestDto.ancNumber}
-                    style={{
-                      border: "1px solid #014D88",
-                      borderRadius: "0.25rem",
-                    }}
-                    onChange={handleInputChangeInfantVisitRequestDto}
-                    disabled
-                  />
-                  {errors.ancNumber !== "" ? (
-                    <span className={classes.error}>{errors.ancNumber}</span>
                   ) : (
                     ""
                   )}
@@ -1676,22 +1667,146 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
               )}
-            </div>
 
-            <br />
-            {/* {formFilter && formFilter.motherArt === false && ( */}
-            <>
-              <Label
-                as="a"
-                color="teal"
-                style={{ width: "106%", height: "35px" }}
-                ribbon
-              >
-                <h4 style={{ color: "#fff" }}> Mother's ART </h4>
-              </Label>
-              <br />
-              <br />
+              {/* Infant Outcome Sub-options: HIV-Positive */}
+              {formFilter && formFilter.outCome === true && infantVisitRequestDto.infantOutcomeAt18Months && infantVisitRequestDto.infantOutcomeAt18Months.includes("POSITIVE") && (
+                <>
+                <div className="form-group mb-3 col-md-6">
+                  <FormGroup>
+                    <FormLabelName>HIV-Positive Sub-option</FormLabelName>
+                    <Input
+                      type="select"
+                      name="infantOutcomeSubOption"
+                      id="infantOutcomeSubOption"
+                      value={infantVisitRequestDto.infantOutcomeSubOption}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      onChange={handleInputChangeInfantVisitRequestDto}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="Linked to ART">Linked to ART</option>
+                      <option value="Not Linked to ART">Not Linked to ART</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+                {infantVisitRequestDto.infantOutcomeSubOption === "Linked to ART" && (
+                  <>
+                  <div className="form-group mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>Date Linked to ART Clinic</FormLabelName>
+                      <Input
+                        type="date"
+                        onKeyPress={(e) => { e.preventDefault() }}
+                        name="dateLinkedToArtClinic"
+                        id="dateLinkedToArtClinic"
+                        value={infantVisitRequestDto.dateLinkedToArtClinic}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        onChange={handleInputChangeInfantVisitRequestDto}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField}
+                      />
+                    </FormGroup>
+                  </div>
+                  <div className="form-group mb-3 col-md-6">
+                    <FormGroup>
+                      <FormLabelName>ART Enrollment No</FormLabelName>
+                      <Input
+                        type="text"
+                        name="artEnrollmentNo"
+                        id="artEnrollmentNo"
+                        value={infantVisitRequestDto.artEnrollmentNo}
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.25rem",
+                        }}
+                        onChange={handleInputChangeInfantVisitRequestDto}
+                        disabled={disabledField}
+                      />
+                    </FormGroup>
+                  </div>
+                  </>
+                )}
+                </>
+              )}
+
+              {/* Infant Outcome Sub-options: HIV status unknown */}
+              {formFilter && formFilter.outCome === true && infantVisitRequestDto.infantOutcomeAt18Months && infantVisitRequestDto.infantOutcomeAt18Months.includes("UNKNOWN") && (
+                <div className="form-group mb-3 col-md-6">
+                  <FormGroup>
+                    <FormLabelName>HIV Unknown Sub-option</FormLabelName>
+                    <Input
+                      type="select"
+                      name="infantOutcomeSubOption"
+                      id="infantOutcomeSubOption"
+                      value={infantVisitRequestDto.infantOutcomeSubOption}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      onChange={handleInputChangeInfantVisitRequestDto}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="Still breastfeeding">Still breastfeeding</option>
+                      <option value="Transferred out">Transferred out</option>
+                      <option value="Lost to Follow-up">Lost to Follow-up</option>
+                      <option value="Died">Died</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+              )}
+
+              {infantVisitRequestDto.infantOutcomeSubOption === "Still breastfeeding" && (
+                <div className="col-md-12 mb-3">
+                  <div style={{ backgroundColor: "#d1ecf1", border: "1px solid #bee5eb", borderRadius: "4px", padding: "10px" }}>
+                    <p style={{ color: "#0c5460", margin: 0 }}>
+                      <strong>Note:</strong> Record remains open. Please schedule a follow-up PCR test 6 weeks after cessation of breastfeeding.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            </div>
+          </div>
+
+          {/* === Mother's ART === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <LocalHospitalIcon style={sectionIconStyle} />Mother's ART
+              </h6>
               <div className="row">
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Mother's Current ART Status</FormLabelName>
+                    <Input
+                      type="select"
+                      name="motherCurrentArtStatus"
+                      id="motherCurrentArtStatus"
+                      value={infantMotherArtDto.motherCurrentArtStatus}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="HIV+">HIV+</option>
+                      <option value="Syphilis+">Syphilis+</option>
+                      <option value="Hepatitis B+">Hepatitis B+</option>
+                      <option value="HIV/Syphilis+">HIV/Syphilis+</option>
+                      <option value="HIV/HBV+">HIV/HBV+</option>
+                      <option value="Syphilis/HBV+">Syphilis/HBV+</option>
+                    </Input>
+                  </FormGroup>
+                </div>
                 <div className=" mb-3 col-md-4">
                   <FormGroup>
                     <FormLabelName>
@@ -1725,6 +1840,26 @@ const ClinicVisit = (props) => {
                     )}
                   </FormGroup>
                 </div>
+
+                {infantMotherArtDto.motherArtInitiationTime && infantMotherArtDto.motherArtInitiationTime.includes("NONE") && (
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Why ART Unknown</FormLabelName>
+                    <Input
+                      type="text"
+                      name="whyArtUnknown"
+                      id="whyArtUnknown"
+                      value={infantMotherArtDto.whyArtUnknown}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+                )}
 
                 <div className="form-group mb-3 col-md-4">
                   <FormGroup>
@@ -1789,21 +1924,113 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
               </div>
-            </>
-            {/* )} */}
-            <br />
-            {/* {formFilter && formFilter.infantArv === false && ( */}
-            <>
-              <Label
-                as="a"
-                color="blue"
-                style={{ width: "106%", height: "35px" }}
-                ribbon
-              >
-                <h4 style={{ color: "#fff" }}> Infant ARV & CTX</h4>
-              </Label>
-              <br />
-              <br />
+            </div>
+          </div>
+
+          {/* === Syphilis & HBV Treatment === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <HealingIcon style={sectionIconStyle} />Syphilis & HBV Treatment
+              </h6>
+              <div className="row">
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Syphilis Treatment/Referral</FormLabelName>
+                    <Input
+                      type="select"
+                      name="syphilisTreatmentReferral"
+                      id="syphilisTreatmentReferral"
+                      value={infantMotherArtDto.syphilisTreatmentReferral}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="Not Treated">Not Treated</option>
+                      <option value="Treated">Treated</option>
+                      <option value="Referred">Referred</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+                {infantMotherArtDto.syphilisTreatmentReferral === "Treated" && (
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Syphilis Treatment Start Date</FormLabelName>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => { e.preventDefault() }}
+                      name="syphilisTreatmentStartDate"
+                      id="syphilisTreatmentStartDate"
+                      value={infantMotherArtDto.syphilisTreatmentStartDate}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+                )}
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>HBV Treatment/Prophylaxis</FormLabelName>
+                    <Input
+                      type="select"
+                      name="hbvTreatmentProphylaxis"
+                      id="hbvTreatmentProphylaxis"
+                      value={infantMotherArtDto.hbvTreatmentProphylaxis}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="Not Treated">Not Treated</option>
+                      <option value="New on Prophylaxis">New on Prophylaxis</option>
+                      <option value="Referred">Referred</option>
+                      <option value="Prior on HBV treatment">Prior on HBV treatment</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+                {(infantMotherArtDto.hbvTreatmentProphylaxis === "New on Prophylaxis" || infantMotherArtDto.hbvTreatmentProphylaxis === "Prior on HBV treatment") && (
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>HBV Treatment Start Date</FormLabelName>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => { e.preventDefault() }}
+                      name="hbvTreatmentStartDate"
+                      id="hbvTreatmentStartDate"
+                      value={infantMotherArtDto.hbvTreatmentStartDate}
+                      onChange={handleInputChangeInfantMotherArtDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* === Infant ARV & CTX === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <FavoriteIcon style={sectionIconStyle} />Infant ARV & CTX
+              </h6>
               <div className="row">
               <div className="form-group mb-3 col-md-4">
                     <FormGroup>
@@ -2085,23 +2312,107 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
               </div>
-            </>
-            {/* )} */}
-            <br />
-            <Label
-              as="a"
-              color="black"
-              style={{ width: "106%", height: "35px" }}
-              ribbon
-            >
-              <h4 style={{ color: "#fff" }}>
-                {" "}
-                Infant PCR/HIV test 
-                {/* {infantPCRTestDto.testType}{" "} */}
-              </h4>
-            </Label>
-            <br />
-            <br />
+            </div>
+          </div>
+
+          {/* === HBV Vaccination === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <AssignmentTurnedInIcon style={sectionIconStyle} />HBV Vaccination
+              </h6>
+              <div className="row">
+                <div className=" mb-3 col-md-3">
+                  <FormGroup>
+                    <FormLabelName>1st Dose (Birth Dose) Date</FormLabelName>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => { e.preventDefault() }}
+                      name="firstDoseBirthDoseDate"
+                      id="firstDoseBirthDoseDate"
+                      value={hbvVaccinationDto.firstDoseBirthDoseDate}
+                      onChange={handleInputChangeHbvVaccinationDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      min={choosenInfant.dateOfDelivery}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-3">
+                  <FormGroup>
+                    <FormLabelName>Timing of Vaccination</FormLabelName>
+                    <Input
+                      type="select"
+                      name="timingOfVaccination"
+                      id="timingOfVaccination"
+                      value={hbvVaccinationDto.timingOfVaccination}
+                      onChange={handleInputChangeHbvVaccinationDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      disabled={disabledField}
+                    >
+                      <option value="">Select </option>
+                      <option value="Within 24 hours">Within 24 hours</option>
+                      <option value="After 24 hours">After 24 hours</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-3">
+                  <FormGroup>
+                    <FormLabelName>2nd Dose Date</FormLabelName>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => { e.preventDefault() }}
+                      name="secondDoseDate"
+                      id="secondDoseDate"
+                      value={hbvVaccinationDto.secondDoseDate}
+                      onChange={handleInputChangeHbvVaccinationDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      min={hbvVaccinationDto.firstDoseBirthDoseDate || choosenInfant.dateOfDelivery}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-3">
+                  <FormGroup>
+                    <FormLabelName>3rd Dose Date</FormLabelName>
+                    <Input
+                      type="date"
+                      onKeyPress={(e) => { e.preventDefault() }}
+                      name="thirdDoseDate"
+                      id="thirdDoseDate"
+                      value={hbvVaccinationDto.thirdDoseDate}
+                      onChange={handleInputChangeHbvVaccinationDto}
+                      style={{
+                        border: "1px solid #014D88",
+                        borderRadius: "0.25rem",
+                      }}
+                      min={hbvVaccinationDto.secondDoseDate || choosenInfant.dateOfDelivery}
+                      max={moment(new Date()).format("YYYY-MM-DD")}
+                      disabled={disabledField}
+                    />
+                  </FormGroup>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* === Infant PCR/HIV Test === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <AssessmentIcon style={sectionIconStyle} />Infant PCR/HIV Test
+              </h6>
             {/* LAB Screening Form */}
             <div className="row">
               <div className=" mb-3 col-md-6">
@@ -2177,7 +2488,11 @@ const ClinicVisit = (props) => {
                       border: "1px solid #014D88",
                       borderRadius: "0.25rem",
                     }}
-                    min={choosenInfant.dateOfDelivery}
+                    min={
+                      latestPCR && latestPCR.results && latestPCR.results.includes("POSITIVE") && latestPCR.dateSampleCollected
+                        ? latestPCR.dateSampleCollected
+                        : choosenInfant.dateOfDelivery
+                    }
                     max={moment(new Date()).format("YYYY-MM-DD")}
                     disabled={disabledField}
                   />
@@ -2319,23 +2634,16 @@ const ClinicVisit = (props) => {
                 ""
               )}
             </div>
-            <br />
-            <br />
-            <br />
-         
-            {showRapidTest && (
-              <>
-                <Label
-                  as="a"
-                  color="teal"
-                  style={{ width: "106%", height: "35px" }}
-                  ribbon
-                >
-                  <h4 style={{ color: "#fff" }}> Rapid Antibody Test</h4>
-                </Label>
-                <br />
-                <br />
-                {/* Infant testing  Form */}
+            </div>
+          </div>
+
+          {/* === Rapid Antibody Test === */}
+          { !showRapidTest  && (
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <AssessmentIcon style={sectionIconStyle} />Rapid Antibody Test
+              </h6>
                 <div className="row">
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
@@ -2464,10 +2772,38 @@ const ClinicVisit = (props) => {
                     ""
                   )}
                 </div>
-              </>
-            )}
-            <br />
+            </div>
+          </div>
+          )}
 
+          {/* === Comments === */}
+          <div className="col-md-12 mb-3">
+            <div style={sectionContainerStyle}>
+              <h6 style={sectionHeaderStyle}>
+                <EventIcon style={sectionIconStyle} />Comments
+              </h6>
+            <div className="row">
+              <div className="form-group mb-3 col-md-12">
+                <FormGroup>
+                  <FormLabelName>Comments</FormLabelName>
+                  <Input
+                    type="textarea"
+                    name="comments"
+                    id="comments"
+                    value={infantVisitRequestDto.comments}
+                    onChange={handleInputChangeInfantVisitRequestDto}
+                    style={{
+                      border: "1px solid #014D88",
+                      borderRadius: "0.25rem",
+                      minHeight: "80px",
+                    }}
+                    disabled={disabledField}
+                  />
+                </FormGroup>
+              </div>
+            </div>
+            </div>
+          </div>
 
             {infantVisitRequestDto &&
             infantVisitRequestDto.infantHospitalNumber ? (
@@ -2526,9 +2862,9 @@ const ClinicVisit = (props) => {
 
 
         </>}
-          </Segment>
-        </Grid.Column>
-      </Grid>
+          </div>
+        </CardBody>
+      </Card>
 
       <Modal
         open={open}

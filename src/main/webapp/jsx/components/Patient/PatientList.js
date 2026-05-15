@@ -174,9 +174,9 @@ const Patients = (props) => {
               )
               .then((response) => response)
               .then((result) => {
-                //console.log(result.data.records)
+                const records = (result.data && result.data.records) || [];
                 resolve({
-                  data: result.data.records.map((row) => ({
+                  data: records.map((row) => ({
                     name: (
                       <Link
                         to={{
@@ -272,8 +272,12 @@ const Patients = (props) => {
                     ),
                   })),
                   page: query.page,
-                  totalCount: result.data.totalRecords,
+                  totalCount: (result.data && result.data.totalRecords) || 0,
                 });
+              })
+              .catch((error) => {
+                console.error("Error fetching patient list:", error);
+                resolve({ data: [], page: query.page, totalCount: 0 });
               })
           )
         }

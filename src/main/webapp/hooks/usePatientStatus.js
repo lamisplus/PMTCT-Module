@@ -41,10 +41,10 @@ const usePatientStatus = (patientId, commenced) => {
     }
   };
 
-  const updateEnrollmentStatus = async (personUuid) => {
+  const updateEnrollmentStatus = async (patientUuid) => {
     try {
       const response = await axios.post(
-        `${baseUrl}hiv/status/activate-stop_status/${personUuid}`,
+        `${baseUrl}hiv/status/activate-stop_status/${patientUuid}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

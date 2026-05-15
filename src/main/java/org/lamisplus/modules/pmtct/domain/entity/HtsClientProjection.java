@@ -6,7 +6,7 @@ public interface HtsClientProjection {
      Long getId();
      String getClientCode();
      LocalDate getDateVisit();
-     String getPersonUuid();
+     String getPatientUuid();
      String getUuid();
      String getHivTestResult();
 }

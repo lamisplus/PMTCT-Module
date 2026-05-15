@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HbvDetailsDto {
+    private String testResult;
     private String vlResultDate;
     private String vlResult;
     private String treatmentType;

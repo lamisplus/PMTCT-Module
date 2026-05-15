@@ -15,6 +15,14 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Card, CardContent } from "@material-ui/core";
 import SaveIcon from "@material-ui/icons/Save";
 import CancelIcon from "@material-ui/icons/Cancel";
+import PersonIcon from "@material-ui/icons/Person";
+import FitnessCenterIcon from "@material-ui/icons/FitnessCenter";
+import LocalHospitalIcon from "@material-ui/icons/LocalHospital";
+import AssignmentIcon from "@material-ui/icons/Assignment";
+import HealingIcon from "@material-ui/icons/Healing";
+import TimelineIcon from "@material-ui/icons/Timeline";
+import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
+import ChildCareIcon from "@material-ui/icons/ChildCare";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-widgets/dist/css/react-widgets.css";
@@ -96,6 +104,30 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const sectionContainerStyle = {
+  border: "1px solid #e0e0e0",
+  borderRadius: "0.35rem",
+  padding: "15px 10px",
+  backgroundColor: "#f8f9fa",
+};
+
+const sectionHeaderStyle = {
+  backgroundColor: "transparent",
+  color: "#2d3748",
+  padding: "8px 12px",
+  borderRadius: "0.25rem",
+  fontSize: "13px",
+  fontWeight: "bold",
+  marginBottom: "12px",
+};
+
+const sectionIconStyle = {
+  fontSize: "16px",
+  color: "#014d88",
+  marginRight: "6px",
+  verticalAlign: "text-bottom",
+};
+
 const UserRegistration = (props) => {
   const [basicInfo, setBasicInfo] = useState({
     fullname: "",
@@ -125,10 +157,10 @@ const UserRegistration = (props) => {
     gaweeks: "",
     gravida: "",
     expectedDeliveryDate: "",
-    firstAncDate: "",
+    dateOfEnrollment: "",
     lmp: "",
     parity: "",
-    person_uuid: "",
+    patient_uuid: "",
     hivDiognosicTime: "",
     referredSyphilisTreatment: "",
     testResultSyphilis: "",
@@ -152,6 +184,31 @@ const UserRegistration = (props) => {
     dateOfHepatitisC: "",
     hepatitisC: "",
     facilityEnrolledIn: "",
+    // NHMIS fields
+    ancAttendance: "",
+    weight: "",
+    height: "",
+    systolic: "",
+    diastolic: "",
+    numberOfAncVisits: "",
+    counsellingHts: "",
+    counsellingFgm: "",
+    counsellingFp: "",
+    counsellingMaternalNutrition: "",
+    counsellingEarlyBf: "",
+    counsellingExclusiveBf: "",
+    hbPcv: "",
+    bloodSugarGdm: "",
+    urinalysisSugar: "",
+    urinalysisProteins: "",
+    llinGiven: "",
+    iptDose: "",
+    hematinicsGiven: "",
+    tdImmunization: "",
+    associatedProblems: "",
+    outcomeOfVisit: "",
+    referralReason: "",
+    transportationOut: "",
   });
   const [pregnancyStatus, setPregnancyStatus] = useState([]);
   //set ro show the facility name field if is transfer in
@@ -184,12 +241,12 @@ const UserRegistration = (props) => {
 
   useEffect(() => {
     GET_CODESETS()
-    
-    
+
+
     //console.log(patientObj)
     if (patientObj) {
       setDisabledField(actionType === "view" ? true : false);
-      setObjValues({ 
+      setObjValues({
         ...patientObj,
         staticHivStatus: patientObj?.dynamicHivStatus || ""
       });
@@ -218,10 +275,10 @@ const UserRegistration = (props) => {
       getPatientEntryType();
     }
   }, []);
- 
+
   const viewANCInfo = () => {
     axios
-      .get(`${baseUrl}pmtct/anc/${location.state.id}`, {
+      .get(`${baseUrl}pmtct/anc/view-anc/${location.state.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -231,11 +288,11 @@ const UserRegistration = (props) => {
         //console.log(error);
       });
   };
- 
+
 
 
      const GET_CODESETS = () => {
-  
+
      GET_CODESETS_IN_BATCH(
        "ENROLLMENT_SETTING",
        "COMMUNITY_PMTCT",
@@ -250,7 +307,7 @@ const UserRegistration = (props) => {
        setGenders(response.data.SEX);
        setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT);
      });
-      
+
     };
 
 
@@ -311,7 +368,7 @@ const UserRegistration = (props) => {
   const validate = () => {
     let temp = { ...errors };
 
-    //temp.firstAncDate = objValues.firstAncDate ? "" : "This field is required"
+    //temp.dateOfEnrollment = objValues.dateOfEnrollment ? "" : "This field is required"
     temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
     temp.gravida = objValues.gravida ? "" : "This field is required";
     objValues.testResultSyphilis === "Yes" &&
@@ -479,7 +536,7 @@ const UserRegistration = (props) => {
         referredHepatitisC: "",
       });
     } else if (
-      e.target.name === "firstAncDate" &&
+      e.target.name === "dateOfEnrollment" &&
       e.target.value !== "" &&
       objValues.lmp !== ""
     ) {
@@ -507,7 +564,7 @@ const UserRegistration = (props) => {
       //   );
 
       let response = calculateGestationalAge(
-        objValues.firstAncDate,
+        objValues.dateOfEnrollment,
         e.target.value
       );
 
@@ -558,7 +615,7 @@ const UserRegistration = (props) => {
 
     if (validate()) {
       try {
-        objValues.person_uuid = patientObj.uuid;
+        objValues.patient_uuid = patientObj.uuid;
         objValues.source = "WEB";
         const response = await axios.put(
           `${baseUrl}pmtct/anc/update-anc/${recordId}`,
@@ -612,18 +669,14 @@ const UserRegistration = (props) => {
   };
   return (
     <>
-      <div
-        className="row page-titles mx-0"
-        style={{ marginTop: "0px", marginBottom: "-10px" }}
-      >
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item active">
-            <h4>
-              {" "}
-              <Link to={"/"}>PMTCT /</Link> Patient Enrollment
-            </h4>
-          </li>
-        </ol>
+      <div style={{ padding: "10px 24px 6px", marginBottom: "4px" }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+          <Link to={"/"} style={{ color: "#64748b", textDecoration: "none", fontWeight: "500" }}>
+            PMTCT
+          </Link>
+          <span style={{ color: "#cbd5e1", fontSize: "11px" }}>/</span>
+          <span style={{ color: "#0f172a", fontWeight: "600" }}>Patient Enrollment</span>
+        </nav>
       </div>
       <ToastContainer autoClose={3000} hideProgressBar />
       <Card className={classes.root}>
@@ -638,7 +691,7 @@ const UserRegistration = (props) => {
               variant="contained"
               color="primary"
               className=" float-end ms-1"
-              style={{ backgroundColor: "#014d88", fontWeight: "bolder" }}
+              style={{ background: "linear-gradient(135deg, #014d88 0%, #0168b3 100%)", fontWeight: "600", borderRadius: "0.35rem", padding: "6px 16px", boxShadow: "0 1px 3px rgba(1,77,136,0.3)" }}
               startIcon={<TiArrowBack />}
             >
               <span style={{ textTransform: "capitalize", color: "#fff" }}>
@@ -650,24 +703,25 @@ const UserRegistration = (props) => {
           <br />
           <div className="col-xl-12 col-lg-12">
             <Form>
-              <div className="card">
+              <div className="card" style={{ borderRadius: "0.5rem", border: "none", boxShadow: "0 1px 4px rgba(1,77,136,0.12)" }}>
                 <div
                   className="card-header"
                   style={{
-                    backgroundColor: "#014d88",
+                    background: "linear-gradient(135deg, #014d88 0%, #0168b3 100%)",
                     color: "#fff",
-                    fontWeight: "bolder",
-                    borderRadius: "0.2rem",
+                    borderRadius: "0.5rem 0.5rem 0 0",
+                    padding: "14px 20px",
                   }}
                 >
-                  <h5 className="card-title" style={{ color: "#fff" }}>
+                  <h5 className="card-title" style={{ color: "#fff", fontWeight: "600", marginBottom: "0", fontSize: "1rem", letterSpacing: "0.3px", display: "flex", alignItems: "center" }}>
+                    <PersonIcon style={{ marginRight: "8px", fontSize: "20px" }} />
                     {userDetail === null
                       ? "Basic Information"
                       : "Edit User Information"}
                   </h5>
                 </div>
 
-                <div className="card-body">
+                <div className="card-body" style={{ backgroundColor: "rgb(248, 249, 250)" }}>
                   <div className="basic-form">
                     <div className="row">
                       <div className="form-group mb-3 col-md-4">
@@ -762,851 +816,656 @@ const UserRegistration = (props) => {
               </div>
 
               {/* Adding  ENROLLEMENT FORM HERE */}
-              <div className="card">
+              <div className="card" style={{ borderRadius: "0.5rem", border: "none", boxShadow: "0 1px 4px rgba(1,77,136,0.12)", marginTop: "20px" }}>
                 <div
                   className="card-header"
                   style={{
-                    backgroundColor: "#014d88",
+                    background: "linear-gradient(135deg, #014d88 0%, #0168b3 100%)",
                     color: "#fff",
-                    fontWeight: "bolder",
-                    borderRadius: "0.2rem",
+                    borderRadius: "0.5rem 0.5rem 0 0",
+                    padding: "14px 20px",
                   }}
                 >
-                  <h5 className="card-title" style={{ color: "#fff" }}>
+                  <h5 className="card-title" style={{ color: "#fff", fontWeight: "600", marginBottom: "0", fontSize: "1rem", letterSpacing: "0.3px", display: "flex", alignItems: "center" }}>
+                    <AssignmentIcon style={{ marginRight: "8px", fontSize: "20px" }} />
                     ANC Enrollment
                   </h5>
                 </div>
-                <div className="card-body">
-                  <div className="row">
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>ANC Setting</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="ancSetting"
-                            id="encounterDate"
-                            onChange={handleInputChange}
-                            value={objValues.ancSetting}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {ANCSetting && ANCSetting.length > 0 &&
-                              ANCSetting.map((each) => {
-                                return (
-                                  <option value={each.code}>
-                                    {each.display}
-                                  </option>
-                                );
-                              })}
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    {objValues.ancSetting && (
-                      <div className="form-group mb-3 col-md-6">
-                        <FormGroup>
-                          <Label>
-                            {objValues.ancSetting ===
-                            "ENROLLMENT_SETTING_COMMUNITY"
-                              ? "Community Setting"
-                              : "Facility Setting"}
-                          </Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="communitySetting"
-                              id="communitySetting"
-                              onChange={handleInputChange}
-                              value={objValues.communitySetting}
-                            >
-                              <option value="">Select</option>
-                              {objValues.ancSetting ===
-                              "ENROLLMENT_SETTING_COMMUNITY" ? (
-                                <>
-                                  {communitySetting && communitySetting.length > 0 &&
-                                    communitySetting.map((each) => {
-                                      return (
-                                        <option value={each.code}>
-                                          {each.display}
-                                        </option>
-                                      );
-                                    })}
-                                </>
-                              ) : (
-                                <option value={"PMTCT (ANC1 Only)"}>
-                                  PMTCT (ANC1 Only)
-                                </option>
-                              )}
-                            </Input>
-                          </InputGroup>
-                        </FormGroup>
-                      </div>
-                    )}
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          ANC No <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="text"
-                            name="ancNo"
-                            id="ancNo"
-                            onChange={handleInputChange}
-                            value={objValues.ancNo}
-                            disabled
-                          />
-                        </InputGroup>
-                        {errors.ancNo !== "" ? (
-                          <span className={classes.error}>{errors.ancNo}</span>
-                        ) : (
-                          ""
-                        )}
-                        {ancNumberCheck === true ? (
-                          <span className={classes.error}>
-                            {"ANC number already exist"}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Date of Enrollment{" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="date"
-                            onKeyPress={(e) => {
-                              e.preventDefault();
-                            }}
-                            name="firstAncDate"
-                            id="firstAncDate"
-                            onChange={handleInputChange}
-                            value={objValues.firstAncDate}
-                            max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={disabledField}
-                          />
-                        </InputGroup>
-                        {errors.firstAncDate !== "" ? (
-                          <span className={classes.error}>
-                            {errors.firstAncDate}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Parity <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="number"
-                            name="parity"
-                            id="parity"
-                            onChange={handleInputChange}
-                            value={objValues.parity}
-                            disabled={disabledField}
-                          />
-                        </InputGroup>
-                        {errors.parity !== "" ? (
-                          <span className={classes.error}>{errors.parity}</span>
-                        ) : (
-                          ""
-                        )}
-                        {/* {objValues.parity !== "" && objValues.parity <= 0 ? (
-                          <span className={classes.error}>
-                            Parity should not be less than 1
-                          </span>
-                        ) : (
-                          ""
-                        )} */}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Gravida <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="number"
-                            name="gravida"
-                            id="gravida"
-                            onChange={handleInputChange}
-                            value={objValues.gravida}
-                            disabled={disabledField}
-                          />
-                        </InputGroup>
-                        {errors.gravida !== "" ? (
-                          <span className={classes.error}>
-                            {errors.gravida}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                        {objValues.gravida < objValues.parity ? (
-                          <span className={classes.error}>
-                            Gravida should not be less Parity
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
+                <div className="card-body" style={{ backgroundColor: "rgb(248, 249, 250)" }}>
 
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Date Of Last Menstrual Period{" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="date"
-                            onKeyPress={(e) => {
-                              e.preventDefault();
-                            }}
-                            name="lmp"
-                            id="lmp"
-                            onChange={handleInputChange}
-                            value={objValues.lmp}
-                            max={
-                              objValues.firstAncDate
-                                ? objValues.firstAncDate
-                                : moment(new Date()).format("YYYY-MM-DD")
-                            }
-                            // max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={disabledField}
-                          />
-                        </InputGroup>
-                        {errors.lmp !== "" ? (
-                          <span className={classes.error}>{errors.lmp}</span>
-                        ) : (
-                          ""
-                        )}
-                        {objValues.gaweeks === 0 ? (
-                          <span className={classes.error}>Invalid date </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Gestational Age (Weeks){" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="number"
-                            name="gaweeks"
-                            id="gaweeks"
-                            onChange={handleInputChange}
-                            value={objValues.gaweeks}
-                            // disabled={disabledField}
-                            disabled
-                          />
-                        </InputGroup>
-                        {errors.gaweeks !== "" ? (
-                          <span className={classes.error}>
-                            {errors.gaweeks}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-
-                    {/* <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Source of Referral{" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="sourceOfReferral"
-                            id="sourceOfReferral"
-                            onChange={handleInputChange}
-                            value={objValues.sourceOfReferral}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {sourceOfReferral.map((value, index) => (
-                              <option key={index} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
-                        </InputGroup>
-                        {errors.sourceOfReferral !== "" ? (
-                          <span className={classes.error}>
-                            {errors.sourceOfReferral}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div> */}
-
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Tested for syphilis{" "}
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="testedSyphilis"
-                            id="testedSyphilis"
-                            onChange={handleInputChange}
-                            value={objValues.testedSyphilis}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.testedSyphilis !== "" ? (
-                          <span className={classes.error}>
-                            {errors.testedSyphilis}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-
-                    {objValues.testedSyphilis === "Yes" && (
-                      <>
-                        <div className="form-group mb-3 col-md-6">
+                  {/* === Registration Information === */}
+                  <div className="col-md-12 mb-3 mt-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <PersonIcon style={sectionIconStyle} />Registration Information
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <Label>
-                              Syphilis test result{" "}
-                              <span style={{ color: "red" }}> *</span>
-                            </Label>
+                            <Label>ANC Setting</Label>
                             <InputGroup>
-                              <Input
-                                type="select"
-                                name="testResultSyphilis"
-                                id="testResultSyphilis"
-                                onChange={handleInputChange}
-                                value={objValues.testResultSyphilis}
-                                disabled={disabledField}
-                              >
+                              <Input type="select" name="ancSetting" id="ancSetting" onChange={handleInputChange} value={objValues.ancSetting} disabled={disabledField}>
                                 <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
+                                {ANCSetting && ANCSetting.length > 0 && ANCSetting.map((each) => (<option key={each.id} value={each.code}>{each.display}</option>))}
                               </Input>
                             </InputGroup>
-                            {errors.testResultSyphilis !== "" ? (
-                              <span className={classes.error}>
-                                {errors.testResultSyphilis}
-                              </span>
-                            ) : (
-                              ""
-                            )}
                           </FormGroup>
                         </div>
-                        {objValues.testedSyphilis === "Yes" &&
-                          objValues.testResultSyphilis === "Positive" && (
-                            <>
-                              <div className="form-group mb-3 col-md-6">
-                                <FormGroup>
-                                  <Label>
-                                    Treated for syphilis (penicillin){" "}
-                                    <span style={{ color: "red" }}> *</span>
-                                  </Label>
-                                  <InputGroup>
-                                    <Input
-                                      type="select"
-                                      name="treatedSyphilis"
-                                      id="treatedSyphilis"
-                                      onChange={handleInputChange}
-                                      value={objValues.encounterDate}
-                                      disabled={disabledField}
-                                    >
-                                      <option value="">Select</option>
-                                      <option value="Yes">Yes</option>
-                                      <option value="No">No</option>
-                                    </Input>
-                                  </InputGroup>
-                                  {errors.treatedSyphilis !== "" ? (
-                                    <span className={classes.error}>
-                                      {errors.treatedSyphilis}
-                                    </span>
+                        {objValues.ancSetting && (
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>{objValues.ancSetting === "ENROLLMENT_SETTING_COMMUNITY" ? "Community Setting" : "Facility Setting"}</Label>
+                              <InputGroup>
+                                <Input type="select" name="communitySetting" id="communitySetting" onChange={handleInputChange} value={objValues.communitySetting} disabled={disabledField}>
+                                  <option value="">Select</option>
+                                  {objValues.ancSetting === "ENROLLMENT_SETTING_COMMUNITY" ? (
+                                    <>{communitySetting && communitySetting.length > 0 && communitySetting.map((each) => (<option key={each.id} value={each.code}>{each.display}</option>))}</>
                                   ) : (
-                                    ""
+                                    <option value={"PMTCT (ANC1 Only)"}>PMTCT (ANC1 Only)</option>
                                   )}
-                                </FormGroup>
-                              </div>
-                              <div className="form-group mb-3 col-md-6">
-                                <FormGroup>
-                                  <Label>
-                                    Referred Syphilis +ve client{" "}
-                                    <span style={{ color: "red" }}> *</span>
-                                  </Label>
-                                  <InputGroup>
-                                    <Input
-                                      type="select"
-                                      name="referredSyphilisTreatment"
-                                      id="referredSyphilisTreatment"
-                                      onChange={handleInputChange}
-                                      value={
-                                        objValues.referredSyphilisTreatment
-                                      }
-                                      disabled={disabledField}
-                                    >
-                                      <option value="">Select</option>
-                                      <option value="Yes">Yes</option>
-                                      <option value="No">No</option>
-                                    </Input>
-                                  </InputGroup>
-                                  {errors.referredSyphilisTreatment !== "" ? (
-                                    <span className={classes.error}>
-                                      {errors.referredSyphilisTreatment}
-                                    </span>
-                                  ) : (
-                                    ""
-                                  )}
-                                </FormGroup>
-                              </div>
-                            </>
-                          )}
-                      </>
-                    )}
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Tested for Hepatitis B
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="testedHepatitisB"
-                            id="testedHepatitisB"
-                            onChange={handleInputChange}
-                            value={objValues.testedHepatitisB}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    {objValues.testedHepatitisB === "Yes" && (
-                      <>
-                        {" "}
-                        <div className="form-group mb-3 col-md-6">
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                        )}
+                        <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <Label>
-                              Date Test Done
-                              {/* <span style={{ color: "red" }}> *</span> */}
-                            </Label>
+                            <Label>ANC No <span style={{ color: "red" }}> *</span></Label>
                             <InputGroup>
-                              <Input
-                                type="date"
-                                onKeyPress={(e) => {
-                                  e.preventDefault();
-                                }}
-                                name="dateOfHepatitisB"
-                                id="dateOfHepatitisB"
-                                onChange={handleInputChange}
-                                value={objValues.dateOfHepatitisB}
-                                min={patientObj.dateOfRegistration}
-                                max={moment(new Date()).format("YYYY-MM-DD")}
-                              />
+                              <Input type="text" name="ancNo" id="ancNo" onChange={handleInputChange} value={objValues.ancNo} disabled />
                             </InputGroup>
-                            {/* {errors.firstAncDate !== "" ? (
-                            <span className={classes.error}>
-                              {errors.firstAncDate}
-                            </span>
-                          ) : (
-                            ""
-                          )} */}
+                            {errors.ancNo !== "" ? (<span className={classes.error}>{errors.ancNo}</span>) : ""}
+                            {ancNumberCheck === true ? (<span className={classes.error}>{"ANC number already exist"}</span>) : ""}
                           </FormGroup>
                         </div>
-                        <div className="form-group mb-3 col-md-6">
+                        <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <Label>
-                              Hepatitis B test result{" "}
-                              {/* <span style={{ color: "red" }}> *</span>{" "} */}
-                            </Label>
+                            <Label>Date of Enrollment <span style={{ color: "red" }}> *</span></Label>
                             <InputGroup>
-                              <Input
-                                type="select"
-                                name="hepatitisB"
-                                id="hepatitisB"
-                                onChange={handleInputChange}
-                                value={objValues.hepatitisB}
-                              >
+                              <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="dateOfEnrollment" id="dateOfEnrollment" onChange={handleInputChange} value={objValues.dateOfEnrollment} max={moment(new Date()).format("YYYY-MM-DD")} disabled={disabledField} />
+                            </InputGroup>
+                            {errors.dateOfEnrollment !== "" ? (<span className={classes.error}>{errors.dateOfEnrollment}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>ANC Attendance</Label>
+                            <InputGroup>
+                              <Input type="select" name="ancAttendance" id="ancAttendance" onChange={handleInputChange} value={objValues.ancAttendance} disabled={disabledField}>
                                 <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
+                                <option value="New">New</option>
+                                <option value="Revisit">Revisit</option>
                               </Input>
                             </InputGroup>
-                            {/* {errors.hepatitisB !== "" ? (
-                                <span className={classes.error}>
-                                  {errors.hepatitisB}
-                                </span>
-                              ) : (
-                                ""
-                              )} */}
                           </FormGroup>
                         </div>
-                        {objValues.hepatitisB === "Positive" && (
-                          <>
-                            <div className="form-group mb-3 col-md-6">
-                              <FormGroup>
-                                <Label>
-                                  Treated for Hepatitis B
-                                  {/* <span style={{ color: "red" }}> *</span> */}
-                                </Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="treatedHepatitisB"
-                                    id="treatedHepatitisB"
-                                    onChange={handleInputChange}
-                                    value={objValues.treatedHepatitisB}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
-                            <div className="form-group mb-3 col-md-6">
-                              <FormGroup>
-                                <Label>
-                                  Referred Hepatitis B +ve client
-                                  {/* <span style={{ color: "red" }}> *</span> */}
-                                </Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="referredHepatitisB"
-                                    id="referredHepatitisB"
-                                    onChange={handleInputChange}
-                                    value={objValues.referredHepatitisB}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Tested for Hepatitis C
-                          {/* <span style={{ color: "red" }}> *</span> */}
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="testedHepatitisC"
-                            id="testedHepatitisC"
-                            onChange={handleInputChange}
-                            value={objValues.testedHepatitisC}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                        {/* {errors.testedSyphilis !== "" ? (
-                            <span className={classes.error}>
-                              {errors.testedSyphilis}
-                            </span>
-                          ) : (
-                            ""
-                          )} */}
-                      </FormGroup>
-                    </div>
-                    {objValues.testedHepatitisC === "Yes" && (
-                      <>
-                        <div className="form-group mb-3 col-md-6">
-                          <FormGroup>
-                            <Label>
-                              Date Test Done
-                              {/* <span style={{ color: "red" }}> *</span> */}
-                            </Label>
-                            <InputGroup>
-                              <Input
-                                type="date"
-                                onKeyPress={(e) => {
-                                  e.preventDefault();
-                                }}
-                                name="dateOfHepatitisC"
-                                id="dateOfHepatitisC"
-                                onChange={handleInputChange}
-                                value={objValues.dateOfHepatitisC}
-                                min={patientObj.dateOfRegistration}
-                                max={moment(new Date()).format("YYYY-MM-DD")}
-                              />
-                            </InputGroup>
-                            {/* {errors.firstAncDate !== "" ? (
-                            <span className={classes.error}>
-                              {errors.firstAncDate}
-                            </span>
-                          ) : (
-                            ""
-                          )} */}
-                          </FormGroup>
-                        </div>
-                        <div className="form-group mb-3 col-md-6">
-                          <FormGroup>
-                            <Label>
-                              Hepatitis C test result{" "}
-                              {/* <span style={{ color: "red" }}> *</span>{" "} */}
-                            </Label>
-                            <InputGroup>
-                              <Input
-                                type="select"
-                                name="hepatitisC"
-                                id="hepatitisC"
-                                onChange={handleInputChange}
-                                value={objValues.hepatitisC}
-                              >
-                                <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
-                              </Input>
-                            </InputGroup>
-                            {/* {errors.hepatitisB !== "" ? (
-                                <span className={classes.error}>
-                                  {errors.hepatitisB}
-                                </span>
-                              ) : (
-                                ""
-                              )} */}
-                          </FormGroup>
-                        </div>
-                        {objValues.hepatitisC === "Positive" && (
-                          <>
-                            <div className="form-group mb-3 col-md-6">
-                              <FormGroup>
-                                <Label>
-                                  Treated for Hepatitis C
-                                  {/* <span style={{ color: "red" }}> *</span> */}
-                                </Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="treatedHepatitisC"
-                                    id="treatedHepatitisC"
-                                    onChange={handleInputChange}
-                                    value={objValues.treatedHepatitisC}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
-                            <div className="form-group mb-3 col-md-6">
-                              <FormGroup>
-                                <Label>
-                                  Referred Hepatitis C +ve client
-                                  {/* <span style={{ color: "red" }}> *</span> */}
-                                </Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="referredHepatitisC"
-                                    id="referredHepatitisC"
-                                    onChange={handleInputChange}
-                                    value={objValues.referredHepatitisC}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          Previously known HIV +ve Status
-                          <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        {/* previouslyKnownHivStatus */}
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="previouslyKnownHivStatus"
-                            id="previouslyKnownHivStatus"
-                            onChange={handleInputChange}
-                            value={objValues.previouslyKnownHivStatus}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="Not tested">Not tested</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.previouslyKnownHivStatus !== "" ? (
-                          <span className={classes.error}>
-                            {errors.previouslyKnownHivStatus}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    {objValues.previouslyKnownHivStatus === "Yes" && (
-                      <div className="form-group mb-3 col-md-6">
-                        <FormGroup>
-                          <Label>
-                            Are you currently on ART ?
-                            <span style={{ color: "red" }}> *</span>
-                          </Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="currentlyOnArt"
-                              id="currentlyOnArt"
-                              onChange={handleInputChange}
-                              value={objValues.currentlyOnArt}
-                            >
-                              <option value="">Select</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
-                            </Input>
-                          </InputGroup>
-                          {errors.currentlyOnArt !== "" ? (
-                            <span className={classes.error}>
-                              {errors.currentlyOnArt}
-                            </span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
                       </div>
-                    )}
-
-                    {objValues.currentlyOnArt === "Yes" && (
-                      <div className="form-group mb-3 col-md-6">
-                        <FormGroup>
-                          <Label>
-                            Facility Enrolled In{" "}
-                            <span style={{ color: "red" }}> *</span>
-                          </Label>
-                          <FacilitySearchDropdown
-                            name="facilityEnrolledIn"
-                            value={objValues.facilityEnrolledIn}
-                            onChange={handleInputChange}
-                            placeholder="Search for a facility..."
-                            error={errors.facilityEnrolledIn}
-                          />
-                          {errors.facilityEnrolledIn !== "" ? (
-                            <span className={classes.error}>
-                              {errors.facilityEnrolledIn}
-                            </span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
-                      </div>
-                    )}
-
-                    <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          HIV Status
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="staticHivStatus"
-                            id="staticHivStatus"
-                            onChange={handleInputChange}
-                            value={objValues.staticHivStatus}
-                            disabled={
-                              objValues.previouslyKnownHivStatus === "Yes" ||
-                              disableHIVStatus ||
-                              disabledField
-                                ? true
-                                : false
-                            }
-                          >
-                            <option value="">Select</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
-                           <option value="Not tested">Not Tested</option>
-
-                          </Input>
-                        </InputGroup>
-                        {errors.staticHivStatus !== "" ? (
-                          <span className={classes.error}>
-                            {errors.staticHivStatus}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
                     </div>
-
-                    {/* <div className="form-group mb-3 col-md-6">
-                      <FormGroup>
-                        <Label>
-                          HIV Status <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="staticHivStatus"
-                            id="staticHivStatus"
-                            onChange={handleInputChange}
-                            value={objValues.staticHivStatus}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
-                            <option value="Unknown">Unknown</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.staticHivStatus !== "" ? (
-                          <span className={classes.error}>
-                            {errors.staticHivStatus}
-                          </span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div> */}
                   </div>
+
+                  {/* === Obstetric History === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <ChildCareIcon style={sectionIconStyle} />Obstetric History
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Parity <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="number" name="parity" id="parity" onChange={handleInputChange} value={objValues.parity} min={0} disabled={disabledField} />
+                            </InputGroup>
+                            {errors.parity !== "" ? (<span className={classes.error}>{errors.parity}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Gravida <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="number" name="gravida" id="gravida" onChange={handleInputChange} value={objValues.gravida} min="1" disabled={disabledField} />
+                            </InputGroup>
+                            {errors.gravida !== "" ? (<span className={classes.error}>{errors.gravida}</span>) : ""}
+                            {objValues.gravida < objValues.parity ? (<span className={classes.error}>Gravida should not be less Parity</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Date Of Last Menstrual Period <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="lmp" id="lmp" onChange={handleInputChange} value={objValues.lmp} max={objValues.dateOfEnrollment ? objValues.dateOfEnrollment : moment(new Date()).format("YYYY-MM-DD")} disabled={disabledField} />
+                            </InputGroup>
+                            {errors.lmp !== "" ? (<span className={classes.error}>{errors.lmp}</span>) : ""}
+                            {objValues.gaweeks === 0 ? (<span className={classes.error}>Invalid date</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Gestational Age (Weeks) <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="text" name="gaweeks" id="gaweeks" onChange={handleInputChange} value={objValues.gaweeks} disabled />
+                            </InputGroup>
+                            {errors.gaweeks !== "" ? (<span className={classes.error}>{errors.gaweeks}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Vital Signs === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <FitnessCenterIcon style={sectionIconStyle} />Vital Signs
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Weight (kg)</Label>
+                            <InputGroup>
+                              <Input type="number" name="weight" id="weight" onChange={handleInputChange} value={objValues.weight} step="0.1" min="0" disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Height (m)</Label>
+                            <InputGroup>
+                              <Input type="number" name="height" id="height" onChange={handleInputChange} value={objValues.height} step="0.01" min="0" disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Blood Pressure (Systolic)</Label>
+                            <InputGroup>
+                              <Input type="number" name="systolic" id="systolic" onChange={handleInputChange} value={objValues.systolic} min="0" disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Blood Pressure (Diastolic)</Label>
+                            <InputGroup>
+                              <Input type="number" name="diastolic" id="diastolic" onChange={handleInputChange} value={objValues.diastolic} min="0" disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>No. of ANC Visits to Date</Label>
+                            <InputGroup>
+                              <Input type="number" name="numberOfAncVisits" id="numberOfAncVisits" onChange={handleInputChange} value={objValues.numberOfAncVisits} min="0" disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Counselling === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <TimelineIcon style={sectionIconStyle} />Counselling
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HIV Testing Services</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingHts" id="counsellingHts" onChange={handleInputChange} value={objValues.counsellingHts} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Female Genital Mutilation (FGM)</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingFgm" id="counsellingFgm" onChange={handleInputChange} value={objValues.counsellingFgm} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Family Planning</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingFp" id="counsellingFp" onChange={handleInputChange} value={objValues.counsellingFp} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Maternal Nutrition</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingMaternalNutrition" id="counsellingMaternalNutrition" onChange={handleInputChange} value={objValues.counsellingMaternalNutrition} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Early Initiation of Breastfeeding</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingEarlyBf" id="counsellingEarlyBf" onChange={handleInputChange} value={objValues.counsellingEarlyBf} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Exclusive Breastfeeding</Label>
+                            <InputGroup>
+                              <Input type="select" name="counsellingExclusiveBf" id="counsellingExclusiveBf" onChange={handleInputChange} value={objValues.counsellingExclusiveBf} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Syphilis Information === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <LocalHospitalIcon style={sectionIconStyle} />Syphilis Information
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Tested for Syphilis <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="select" name="testedSyphilis" id="testedSyphilis" onChange={handleInputChange} value={objValues.testedSyphilis} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                            {errors.testedSyphilis !== "" ? (<span className={classes.error}>{errors.testedSyphilis}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        {objValues.testedSyphilis === "Yes" && (
+                          <>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Syphilis Test Result <span style={{ color: "red" }}> *</span></Label>
+                                <InputGroup>
+                                  <Input type="select" name="testResultSyphilis" id="testResultSyphilis" onChange={handleInputChange} value={objValues.testResultSyphilis} disabled={disabledField}>
+                                    <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
+                                  </Input>
+                                </InputGroup>
+                                {errors.testResultSyphilis !== "" ? (<span className={classes.error}>{errors.testResultSyphilis}</span>) : ""}
+                              </FormGroup>
+                            </div>
+                            {objValues.testResultSyphilis === "Positive" && (
+                              <>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Treated for Syphilis (penicillin) <span style={{ color: "red" }}> *</span></Label>
+                                    <InputGroup>
+                                      <Input type="select" name="treatedSyphilis" id="treatedSyphilis" onChange={handleInputChange} value={objValues.treatedSyphilis} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                    {errors.treatedSyphilis !== "" ? (<span className={classes.error}>{errors.treatedSyphilis}</span>) : ""}
+                                  </FormGroup>
+                                </div>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Referred Syphilis +ve Client <span style={{ color: "red" }}> *</span></Label>
+                                    <InputGroup>
+                                      <Input type="select" name="referredSyphilisTreatment" id="referredSyphilisTreatment" onChange={handleInputChange} value={objValues.referredSyphilisTreatment} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                    {errors.referredSyphilisTreatment !== "" ? (<span className={classes.error}>{errors.referredSyphilisTreatment}</span>) : ""}
+                                  </FormGroup>
+                                </div>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Hepatitis Information === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <LocalHospitalIcon style={sectionIconStyle} />Hepatitis Information
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Tested for Hepatitis B <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="select" name="testedHepatitisB" id="testedHepatitisB" onChange={handleInputChange} value={objValues.testedHepatitisB} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        {objValues.testedHepatitisB === "Yes" && (
+                          <>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Date Test Done</Label>
+                                <InputGroup>
+                                  <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="dateOfHepatitisB" id="dateOfHepatitisB" onChange={handleInputChange} value={objValues.dateOfHepatitisB} min={patientObj.dateOfRegistration} max={moment(new Date()).format("YYYY-MM-DD")} disabled={disabledField} />
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Hepatitis B Test Result</Label>
+                                <InputGroup>
+                                  <Input type="select" name="hepatitisB" id="hepatitisB" onChange={handleInputChange} value={objValues.hepatitisB} disabled={disabledField}>
+                                    <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
+                                  </Input>
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                            {objValues.hepatitisB === "Positive" && (
+                              <>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Treated for Hepatitis B</Label>
+                                    <InputGroup>
+                                      <Input type="select" name="treatedHepatitisB" id="treatedHepatitisB" onChange={handleInputChange} value={objValues.treatedHepatitisB} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                  </FormGroup>
+                                </div>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Referred Hepatitis B +ve Client</Label>
+                                    <InputGroup>
+                                      <Input type="select" name="referredHepatitisB" id="referredHepatitisB" onChange={handleInputChange} value={objValues.referredHepatitisB} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                  </FormGroup>
+                                </div>
+                              </>
+                            )}
+                          </>
+                        )}
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Tested for Hepatitis C</Label>
+                            <InputGroup>
+                              <Input type="select" name="testedHepatitisC" id="testedHepatitisC" onChange={handleInputChange} value={objValues.testedHepatitisC} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        {objValues.testedHepatitisC === "Yes" && (
+                          <>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Date Test Done</Label>
+                                <InputGroup>
+                                  <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="dateOfHepatitisC" id="dateOfHepatitisC" onChange={handleInputChange} value={objValues.dateOfHepatitisC} min={patientObj.dateOfRegistration} max={moment(new Date()).format("YYYY-MM-DD")} disabled={disabledField} />
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Hepatitis C Test Result</Label>
+                                <InputGroup>
+                                  <Input type="select" name="hepatitisC" id="hepatitisC" onChange={handleInputChange} value={objValues.hepatitisC} disabled={disabledField}>
+                                    <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
+                                  </Input>
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                            {objValues.hepatitisC === "Positive" && (
+                              <>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Treated for Hepatitis C</Label>
+                                    <InputGroup>
+                                      <Input type="select" name="treatedHepatitisC" id="treatedHepatitisC" onChange={handleInputChange} value={objValues.treatedHepatitisC} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                  </FormGroup>
+                                </div>
+                                <div className="form-group mb-3 col-md-4">
+                                  <FormGroup>
+                                    <Label>Referred Hepatitis C +ve Client</Label>
+                                    <InputGroup>
+                                      <Input type="select" name="referredHepatitisC" id="referredHepatitisC" onChange={handleInputChange} value={objValues.referredHepatitisC} disabled={disabledField}>
+                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                      </Input>
+                                    </InputGroup>
+                                  </FormGroup>
+                                </div>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Haematology & Lab Tests === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <HealingIcon style={sectionIconStyle} />Haematology & Lab Tests
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HB/PCV (g/dl or %)</Label>
+                            <InputGroup>
+                              <Input type="text" name="hbPcv" id="hbPcv" onChange={handleInputChange} value={objValues.hbPcv} disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Blood Sugar (Gestational Diabetes)</Label>
+                            <InputGroup>
+                              <Input type="select" name="bloodSugarGdm" id="bloodSugarGdm" onChange={handleInputChange} value={objValues.bloodSugarGdm} disabled={disabledField}>
+                                <option value="">Select</option><option value="Normal">Normal</option><option value="Abnormal">Abnormal</option><option value="Not Done">Not Done</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Urinalysis - Sugar</Label>
+                            <InputGroup>
+                              <Input type="select" name="urinalysisSugar" id="urinalysisSugar" onChange={handleInputChange} value={objValues.urinalysisSugar} disabled={disabledField}>
+                                <option value="">Select</option><option value="Normal">Normal</option><option value="Abnormal">Abnormal</option><option value="Not Done">Not Done</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Urinalysis - Proteins</Label>
+                            <InputGroup>
+                              <Input type="select" name="urinalysisProteins" id="urinalysisProteins" onChange={handleInputChange} value={objValues.urinalysisProteins} disabled={disabledField}>
+                                <option value="">Select</option><option value="Normal">Normal</option><option value="Abnormal">Abnormal</option><option value="Not Done">Not Done</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Preventive Services === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <HealingIcon style={sectionIconStyle} />Preventive Services
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>LLIN Given (Mosquito Net)?</Label>
+                            <InputGroup>
+                              <Input type="select" name="llinGiven" id="llinGiven" onChange={handleInputChange} value={objValues.llinGiven} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Dose of IPT Given</Label>
+                            <InputGroup>
+                              <Input type="select" name="iptDose" id="iptDose" onChange={handleInputChange} value={objValues.iptDose} disabled={disabledField}>
+                                <option value="">Select</option><option value="IPT1">IPT 1</option><option value="IPT2">IPT 2</option><option value="IPT3">IPT 3</option><option value="IPT4">IPT 4</option><option value="None">None</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Hematinics Given (Iron & Folic Acid)?</Label>
+                            <InputGroup>
+                              <Input type="select" name="hematinicsGiven" id="hematinicsGiven" onChange={handleInputChange} value={objValues.hematinicsGiven} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>TD Immunization</Label>
+                            <InputGroup>
+                              <Input type="select" name="tdImmunization" id="tdImmunization" onChange={handleInputChange} value={objValues.tdImmunization} disabled={disabledField}>
+                                <option value="">Select</option><option value="Td1">Td1</option><option value="Td2">Td2</option><option value="Td3">Td3</option><option value="Td4">Td4</option><option value="Td5">Td5</option><option value="None">None</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === HIV Status === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <AssignmentIcon style={sectionIconStyle} />HIV Status
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Previously Known HIV +ve Status <span style={{ color: "red" }}> *</span></Label>
+                            <InputGroup>
+                              <Input type="select" name="previouslyKnownHivStatus" id="previouslyKnownHivStatus" onChange={handleInputChange} value={objValues.previouslyKnownHivStatus} disabled={disabledField}>
+                                <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option><option value="Not tested">Not tested</option>
+                              </Input>
+                            </InputGroup>
+                            {errors.previouslyKnownHivStatus !== "" ? (<span className={classes.error}>{errors.previouslyKnownHivStatus}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                        {objValues.previouslyKnownHivStatus === "Yes" && (
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Are You Currently on ART? <span style={{ color: "red" }}> *</span></Label>
+                              <InputGroup>
+                                <Input type="select" name="currentlyOnArt" id="currentlyOnArt" onChange={handleInputChange} value={objValues.currentlyOnArt} disabled={disabledField}>
+                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                              {errors.currentlyOnArt !== "" ? (<span className={classes.error}>{errors.currentlyOnArt}</span>) : ""}
+                            </FormGroup>
+                          </div>
+                        )}
+                        {objValues.previouslyKnownHivStatus === "Yes" && objValues.currentlyOnArt === "Yes" && (
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Facility Enrolled In <span style={{ color: "red" }}> *</span></Label>
+                              <FacilitySearchDropdown name="facilityEnrolledIn" value={objValues.facilityEnrolledIn} onChange={handleInputChange} placeholder="Search for a facility..." error={errors.facilityEnrolledIn} disabled={disabledField} />
+                              {errors.facilityEnrolledIn !== "" ? (<span className={classes.error}>{errors.facilityEnrolledIn}</span>) : ""}
+                            </FormGroup>
+                          </div>
+                        )}
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HIV Status</Label>
+                            <InputGroup>
+                              <Input type="select" name="staticHivStatus" id="staticHivStatus" onChange={handleInputChange} value={objValues.staticHivStatus} disabled={objValues.previouslyKnownHivStatus === "Yes" || disableHIVStatus || disabledField ? true : false}>
+                                <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option><option value="Not tested">Not Tested</option>
+                              </Input>
+                            </InputGroup>
+                            {errors.staticHivStatus !== "" ? (<span className={classes.error}>{errors.staticHivStatus}</span>) : ""}
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* === Visit Outcome === */}
+                  <div className="col-md-12 mb-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <AssignmentTurnedInIcon style={sectionIconStyle} />Visit Outcome
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Associated Problems</Label>
+                            <InputGroup>
+                              <Input type="textarea" name="associatedProblems" id="associatedProblems" onChange={handleInputChange} value={objValues.associatedProblems} style={{ height: "41px" }} disabled={disabledField} />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Outcome of Visit</Label>
+                            <InputGroup>
+                              <Input type="select" name="outcomeOfVisit" id="outcomeOfVisit" onChange={handleInputChange} value={objValues.outcomeOfVisit} disabled={disabledField}>
+                                <option value="">Select</option><option value="Not Treated">Not Treated (NT)</option><option value="Treated">Treated (T)</option><option value="Admitted">Admitted (A)</option><option value="Referred Out">Referred Out (RO)</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        {objValues.outcomeOfVisit === "Referred Out" && (
+                          <>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Reason for Referral</Label>
+                                <InputGroup>
+                                  <Input type="text" name="referralReason" id="referralReason" onChange={handleInputChange} value={objValues.referralReason} disabled={disabledField} />
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                            <div className="form-group mb-3 col-md-4">
+                              <FormGroup>
+                                <Label>Transportation Out</Label>
+                                <InputGroup>
+                                  <Input type="select" name="transportationOut" id="transportationOut" onChange={handleInputChange} value={objValues.transportationOut} disabled={disabledField}>
+                                    <option value="">Select</option><option value="Ambulance">Ambulance</option><option value="Others">Others</option>
+                                  </Input>
+                                </InputGroup>
+                              </FormGroup>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
               {/* END OF HIV ENROLLEMENT FORM */}

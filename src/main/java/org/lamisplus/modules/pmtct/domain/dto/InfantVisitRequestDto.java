@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class InfantVisitRequestDto implements Serializable
 {
     private String source;
-    private Long id;
+    private String id;
     private LocalDate visitDate;
     private String infantHospitalNumber;
     private String ancNumber;
@@ -24,9 +24,11 @@ public class InfantVisitRequestDto implements Serializable
     private String breastFeeding ;
     private String uuid;
     private String infantOutcomeAt18Months;
-    private String personUuid;
+    private String patientUuid;
     private String uniqueUuid;
-    private Long pmtctCycleId;
-
-
+    private String pmtctCycleUuid;
+    private String infantOutcomeSubOption;
+    private LocalDate dateLinkedToArtClinic;
+    private String artEnrollmentNo;
+    private String comments;
 }

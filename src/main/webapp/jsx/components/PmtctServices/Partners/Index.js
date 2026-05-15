@@ -63,10 +63,10 @@ const PatientnHistory = (props) => {
         ///GET LIST OF Patients
         const PatientHistory =()=>{
             setLoading(true)
-            const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
-            const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id || props.patientObj.pmtctCycleId;
+            const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
+            const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid || props.patientObj.pmtctCycleUuid;
             axios
-               .get(`${baseUrl}pmtct/anc/get-anc-by-person?personUuid=${personUuid}&pmtctCycleId=${pmtctCycleId}`,
+               .get(`${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
                    { headers: {"Authorization" : `Bearer ${token}`} }
                )
                .then((response) => {

@@ -31,6 +31,23 @@ public class PMTCTStatisticsDto {
     private Long unsuppressedQ4; // Jul-Sep
     private Long unsuppressedTotal;
 
+    // Key PMTCT Indicators
+    private Long totalPregnancyCycles;
+    private Long activePregnancyCycles;
+    private Long closedPregnancyCycles;
+    private Long totalANCVisits;
+    private Long totalMotherVisits;
+
+    // Infant Information Summary
+    private Long totalInfantsRegistered;
+    private Long infantsAlive;
+    private Long infantsOnARV;
+    private Long infantsWithPCRTest;
+    private Long infantsPCRPositive;
+    private Long infantsPCRNegative;
+    private Long infantsWithRapidTest;
+    private Long infantsDeceased;
+
     // PMTCT Exit Tracked - Mothers (from pmtct_pregnancy_cycle.maternal_outcome)
     private Long pmtctExitActiveInCohort;
     private Long pmtctExitTransferredOut;

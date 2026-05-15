@@ -22,6 +22,5 @@ public class InfantVisitationConsolidatedDto implements Serializable
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
     private InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto;
-
-
+    private InfantVisitHbvVaccinationDto infantVisitHbvVaccinationDto;
 }

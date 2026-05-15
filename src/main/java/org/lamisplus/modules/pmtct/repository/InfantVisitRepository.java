@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, Long>
+public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, String>
 {
     List<InfantVisit> findInfantVisitsByInfantHospitalNumber(String infanHospitalNumber);
 
@@ -21,19 +21,19 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
     @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where anc_number = ?1", nativeQuery = true)
     Integer getChildVisits(String ancNO);
 
-    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_person_uuid = CAST(?1 AS VARCHAR)", nativeQuery = true)
-    Integer getChildVisitsWithPersonUuid(String personUuid);
+    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_patient_uuid = CAST(?1 AS VARCHAR)", nativeQuery = true)
+    Integer getChildVisitsWithPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id = ?2", nativeQuery = true)
-    Integer getChildVisitsWithPersonUuidAndCycleId(String personUuid, Long pmtctCycleId);
+    @Query(value = "SELECT count(*) FROM public.pmtct_infant_visit where mother_patient_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_uuid = ?2", nativeQuery = true)
+    Integer getChildVisitsWithPatientUuidAndCycleUuid(String patientUuid, String pmtctCycleUuid);
 
     List<InfantVisit> getInfantVisitsByAncNumber(String ancNO);
 
-    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND archived = 0", nativeQuery = true)
-    List<InfantVisit> getInfantVisitsByMotherPersonUuid(String motherPersonUuid);
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND archived = 0", nativeQuery = true)
+    List<InfantVisit> getInfantVisitsByMotherPatientUuid(String motherPatientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_person_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_id=?2 AND archived = 0", nativeQuery = true)
-    List<InfantVisit> getInfantVisitsByMotherPersonUuidAndCycleId(String motherPersonUuid, Long pmtctCycleId);
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_uuid=?2 AND archived = 0", nativeQuery = true)
+    List<InfantVisit> getInfantVisitsByMotherPatientUuidAndCycleUuid(String motherPatientUuid, String pmtctCycleUuid);
 
       @Query(value = "SELECT visit_date FROM pmtct_infant_visit WHERE infant_hospital_number=?1 ORDER BY visit_date DESC LIMIT 1", nativeQuery = true)
     LocalDate getLatestInfantVisitDate(String infantHospitalNo);
@@ -43,7 +43,7 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
     @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND archived = 0", nativeQuery = true)
     boolean existsByInfantHospitalNumberAndVisitDate(String hospitalNumber, LocalDate visitDate);
 
-    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND id != ?3 AND archived = 0", nativeQuery = true)
-    boolean existsByInfantHospitalNumberAndVisitDateAndIdNot(String hospitalNumber, LocalDate visitDate, Long id);
+    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND uuid != CAST(?3 AS VARCHAR) AND archived = 0", nativeQuery = true)
+    boolean existsByInfantHospitalNumberAndVisitDateAndIdNot(String hospitalNumber, LocalDate visitDate, String uuid);
 
 }

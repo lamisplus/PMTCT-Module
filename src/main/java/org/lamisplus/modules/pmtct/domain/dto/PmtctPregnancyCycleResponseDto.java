@@ -1,5 +1,6 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,12 +10,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PmtctPregnancyCycleResponseDto {
     private Long id;
-    private String personUuid;
+    @JsonProperty("patientUuid")
+    private String patientUuid;
     private String maternalOutcome;
     private String entryPoint;
-    private String hivStatus;
     private String pregnancyOutcome;
-    private Integer numberOfInfants;
     private String pmtctStatus;
     private Long facilityId;
     private String createdBy;

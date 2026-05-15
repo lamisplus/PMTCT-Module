@@ -9,7 +9,7 @@ public class RegisterPatientResponseDTO {
        private String fullname;
        private String gender;
         private String dateOfBirth;
-        private String   personUuid;
+        private String   patientUuid;
         private String   hivResult;
          private String   testingSetting;
 //         private String   pregnancyStatus;

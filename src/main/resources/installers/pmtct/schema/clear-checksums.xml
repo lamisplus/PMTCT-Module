@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Clears recorded MD5 checksums for schema.xml changesets so Liquibase
+         recomputes them instead of throwing ValidationFailedException when
+         schema.xml content has been modified since it was originally executed. -->
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-schema-xml-checksums" runAlways="true">
+        <sql>
+            UPDATE databasechangelog SET md5sum = NULL
+            WHERE filename = 'classpath:installers/pmtct/schema/schema.xml';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-add-new-columns-checksums" runAlways="true">
+        <sql>
+            UPDATE databasechangelog SET md5sum = NULL
+            WHERE filename = 'classpath:installers/pmtct/schema/add-new-columns.xml';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-pregnancy-cycle-migration-checksums" runAlways="true">
+        <sql>
+            UPDATE databasechangelog SET md5sum = NULL
+            WHERE filename = 'classpath:installers/pmtct/schema/pregnancy-cycle-migration.xml';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-populate-facility-id-migration-checksums" runAlways="true">
+        <sql>
+            UPDATE databasechangelog SET md5sum = NULL
+            WHERE filename = 'classpath:installers/pmtct/schema/populate-facility-id-migration.xml';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

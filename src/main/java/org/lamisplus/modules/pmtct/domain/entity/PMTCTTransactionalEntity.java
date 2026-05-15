@@ -12,7 +12,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.springframework.data.annotation.CreatedBy;
@@ -44,14 +46,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         typeClass = JsonNodeStringType.class
 )})
 @Data
-public class PMTCTTransactionalEntity implements Serializable, Persistable<Long> {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+public class PMTCTTransactionalEntity implements Serializable, Persistable<String> {
+    @Getter(AccessLevel.NONE)
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
-    private String hospitalNumber;
+
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String uuid;
-    private String ancNo;
     @Column(name = "created_date", updatable = false)
     @CreatedDate
     private LocalDateTime createdDate;
@@ -73,7 +75,12 @@ public class PMTCTTransactionalEntity implements Serializable, Persistable<Long>
     private String source;
 
     @Override
+    public String getId() {
+        return this.uuid;
+    }
+
+    @Override
     public boolean isNew() {
-        return id == null;
+        return uuid == null;
     }
 }

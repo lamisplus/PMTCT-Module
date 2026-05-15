@@ -53,18 +53,18 @@ const RecentHistory = (props) => {
 
   const InfantInfo = () => {
 
-      const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid || props.patientObj.uuid;
+      const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
       // Use selectedCycleId if available, otherwise use latestPmtctCycle
-      const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+      const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
 
-      if (!pmtctCycleId) {
-        console.error("pmtctCycleId is required");
+      if (!pmtctCycleUuid) {
+        console.error("pmtctCycleUuid is required");
         return;
       }
 
       axios
         .get(
-          `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+          `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
@@ -83,31 +83,31 @@ const RecentHistory = (props) => {
       return;
     }
 
-    // Check if any activity has type "pmtct_enrollment"
+    // Check if any activity has path "pmtct-enrollment"
     const hasPmtctEnrollment = activities.some(
-      (activity) => activity.type === "pmtct_enrollment"
+      (activity) => activity.path === "pmtct-enrollment"
     );
 
-    // If pmtct_enrollment is found and setIsOnPMTCT prop is provided, call it
-    if (hasPmtctEnrollment && props.setIsOnPMTCT) {
-      props.setIsOnPMTCT(true);
+    // Update isOnPMTCT based on whether enrollment exists for the selected cycle
+    if (props.setIsOnPMTCT) {
+      props.setIsOnPMTCT(hasPmtctEnrollment);
     }
   };
 
   const RecentActivities = () => {
 
-    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
     // Use selectedCycleId if available, otherwise use latestPmtctCycle
-    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+    const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
 
-    if (!pmtctCycleId) {
-      console.error("pmtctCycleId is required");
+    if (!pmtctCycleUuid) {
+      console.error("pmtctCycleUuid is required");
       return;
     }
 
     axios
       .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        `${baseUrl}pmtct/anc/getAllActivities/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -124,18 +124,18 @@ const RecentHistory = (props) => {
     // }
   };
   const SummaryChart = () => {
-    const personUuid = props.patientObj.person_uuid || props.patientObj.personUuid;
+    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
     // Use selectedCycleId if available, otherwise use latestPmtctCycle
-    const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+    const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
 
-    if (!pmtctCycleId) {
-      console.error("pmtctCycleId is required");
+    if (!pmtctCycleUuid) {
+      console.error("pmtctCycleUuid is required");
       return;
     }
 
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -148,9 +148,14 @@ const RecentHistory = (props) => {
       });
   };
   // Map activity names for display
-  const displayActivityName = (name) => {
+  const displayActivityName = (name, data) => {
     if (!name) return name;
     if (name.toLowerCase() === "pmtct enrollment") return "Mother Clinical Information";
+    if (name.toLowerCase() === "initial" || name.toLowerCase() === "retesting") return "PMTCT HTS";
+    if (name.toLowerCase() === "mother follow up visit" || name.toLowerCase() === "mother follow-up visit") {
+      if (data && data.visitType === "ANC_REVISIT") return "ANC Revisit";
+      return name;
+    }
     return name;
   };
 
@@ -211,7 +216,7 @@ const RecentHistory = (props) => {
     } else if (row.path === "pmtct_infant_visit") {
       props.setActiveContent({
         ...props.activeContent,
-        route: "consultation",
+        route: "infant-visit",
         id: row.recordId,
         activeTab: "child",
         actionType: action,
@@ -429,325 +434,338 @@ const RecentHistory = (props) => {
   };
   const index = 0;
 
+  const activityColors = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
   return (
     <Fragment>
-      {/* <Ext /> */}
-
-      <div className="row">
-        <div className="col-xl-4 col-xxl-4 col-lg-4">
-          <div className="card">
-            <div className="card-header  border-0 pb-0">
-              <h4 className="card-title"> Recent Activities</h4>
+      <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+        {/* Recent Activities */}
+        <div className="col-xl-4 col-xxl-4 col-lg-4" style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{
+            background: "#fff", borderRadius: "12px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+            overflow: "hidden",
+            height: "100%",
+          }}>
+            <div style={{
+              padding: "14px 20px",
+              background: "#1466c2",
+              borderRadius: "12px 12px 0 0",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#fff", display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Recent Activities
+              </h4>
+              <span style={{
+                fontSize: "11px", fontWeight: "600", color: "#fff",
+                background: "rgba(255,255,255,0.15)", padding: "2px 10px",
+                borderRadius: "12px",
+              }}>
+                {recentActivities.length}
+              </span>
             </div>
-            <div className="card-body">
+            <div style={{ padding: "8px 12px" }}>
               <PerfectScrollbar
                 style={{ height: "370px" }}
                 id="DZ_W_Todo1"
                 className="widget-media dz-scroll ps ps--active-y"
               >
-                <Accordion
-                  className="accordion accordion-header-bg accordion-header-shadow accordion-rounded "
-                  defaultActiveKey="0"
-                >
-                  <>
-                    {recentActivities.length > 0 &&
-                      recentActivities.map((data, i) => (
-                        <div className="accordion-item" key={i}>
-                          <Accordion.Toggle
-                            as={Card.Text}
-                            eventKey={`${i}`}
-                            className={`accordion-header ${
-                              activeAccordionHeaderShadow === 1
-                                ? ""
-                                : "collapsed"
-                            } accordion-header-info`}
-                            onClick={() =>
-                              setActiveAccordionHeaderShadow(
-                                activeAccordionHeaderShadow === 1 ? -1 : i
-                              )
-                            }
-                          >
-                            <span className="accordion-header-icon"></span>
-                            <span className="accordion-header-text" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", paddingRight: "25px" }}>
-                              <span>{displayActivityName(data.activityName)}</span>
-                              <span style={{ color: "#fff", fontSize: "13px", fontWeight: "600", marginLeft: "auto", paddingLeft: "10px", whiteSpace: "nowrap" }}>{data.activityDate}</span>
-                            </span>
-                            <span className="accordion-header-indicator"></span>
-                          </Accordion.Toggle>
-                          <Accordion.Collapse
-                            eventKey={`${i}`}
-                            className="accordion__body"
-                          >
-                            <div className="accordion-body-text">
-                              <ul className="timeline">
-                                <li>
-                                  <div className="timeline-panel">
-                                    <div
-                                      className={
-                                        i % 2 == 0
-                                          ? "media me-2 media-info"
-                                          : "media me-2 media-success"
-                                      }
-                                    >
-                                      {ActivityName(data.path)}
-                                    </div>
-                                    <div className="media-body">
-                                      <h5 className="mb-1">
-                                        {displayActivityName(data.activityName)}
-                                      </h5>
-                                      <small className="d-block">
-                                        {data.activityDate}
-                                      </small>
-                                    </div>
-                                    {!notToBeUpdated.includes(data.path) ? (
-                                      <Dropdown className="dropdown">
-                                        <Dropdown.Toggle
-                                          variant=" light"
-                                          className="i-false p-0 btn-info sharp"
-                                        >
-                                          <svg
-                                            width="18px"
-                                            height="18px"
-                                            viewBox="0 0 24 24"
-                                            version="1.1"
-                                          >
-                                            <g
-                                              stroke="none"
-                                              strokeWidth="1"
-                                              fill="none"
-                                              fillRule="evenodd"
-                                            >
-                                              <rect
-                                                x="0"
-                                                y="0"
-                                                width="24"
-                                                height="24"
-                                              />
-                                              <circle
-                                                fill="#000000"
-                                                cx="5"
-                                                cy="12"
-                                                r="2"
-                                              />
-                                              <circle
-                                                fill="#000000"
-                                                cx="12"
-                                                cy="12"
-                                                r="2"
-                                              />
-                                              <circle
-                                                fill="#000000"
-                                                cx="19"
-                                                cy="12"
-                                                r="2"
-                                              />
-                                            </g>
-                                          </svg>
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu className="dropdown-menu">
-                                          <Dropdown.Item
-                                            className="dropdown-item"
-                                            onClick={() =>
-                                              LoadViewPage(data, "view")
-                                            }
-                                          >
-                                            View
-                                          </Dropdown.Item>
-                                          <Dropdown.Item
-                                            className="dropdown-item"
-                                            onClick={() =>
-                                              LoadViewPage(data, "update")
-                                            }
-                                          >
-                                            Update
-                                          </Dropdown.Item>
-                                          <Dropdown.Item
-                                            className="dropdown-item"
-                                            onClick={() =>
-                                              LoadModal(data, "delete")
-                                            }
-                                          >
-                                            Delete
-                                          </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                      </Dropdown>
-                                    ) : (
-                                      ""
-                                    )}
-                                  </div>
-                                </li>
-                              </ul>
-                            </div>
-                          </Accordion.Collapse>
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((data, i) => {
+                    const accentColor = activityColors[i % activityColors.length];
+                    return (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: "12px",
+                        padding: "12px 10px",
+                        borderRadius: "8px",
+                        marginBottom: "4px",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                        background: activeAccordionHeaderShadow === i ? "#f8fafc" : "transparent",
+                      }}
+                      onClick={() => setActiveAccordionHeaderShadow(activeAccordionHeaderShadow === i ? -1 : i)}
+                      >
+                        {/* Icon */}
+                        <div style={{
+                          width: "38px", height: "38px", borderRadius: "10px",
+                          background: accentColor + "12",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "12px", fontWeight: "800", color: accentColor,
+                          flexShrink: 0,
+                        }}>
+                          {ActivityName(data.path)}
                         </div>
-                      ))}
-                  </>
-                </Accordion>
+                        {/* Content */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: "13px", fontWeight: "600", color: "#0f172a",
+                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                          }}>
+                            {displayActivityName(data.activityName, data)}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
+                            {data.activityDate}
+                          </div>
+                        </div>
+                        {/* Actions */}
+                        <Dropdown className="dropdown" onClick={(e) => e.stopPropagation()}>
+                          <Dropdown.Toggle
+                            variant="light"
+                            style={{
+                              background: "#f1f5f9", border: "none",
+                              padding: "5px 7px", borderRadius: "8px",
+                              lineHeight: 1, display: "flex", alignItems: "center",
+                            }}
+                          >
+                            <svg width="16px" height="16px" viewBox="0 0 24 24">
+                              <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+                                <circle fill="#475569" cx="5" cy="12" r="2.5" />
+                                <circle fill="#475569" cx="12" cy="12" r="2.5" />
+                                <circle fill="#475569" cx="19" cy="12" r="2.5" />
+                              </g>
+                            </svg>
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu style={{
+                            borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                            border: "1px solid #f1f5f9", padding: "6px", minWidth: "140px",
+                          }}>
+                            <Dropdown.Item
+                              onClick={() => LoadViewPage(data, "view")}
+                              style={{ borderRadius: "6px", fontSize: "12px", fontWeight: "500", padding: "8px 12px", color: "#6366f1", display: "flex", alignItems: "center", gap: "8px" }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              View
+                            </Dropdown.Item>
+                            {!notToBeUpdated.includes(data.path) && (
+                              <>
+                                <Dropdown.Item
+                                  onClick={() => LoadViewPage(data, "update")}
+                                  style={{ borderRadius: "6px", fontSize: "12px", fontWeight: "500", padding: "8px 12px", color: "#0ea5e9", display: "flex", alignItems: "center", gap: "8px" }}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  Update
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={() => LoadModal(data, "delete")}
+                                  style={{ borderRadius: "6px", fontSize: "12px", fontWeight: "500", padding: "8px 12px", color: "#ef4444", display: "flex", alignItems: "center", gap: "8px" }}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  Delete
+                                </Dropdown.Item>
+                              </>
+                            )}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    padding: "50px 20px", textAlign: "center",
+                  }}>
+                    <div style={{
+                      width: "48px", height: "48px", borderRadius: "50%",
+                      background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: "12px",
+                    }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#94a3b8", marginBottom: "4px" }}>
+                      No recent activities
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#cbd5e1", maxWidth: "160px", lineHeight: "1.4" }}>
+                      Activities will show up here as forms are completed
+                    </div>
+                  </div>
+                )}
               </PerfectScrollbar>
             </div>
           </div>
         </div>
+
+        {/* Patient Chart */}
         {props.patientObj.dynamicHivStatus === "Positive" ||
         props.patientObj.hivStatus === "Positive" ? (
-          <>
-            <div className="col-xl-8 col-xxl-8 col-lg-8">
-              <div className="card">
-                <div className="card-header border-0 pb-0">
-                  <h4 className="card-title">Patient Chart</h4>
-                </div>
-                <br />
+          <div className="col-xl-8 col-xxl-8 col-lg-8" style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{
+              background: "#fff", borderRadius: "12px",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+              overflow: "hidden",
+              width: "100%",
+            }}>
+              <div style={{
+                padding: "18px 20px 14px",
+                borderBottom: "1px solid #f1f5f9",
+              }}>
+                <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#014d88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  Patient Chart
+                </h4>
+              </div>
+              <div style={{ padding: "16px 20px" }}>
                 <div className="row">
+                  {/* Metrics Column */}
                   <div className="col-sm-6 col-md-6 col-lg-6">
-                    <div className="col-xl-12 col-xxl-12 col-sm-12">
-                      <div className="card overflow-hidden">
-                        <div className="social-graph-wrapper widget-facebook">
-                          <span className="s-icon">
-                            <span style={{ fontSize: "16px" }}>
-                              Total Clinic Visit
-                            </span>
-                          </span>
+                    {/* Clinic Visits Metric */}
+                    <div style={{
+                      background: "#f8fafc", borderRadius: "10px",
+                      padding: "16px", marginBottom: "12px",
+                    }}>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "12px" }}>
+                        Total Clinic Visits
+                      </div>
+                      <div style={{ display: "flex", gap: "16px" }}>
+                        <div style={{ flex: 1, textAlign: "center" }}>
+                          <div style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a", lineHeight: 1 }}>
+                            {summartChart.motherVisit}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "500" }}>
+                            Mother
+                          </div>
                         </div>
-                        <div className="row">
-                          <div className="col-6 border-right">
-                            <div className="pt-3 pb-3 ps-0 pe-0 text-center">
-                              <h4 className="m-1">
-                                <span className="counter">
-                                  <b>{summartChart.motherVisit}</b>
-                                </span>
-                              </h4>
-                              <p className="m-0">
-                                <b>Mother Visit</b>
-                              </p>
+                        {infants.length > 0 && (
+                          <>
+                            <div style={{ width: "1px", background: "#e2e8f0" }} />
+                            <div style={{ flex: 1, textAlign: "center" }}>
+                              <div style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a", lineHeight: 1 }}>
+                                {summartChart.childVisit}
+                              </div>
+                              <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "500" }}>
+                                Infant
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Infants Metric */}
+                    <div style={{
+                      background: "#f8fafc", borderRadius: "10px",
+                      padding: "16px",
+                    }}>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "12px" }}>
+                        Infants{infants.length > 0 ? ` (${infants.length})` : ""}
+                      </div>
+                      {infants.length > 0 ? (
+                        <div style={{ display: "flex", gap: "16px" }}>
+                          <div style={{ flex: 1, textAlign: "center" }}>
+                            <div style={{ fontSize: "28px", fontWeight: "800", color: "#16a34a", lineHeight: 1 }}>
+                              {summartChart.childAlive}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "500" }}>
+                              Alive
                             </div>
                           </div>
-                          {infants.length > 0 && (
-                            <div className="col-6">
-                              <div className="pt-3 pb-3 ps-0 pe-0 text-center">
-                                <h4 className="m-1">
-                                  <span className="counter">
-                                    <b>{summartChart.childVisit}</b>
-                                  </span>
-                                </h4>
-                                <p className="m-0">
-                                  <b>Infant's Visit</b>
-                                </p>
-                              </div>
+                          <div style={{ width: "1px", background: "#e2e8f0" }} />
+                          <div style={{ flex: 1, textAlign: "center" }}>
+                            <div style={{ fontSize: "28px", fontWeight: "800", color: "#ef4444", lineHeight: 1 }}>
+                              {summartChart.childDead}
                             </div>
-                          )}
+                            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", fontWeight: "500" }}>
+                              Dead
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div className="col-xl-12 col-xxl-12 col-sm-12">
-                      <div className="card overflow-hidden">
-                        <div className="social-graph-wrapper widget-linkedin">
-                          <span className="s-icon">
-                            <span style={{ fontSize: "16px" }}>
-                              No. of Infants{" "}
-                              {infants.length > 0 ? " : " + infants.length : ""}
-                            </span>
-                          </span>
-                        </div>
-                        <div className="row">
-                          {infants.length > 0 ? (
-                            <>
-                              <div className="col-6 border-right">
-                                <div className="pt-3 pb-3 ps-0 pe-0 text-center">
-                                  <h4 className="m-1">
-                                    <span className="counter">
-                                      {summartChart.childAlive}
-                                    </span>
-                                  </h4>
-                                  <p className="m-0">
-                                    <b>Alive </b>
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="col-6">
-                                <div className="pt-3 pb-3 ps-0 pe-0 text-center">
-                                  <h4 className="m-1">
-                                    <span className="counter">
-                                      {summartChart.childDead}
-                                    </span>
-                                  </h4>
-                                  <p className="m-0">
-                                    <b>Dead </b>
-                                  </p>
-                                </div>
-                              </div>
-                            </>
-                          ) : (
-                            <p>No Record</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-sm-6 col-md-6 col-lg-6">
-                    <div className="card-body">
-                      <h3>Current Infant's Details</h3>
-                      {infants.length > 0 ? (
-                        <PerfectScrollbar
-                          style={{ height: "370px" }}
-                          id="DZ_W_TimeLine1"
-                          className="widget-timeline dz-scroll style-1 height370 ps ps--active-y"
-                        >
-                          <ul className="timeline">
-                            {infants.length > 0
-                              ? infants.map((obj, idx) => (
-                                  <li key={idx}>
-                                    <div
-                                      className={
-                                        idx % 2 == 0
-                                          ? "timeline-badge info"
-                                          : "timeline-badge success"
-                                      }
-                                    ></div>
-                                    <span
-                                      className="timeline-panel text-muted"
-                                      //onClick={()=>redirectLink()}
-                                      //to=""
-                                    >
-                                      <h6 className="mb-0">
-                                        Infant Given Name
-                                        <br />
-                                        {obj.firstName}
-                                      </h6>
-                                      <strong className="text-teal">
-                                        Infant DOB
-                                        <br />
-                                        {obj.dateOfDelivery}
-                                      </strong>
-                                      <br />
-                                      <strong className="text-warning">
-                                        Gender
-                                        <br />
-                                        {obj.sex === "SEX_FEMALE"
-                                          ? "Female"
-                                          : "Male"}
-                                      </strong>
-                                    </span>
-                                  </li>
-                                ))
-                              : ""}
-                          </ul>
-                        </PerfectScrollbar>
                       ) : (
-                        <p>No Record</p>
+                        <div style={{
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          padding: "12px 8px", textAlign: "center",
+                        }}>
+                          <div style={{
+                            width: "36px", height: "36px", borderRadius: "50%",
+                            background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center",
+                            marginBottom: "8px",
+                          }}>
+                            <svg width="18" height="18" viewBox="0 0 64 64" fill="#cbd5e1" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="12" r="8"/><ellipse cx="34" cy="32" rx="14" ry="9"/><ellipse cx="18" cy="42" rx="5" ry="7" transform="rotate(-20 18 42)"/><ellipse cx="48" cy="44" rx="5" ry="7" transform="rotate(20 48 44)"/><ellipse cx="10" cy="50" rx="4.5" ry="3" transform="rotate(-10 10 50)"/><ellipse cx="55" cy="52" rx="4.5" ry="3" transform="rotate(10 55 52)"/><ellipse cx="22" cy="26" rx="4" ry="5.5" transform="rotate(30 22 26)"/><ellipse cx="14" cy="20" rx="3.5" ry="2.5" transform="rotate(30 14 20)"/></svg>
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "500" }}>No infant record</div>
+                        </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Infant Details Column */}
+                  <div className="col-sm-6 col-md-6 col-lg-6">
+                    <div style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      Current Infant Details
+                    </div>
+                    {infants.length > 0 ? (
+                      <PerfectScrollbar
+                        style={{ height: "300px" }}
+                        id="DZ_W_TimeLine1"
+                        className="dz-scroll ps ps--active-y"
+                      >
+                        {infants.map((obj, idx) => (
+                          <div key={idx} style={{
+                            display: "flex", alignItems: "flex-start", gap: "12px",
+                            padding: "12px 14px", borderRadius: "8px",
+                            background: "#f8fafc", marginBottom: "8px",
+                          }}>
+                            <div style={{
+                              width: "36px", height: "36px", borderRadius: "50%",
+                              background: idx % 2 === 0 ? "#6366f112" : "#10b98112",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: "14px", flexShrink: 0,
+                              color: idx % 2 === 0 ? "#6366f1" : "#10b981",
+                              fontWeight: "700",
+                            }}>
+                              {obj.firstName ? obj.firstName.charAt(0).toUpperCase() : "I"}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                                {obj.firstName || "---"}
+                              </div>
+                              <div style={{ display: "flex", gap: "16px", marginTop: "4px" }}>
+                                <span style={{ fontSize: "11px", color: "#64748b" }}>
+                                  DOB: <span style={{ fontWeight: "600", color: "#475569" }}>{obj.dateOfDelivery}</span>
+                                </span>
+                                <span style={{ fontSize: "11px", color: "#64748b" }}>
+                                  Sex: <span style={{ fontWeight: "600", color: "#475569" }}>{obj.sex === "SEX_FEMALE" ? "Female" : "Male"}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </PerfectScrollbar>
+                    ) : (
+                      <div style={{
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                        padding: "40px 20px", textAlign: "center",
+                        background: "#f8fafc", borderRadius: "10px", border: "1px dashed #e2e8f0",
+                        minHeight: "200px",
+                      }}>
+                        <div style={{
+                          width: "56px", height: "56px", borderRadius: "50%",
+                          background: "#eef2ff", display: "flex", alignItems: "center", justifyContent: "center",
+                          marginBottom: "14px",
+                        }}>
+                          <svg width="28" height="28" viewBox="0 0 64 64" fill="#a5b4fc" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="12" r="8"/><ellipse cx="34" cy="32" rx="14" ry="9"/><ellipse cx="18" cy="42" rx="5" ry="7" transform="rotate(-20 18 42)"/><ellipse cx="48" cy="44" rx="5" ry="7" transform="rotate(20 48 44)"/><ellipse cx="10" cy="50" rx="4.5" ry="3" transform="rotate(-10 10 50)"/><ellipse cx="55" cy="52" rx="4.5" ry="3" transform="rotate(10 55 52)"/><ellipse cx="22" cy="26" rx="4" ry="5.5" transform="rotate(30 22 26)"/><ellipse cx="14" cy="20" rx="3.5" ry="2.5" transform="rotate(30 14 20)"/></svg>
+                        </div>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#94a3b8", marginBottom: "4px" }}>
+                          No infant records yet
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#cbd5e1", maxWidth: "180px", lineHeight: "1.4" }}>
+                          Infant details will appear here once registered during Labour &amp; Delivery
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         ) : (
           ""
         )}
 
-        {/* props.patientObj.dynamicHivStatus === "Unknown" || */}
+        {/* HTS referral notice */}
         <>
           <div className="col-sm-6 col-md-6 col-lg-6">
-            <div className="card-body">
+            <div style={{ padding: "12px 0" }}>
               {props.checkForRetesting &&
               !recentActivities.some(
                 (activity) => activity.path === "pmtct-hts"
@@ -758,7 +776,13 @@ const RecentHistory = (props) => {
                 props.patientObj.staticHivStatus === "") &&
               (!props.patientObj.hivStatus ||
                 props.patientObj.hivStatus === "") ? (
-                <b>Patient has no HTS record. Please refer for testing...</b>
+                <div style={{
+                  padding: "12px 16px", borderRadius: "8px",
+                  background: "#fffbeb", color: "#92400e",
+                  fontSize: "13px", fontWeight: "600",
+                }}>
+                  Patient has no HTS record. Please refer for testing...
+                </div>
               ) : (
                 ""
               )}
@@ -766,6 +790,7 @@ const RecentHistory = (props) => {
           </div>
         </>
 
+        {/* Delete Confirmation Modal */}
         <Modal
           show={open}
           toggle={toggle}
@@ -776,30 +801,37 @@ const RecentHistory = (props) => {
           backdrop="static"
         >
           <Modal.Header>
-            <Modal.Title id="contained-modal-title-vcenter">
-              Notification!
+            <Modal.Title id="contained-modal-title-vcenter" style={{ fontSize: "16px", fontWeight: "700" }}>
+              Confirm Deletion
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <h4>
-              Are you Sure you want to delete{" "}
-              <b>{record && record.activityName}</b>
-            </h4>
+            <p style={{ fontSize: "14px", color: "#475569", margin: 0 }}>
+              Are you sure you want to delete <b style={{ color: "#0f172a" }}>{record && displayActivityName(record.activityName, record)}</b>?
+            </p>
           </Modal.Body>
-          <Modal.Footer>
-            <Button
-              onClick={() => LoadDeletePage(record)}
-              style={{ backgroundColor: "red", color: "#fff" }}
-              disabled={saving}
-            >
-              {saving === false ? "Yes" : "Deleting..."}
-            </Button>
+          <Modal.Footer style={{ borderTop: "1px solid #f1f5f9", gap: "8px" }}>
             <Button
               onClick={toggle}
-              style={{ backgroundColor: "#014d88", color: "#fff" }}
               disabled={saving}
+              style={{
+                backgroundColor: "#f1f5f9", color: "#475569",
+                borderRadius: "8px", fontWeight: "600", fontSize: "13px",
+                border: "none", padding: "8px 20px",
+              }}
             >
-              No
+              Cancel
+            </Button>
+            <Button
+              onClick={() => LoadDeletePage(record)}
+              disabled={saving}
+              style={{
+                backgroundColor: "#ef4444", color: "#fff",
+                borderRadius: "8px", fontWeight: "600", fontSize: "13px",
+                border: "none", padding: "8px 20px",
+              }}
+            >
+              {saving === false ? "Delete" : "Deleting..."}
             </Button>
           </Modal.Footer>
         </Modal>

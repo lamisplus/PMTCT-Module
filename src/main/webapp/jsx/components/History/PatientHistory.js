@@ -70,15 +70,16 @@ const PatientnHistory = (props) => {
   const displayActivityName = (name) => {
     if (!name) return name;
     if (name.toLowerCase() === "pmtct enrollment") return "Mother Information- MIP1";
+    if (name.toLowerCase() === "initial" || name.toLowerCase() === "retesting") return "PMTCT HTS";
     return name;
   };
 
-  // Get pmtctCycleId from props
-  const pmtctCycleId = props.selectedCycleId || props.latestPmtctCycle?.id;
+  // Get pmtctCycleUuid from props
+  const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
 
   useEffect(() => {
     PatientHistory();
-  }, [props.patientObj.id, pmtctCycleId]);
+  }, [props.patientObj.id, pmtctCycleUuid]);
   ///GET LIST OF Patients
   const PatientHistory = () => {
     setLoading(true);
@@ -97,13 +98,13 @@ const PatientnHistory = (props) => {
     //     });
     // } else {
 
-      let personUuid=props.patientObj.person_uuid
-            ? props.patientObj.person_uuid
-            : props.patientObj.personUuid
-      // ${personUuid}?pmtctCycleId=${pmtctCycleId}
+      let patientUuid=props.patientObj.patient_uuid
+            ? props.patientObj.patient_uuid
+            : props.patientObj.patientUuid
+      // ${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}
     axios
       .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${personUuid}?pmtctCycleId=${pmtctCycleId}`,
+        `${baseUrl}pmtct/anc/getAllActivities/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -156,7 +157,7 @@ const PatientnHistory = (props) => {
     } else if (row.path === "pmtct_infant_visit") {
       props.setActiveContent({
         ...props.activeContent,
-        route: "consultation",
+        route: "infant-visit",
         id: row.recordId,
         activeTab: "child",
         actionType: action,
@@ -267,7 +268,7 @@ const PatientnHistory = (props) => {
       setSaving(true);
       //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
       axios
-        .delete(`${baseUrl}pmtct/anc/delete/delivery/${row.recordId}`, {
+        .delete(`${baseUrl}pmtct/anc/delete/mothervisit/${row.recordId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {

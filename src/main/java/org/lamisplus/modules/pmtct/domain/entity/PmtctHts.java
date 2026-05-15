@@ -22,19 +22,19 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class PmtctHts {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", insertable = false, updatable = false)
     private Long id;
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
     private String testSetting;
+    @Id
+    @Column(name = "uuid", nullable = false, updatable = false)
     private String uuid;
 //    private String initialHivTest;
 //    private String confirmatoryHivTest;
     private String stageOfPregnancy;
-    private String personUuid;
-    private String hospitalNumber;
+    @Column(name = "patient_uuid")
+    private String patientUuid;
     private Long archived;
     private String syphilis;
     @Column(name = "hepatitis_b")
@@ -42,7 +42,6 @@ public class PmtctHts {
     @Column(name = "hepatitis_c")
     private String hepatitisC;
     private String testingType;
-    private String ancNo;
     private String finalResult;
 
     // JSONB columns mapped to HivTestDto
@@ -97,7 +96,7 @@ public class PmtctHts {
     private String pmtctTestEntryPoint;
     private String viralLoadMonitoring;
 
-    private Long pmtctCycleId;
+    private String pmtctCycleUuid;
     private Long facilityId;
 
     @Column(name = "created_date", updatable = false)

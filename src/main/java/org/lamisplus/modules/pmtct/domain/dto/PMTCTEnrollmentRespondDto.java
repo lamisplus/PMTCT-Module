@@ -1,5 +1,6 @@
  package org.lamisplus.modules.pmtct.domain.dto;
 
+ import com.fasterxml.jackson.annotation.JsonProperty;
  import lombok.Data;
  import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
 
@@ -12,6 +13,7 @@
      private String ancNo;
      private LocalDate pmtctEnrollmentDate;
      private Integer gravida;
+     @JsonProperty("gaweeks")
      private Integer gAWeeks;
      public String entryPoint;
      public LocalDate artStartDate;
@@ -24,20 +26,19 @@
      public String hivStatus;
      private LocalDate lmp;
      private boolean pmtctRegStatus;
-     private String personUuid;
-     private String  motherArtInitiationTime;
+     private String patientUuid;
+
      private Long regimenTypeId;
      private String regimenId;
-     private String hepatitisB;
      private String urinalysis;
      private HbvDetailsDto hbvDetails;
      private SyphilisDetailsDto syphilisDetails;
      private String timeOfHivDiagnosis;
-     private String dateOfDelivery;
-     private String expectedDeliveryDate;
+     private LocalDate dateOfDelivery;
+     private LocalDate expectedDeliveryDate;
      private String modeOfDelivery;
      private String modeOfDeliveryOther;
-     private Long pmtctCycleId;
+     private String pmtctCycleUuid;
      private String source;
 
  }

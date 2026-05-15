@@ -30,35 +30,28 @@ public class ANCAcivityTracker {
 
 
 
-    private LocalDate getDeliveryDate (String ancNo)
+    private String resolvePatientUuidFromAncNo(String ancNo) {
+        Optional<ANC> ancOpt = this.ancRepository.getByAncNoAndArchived(ancNo, 0L);
+        return ancOpt.map(ANC::getPatientUuid).orElse(null);
+    }
+
+    private LocalDate getDeliveryDateByPatientUuid (String patientUuid)
     {
         LocalDate deliveryDate = LocalDate.now();
         Delivery delivery = new Delivery();
         try{
-            delivery = this.deliveryRepository.getDeliveryByAncNo(ancNo);
+            delivery = this.deliveryRepository.getDeliveryByPatientUuid(patientUuid);
             deliveryDate = delivery.getDateOfDelivery();
         }catch (Exception e){}
 
         return deliveryDate;
     }
 
-    private LocalDate getDeliveryDateByPersonUuid (String personUuid)
-    {
-        LocalDate deliveryDate = LocalDate.now();
-        Delivery delivery = new Delivery();
-        try{
-            delivery = this.deliveryRepository.getDeliveryByPersonUuid(personUuid);
-            deliveryDate = delivery.getDateOfDelivery();
-        }catch (Exception e){}
-
-        return deliveryDate;
-    }
-
-    private LocalDate getDeliveryDateByPersonUuid (String personUuid, Long pmtctCycleId)
+    private LocalDate getDeliveryDateByPatientUuid (String patientUuid, String pmtctCycleUuid)
     {
         LocalDate deliveryDate = LocalDate.now();
         try{
-            Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+            Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(patientUuid, pmtctCycleUuid);
             if (delivery.isPresent()) {
                 deliveryDate = delivery.get().getDateOfDelivery();
             }
@@ -69,133 +62,11 @@ public class ANCAcivityTracker {
 
     public List<ActivityTracker> getANCActivities(String ancNo)
     {
-        ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
-        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByAncNumber(ancNo);
-        if(!(infantVisits.isEmpty()) ){
-            ActivityTracker activityTracker = new ActivityTracker();
-            infantVisits.forEach(infantVisit -> {
-
-                activityTracker.setActivityName("Infant Visit");
-                activityTracker.setPath("pmtct_infant_visit");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
-                activityTracker.setViewable(true);
-                activityTracker.setRecordId(infantVisit.getId());
-                activityTracker.setActivityDate(infantVisit.getVisitDate());
-                activityTrackers.add(activityTracker);
-            });
+        String patientUuid = resolvePatientUuidFromAncNo(ancNo);
+        if (patientUuid == null) {
+            return new ArrayList<>();
         }
-//        ///LocalDate arvDate = this.getInfantArvDate(hospitalNumber);
-//        List<InfantVisit> infantVisitList = this.infantVisitRepository.getPreArvVisits(ancNo);
-//        if (!(infantVisitList.isEmpty()))
-//        {
-//            ActivityTracker activityTracker = new ActivityTracker();
-//            infantVisitList.forEach(pmtctVisit ->{
-//                activityTracker.setActivityName("Infant Post-ARV Visit");
-//                activityTracker.setPath("pmtct_infant_visit");
-//                activityTracker.setEditable(true);
-//                activityTracker.setDeletable(true);
-//                activityTracker.setViewable(true);
-//                activityTracker.setRecordId(pmtctVisit.getId());
-//                activityTracker.setActivityDate(pmtctVisit.getVisitDate());
-//                activityTrackers.add(activityTracker);
-//            } );
-//
-//        }
-
-        LocalDate deliveryDate = this.getDeliveryDate(ancNo);
-        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisits(ancNo, deliveryDate);
-        if (!(pmtctVisits1.isEmpty()))
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            pmtctVisits1.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("PMTCT Visit");
-                activityTracker.setPath("anc-mother-visit");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
-                activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctVisit.getId());
-                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
-                activityTrackers.add(activityTracker);
-            } );
-
-        }
-
-        List<Infant> infantList = infantRepository.findInfantByAncNo(ancNo);
-
-        if(!(infantList.isEmpty())){
-            infantList.forEach(infant-> {
-                ActivityTracker activityTracker = new ActivityTracker();
-                activityTracker.setActivityName("Add Infant");
-                activityTracker.setPath("pmtct_infant_information");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
-                activityTracker.setViewable(true);
-                activityTracker.setRecordId(infant.getId());
-                activityTracker.setActivityDate(infant.getDateOfDelivery());
-                activityTrackers.add(activityTracker);
-            });
-        }
-
-        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByAncNo(ancNo);
-        if (deliveries.isPresent())
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("Labour and Delivery");
-            activityTracker.setPath("anc-delivery");
-            activityTracker.setEditable(true);
-            activityTracker.setDeletable(true);
-            activityTracker.setViewable(true);
-            activityTracker.setRecordId(deliveries.get().getId());
-            activityTracker.setActivityDate(deliveries.get().getDateOfDelivery());
-            activityTrackers.add(activityTracker);
-        }
-
-        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisits(ancNo, deliveryDate);
-        if (!(pmtctVisits.isEmpty()))
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            pmtctVisits.forEach(pmtctVisit ->{
-                activityTracker.setActivityName("PMTCT Visit");
-                activityTracker.setPath("anc-mother-visit");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
-                activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctVisit.getId());
-                activityTracker.setActivityDate(pmtctVisit.getDateOfVisit());
-                activityTrackers.add(activityTracker);
-            } );
-        }
-        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByAncNo(ancNo);
-        if (pmtctEnrollments.isPresent())
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("PMTCT Enrollment");
-            activityTracker.setPath("pmtct-enrollment");
-            activityTracker.setEditable(true);
-            activityTracker.setDeletable(true);
-            activityTracker.setViewable(true);
-            activityTracker.setRecordId(pmtctEnrollments.get().getId());
-            activityTracker.setActivityDate(pmtctEnrollments.get().getPmtctEnrollmentDate());
-            activityTrackers.add(activityTracker);
-        }
-
-        Optional<ANC> ancs = this.ancRepository.getByAncNoAndArchived(ancNo,0L);
-        if (ancs.isPresent())
-        {
-            ActivityTracker activityTracker = new ActivityTracker();
-            activityTracker.setActivityName("ANC Enrollment");
-            activityTracker.setPath("anc-enrollment");
-            activityTracker.setEditable(true);
-            activityTracker.setDeletable(true);
-            activityTracker.setViewable(true);
-            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
-            activityTracker.setRecordId(ancs.get().getId());
-            activityTrackers.add(activityTracker);
-        }
-
-        return activityTrackers;
-
+        return getAllActivities(patientUuid);
     }
 
 //    private LocalDate getInfantArvDate (String hospitalNumber)
@@ -257,29 +128,22 @@ public class ANCAcivityTracker {
 
     public SummaryChart getSummaryChart (String ancNo)
     {
-        SummaryChart summaryChart = new SummaryChart();
-        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisits(ancNo));
-        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByAncNo(ancNo);
-        if (delivery.isPresent()){
-            summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
-            summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
-            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisits(ancNo));
-
-        }
-        else
-        {
+        String patientUuid = resolvePatientUuidFromAncNo(ancNo);
+        if (patientUuid == null) {
+            SummaryChart summaryChart = new SummaryChart();
+            summaryChart.setMotherVisit(0);
             summaryChart.setChildAlive(0);
             summaryChart.setChildDead(0);
             summaryChart.setChildVisit(0);
-
+            return summaryChart;
         }
-        return summaryChart;
+        return getPmtctSummaryChart(patientUuid);
     }
 
-    public List<ActivityTracker> getAllActivities(String personUuid) {
+    public List<ActivityTracker> getAllActivities(String patientUuid) {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
 
-        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPersonUuid(personUuid);
+        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPatientUuid(patientUuid);
         if(!(infantVisits.isEmpty()) ){
             infantVisits.forEach(infantVisit -> {
                 ActivityTracker activityTracker = new ActivityTracker();
@@ -295,15 +159,15 @@ public class ANCAcivityTracker {
             });
         }
 
-        LocalDate deliveryDate = this.getDeliveryDateByPersonUuid(personUuid);
-        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPersonUuid(personUuid, deliveryDate);
+        LocalDate deliveryDate = this.getDeliveryDateByPatientUuid(patientUuid);
+        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPatientUuid(patientUuid, deliveryDate);
         if (!(pmtctVisits1.isEmpty()))
         {
             pmtctVisits1.forEach(pmtctVisit ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                System.out.println(pmtctVisit);
-                activityTracker.setActivityName("PMTCT Visit");
+                String activityName = "ANC_REVISIT".equals(pmtctVisit.getVisitType()) ? "ANC Revisit" : "Mother Follow-up Visit";
+                activityTracker.setActivityName(activityName);
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
@@ -315,7 +179,7 @@ public class ANCAcivityTracker {
 
         }
 
-        List<Infant> infantList = infantRepository.findInfantByMotherPersonUuid(personUuid);
+        List<Infant> infantList = infantRepository.findInfantByMotherPatientUuid(patientUuid);
 
         if(!(infantList.isEmpty())){
             infantList.forEach(infant-> {
@@ -331,7 +195,7 @@ public class ANCAcivityTracker {
             });
         }
 
-        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByPersonUuid(personUuid);
+        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByPatientUuid(patientUuid);
         if (deliveries.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -345,13 +209,14 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPersonUuid(personUuid, deliveryDate);
+        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPatientUuid(patientUuid, deliveryDate);
         if (!(pmtctVisits.isEmpty()))
         {
             pmtctVisits.forEach(pmtctVisit ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                activityTracker.setActivityName("PMTCT Visit");
+                String activityName = "ANC_REVISIT".equals(pmtctVisit.getVisitType()) ? "ANC Revisit" : "Mother Follow-up Visit";
+                activityTracker.setActivityName(activityName);
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
@@ -361,7 +226,7 @@ public class ANCAcivityTracker {
                 activityTrackers.add(activityTracker);
             } );
         }
-        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByPersonUuid(personUuid);
+        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByPatientUuid(patientUuid);
         if (pmtctEnrollments.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -375,7 +240,7 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        Optional<ANC> ancs = this.ancRepository.findANCByPersonUuidAndArchived(personUuid,0L);
+        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndArchived(patientUuid,0L);
         if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -384,24 +249,24 @@ public class ANCAcivityTracker {
             activityTracker.setEditable(true);
             activityTracker.setDeletable(true);
             activityTracker.setViewable(true);
-            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
+            activityTracker.setActivityDate(ancs.get().getDateOfEnrollment());
             activityTracker.setRecordId(ancs.get().getId());
             activityTrackers.add(activityTracker);
         }
 
 
-        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuidAndUnarchived(personUuid);
+        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPatientUuidAndUnarchived(patientUuid);
         if (!(pmtctHtsRecord.isEmpty()))
         {
             pmtctHtsRecord.forEach(pmtctHtsRec ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                activityTracker.setActivityName(pmtctHtsRec.getTestingType());
+                activityTracker.setActivityName("PMTCT HTS");
                 activityTracker.setPath("pmtct-hts");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
                 activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctHtsRec.getId());
+                activityTracker.setRecordId(pmtctHtsRec.getUuid());
                 activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
                 activityTrackers.add(activityTracker);
             } );
@@ -414,10 +279,10 @@ public class ANCAcivityTracker {
 
     }
 
-    public List<ActivityTracker> getAllActivities(String personUuid, Long pmtctCycleId) {
+    public List<ActivityTracker> getAllActivities(String patientUuid, String pmtctCycleUuid) {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
 
-        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPersonUuidAndCycleId(personUuid, pmtctCycleId);
+        List<InfantVisit> infantVisits = this.infantVisitRepository.getInfantVisitsByMotherPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
         if(!(infantVisits.isEmpty()) ){
             infantVisits.forEach(infantVisit -> {
                 ActivityTracker activityTracker = new ActivityTracker();
@@ -433,15 +298,15 @@ public class ANCAcivityTracker {
             });
         }
 
-        LocalDate deliveryDate = this.getDeliveryDateByPersonUuid(personUuid, pmtctCycleId);
-        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPersonUuidAndCycleId(personUuid, pmtctCycleId, deliveryDate);
+        LocalDate deliveryDate = this.getDeliveryDateByPatientUuid(patientUuid, pmtctCycleUuid);
+        List<PmtctVisit> pmtctVisits1 = this.pmtctVisitRepository.getPNCVisitsByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid, deliveryDate);
         if (!(pmtctVisits1.isEmpty()))
         {
             pmtctVisits1.forEach(pmtctVisit ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                System.out.println(pmtctVisit);
-                activityTracker.setActivityName("PMTCT Visit");
+                String activityName = "ANC_REVISIT".equals(pmtctVisit.getVisitType()) ? "ANC Revisit" : "Mother Follow-up Visit";
+                activityTracker.setActivityName(activityName);
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
@@ -453,7 +318,7 @@ public class ANCAcivityTracker {
 
         }
 
-        List<Infant> infantList = infantRepository.getAllInfantByPersonUuidAndCycleId(personUuid, pmtctCycleId);
+        List<Infant> infantList = infantRepository.getAllInfantByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
 
         if(!(infantList.isEmpty())){
             infantList.forEach(infant-> {
@@ -469,7 +334,7 @@ public class ANCAcivityTracker {
             });
         }
 
-        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        Optional<Delivery> deliveries = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(patientUuid, pmtctCycleUuid);
         if (deliveries.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -483,13 +348,14 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPersonUuidAndCycleId(personUuid, pmtctCycleId, deliveryDate);
+        List<PmtctVisit> pmtctVisits = this.pmtctVisitRepository.getANCVisitsByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid, deliveryDate);
         if (!(pmtctVisits.isEmpty()))
         {
             pmtctVisits.forEach(pmtctVisit ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                activityTracker.setActivityName("PMTCT Visit");
+                String activityName = "ANC_REVISIT".equals(pmtctVisit.getVisitType()) ? "ANC Revisit" : "Mother Follow-up Visit";
+                activityTracker.setActivityName(activityName);
                 activityTracker.setPath("anc-mother-visit");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
@@ -499,7 +365,7 @@ public class ANCAcivityTracker {
                 activityTrackers.add(activityTracker);
             } );
         }
-        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        Optional<PMTCTEnrollment> pmtctEnrollments = this.pmtctEnrollmentReporsitory.getByPatientUuidAndPmtctCycleId(patientUuid, pmtctCycleUuid);
         if (pmtctEnrollments.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -513,7 +379,7 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        Optional<ANC> ancs = this.ancRepository.findANCByPersonUuidAndCycleIdAndArchived(personUuid, pmtctCycleId, 0L);
+        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
         if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -522,24 +388,24 @@ public class ANCAcivityTracker {
             activityTracker.setEditable(true);
             activityTracker.setDeletable(true);
             activityTracker.setViewable(true);
-            activityTracker.setActivityDate(ancs.get().getFirstAncDate());
+            activityTracker.setActivityDate(ancs.get().getDateOfEnrollment());
             activityTracker.setRecordId(ancs.get().getId());
             activityTrackers.add(activityTracker);
         }
 
 
-        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPersonUuidAndPmtctCycleIdAndUnarchived(personUuid, pmtctCycleId);
+        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPatientUuidAndPmtctCycleIdAndUnarchived(patientUuid, pmtctCycleUuid);
         if (!(pmtctHtsRecord.isEmpty()))
         {
             pmtctHtsRecord.forEach(pmtctHtsRec ->{
                 ActivityTracker activityTracker = new ActivityTracker();
 
-                activityTracker.setActivityName(pmtctHtsRec.getTestingType());
+                activityTracker.setActivityName("PMTCT HTS");
                 activityTracker.setPath("pmtct-hts");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
                 activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctHtsRec.getId());
+                activityTracker.setRecordId(pmtctHtsRec.getUuid());
                 activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
                 activityTrackers.add(activityTracker);
             } );
@@ -552,14 +418,14 @@ public class ANCAcivityTracker {
 
     }
 
-    public SummaryChart getPmtctSummaryChart(String personUuid) {
+    public SummaryChart getPmtctSummaryChart(String patientUuid) {
         SummaryChart summaryChart = new SummaryChart();
-        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPersonUuid(personUuid));
-        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPersonUuid(personUuid);
+        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPatientUuid(patientUuid));
+        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPatientUuid(patientUuid);
         if (delivery.isPresent()){
             summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
             summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
-            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPersonUuid(personUuid));
+            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPatientUuid(patientUuid));
 
         }
         else
@@ -572,14 +438,14 @@ public class ANCAcivityTracker {
         return summaryChart;
     }
 
-    public SummaryChart getPmtctSummaryChart(String personUuid, Long pmtctCycleId) {
+    public SummaryChart getPmtctSummaryChart(String patientUuid, String pmtctCycleUuid) {
         SummaryChart summaryChart = new SummaryChart();
-        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPersonUuidAndCycleId(personUuid, pmtctCycleId));
-        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPersonUuidAndPmtctCycleId(personUuid, pmtctCycleId);
+        summaryChart.setMotherVisit(this.pmtctVisitRepository.getMotherVisitsWithPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid));
+        Optional<Delivery> delivery = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(patientUuid, pmtctCycleUuid);
         if (delivery.isPresent()){
             summaryChart.setChildAlive(delivery.get().getNumberOfInfantsAlive());
             summaryChart.setChildDead(delivery.get().getNumberOfInfantsDead());
-            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPersonUuidAndCycleId(personUuid, pmtctCycleId));
+            summaryChart.setChildVisit(this.infantVisitRepository.getChildVisitsWithPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid));
 
         }
         else
