@@ -286,7 +286,7 @@ const showRetestingMenu = (patientHivStatus, hasExistingHts = false) => {
             )}
 
             {/* ANC Revisit — available for ALL women with ANC enrollment, before delivery */}
-            {patientObj?.ancNo && !deliveryStatus && closeCycle && (
+            {patientObj?.ancNo && !deliveryStatus && closeCycle && !isOnPMTCT && (
               <Menu.Item onClick={() => onClickAncRevisit()} style={menuItemStyle("anc-revisit")}>
                 ANC Revisit
               </Menu.Item>
