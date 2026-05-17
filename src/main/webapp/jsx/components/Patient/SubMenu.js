@@ -116,8 +116,6 @@ function SubMenu(props) {
       props.patientObj && props.patientObj.sex ? props.patientObj.sex : null;
     setGenderType(gender === "Female" ? true : false);
 
-
-
     if(props.maternalOutcome){
       const negativeOutcome=["MATERNAL_OUTCOME_DEAD", "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP", "MATERNAL_OUTCOME_TRANSFERRED_OUT"  ]
       let isNegativeOutcome=negativeOutcome.includes(props.maternalOutcome)
@@ -127,16 +125,16 @@ function SubMenu(props) {
       // No maternal outcome for this cycle — allow all actions
       setCloseCycle(true)
     }
-  }, [props]);
+  }, [props.patientObj?.patient_uuid, props.patientObj?.patientUuid, props.patientObj?.sex, props.maternalOutcome, props.latestPmtctCycle?.uuid]);
 
     useEffect(() => {
     getLatestConfirmatoryResult(selectedCycleId);
-   
+
     setDeliveryStatus( props.mainDeliveryStatus  ||  patientObj.deliveryStatus )
 
     // isOnPMTCT is now driven by RecentHistory.checkForPmtctEnrollment (cycle-aware)
     // Do not override it here with the patient-level prop, which is not cycle-specific
-  }, [props.activeContent, props?.patientObj, props.mainDeliveryStatus, selectedCycleId]);
+  }, [props.activeContent?.route, props.mainDeliveryStatus, selectedCycleId]);
 
 
   const loadAncPnc = (row) => {
@@ -182,45 +180,45 @@ function SubMenu(props) {
       const patientUuid =
         props.patientObj.patient_uuid || props.patientObj.patientUuid;
 
+      const htsUrl = `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${thePmtctCycleUuid}`;
 
+      try {
+        const htsRes = await axios.get(htsUrl, { headers: { Authorization: `Bearer ${token}` } });
 
-      const url = `${baseUrl}pmtct/anc/get-confirmatory-latest-result?patientUuid=${patientUuid}&pmtctCycleUuid=${thePmtctCycleUuid}`;
+        // Derive HIV status from the HTS record: finalResult, then confirmatory result
+        const hivStatus = htsRes.data?.finalResult
+          ? htsRes.data.finalResult
+          : htsRes.data?.confirmatoryHivTest?.result
+          ? htsRes.data.confirmatoryHivTest.result
+          : props?.patientObj?.staticHivStatus
+          ? props?.patientObj?.staticHivStatus
+          : props?.patientObj?.hivStatus
+          ? props?.patientObj?.hivStatus
+          : props.patientObj.dynamicHivStatus;
 
-      await axios
-        .get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          setPatientStatus(
-            response.data
-              ? response.data
-              : props?.patientObj?.staticHivStatus
-              ? props?.patientObj?.staticHivStatus
-              : props?.patientObj?.hivStatus
-              ? props?.patientObj?.hivStatus
-              : props.patientObj.dynamicHivStatus
-          );
-          showRetestingMenu(response.data);
-          setMenuReady(true);
-        })
-        .catch((error) => {
-          console.error("Error fetching confirmatory result:", error);
-          setMenuReady(true);
-        });
+        const hasExistingHts = !!(htsRes.data?.id);
+
+        setPatientStatus(hivStatus);
+        showRetestingMenu(hivStatus, hasExistingHts);
+        setMenuReady(true);
+      } catch (error) {
+        console.error("Error fetching confirmatory result:", error);
+        setMenuReady(true);
+      }
     } else {
       // No cycle UUID available yet — still allow menu to render
       setMenuReady(true);
     }
 
   };
-const showRetestingMenu = (patientHivStatus) => {
+const showRetestingMenu = (patientHivStatus, hasExistingHts = false) => {
 
   if (props?.patientObj?.pmtctRegStatus) {
     setShowRetesting(false);
     return; // Exit early if pmtct registered
   }
 
-  // If the API returned a definitive result, use it as the sole source of truth
+  // Retesting should only display when there is a documented HIV Negative Result on the PMTCT HTS
   if (patientHivStatus) {
     const status = String(patientHivStatus).toLowerCase().trim();
     if (status.includes("positive") || (status.includes("reactive") && !status.includes("non-reactive") && !status.includes("non reactive"))) {
@@ -235,39 +233,13 @@ const showRetestingMenu = (patientHivStatus) => {
     }
   }
 
-  // Only fall through to checking patientObj if API had no result
-  let hivStatusSource = [
-    props?.patientObj?.hivStatus,
-    props?.patientObj?.dynamicHivStatus,
-    props?.patientObj?.staticHivStatus
-  ];
-
-  // Filter out null/undefined and convert to lowercase
-  const validStatuses = hivStatusSource
-    .filter(status => status != null && status !== '')
-    .map(status => String(status).toLowerCase().trim());
-
-  // Check for positive/reactive (excluding non-reactive)
-  const hasPositive = validStatuses.some(status => {
-    if (status.includes("non-reactive") || status.includes("non reactive")) {
-      return false;
-    }
-    return status.includes("positive") || status.includes("reactive");
-  });
-
-  // Check for negative/non-reactive
-  const hasNegative = validStatuses.some(status =>
-    status.includes("negative") || status.includes("non-reactive") || status.includes("non reactive")
-  );
-
-  if (hasPositive) {
-    setShowRetesting(false);
-    setRetestingStatus('retesting');
-  } else if (hasNegative) {
+  // No documented result — check if an initial HTS record already exists for this cycle
+  if (hasExistingHts) {
+    // An HTS record exists but result is empty — treat as retesting scenario
     setShowRetesting(true);
     setRetestingStatus('retesting');
   } else {
-    // if the status is unknown
+    // No HTS record at all — show initial PMTCT HTS form
     setShowRetesting(true);
     setRetestingStatus("pmtct-hts");
   }
@@ -322,15 +294,14 @@ const showRetestingMenu = (patientHivStatus) => {
 
             {(["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) || isOnPMTCT === true) && (
               <>
-                {isOnPMTCT !== true ? (
-                  <>
-                    {permissions.genAndPmtct && (
-                      <Menu.Item onClick={() => loadAncPnc()} style={menuItemStyle("anc-pnc")}>
-                        Mother Clinical Information
-                      </Menu.Item>
-                    )}
-                  </>
-                ) : (
+                {/* Mother Clinical Information / Mother Infant Pair — always visible for HIV+ patients */}
+                {isOnPMTCT !== true && permissions.genAndPmtct && (
+                  <Menu.Item onClick={() => loadAncPnc()} style={menuItemStyle("anc-pnc")}>
+                    {deliveryStatus ? "Mother Infant Pair" : "Mother Clinical Information"}
+                  </Menu.Item>
+                )}
+
+                {isOnPMTCT === true && (
                   <>
                     {closeCycle && (
                       <>
@@ -343,14 +314,12 @@ const showRetestingMenu = (patientHivStatus) => {
                             Labour and Delivery
                           </Menu.Item>
                         )}
-                        {/* {patientObj?.ancNo && (
-                          <Menu.Item onClick={() => onClickPartner()} style={menuItemStyle("partners")}>
-                            Partners
+
+                        {deliveryStatus && parseInt(props.numberOfInfantsAlive) > 0 && (
+                          <Menu.Item onClick={() => onClickInfant()} style={menuItemStyle("infants")}>
+                            Infant Information
                           </Menu.Item>
-                        )} */}
-                        <Menu.Item onClick={() => onClickInfant()} style={menuItemStyle("infants")}>
-                          Infant Information
-                        </Menu.Item>
+                        )}
                       </>
                     )}
                   </>

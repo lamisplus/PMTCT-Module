@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.lamisplus.modules.pmtct.domain.dto.HepatitisBDto;
+import org.lamisplus.modules.pmtct.domain.dto.HepatitisCDto;
+import org.lamisplus.modules.pmtct.domain.dto.SyphilisInfoDto;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -109,6 +112,19 @@ public class PmtctVisit implements Serializable, Persistable<String>
     @Column(name = "referred_for_hcv")
     private String referredForHcv;
     private String outcomeOfVisit;
+    private String pcv;
+
+    @Type(type = "jsonb")
+    @Column(name = "syphilis_info", columnDefinition = "jsonb")
+    private SyphilisInfoDto syphilisInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "hepatitis_b_info", columnDefinition = "jsonb")
+    private HepatitisBDto hepatitisBInfo;
+
+    @Type(type = "jsonb")
+    @Column(name = "hepatitis_c_info", columnDefinition = "jsonb")
+    private HepatitisCDto hepatitisCInfo;
 
     @PrePersist
     public void prePersist() {

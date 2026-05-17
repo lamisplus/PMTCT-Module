@@ -428,6 +428,7 @@ public class ANCService {
         ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
         ancRespondDto.setUrinalysis(anc.getUrinalysis());
         ancRespondDto.setHbPcv(anc.getHbPcv());
+        ancRespondDto.setPcv(anc.getPcv());
         ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
         ancRespondDto.setLlinGiven(anc.getLlinGiven());
         ancRespondDto.setIptDose(anc.getIptDose());
@@ -920,14 +921,9 @@ public class ANCService {
             anc.setParity(ancEnrollementRequestDto.getParity());
             anc.setLMP(ancEnrollementRequestDto.getLMP());
             anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
-            anc.setAncSetting(ancEnrollementRequestDto.getAncSetting());
-            anc.setPreviouslyKnownHivStatus(ancEnrollementRequestDto.getPreviouslyKnownHivStatus());
-            anc.setCurrentlyOnArt(ancEnrollementRequestDto.getCurrentlyOnArt());
-            anc.setFacilityEnrolledIn(ancEnrollementRequestDto.getFacilityEnrolledIn());
-            anc.setCommunitySetting(ancEnrollementRequestDto.getCommunitySetting());
             anc.setAncAttendance(ancEnrollementRequestDto.getAncAttendance());
+            anc.setReferredFromSpokesSite(ancEnrollementRequestDto.getReferredFromSpokesSite());
             anc.setPmtctCycleUuid(ancEnrollementRequestDto.getPmtctCycleUuid());
-            anc.setStaticHivStatus(ancEnrollementRequestDto.getStaticHivStatus());
             anc.setVitalSigns(ancEnrollementRequestDto.getVitalSigns());
             anc.setCounselling(ancEnrollementRequestDto.getCounselling());
             anc.setSyphilisInfo(ancEnrollementRequestDto.getSyphilisInfo());
@@ -935,6 +931,7 @@ public class ANCService {
             anc.setHepatitisCInfo(ancEnrollementRequestDto.getHepatitisCInfo());
             anc.setUrinalysis(ancEnrollementRequestDto.getUrinalysis());
             anc.setHbPcv(ancEnrollementRequestDto.getHbPcv());
+            anc.setPcv(ancEnrollementRequestDto.getPcv());
             anc.setBloodSugarGdm(ancEnrollementRequestDto.getBloodSugarGdm());
             anc.setLlinGiven(ancEnrollementRequestDto.getLlinGiven());
             anc.setIptDose(ancEnrollementRequestDto.getIptDose());
@@ -977,6 +974,7 @@ public class ANCService {
         ancRespondDto.setAncSetting(anc.getAncSetting());
         ancRespondDto.setCommunitySetting(anc.getCommunitySetting());
         ancRespondDto.setAncAttendance(anc.getAncAttendance());
+        ancRespondDto.setReferredFromSpokesSite(anc.getReferredFromSpokesSite());
         ancRespondDto.setPatient_uuid(persons.getUuid());
         ancRespondDto.setStaticHivStatus(anc.getStaticHivStatus());
         ancRespondDto.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
@@ -988,6 +986,7 @@ public class ANCService {
         ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
         ancRespondDto.setUrinalysis(anc.getUrinalysis());
         ancRespondDto.setHbPcv(anc.getHbPcv());
+        ancRespondDto.setPcv(anc.getPcv());
         ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
         ancRespondDto.setLlinGiven(anc.getLlinGiven());
         ancRespondDto.setIptDose(anc.getIptDose());
@@ -1437,6 +1436,34 @@ public class ANCService {
 
         // If no records found in any table, return "Unknown"
         return "Unknown";
+    }
+
+    /**
+     * Returns the latest HTS client record with both result and date for a given patient.
+     * Used by the frontend to compare HTS encounter date with ANC enrollment date.
+     */
+    public java.util.Map<String, Object> getHtsStatusWithDate(String patientUuid) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("result", "");
+        result.put("dateVisit", null);
+
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            if (currentUser.isPresent()) {
+                Optional<HtsClientProjection> htsOptional = ancRepository
+                        .getHtsRecordByPersonsUuidAAndFacilityId(patientUuid, currentUser.get()
+                                .getCurrentOrganisationUnitId());
+                if (htsOptional.isPresent()) {
+                    HtsClientProjection hts = htsOptional.get();
+                    result.put("result", hts.getHivTestResult() != null ? hts.getHivTestResult() : "");
+                    result.put("dateVisit", hts.getDateVisit());
+                }
+            }
+        } catch (Exception e) {
+            // Silently fail - best effort
+        }
+
+        return result;
     }
 
     boolean getDeliveryStatus(String ancNo) {

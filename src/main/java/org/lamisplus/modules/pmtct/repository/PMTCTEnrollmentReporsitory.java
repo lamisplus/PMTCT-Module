@@ -82,7 +82,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "WHERE pp.archived = ?1 " +
                           "  AND pp.facility_id = ?2 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
-                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                           "ORDER BY pp.uuid, pa.id DESC " +
                   ") AS subquery ORDER BY id DESC",
           countQuery =
@@ -97,7 +97,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "WHERE pp.archived = ?1 " +
                           "  AND pp.facility_id = ?2 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
-                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                          "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
           nativeQuery = true
   )
   Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
@@ -151,7 +151,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "AND pp.archived = ?2 " +
                           "AND pp.facility_id = ?3 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
-                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                           "ORDER BY pp.uuid, pa.id DESC " +
                   ") AS subquery ORDER BY id DESC",
           countQuery =
@@ -173,7 +173,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "AND pp.archived = ?2 " +
                           "AND pp.facility_id = ?3 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
-                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
           nativeQuery = true
   )
   Page<PatientPerson> getActiveOnPMTCTBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
@@ -224,7 +224,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "WHERE pp.archived = ?2 " +
                         "AND pp.facility_id = ?3 " +
                         "AND UPPER(pp.sex) = 'FEMALE' " +
-                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                         "AND (" +
                         "  pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
                         "  pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
@@ -250,7 +250,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "WHERE pp.archived = ?2 " +
                         "AND pp.facility_id = ?3 " +
                         "AND UPPER(pp.sex) = 'FEMALE' " +
-                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                        "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                         "AND (" +
                         "  pp.first_name ILIKE CONCAT('%', ?1, '%') OR " +
                         "  pp.surname ILIKE CONCAT('%', ?1, '%') OR " +
@@ -306,7 +306,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "WHERE pp.archived = ?1 " +
                           "AND pp.facility_id = ?2 " +
                           "AND UPPER(pp.sex) = 'FEMALE' " +
-                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5 " +
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                           "GROUP BY " +
                           "pp.id, pp.active, pp.deceased_date_time, pp.deceased, " +
                           "pp.date_of_registration, pp.identifier, pp.education, " +
@@ -325,7 +325,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "WHERE pp.archived = ?1 " +
                           "AND pp.facility_id = ?2 " +
                           "AND UPPER(pp.sex) = 'FEMALE' " +
-                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5",
+                          "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10",
           nativeQuery = true
   )
   Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);
@@ -459,12 +459,12 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Statistics queries
 
-    // Total female patients >= 5 years
+    // Total female patients >= 10 years
     @Query(value = "SELECT COUNT(DISTINCT pp.uuid) FROM patient_person pp " +
             "WHERE pp.archived = 0 " +
             "AND pp.facility_id = ?1 " +
             "AND UPPER(pp.sex) = 'FEMALE' " +
-            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 5", nativeQuery = true)
+            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10", nativeQuery = true)
     Long getTotalFemalePatients(Long facilityId);
 
     // Total ANC patients with enrollment date not blank

@@ -32,10 +32,10 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private String sourceOfReferral;
     private String ancSetting;
     private String communitySetting;
-
     private String previouslyKnownHivStatus;
     private String currentlyOnArt;
     private String facilityEnrolledIn;
+    private String referredFromSpokesSite;
     private String pmtctCycleUuid;
     private String source;
     private String ancAttendance;
@@ -65,6 +65,7 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     private UrinalysisDto urinalysis;
 
     private String hbPcv;
+    private String pcv;
     private String bloodSugarGdm;
     private String llinGiven;
     private String iptDose;

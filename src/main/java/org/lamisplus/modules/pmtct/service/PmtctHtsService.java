@@ -285,6 +285,11 @@ public class PmtctHtsService {
     public boolean confirmIfDateExist(String patientUuid, LocalDate dateOfHivTest) {
         return pmtctHtsRepository.findIfDateExist(patientUuid, dateOfHivTest);
     }
+
+    public boolean existsInitialHtsForCycle(String patientUuid, String pmtctCycleUuid) {
+        if (patientUuid == null || pmtctCycleUuid == null) return false;
+        return pmtctHtsRepository.existsInitialHtsForCycle(patientUuid, pmtctCycleUuid);
+    }
 //
 
     public HivRetestStatusResponse getHivRetestStatus(String patientUuid) {

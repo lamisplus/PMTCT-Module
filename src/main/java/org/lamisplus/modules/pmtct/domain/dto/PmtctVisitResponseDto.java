@@ -78,4 +78,8 @@ public class PmtctVisitResponseDto implements Serializable {
     private String hepatitisCTestResult;
     private String referredForHcv;
     private String outcomeOfVisit;
+    private String pcv;
+    private SyphilisInfoDto syphilisInfo;
+    private HepatitisBDto hepatitisBInfo;
+    private HepatitisCDto hepatitisCInfo;
 }

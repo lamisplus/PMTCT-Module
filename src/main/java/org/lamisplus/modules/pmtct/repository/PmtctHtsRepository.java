@@ -45,6 +45,9 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
     @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND date_of_hiv_test =?2 AND archived = 0 ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
     boolean findIfDateExist(String patientUuid, LocalDate dateOfHivTest);
 
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND UPPER(COALESCE(testing_type,'')) != 'RETESTING' AND archived = 0)", nativeQuery = true)
+    boolean existsInitialHtsForCycle(String patientUuid, String pmtctCycleUuid);
+
     @Query(value = "SELECT MIN(date_of_hiv_test) FROM pmtct_hts WHERE patient_uuid = ?1 AND archived = 0 AND (COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') IN ('Positive', 'reactive'))", nativeQuery = true)
     LocalDate findEarliestPositiveHivTestDate(String patientUuid);
 
@@ -98,7 +101,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
-                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, ph.id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
@@ -112,7 +115,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
-                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
     Page<PatientPerson> getActiveOnPmtctHts(Integer archived, Long facilityId, Pageable pageable);
@@ -167,7 +170,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
                             "AND pp.archived = ?2 " +
                             "AND pp.facility_id = ?3 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
-                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, ph.id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
@@ -188,7 +191,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
                             "AND pp.archived = ?2 " +
                             "AND pp.facility_id = ?3 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
-                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
     Page<PatientPerson> getActiveOnPmtctHtsBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);

@@ -25,8 +25,6 @@ import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import moment from "moment";
 import { calculateGestationalAge } from "../../utils";
-import FacilitySearchDropdown from "../Patient/FacilitySearchDropdown";
-import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -123,20 +121,14 @@ const AncEnrollement = (props) => {
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [ANCSetting, setANCSetting] = useState([]);
-  const [communitySettingOptions, setCommunitySettingOptions] = useState([]);
   const [disabledField, setDisabledField] = useState(false);
-  const [disableHIVStatus, setDisableHIVStatus] = useState(false);
-
-  const [ancVisitCount, setAncVisitCount] = useState(0);
 
   const [objValues, setObjValues] = useState({
     // Registration Info
-    ancSetting: "",
-    communitySetting: "",
     ancNo: "",
     dateOfEnrollment: "",
-    ancAttendance: "",
+    ancAttendance: "New",
+    referredFromSpokesSite: "",
     // Obstetric History
     gravida: "",
     parity: "",
@@ -168,21 +160,18 @@ const AncEnrollement = (props) => {
     // Hepatitis B (JSONB)
     hepatitisBInfo: {
       testedHepatitisB: "",
-      dateOfHepatitisB: "",
       hepatitisB: "",
-      treatedHepatitisB: "",
       referredHepatitisB: "",
     },
     // Hepatitis C (JSONB)
     hepatitisCInfo: {
       testedHepatitisC: "",
-      dateOfHepatitisC: "",
       hepatitisC: "",
-      treatedHepatitisC: "",
       referredHepatitisC: "",
     },
     // Lab Tests
     hbPcv: "",
+    pcv: "",
     bloodSugarGdm: "",
     // Urinalysis (JSONB)
     urinalysis: {
@@ -194,16 +183,6 @@ const AncEnrollement = (props) => {
     iptDose: "",
     hematinicsGiven: "",
     tdImmunization: "",
-    // HIV Status
-    previouslyKnownHivStatus:
-      patientObj?.dynamicHivStatus === "Positive"
-        ? "Yes"
-        : patientObj?.dynamicHivStatus === "Negative"
-        ? "No"
-        : "",
-    currentlyOnArt: "",
-    facilityEnrolledIn: "",
-    staticHivStatus: patientObj?.dynamicHivStatus || "",
     // Visit Outcome
     associatedProblems: "",
     outcomeOfVisit: "",
@@ -255,45 +234,46 @@ const AncEnrollement = (props) => {
       return;
     }
 
-    // ANC Setting cascade
-    if (e.target.name === "ancSetting") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        communitySetting: "",
-      });
-      return;
-    }
-
-    // HIV Status cascade
-    if (e.target.name === "previouslyKnownHivStatus") {
-      let newStaticHivStatus = "";
-      if (e.target.value === "Yes") {
-        newStaticHivStatus = "Positive";
-      } else if (e.target.value === "No") {
-        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
-      } else if (e.target.value === "Not tested") {
-        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
-      }
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        staticHivStatus: newStaticHivStatus,
-      });
-      return;
-    }
-
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
   };
 
   const handleVitalSignsChange = (e) => {
+    const { name, value } = e.target;
     setObjValues({
       ...objValues,
-      vitalSigns: { ...objValues.vitalSigns, [e.target.name]: e.target.value },
+      vitalSigns: { ...objValues.vitalSigns, [name]: value },
     });
+    // Validate vital signs ranges
+    const val = parseFloat(value);
+    if (name === "weight" && value !== "") {
+      if (val < 30 || val > 150) {
+        setErrors({ ...errors, weight: "Weight must be between 30 and 150 kg" });
+      } else {
+        setErrors({ ...errors, weight: "" });
+      }
+    } else if (name === "height" && value !== "") {
+      if (val < 0.48 || val > 2.16) {
+        setErrors({ ...errors, height: "Height must be between 0.48 and 2.16 m" });
+      } else {
+        setErrors({ ...errors, height: "" });
+      }
+    } else if (name === "systolicBp" && value !== "") {
+      if (val < 90 || val > 240) {
+        setErrors({ ...errors, systolicBp: "Systolic BP must be between 90 and 240" });
+      } else {
+        setErrors({ ...errors, systolicBp: "" });
+      }
+    } else if (name === "diastolicBp" && value !== "") {
+      if (val < 60 || val > 140) {
+        setErrors({ ...errors, diastolicBp: "Diastolic BP must be between 60 and 140" });
+      } else {
+        setErrors({ ...errors, diastolicBp: "" });
+      }
+    }
   };
 
   const handleCounsellingChange = (e) => {
+    setErrors({ ...errors, [e.target.name]: "" });
     setObjValues({
       ...objValues,
       counselling: { ...objValues.counselling, [e.target.name]: e.target.value },
@@ -340,9 +320,7 @@ const AncEnrollement = (props) => {
         hepatitisBInfo: {
           ...objValues.hepatitisBInfo,
           testedHepatitisB: e.target.value,
-          dateOfHepatitisB: "",
           hepatitisB: "",
-          treatedHepatitisB: "",
           referredHepatitisB: "",
         },
       });
@@ -354,7 +332,6 @@ const AncEnrollement = (props) => {
         hepatitisBInfo: {
           ...objValues.hepatitisBInfo,
           hepatitisB: e.target.value,
-          treatedHepatitisB: "",
           referredHepatitisB: "",
         },
       });
@@ -373,9 +350,7 @@ const AncEnrollement = (props) => {
         hepatitisCInfo: {
           ...objValues.hepatitisCInfo,
           testedHepatitisC: e.target.value,
-          dateOfHepatitisC: "",
           hepatitisC: "",
-          treatedHepatitisC: "",
           referredHepatitisC: "",
         },
       });
@@ -387,7 +362,6 @@ const AncEnrollement = (props) => {
         hepatitisCInfo: {
           ...objValues.hepatitisCInfo,
           hepatitisC: e.target.value,
-          treatedHepatitisC: "",
           referredHepatitisC: "",
         },
       });
@@ -406,18 +380,48 @@ const AncEnrollement = (props) => {
     });
   };
 
-  const GET_CODESETS = () => {
-    GET_CODESETS_IN_BATCH(
-      "ENROLLMENT_SETTING",
-      "COMMUNITY_PMTCT"
-    ).then((response) => {
-      setANCSetting(response.data.ENROLLMENT_SETTING);
-      setCommunitySettingOptions(response.data.COMMUNITY_PMTCT);
-    });
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Validate counselling fields
+    const counsellingFields = [
+      { key: "hts", label: "HIV Testing Services" },
+      { key: "fgm", label: "Female Genital Mutilation (FGM)" },
+      { key: "fp", label: "Family Planning" },
+      { key: "maternalNutrition", label: "Maternal Nutrition" },
+      { key: "earlyBf", label: "Early Initiation of Breastfeeding" },
+      { key: "exclusiveBf", label: "Exclusive Breastfeeding" },
+    ];
+    const newErrors = { ...errors };
+    let hasError = false;
+    counsellingFields.forEach(({ key, label }) => {
+      if (!objValues.counselling[key]) {
+        newErrors[key] = `${label} is required`;
+        hasError = true;
+      }
+    });
+    // Validate vital signs ranges
+    const vs = objValues.vitalSigns;
+    if (vs.weight && (parseFloat(vs.weight) < 30 || parseFloat(vs.weight) > 150)) {
+      newErrors.weight = "Weight must be between 30 and 150 kg";
+      hasError = true;
+    }
+    if (vs.height && (parseFloat(vs.height) < 0.48 || parseFloat(vs.height) > 2.16)) {
+      newErrors.height = "Height must be between 0.48 and 2.16 m";
+      hasError = true;
+    }
+    if (vs.systolicBp && (parseFloat(vs.systolicBp) < 90 || parseFloat(vs.systolicBp) > 240)) {
+      newErrors.systolicBp = "Systolic BP must be between 90 and 240";
+      hasError = true;
+    }
+    if (vs.diastolicBp && (parseFloat(vs.diastolicBp) < 60 || parseFloat(vs.diastolicBp) > 140)) {
+      newErrors.diastolicBp = "Diastolic BP must be between 60 and 140";
+      hasError = true;
+    }
+    if (hasError) {
+      setErrors(newErrors);
+      toast.error("Please fill all required fields and correct validation errors");
+      return;
+    }
     setSaving(true);
     const payload = {
       ...objValues,
@@ -431,9 +435,15 @@ const AncEnrollement = (props) => {
       .then((response) => {
         setSaving(false);
         toast.success("ANC Enrollment saved successfully");
+        if (props.setPmtctHtsRetestingType) {
+          props.setPmtctHtsRetestingType("pmtct-hts");
+        }
         props.setActiveContent({
           ...props.activeContent,
-          route: "recent-history",
+          route: "pmtct-hts",
+          actionType: "create",
+          id: "",
+          obj: {},
         });
       })
       .catch((error) => {
@@ -454,24 +464,11 @@ const AncEnrollement = (props) => {
   };
 
   useEffect(() => {
-    GET_CODESETS();
     if (
       props.activeContent?.id &&
       props.activeContent?.actionType !== "create"
     ) {
       setDisabledField(props.activeContent.actionType === "view");
-    }
-
-    // Fetch ANC visit count
-    const patientUuid = objValues.patientUuid;
-    const cycleUuid = props?.latestPmtctCycle?.uuid || props?.selectedCycleId;
-    if (patientUuid && cycleUuid) {
-      axios
-        .get(`${baseUrl}pmtct/anc/anc-visit-count?patientUuid=${patientUuid}&pmtctCycleUuid=${cycleUuid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => setAncVisitCount(res.data || 0))
-        .catch(() => {});
     }
   }, []);
 
@@ -504,53 +501,6 @@ const AncEnrollement = (props) => {
                     <PersonIcon style={sectionIconStyle} />Registration Information
                   </h6>
                   <div className="row">
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>ANC Setting</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="ancSetting"
-                            id="ancSetting"
-                            onChange={handleInputChange}
-                            value={objValues.ancSetting}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {ANCSetting && ANCSetting.length > 0 &&
-                              ANCSetting.map((each) => (
-                                <option key={each.id} value={each.code}>{each.display}</option>
-                              ))}
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    {objValues.ancSetting && (
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>{objValues.ancSetting === "ENROLLMENT_SETTING_COMMUNITY" ? "Community Setting" : "Facility Setting"}</Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="communitySetting"
-                              id="communitySetting"
-                              onChange={handleInputChange}
-                              value={objValues.communitySetting}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              {objValues.ancSetting === "ENROLLMENT_SETTING_COMMUNITY" ? (
-                                <>{communitySettingOptions && communitySettingOptions.length > 0 && communitySettingOptions.map((each) => (
-                                  <option key={each.id} value={each.code}>{each.display}</option>
-                                ))}</>
-                              ) : (
-                                <option value={"PMTCT (ANC1 Only)"}>PMTCT (ANC1 Only)</option>
-                              )}
-                            </Input>
-                          </InputGroup>
-                        </FormGroup>
-                      </div>
-                    )}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
@@ -598,11 +548,30 @@ const AncEnrollement = (props) => {
                             id="ancAttendance"
                             onChange={handleInputChange}
                             value={objValues.ancAttendance}
-                            disabled={disabledField}
+                            disabled={true}
                           >
                             <option value="">Select</option>
                             <option value="New">New</option>
                             <option value="Revisit">Revisit</option>
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Referred from Spokes Site</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="referredFromSpokesSite"
+                            id="referredFromSpokesSite"
+                            onChange={handleInputChange}
+                            value={objValues.referredFromSpokesSite}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
                           </Input>
                         </InputGroup>
                       </FormGroup>
@@ -703,17 +672,6 @@ const AncEnrollement = (props) => {
                     <FitnessCenterIcon style={sectionIconStyle} />Vital Signs
                   </h6>
                   <div className="row">
-                    <div className="col-md-12 mb-2">
-                      <div style={{
-                        display: "inline-flex", alignItems: "center", gap: "8px",
-                        padding: "8px 16px", borderRadius: "6px",
-                        background: "#eef2ff",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                      }}>
-                        <span style={{ fontWeight: 600, color: "#014d88" }}>No. of ANC Visits:</span>
-                        <span style={{ fontWeight: 700, color: "#014d88", fontSize: "16px" }}>{ancVisitCount}</span>
-                      </div>
-                    </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Weight (kg)</Label>
@@ -725,10 +683,12 @@ const AncEnrollement = (props) => {
                             onChange={handleVitalSignsChange}
                             value={objValues.vitalSigns.weight}
                             step="0.1"
-                            min="0"
+                            min="30"
+                            max="150"
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {errors.weight !== "" ? (<span className={classes.error}>{errors.weight}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
@@ -742,10 +702,12 @@ const AncEnrollement = (props) => {
                             onChange={handleVitalSignsChange}
                             value={objValues.vitalSigns.height}
                             step="0.01"
-                            min="0"
+                            min="0.48"
+                            max="2.16"
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {errors.height !== "" ? (<span className={classes.error}>{errors.height}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
@@ -758,10 +720,12 @@ const AncEnrollement = (props) => {
                             id="systolicBp"
                             onChange={handleVitalSignsChange}
                             value={objValues.vitalSigns.systolicBp}
-                            min="0"
+                            min="90"
+                            max="240"
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {errors.systolicBp !== "" ? (<span className={classes.error}>{errors.systolicBp}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
@@ -774,10 +738,12 @@ const AncEnrollement = (props) => {
                             id="diastolicBp"
                             onChange={handleVitalSignsChange}
                             value={objValues.vitalSigns.diastolicBp}
-                            min="0"
+                            min="60"
+                            max="140"
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {errors.diastolicBp !== "" ? (<span className={classes.error}>{errors.diastolicBp}</span>) : ""}
                       </FormGroup>
                     </div>
                   </div>
@@ -793,7 +759,7 @@ const AncEnrollement = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>HIV Testing Services</Label>
+                        <Label>HIV Testing Services <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -808,11 +774,12 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.hts !== "" ? (<span className={classes.error}>{errors.hts}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Female Genital Mutilation (FGM)</Label>
+                        <Label>Female Genital Mutilation (FGM) <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -827,11 +794,12 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.fgm !== "" ? (<span className={classes.error}>{errors.fgm}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Family Planning</Label>
+                        <Label>Family Planning <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -846,11 +814,12 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.fp !== "" ? (<span className={classes.error}>{errors.fp}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Maternal Nutrition</Label>
+                        <Label>Maternal Nutrition <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -865,11 +834,12 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.maternalNutrition !== "" ? (<span className={classes.error}>{errors.maternalNutrition}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Early Initiation of Breastfeeding</Label>
+                        <Label>Early Initiation of Breastfeeding <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -884,11 +854,12 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.earlyBf !== "" ? (<span className={classes.error}>{errors.earlyBf}</span>) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Exclusive Breastfeeding</Label>
+                        <Label>Exclusive Breastfeeding <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -903,6 +874,7 @@ const AncEnrollement = (props) => {
                             <option value="No">No</option>
                           </Input>
                         </InputGroup>
+                        {errors.exclusiveBf !== "" ? (<span className={classes.error}>{errors.exclusiveBf}</span>) : ""}
                       </FormGroup>
                     </div>
                   </div>
@@ -962,7 +934,7 @@ const AncEnrollement = (props) => {
                           <>
                             <div className="form-group mb-3 col-md-4">
                               <FormGroup>
-                                <Label>Treated for Syphilis (penicillin) <span style={{ color: "red" }}> *</span></Label>
+                                <Label>Treated for Syphilis <span style={{ color: "red" }}> *</span></Label>
                                 <InputGroup>
                                   <Input
                                     type="select"
@@ -978,26 +950,6 @@ const AncEnrollement = (props) => {
                                   </Input>
                                 </InputGroup>
                                 {errors.treatedSyphilis !== "" ? (<span className={classes.error}>{errors.treatedSyphilis}</span>) : ""}
-                              </FormGroup>
-                            </div>
-                            <div className="form-group mb-3 col-md-4">
-                              <FormGroup>
-                                <Label>Referred Syphilis +ve Client <span style={{ color: "red" }}> *</span></Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="referredSyphilisTreatment"
-                                    id="referredSyphilisTreatment"
-                                    onChange={handleSyphilisChange}
-                                    value={objValues.syphilisInfo.referredSyphilisTreatment}
-                                    disabled={disabledField}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                                {errors.referredSyphilisTreatment !== "" ? (<span className={classes.error}>{errors.referredSyphilisTreatment}</span>) : ""}
                               </FormGroup>
                             </div>
                           </>
@@ -1038,23 +990,6 @@ const AncEnrollement = (props) => {
                       <>
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <Label>Date Test Done</Label>
-                            <InputGroup>
-                              <Input
-                                type="date"
-                                onKeyPress={(e) => { e.preventDefault(); }}
-                                name="dateOfHepatitisB"
-                                id="dateOfHepatitisB"
-                                onChange={handleHepatitisBChange}
-                                value={objValues.hepatitisBInfo.dateOfHepatitisB}
-                                max={moment(new Date()).format("YYYY-MM-DD")}
-                                disabled={disabledField}
-                              />
-                            </InputGroup>
-                          </FormGroup>
-                        </div>
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
                             <Label>Hepatitis B Test Result</Label>
                             <InputGroup>
                               <Input
@@ -1074,25 +1009,6 @@ const AncEnrollement = (props) => {
                         </div>
                         {objValues.hepatitisBInfo.hepatitisB === "Positive" && (
                           <>
-                            <div className="form-group mb-3 col-md-4">
-                              <FormGroup>
-                                <Label>Treated for Hepatitis B</Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="treatedHepatitisB"
-                                    id="treatedHepatitisB"
-                                    onChange={handleHepatitisBChange}
-                                    value={objValues.hepatitisBInfo.treatedHepatitisB}
-                                    disabled={disabledField}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
                             <div className="form-group mb-3 col-md-4">
                               <FormGroup>
                                 <Label>Referred Hepatitis B +ve Client</Label>
@@ -1139,23 +1055,6 @@ const AncEnrollement = (props) => {
                       <>
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <Label>Date Test Done</Label>
-                            <InputGroup>
-                              <Input
-                                type="date"
-                                onKeyPress={(e) => { e.preventDefault(); }}
-                                name="dateOfHepatitisC"
-                                id="dateOfHepatitisC"
-                                onChange={handleHepatitisCChange}
-                                value={objValues.hepatitisCInfo.dateOfHepatitisC}
-                                max={moment(new Date()).format("YYYY-MM-DD")}
-                                disabled={disabledField}
-                              />
-                            </InputGroup>
-                          </FormGroup>
-                        </div>
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
                             <Label>Hepatitis C Test Result</Label>
                             <InputGroup>
                               <Input
@@ -1175,25 +1074,6 @@ const AncEnrollement = (props) => {
                         </div>
                         {objValues.hepatitisCInfo.hepatitisC === "Positive" && (
                           <>
-                            <div className="form-group mb-3 col-md-4">
-                              <FormGroup>
-                                <Label>Treated for Hepatitis C</Label>
-                                <InputGroup>
-                                  <Input
-                                    type="select"
-                                    name="treatedHepatitisC"
-                                    id="treatedHepatitisC"
-                                    onChange={handleHepatitisCChange}
-                                    value={objValues.hepatitisCInfo.treatedHepatitisC}
-                                    disabled={disabledField}
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                  </Input>
-                                </InputGroup>
-                              </FormGroup>
-                            </div>
                             <div className="form-group mb-3 col-md-4">
                               <FormGroup>
                                 <Label>Referred Hepatitis C +ve Client</Label>
@@ -1230,14 +1110,34 @@ const AncEnrollement = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>HB/PCV (g/dl or %)</Label>
+                        <Label>HB (g/dl)</Label>
                         <InputGroup>
                           <Input
-                            type="text"
+                            type="number"
                             name="hbPcv"
                             id="hbPcv"
+                            step="1"
+                            min="0"
                             onChange={handleInputChange}
                             value={objValues.hbPcv}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>PCV (%)</Label>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="pcv"
+                            id="pcv"
+                            step="1"
+                            min="0"
+                            max="100"
+                            onChange={handleInputChange}
+                            value={objValues.pcv}
                             disabled={disabledField}
                           />
                         </InputGroup>
@@ -1248,18 +1148,15 @@ const AncEnrollement = (props) => {
                         <Label>Blood Sugar (Gestational Diabetes)</Label>
                         <InputGroup>
                           <Input
-                            type="select"
+                            type="number"
                             name="bloodSugarGdm"
                             id="bloodSugarGdm"
+                            step="1"
+                            min="0"
                             onChange={handleInputChange}
                             value={objValues.bloodSugarGdm}
                             disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Normal">Normal</option>
-                            <option value="Abnormal">Abnormal</option>
-                            <option value="Not Done">Not Done</option>
-                          </Input>
+                          />
                         </InputGroup>
                       </FormGroup>
                     </div>
@@ -1401,94 +1298,7 @@ const AncEnrollement = (props) => {
                 </div>
               </div>
 
-              {/* === HIV Status === */}
-              <div className="col-md-12 mb-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <AssignmentIcon style={sectionIconStyle} />HIV Status
-                  </h6>
-                  <div className="row">
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Previously Known HIV +ve Status <span style={{ color: "red" }}> *</span></Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="previouslyKnownHivStatus"
-                            id="previouslyKnownHivStatus"
-                            onChange={handleInputChange}
-                            disabled={disableHIVStatus || disabledField}
-                            value={objValues.previouslyKnownHivStatus}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="Not tested">Not tested</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.previouslyKnownHivStatus !== "" ? (<span className={classes.error}>{errors.previouslyKnownHivStatus}</span>) : ""}
-                      </FormGroup>
-                    </div>
-                    {objValues.previouslyKnownHivStatus === "Yes" && (
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>Are You Currently on ART? <span style={{ color: "red" }}> *</span></Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="currentlyOnArt"
-                              id="currentlyOnArt"
-                              onChange={handleInputChange}
-                              value={objValues.currentlyOnArt}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
-                            </Input>
-                          </InputGroup>
-                          {errors.currentlyOnArt !== "" ? (<span className={classes.error}>{errors.currentlyOnArt}</span>) : ""}
-                        </FormGroup>
-                      </div>
-                    )}
-                    {objValues.previouslyKnownHivStatus === "Yes" && objValues.currentlyOnArt === "Yes" && (
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>Facility Enrolled In <span style={{ color: "red" }}> *</span></Label>
-                          <FacilitySearchDropdown
-                            name="facilityEnrolledIn"
-                            value={objValues.facilityEnrolledIn}
-                            onChange={handleInputChange}
-                            placeholder="Search for a facility..."
-                            error={errors.facilityEnrolledIn}
-                          />
-                        </FormGroup>
-                      </div>
-                    )}
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>HIV Status</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="staticHivStatus"
-                            id="staticHivStatus"
-                            onChange={handleInputChange}
-                            value={objValues.staticHivStatus}
-                            disabled={objValues.previouslyKnownHivStatus === "Yes" || disableHIVStatus || disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
-                            <option value="Not tested">Not Tested</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.staticHivStatus !== "" ? (<span className={classes.error}>{errors.staticHivStatus}</span>) : ""}
-                      </FormGroup>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* === HIV Status === (hidden per feedback F2) */}
 
               {/* === Visit Outcome === */}
               <div className="col-md-12 mb-3">

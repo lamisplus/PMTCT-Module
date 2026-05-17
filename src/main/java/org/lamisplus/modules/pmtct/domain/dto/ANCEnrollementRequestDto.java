@@ -17,9 +17,8 @@ public class ANCEnrollementRequestDto{
     private String source;
     private String id;
     private String ancNo;
-    private String ancSetting;
-    private String communitySetting;
     private String ancAttendance;
+    private String referredFromSpokesSite;
 
     private LocalDate dateOfEnrollment;
     private Integer gravida;
@@ -28,11 +27,7 @@ public class ANCEnrollementRequestDto{
     private LocalDate LMP;
     @JsonProperty("gaweeks")
     private Integer gAWeeks;
-    private String staticHivStatus;
     private final String patient_uuid;
-    private String previouslyKnownHivStatus;
-    private String currentlyOnArt;
-    private String facilityEnrolledIn;
 
     @NotNull(message = "pmtctCycleUuid is required")
     private String pmtctCycleUuid;
@@ -44,6 +39,7 @@ public class ANCEnrollementRequestDto{
     private HepatitisCDto hepatitisCInfo;
     private UrinalysisDto urinalysis;
     private String hbPcv;
+    private String pcv;
     private String bloodSugarGdm;
     private String llinGiven;
     private String iptDose;

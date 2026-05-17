@@ -157,13 +157,14 @@ const PmtctHtsForm = (props) => {
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
     patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
     maternalOutcome: "",
-    entryPoint: locationState.entrypointValue,
+    entryPoint: locationState?.entrypointValue || props?.entrypointValue || "",
     hivStatus: patientObj?.dynamicHivStatus || "",
     pregnancyOutcome: "",
     numberOfInfants: 0,
     pmtctStatus: "INACTIVE",
   });
   const [dateOfHivTestExist, setDateOfHivTestExist] = useState(false);
+  const [initialHtsExistsForCycle, setInitialHtsExistsForCycle] = useState(false);
 
   const [checkingForTheDate, setCheckingForTheDate] = useState(false);
 
@@ -395,6 +396,10 @@ const PmtctHtsForm = (props) => {
          .then((response) => {
            if (response.data) {
              setLastPmtctHtsRecord(response.data);
+             // If any HTS record exists for this cycle, the initial has already been created
+             if (response?.data?.id) {
+               setInitialHtsExistsForCycle(true);
+             }
              if (
                props.onEnrollPatient &&
                response?.data?.id &&
@@ -411,7 +416,7 @@ const PmtctHtsForm = (props) => {
          });
     }
 
-  
+
   };
 
 
@@ -510,6 +515,88 @@ const PmtctHtsForm = (props) => {
     });
   };
 
+  // Auto-populate Previously Known HIV+ and Unique ID for new creates
+  const checkHistoricalHivAndArt = () => {
+    try {
+      const patientUuid =
+        props?.patientObj?.patient_uuid ||
+        props?.patientObj?.patientUuid ||
+        props?.patientObj?.uuid;
+      const personUuid =
+        props?.patientObj?.person_Uuud ||
+        props?.patientObj?.personUuud ||
+        props?.patientObj?.patient_uuid ||
+        props?.patientObj?.uuid;
+
+      if (!patientUuid) return;
+
+      // Get the enrollment/cycle date for date comparison
+      const enrollmentDate = props?.patientObj?.dateOfEnrollment
+        || props?.latestPmtctCycle?.createdDate
+        || null;
+
+      // Check HTS table for documented HIV result (with date for comparison)
+      const htsPromise = axios.get(
+        `${baseUrl}pmtct/anc/hiv-status-detail?patientUuid=${patientUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => ({ data: { result: "", dateVisit: null } }));
+
+      // Check ART table for enrollment
+      const artPromise = axios.get(
+        `${baseUrl}pmtct/anc/art/?PersonUuid=${personUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => ({ data: [] }));
+
+      Promise.all([htsPromise, artPromise])
+        .then(([htsRes, artRes]) => {
+          const htsData = htsRes?.data || {};
+          const htsResult = typeof htsData.result === "string" ? htsData.result : "";
+          const htsDateVisit = htsData.dateVisit || null;
+
+          const artData =
+            Array.isArray(artRes?.data) && artRes.data.length > 0
+              ? artRes.data[0]
+              : null;
+
+          // Date check: only auto-populate from HTS if enrollment date is
+          // later than (or same as) the HTS encounter date
+          let htsDateIsValid = true;
+          if (enrollmentDate && htsDateVisit) {
+            const enrollMoment = moment(enrollmentDate);
+            const htsMoment = moment(htsDateVisit);
+            if (enrollMoment.isValid() && htsMoment.isValid()) {
+              htsDateIsValid = enrollMoment.isSameOrAfter(htsMoment, "day");
+            }
+          }
+
+          const isPositive = htsDateIsValid &&
+            htsResult &&
+            (htsResult.toUpperCase().includes("POSITIVE") ||
+              htsResult.toUpperCase().includes("REACTIVE"));
+          const isOnArt = artData && artData.artStartDate != null;
+
+          if (isPositive || isOnArt) {
+            setPayload((prev) => {
+              // Don't override if user already selected a value
+              if (prev.previouslyKnownHivPositive) return prev;
+              return {
+                ...prev,
+                previouslyKnownHivPositive: "Yes",
+                enrolledOnArt: isOnArt ? "On ART" : "Not on ART",
+                hospitalNumber: (artData && artData.uniqueArtNumber) || prev.hospitalNumber,
+              };
+            });
+            setFinalResult((prev) => prev || "Positive");
+          }
+        })
+        .catch(() => {
+          // Silently fail — auto-population is best-effort, should not block the form
+        });
+    } catch (e) {
+      // Guard against any unexpected errors during setup
+    }
+  };
+
   useEffect(() => {
     POINT_ENTRY_PMTCT();
     GET_CODESETS();
@@ -526,6 +613,12 @@ const PmtctHtsForm = (props) => {
         props?.patientObj?.identifier?.identifier[0]?.value,
         props.patientUuid
       );
+    } else if (
+      !props?.activeContent?.id ||
+      props?.activeContent?.actionType === "create"
+    ) {
+      // New create — check historical HIV/ART status for auto-population
+      checkHistoricalHivAndArt();
     }
   }, [props?.activeContent]);
 
@@ -879,7 +972,7 @@ const PmtctHtsForm = (props) => {
         hivEarlyDetect: "",
         hivEarlyDetectViralLoad: "",
         initiatedOnProphylaxis: "",
-        confirmatoryFromSpokes: "",
+        // confirmatoryFromSpokes NOT cleared — field stays visible per S/N 8
       }));
       if (e.target.value === "Yes") {
         // Auto-set final result to Positive and clear test fields
@@ -1031,12 +1124,13 @@ const PmtctHtsForm = (props) => {
       ? ""
       : "This field is required";
 
-    // Skip test-related validation when Previously Known HIV+ = Yes
-    if (!isKnownPositive) {
-      temp.testEntryPoint = payload.testEntryPoint
-        ? ""
-        : "This field is required";
+    // Test Entry Point is always visible and required
+    temp.testEntryPoint = payload.testEntryPoint
+      ? ""
+      : "This field is required";
 
+    // Skip test setting/stage validation when Previously Known HIV+ = Yes
+    if (!isKnownPositive) {
       temp.testSetting = payload.testSetting ? "" : "This field is required";
 
       payload.testSetting !== "" &&
@@ -1045,41 +1139,28 @@ const PmtctHtsForm = (props) => {
           ? ""
           : "This field is required");
 
-      if (isPmtctHts) {
-        // PMTCT-HTS diagnostic testing validation
-        if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_RAPID_ANTIBODY") {
-          temp.initialresult = initialHivTest.result ? "" : "This field is required";
-          if (initialHivTest.result === "Positive") {
-            temp.confirmatoryresult = confirmatoryHivTest.result
-              ? ""
-              : "This field is required";
-          }
-        } else if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_HIV_EARLY_DETECT") {
-          // Require HIV Early Detect Result
-          temp.hivEarlyDetect = payload.hivEarlyDetect ? "" : "This field is required";
-          // If Suspected Acute → Initiated on Prophylaxis required
-          if (payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE" || payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE") {
-            temp.initiatedOnProphylaxis = payload.initiatedOnProphylaxis ? "" : "This field is required";
-          }
-          // If Antibody Reactive Only → Confirmatory required
-          if (payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIBODY_REACTIVE") {
-            temp.confirmatoryresult = confirmatoryHivTest.result
-              ? ""
-              : "This field is required";
-          }
-        }
-      } else {
-        // Retesting flow — initial result required
+      // Diagnostic testing validation — applies to both PMTCT-HTS and Retesting
+      temp.typeOfHivTest = payload.typeOfHivTest ? "" : "This field is required";
+      if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_RAPID_ANTIBODY") {
         temp.initialresult = initialHivTest.result ? "" : "This field is required";
-      }
-    }
-
-    if (!isPmtctHts && !isKnownPositive) {
-      // Retesting validation: Initial Positive → require confirmatory
-      if (initialHivTest.result === "Positive") {
-        temp.confirmatoryresult = confirmatoryHivTest.result
-          ? ""
-          : "This field is required";
+        if (initialHivTest.result === "Positive") {
+          temp.confirmatoryresult = confirmatoryHivTest.result
+            ? ""
+            : "This field is required";
+        }
+      } else if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_HIV_EARLY_DETECT") {
+        // Require HIV Early Detect Result
+        temp.hivEarlyDetect = payload.hivEarlyDetect ? "" : "This field is required";
+        // If Suspected Acute → Initiated on Prophylaxis required
+        if (payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE" || payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE") {
+          temp.initiatedOnProphylaxis = payload.initiatedOnProphylaxis ? "" : "This field is required";
+        }
+        // If Antibody Reactive Only → Confirmatory required
+        if (payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIBODY_REACTIVE") {
+          temp.confirmatoryresult = confirmatoryHivTest.result
+            ? ""
+            : "This field is required";
+        }
       }
     }
 
@@ -1223,7 +1304,7 @@ const PmtctHtsForm = (props) => {
       let payload2 = {
         patientUuid: props.patientUuid,
         maternalOutcome: "",
-        entryPoint: locationState.entrypointValue,
+        entryPoint: locationState?.entrypointValue || props?.entrypointValue || "",
         hivStatus: payload.finalResult,
         pregnancyOutcome: "",
         numberOfInfants: 0,
@@ -1299,13 +1380,12 @@ const PmtctHtsForm = (props) => {
         }
       }
 
-      // If Previously Known HIV+, clear all test fields
+      // If Previously Known HIV+, clear test fields (but keep confirmatoryFromSpokes per S/N 8)
       if (payload.previouslyKnownHivPositive === "Yes") {
         payload.typeOfHivTest = "";
         payload.hivEarlyDetect = "";
         payload.hivEarlyDetectViralLoad = "";
         payload.initiatedOnProphylaxis = "";
-        payload.confirmatoryFromSpokes = "";
         payload.initialHivTest = null;
         payload.confirmatoryHivTest = null;
       }
@@ -1335,10 +1415,45 @@ const PmtctHtsForm = (props) => {
         referral: payload.partnerReferredTo || "",
       };
     } else {
-      payload.tieBreaker = tieBreaker;
-      payload.retesting = retesting;
-      payload.confirmatoryTest2 = confirmatoryTest2;
-      payload.tieBreaker2 = tieBreaker2;
+      // Retesting — clean up fields based on Type of HIV Test (same logic as PMTCT-HTS)
+      payload.tieBreaker = null;
+      payload.retesting = null;
+      payload.confirmatoryTest2 = null;
+      payload.tieBreaker2 = null;
+
+      if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_RAPID_ANTIBODY") {
+        payload.hivEarlyDetect = "";
+        payload.hivEarlyDetectViralLoad = "";
+        payload.initiatedOnProphylaxis = "";
+      } else if (payload.typeOfHivTest === "TYPE_OF_HIV_TEST_HIV_EARLY_DETECT") {
+        if (payload.hivEarlyDetect !== "HIV_EARLY_DETECT_RESULT_ANTIBODY_REACTIVE") {
+          payload.initialHivTest = null;
+          payload.confirmatoryHivTest = null;
+        }
+      }
+
+      // Retesting does not have serology tests — clear them
+      payload.hepatitisC = "";
+      payload.syphilisInfo = null;
+      payload.hbvInfo = null;
+
+      // Assemble Partner Info JSONB (Partner Notification is on both forms)
+      payload.partnerInfo = {
+        notificationAgreed: payload.partnerNotificationAgreed || "",
+        testedHiv: payload.partnerTestedHiv || "",
+        testedSyphilis: payload.partnerTestedSyphilis || "",
+        testedHbv: payload.partnerTestedHbv || "",
+        referral: payload.partnerReferredTo || "",
+      };
+    }
+
+    // Prevent saving a second initial PMTCT HTS for the same cycle
+    const isNewCreate = props.activeContent?.actionType === "create" || !props.activeContent?.id;
+    if (isPmtctHts && initialHtsExistsForCycle && isNewCreate) {
+      toast.error("An initial PMTCT HTS record already exists for this cycle. Use Retesting instead.", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return;
     }
 
     // Validation checks
@@ -1434,12 +1549,28 @@ const PmtctHtsForm = (props) => {
           ancNo: props?.patientObj?.ancNo,
           patientUuid: props.patientUuid,
         };
-        props.handleRoute(data);
+        // S/N 17: Positive confirmatory → auto-open MIP enrollment form
+        if (finalResult === "Positive") {
+          props.handleRoute(data, { autoOpenRoute: "anc-pnc" });
+        } else {
+          props.handleRoute(data);
+        }
       } else {
-        props.setActiveContent({
-          ...props.activeContent,
-          route: "recent-history",
-        });
+        // S/N 17: Positive confirmatory → navigate to MIP enrollment form
+        if (finalResult === "Positive" && !isUpdate) {
+          props.setActiveContent({
+            ...props.activeContent,
+            route: "anc-pnc",
+            actionType: "create",
+            id: "",
+            obj: {},
+          });
+        } else {
+          props.setActiveContent({
+            ...props.activeContent,
+            route: "recent-history",
+          });
+        }
       }
     } catch (error) {
       console.error("Enrollment error:", error);
@@ -1579,45 +1710,46 @@ const PmtctHtsForm = (props) => {
               </div>
 
               {/* === Test Details (bordered container) === */}
-              {!(isPmtctHts && payload.previouslyKnownHivPositive === "Yes") && (
-                <div className="col-md-12 mb-3">
-                  <div style={{
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "0.35rem",
-                    padding: "15px 10px",
-                    backgroundColor: "#f8f9fa"
-                  }}>
-                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
-                      <AssignmentIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Test Details
-                    </h6>
-                    <div className="row">
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>Test Entry Point</Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="testEntryPoint"
-                              id="testEntryPoint"
-                              onChange={handleInputChange}
-                              value={payload.testEntryPoint}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              {testEntryPoint.map((value) => (
-                                <option key={value.id} value={value.code}>
-                                  {value.display}
-                                </option>
-                              ))}
-                            </Input>
-                          </InputGroup>
-                          {errors.testEntryPoint !== "" ? (
-                            <span className={classes.error}>{errors.testEntryPoint}</span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
-                      </div>
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <AssignmentIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Test Details
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Test Entry Point</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="testEntryPoint"
+                            id="testEntryPoint"
+                            onChange={handleInputChange}
+                            value={payload.testEntryPoint}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {testEntryPoint.map((value) => (
+                              <option key={value.id} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.testEntryPoint !== "" ? (
+                          <span className={classes.error}>{errors.testEntryPoint}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    {/* Hide Test Setting when Previously Known HIV+ (S/N 7) */}
+                    {!(isPmtctHts && payload.previouslyKnownHivPositive === "Yes") && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>
@@ -1649,7 +1781,8 @@ const PmtctHtsForm = (props) => {
                           )}
                         </FormGroup>
                       </div>
-                      {(payload.testSetting || "").includes("_ANC") && (
+                    )}
+                    {!(isPmtctHts && payload.previouslyKnownHivPositive === "Yes") && (payload.testSetting || "").includes("_ANC") && (
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
                             <Label>
@@ -1704,7 +1837,6 @@ const PmtctHtsForm = (props) => {
                     </div>
                   </div>
                 </div>
-              )}
 
               {/* === HIV History (bordered container, PMTCT-HTS only) === */}
               {isPmtctHts && (
@@ -1759,13 +1891,35 @@ const PmtctHtsForm = (props) => {
                           </FormGroup>
                         </div>
                       )}
+                      {/* Confirmatory Test: Positives from Spokes — always visible per S/N 8 */}
+                      {isPmtctHts && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Confirmatory Test: Positives from Spokes</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="confirmatoryFromSpokes"
+                                id="confirmatoryFromSpokes"
+                                onChange={handleInputChange}
+                                value={payload.confirmatoryFromSpokes}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Positive">Positive</option>
+                                <option value="Negative">Negative</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
               {/* === Diagnostic Testing (bordered container, PMTCT-HTS only) === */}
-              {isPmtctHts && payload.previouslyKnownHivPositive !== "Yes" && (
+              {payload.previouslyKnownHivPositive !== "Yes" && (
                 <div className="col-md-12 mb-3">
                   <div style={{
                     border: "1px solid #e0e0e0",
@@ -1774,29 +1928,9 @@ const PmtctHtsForm = (props) => {
                     backgroundColor: "#f8f9fa"
                   }}>
                     <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
-                      <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Diagnostic Testing
+                      <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />{isPmtctHts ? "Diagnostic Testing" : "HIV Maternal Re-testing"}
                     </h6>
                     <div className="row">
-                  {/* Confirmatory Test: Positives from Spokes */}
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <Label>Confirmatory Test: Positives from Spokes</Label>
-                      <InputGroup>
-                        <Input
-                          type="select"
-                          name="confirmatoryFromSpokes"
-                          id="confirmatoryFromSpokes"
-                          onChange={handleInputChange}
-                          value={payload.confirmatoryFromSpokes}
-                          disabled={disabledField}
-                        >
-                          <option value="">Select</option>
-                          <option value="Positive">Positive</option>
-                          <option value="Negative">Negative</option>
-                        </Input>
-                      </InputGroup>
-                    </FormGroup>
-                  </div>
 
                   {/* Type of HIV Test */}
                   <div className="form-group mb-3 col-md-4">
@@ -2026,79 +2160,7 @@ const PmtctHtsForm = (props) => {
                 </div>
               )}
 
-              {/* === Retesting Flow (bordered container, not PMTCT-HTS) === */}
-              {!isPmtctHts && (
-                <div className="col-md-12 mb-3">
-                  <div style={{
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "0.35rem",
-                    padding: "15px 10px",
-                    backgroundColor: "#f8f9fa"
-                  }}>
-                    <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
-                      <ReplayIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV Re-testing
-                    </h6>
-                    <div className="row">
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>
-                            HIV Re-testing Result
-                            <span style={{ color: "red" }}> *</span>
-                          </Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="result"
-                              id="result"
-                              onChange={handleInitialInputChange}
-                              value={initialHivTest.result}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
-                            </Input>
-                          </InputGroup>
-                          {errors.initialresult !== "" ? (
-                            <span className={classes.error}>{errors.initialresult}</span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
-                      </div>
-                      {initialHivTest.result === "Positive" && (
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>
-                              Confirmatory HIV Test{" "}
-                              <span style={{ color: "red" }}> *</span>
-                            </Label>
-                            <InputGroup>
-                              <Input
-                                type="select"
-                                name="result"
-                                id="confirmatory_result"
-                                onChange={handleConfirmatoryInputChange}
-                                value={confirmatoryHivTest.result}
-                                disabled={disabledField}
-                              >
-                                <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
-                              </Input>
-                            </InputGroup>
-                            {errors.confirmatoryresult !== "" ? (
-                              <span className={classes.error}>{errors.confirmatoryresult}</span>
-                            ) : (
-                              ""
-                            )}
-                          </FormGroup>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Old simple retesting section removed — retesting now uses the full Diagnostic Testing flow above */}
 
               {/* === OTHER SEROLOGY TESTS (PMTCT-HTS only, NOT on Retesting) === */}
               {isPmtctHts && (
@@ -2135,14 +2197,14 @@ const PmtctHtsForm = (props) => {
                           disabled={disabledField}
                         >
                           <option value="">Select</option>
-                          <option value="Positive">Positive</option>
-                          <option value="Negative">Negative</option>
+                          <option value="Reactive">Reactive</option>
+                          <option value="Non-reactive">Non-reactive</option>
                         </Input>
                       </InputGroup>
                     </FormGroup>
                   </div>
 
-                  {payload.syphilis === "Positive" && (
+                  {payload.syphilis === "Reactive" && (
                     <>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -2221,7 +2283,7 @@ const PmtctHtsForm = (props) => {
                     </FormGroup>
                   </div>
 
-                  {/* If Known HBV = Yes → show HBV Test Result + Treatment (without "Prior on HBV treatment") */}
+                  {/* Known HBV = Yes → show HBV Result (Pos/Neg) + Treatment (3 options: Not treated, New on Prophylaxis, Referred) */}
                   {payload.knownHbvPositive === "Yes" && (
                     <>
                       <div className="form-group mb-3 col-md-4">
@@ -2244,36 +2306,56 @@ const PmtctHtsForm = (props) => {
                         </FormGroup>
                       </div>
 
-                      {/* Hide treatment if HBV Test Result = Negative */}
-                      {payload.hepatitisB === "Positive" && (
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>HBV Treatment/Referral</Label>
-                            <InputGroup>
-                              <Input
-                                type="select"
-                                name="hepatitisBTreatment"
-                                id="hepatitisBTreatment"
-                                onChange={handleInputChange}
-                                value={payload.hepatitisBTreatment}
-                                disabled={disabledField}
-                              >
-                                <option value="">Select</option>
-                                {hbvTreatmentOptions.map((value) => (
-                                  <option key={value.id} value={value.code}>
-                                    {value.display}
-                                  </option>
-                                ))}
-                              </Input>
-                            </InputGroup>
-                          </FormGroup>
-                        </div>
-                      )}
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>HBV Treatment/Referral</Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="hepatitisBTreatment"
+                              id="hepatitisBTreatment"
+                              onChange={handleInputChange}
+                              value={payload.hepatitisBTreatment}
+                              disabled={disabledField}
+                            >
+                              <option value="">Select</option>
+                              <option value="Not treated">Not treated</option>
+                              <option value="New on Prophylaxis">New on Prophylaxis</option>
+                              <option value="Referred">Referred</option>
+                            </Input>
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
                     </>
                   )}
 
-                  {/* HBV VL fields — only show when HBV Test Result is Positive */}
-                  {payload.knownHbvPositive === "Yes" && payload.hepatitisB === "Positive" && (
+                  {/* Known HBV = No → skip HBV Result, show Treatment (4 options including "Prior on HBV treatment") */}
+                  {payload.knownHbvPositive === "No" && (
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>HBV Treatment/Referral</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="hepatitisBTreatment"
+                            id="hepatitisBTreatment"
+                            onChange={handleInputChange}
+                            value={payload.hepatitisBTreatment}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Not treated">Not treated</option>
+                            <option value="Prior on HBV treatment">Prior on HBV treatment</option>
+                            <option value="New on Prophylaxis">New on Prophylaxis</option>
+                            <option value="Referred">Referred</option>
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                  )}
+
+                  {/* HBV VL fields — show when Known HBV = Yes (S/N 22) */}
+                  {payload.knownHbvPositive === "Yes" && (
                     <>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -2307,93 +2389,93 @@ const PmtctHtsForm = (props) => {
                         </FormGroup>
                       </div>
 
-                      {payload.knownHbvPositive === "Yes" && (
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>Name of HBV Drug</Label>
-                            <InputGroup>
-                              <Input
-                                type="text"
-                                name="hbvDrugName"
-                                id="hbvDrugName"
-                                onChange={handleInputChange}
-                                value={payload.hbvDrugName}
-                                disabled={disabledField}
-                                placeholder="Enter drug name"
-                              />
-                            </InputGroup>
-                          </FormGroup>
-                        </div>
-                      )}
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Name of HBV Drug</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="hbvDrugName"
+                              id="hbvDrugName"
+                              onChange={handleInputChange}
+                              value={payload.hbvDrugName}
+                              disabled={disabledField}
+                              placeholder="Enter drug name"
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
                     </>
                   )}
                       </div>
                     </div>
                   </div>
+                </>
+              )}
 
-                  {/* === TB (bordered container) === */}
-                  <div className="col-md-12 mb-3">
-                    <div style={{
-                      border: "1px solid #e0e0e0",
-                      borderRadius: "0.35rem",
-                      padding: "15px 10px",
-                      backgroundColor: "#f8f9fa"
-                    }}>
-                      <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
-                        <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />TB
-                      </h6>
-                      <div className="row">
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>TB Screening Status</Label>
-                            <InputGroup>
-                              <Input
-                                type="select"
-                                name="tbScreeningStatus"
-                                id="tbScreeningStatus"
-                                onChange={handleInputChange}
-                                value={payload.tbScreeningStatus}
-                                disabled={disabledField}
-                              >
-                                <option value="">Select</option>
-                                {tbStatus.map((value) => (
-                                  <option key={value.id} value={value.code}>
-                                    {value.display}
-                                  </option>
-                                ))}
-                              </Input>
-                            </InputGroup>
-                          </FormGroup>
-                        </div>
-                        {payload.tbScreeningStatus === "TB_STATUS_PRESUMPTIVE_TB" && (
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Referred for Evaluation</Label>
-                              <InputGroup>
-                                <Input
-                                  type="select"
-                                  name="tbReferred"
-                                  id="tbReferred"
-                                  onChange={handleInputChange}
-                                  value={payload.tbReferred}
-                                  disabled={disabledField}
-                                >
-                                  <option value="">Select</option>
-                                  {tbReferralOptions.map((value) => (
-                                    <option key={value.id} value={value.code}>
-                                      {value.display}
-                                    </option>
-                                  ))}
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                        )}
-                      </div>
+              {/* === TB (bordered container) — Shown on BOTH PMTCT-HTS and Retesting === */}
+              <div className="col-md-12 mb-3">
+                <div style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "0.35rem",
+                  padding: "15px 10px",
+                  backgroundColor: "#f8f9fa"
+                }}>
+                  <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
+                    <LocalHospitalIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />TB
+                  </h6>
+                  <div className="row">
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>TB Screening Status</Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="tbScreeningStatus"
+                            id="tbScreeningStatus"
+                            onChange={handleInputChange}
+                            value={payload.tbScreeningStatus}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            {tbStatus.map((value) => (
+                              <option key={value.id} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                      </FormGroup>
                     </div>
+                    {payload.tbScreeningStatus === "TB_STATUS_PRESUMPTIVE_TB" && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Referred for Evaluation</Label>
+                          <InputGroup>
+                            <Input
+                              type="select"
+                              name="tbReferred"
+                              id="tbReferred"
+                              onChange={handleInputChange}
+                              value={payload.tbReferred}
+                              disabled={disabledField}
+                            >
+                              <option value="">Select</option>
+                              {tbReferralOptions.map((value) => (
+                                <option key={value.id} value={value.code}>
+                                  {value.display}
+                                </option>
+                              ))}
+                            </Input>
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
                   </div>
+                </div>
+              </div>
 
-                  {/* === Partner Notification (bordered container) === */}
+              {/* === Partner Notification (bordered container) — Shown on BOTH PMTCT-HTS and Retesting === */}
                   <div className="col-md-12 mb-3">
                     <div style={{
                       border: "1px solid #e0e0e0",
@@ -2501,7 +2583,15 @@ const PmtctHtsForm = (props) => {
                               disabled={disabledField}
                             >
                               <option value="">Select</option>
-                              {partnerReferredOptions.map((value) => (
+                              {partnerReferredOptions
+                                .filter((value) => {
+                                  // ART option only available when partner is HIV Positive
+                                  if ((value.code || "").toUpperCase().includes("_ART") && payload.partnerTestedHiv !== "Positive") {
+                                    return false;
+                                  }
+                                  return true;
+                                })
+                                .map((value) => (
                                 <option key={value.id} value={value.code}>
                                   {value.display}
                                 </option>
@@ -2515,8 +2605,6 @@ const PmtctHtsForm = (props) => {
                       </div>
                     </div>
                   </div>
-                </>
-              )}
 
               {/* Viral Load Monitoring — Display if Previously Known or HIV Positive */}
               {(payload.previouslyKnownHivPositive === "Yes" ||

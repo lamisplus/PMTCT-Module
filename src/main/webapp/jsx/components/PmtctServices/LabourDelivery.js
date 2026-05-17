@@ -508,14 +508,10 @@ const LabourDelivery = (props) => {
 
   const validate = () => {
     let temp = { ...errors };
-    temp.artStartedLdWard = delivery.artStartedLdWard
-      ? ""
-      : "This field is required";
-    temp.placeOfDelivery = delivery.placeOfDelivery
-      ? ""
-      : "This field is required";
-    temp.vaginalTear = delivery.vaginalTear ? "" : "This field is required";
-    temp.onArt = delivery.onArt ? "" : "This field is required";
+    // artStartedLdWard validation removed — field hidden per feedback F6
+    // placeOfDelivery validation removed — field hidden per feedback F3
+    // vaginalTear validation removed — field hidden per feedback F5
+    // onArt validation removed — field hidden per feedback F6
     temp.modeOfDelivery = delivery.modeOfDelivery
       ? ""
       : "This field is required";
@@ -529,16 +525,14 @@ const LabourDelivery = (props) => {
     } else {
       temp.gaweeks = "";
     }
-    temp.episiotomy = delivery.episiotomy ? "" : "This field is required";
-    temp.deliveryTime = delivery.deliveryTime ? "" : "This field is required";
+    // episiotomy validation removed — field hidden per feedback F4
+    // deliveryTime validation removed — field hidden per feedback F6
     temp.dateOfDelivery = delivery.dateOfDelivery
       ? ""
       : "This field is required";
     temp.childStatus = delivery.childStatus ? "" : "This field is required";
-    temp.childGivenArvWithin72 = delivery.childGivenArvWithin72
-      ? ""
-      : "This field is required";
-    temp.bookingStatus = delivery.bookingStatus ? "" : "This field is required";
+    // childGivenArvWithin72 validation removed — field hidden per feedback F6
+    // bookingStatus validation removed — field hidden per feedback F1
     if (delivery.childStatus !== "" && delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH") {
       if (!delivery.numberOfInfantsAlive && delivery.numberOfInfantsAlive !== 0) {
         temp.numberOfInfantsAlive = "This field is required";
@@ -574,10 +568,63 @@ const LabourDelivery = (props) => {
     return Object.values(temp).every((x) => x == "");
   };
 
-  const handleSubmit = (e) => {
+  // Create PMTCT cycle (used when LabourDelivery is on the enrollment page)
+  const createCycle = async () => {
+    const cyclePayload = {
+      patientUuid: props.patientObj.patient_uuid
+        || props.patientObj.patientUuid
+        || props.patientObj.uuid,
+      maternalOutcome: "",
+      entryPoint: props.entrypointValue || props.patientObj?.entryPoint || "",
+      hivStatus: props.patientObj?.dynamicHivStatus || "",
+      pregnancyOutcome: "",
+      numberOfInfants: 0,
+      pmtctStatus: "INACTIVE",
+      source: "WEB",
+    };
+
+    try {
+      const response = await axios.post(
+        `${baseUrl}pmtct/anc/pregnancy-cycle`,
+        cyclePayload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response?.data) {
+        return { status: true, response: response.data };
+      } else {
+        toast.error("Failed to create PMTCT cycle: no data returned");
+        return { status: false, response: null };
+      }
+    } catch (e) {
+      console.error("Cycle creation error:", e);
+      toast.error(
+        `${e?.response?.status || ""}: PMTCT cycle not created: ${e?.response?.data || e.message}`
+      );
+      return { status: false, response: null };
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
       setSaving(true);
+
+      // If on enrollment page, create cycle first
+      if (props.onEnrollPatient && !delivery.pmtctCycleUuid) {
+        try {
+          const cycleResult = await createCycle();
+          if (!cycleResult.status) {
+            setSaving(false);
+            return;
+          }
+          delivery.pmtctCycleUuid = cycleResult.response.uuid;
+        } catch (err) {
+          console.error("Cycle creation failed:", err);
+          toast.error("Failed to create PMTCT cycle. Please try again.");
+          setSaving(false);
+          return;
+        }
+      }
 
       const isChildAlive =
         delivery.childStatus &&
@@ -585,7 +632,11 @@ const LabourDelivery = (props) => {
         parseInt(delivery.numberOfInfantsAlive) >
           parseInt(delivery.numberOfInfantsDead);
 
-      const targetRoute = isChildAlive ? "infants" : "recent-history";
+      const defaultRoute = isChildAlive ? "infants" : "recent-history";
+
+      // For L&D entry point on new create, navigate to PMTCT HTS after save
+      const isLdEntryPoint =
+        props.patientObj?.entryPoint === "PMTCT_ENTRY_POINT_L&D";
 
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
@@ -601,7 +652,7 @@ const LabourDelivery = (props) => {
             });
             props.setActiveContent({
               ...props.activeContent,
-              route: targetRoute,
+              route: defaultRoute,
             });
           })
           .catch((error) => {
@@ -621,10 +672,33 @@ const LabourDelivery = (props) => {
             toast.success("Record save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
-            props.setActiveContent({
-              ...props.activeContent,
-              route: targetRoute,
-            });
+            // Enrollment page: navigate to patient-history via handleRoute
+            if (props.onEnrollPatient && props.handleRoute) {
+              const data = {
+                ...props.patientObj,
+                id: props.patientObj.id,
+                pmtctCycleUuid: delivery.pmtctCycleUuid,
+                entryPoint: props.entrypointValue || props.patientObj?.entryPoint,
+                hospitalNumber: props.patientObj?.identifier?.identifier?.[0]?.value
+                  || props.patientObj?.hospitalNumber,
+              };
+              props.handleRoute(data, { autoOpenRoute: "pmtct-hts" });
+            } else if (isLdEntryPoint && props.setPmtctHtsRetestingType) {
+              // L&D entry point in PatientDetail: navigate to PMTCT HTS form
+              props.setPmtctHtsRetestingType("pmtct-hts");
+              props.setActiveContent({
+                ...props.activeContent,
+                route: "pmtct-hts",
+                actionType: "create",
+                id: "",
+                obj: {},
+              });
+            } else {
+              props.setActiveContent({
+                ...props.activeContent,
+                route: defaultRoute,
+              });
+            }
           })
           .catch((error) => {
             setSaving(false);
@@ -671,35 +745,7 @@ const LabourDelivery = (props) => {
                     <PersonIcon style={sectionIconStyle} />Patient & Booking Information
                   </h6>
                   <div className="row">
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Booking Status <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="bookingStatus"
-                            id="bookingStatus"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.bookingStatus}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {bookingStatus.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
-                        </InputGroup>
-                        {errors.bookingStatus !== "" ? (
-                          <span className={classes.error}>{errors.bookingStatus}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
+                    {/* Booking Status hidden per feedback F1 */}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Decision in Seeking Care</Label>
@@ -814,57 +860,8 @@ const LabourDelivery = (props) => {
                         )}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>ROM Delivery Interval</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="romDeliveryInterval"
-                            id="romDeliveryInterval"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.romDeliveryInterval}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {romdelivery.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Place of Delivery <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="placeOfDelivery"
-                            id="placeOfDelivery"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.placeOfDelivery}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {placeOfDelivery.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
-                        </InputGroup>
-                        {errors.placeOfDelivery !== "" ? (
-                          <span className={classes.error}>{errors.placeOfDelivery}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
+                    {/* ROM Delivery Interval hidden per feedback F2 */}
+                    {/* Place of Delivery hidden per feedback F3 */}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
@@ -894,60 +891,8 @@ const LabourDelivery = (props) => {
                         )}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Episiotomy <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="episiotomy"
-                            id="episiotomy"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.episiotomy}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="Unknown">Unknown</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.episiotomy !== "" ? (
-                          <span className={classes.error}>{errors.episiotomy}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Vaginal Tear <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="vaginalTear"
-                            id="vaginalTear"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.vaginalTear}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="Unknown">Unknown</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.vaginalTear !== "" ? (
-                          <span className={classes.error}>{errors.vaginalTear}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
+                    {/* Episiotomy hidden per feedback F4 */}
+                    {/* Vaginal Tear hidden per feedback F5 */}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Partograph Used?</Label>
@@ -1068,201 +1013,7 @@ const LabourDelivery = (props) => {
                 </div>
               </div>
 
-              {/* === HIV & Treatment Status === */}
-              <div className="col-md-12 mb-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <LocalHospitalIcon style={sectionIconStyle} />HIV & Treatment Status
-                  </h6>
-                  <div className="row">
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          On ART? <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="onArt"
-                            id="onArt"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.onArt}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.onArt !== "" ? (
-                          <span className={classes.error}>{errors.onArt}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Time of HIV Diagnosis <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="deliveryTime"
-                            id="deliveryTime"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.deliveryTime}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {timehiv.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
-                        </InputGroup>
-                        {errors.deliveryTime !== "" ? (
-                          <span className={classes.error}>{errors.deliveryTime}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          ART Started in L&D Ward <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="artStartedLdWard"
-                            id="artStartedLdWard"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.artStartedLdWard}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.artStartedLdWard !== "" ? (
-                          <span className={classes.error}>{errors.artStartedLdWard}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Hepatitis B Status</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="hbstatus"
-                            id="hbstatus"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.hbstatus}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Hepatitis C Status</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="hcstatus"
-                            id="hcstatus"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.hcstatus}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Child Given ARV Within 72 hrs <span style={{ color: "red" }}> *</span>
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="childGivenArvWithin72"
-                            id="childGivenArvWithin72"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.childGivenArvWithin72}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                        {errors.childGivenArvWithin72 !== "" ? (
-                          <span className={classes.error}>{errors.childGivenArvWithin72}</span>
-                        ) : (
-                          ""
-                        )}
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>HBV Exposed Infant Given Hep B Ig Within 24 hrs</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="hivExposedInfantGivenHbWithin24hrs"
-                            id="hivExposedInfantGivenHbWithin24hrs"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.hivExposedInfantGivenHbWithin24hrs}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>
-                          Non HBV Exposed Infant Given HBV Vaccine Within 24 hrs
-                        </Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="nonHbvExposedInfantGivenHbWithin24hrs"
-                            id="nonHbvExposedInfantGivenHbWithin24hrs"
-                            onChange={handleInputChangeDeliveryDto}
-                            value={delivery.nonHbvExposedInfantGivenHbWithin24hrs}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* === HIV & Treatment Status === (hidden per feedback F6) */}
 
               {/* === Maternal Outcome === */}
               <div className="col-md-12 mb-3">
@@ -1300,117 +1051,126 @@ const LabourDelivery = (props) => {
                         )}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Mother Admitted (reason)</Label>
-                        <InputGroup>
-                          <Input
-                            type="text"
-                            name="motherAdmittedReason"
-                            id="motherAdmittedReason"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.motherAdmittedReason}
-                            disabled={disabledField}
-                          />
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Mother Discharged?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="motherDischarged"
-                            id="motherDischarged"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.motherDischarged}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Mother Referred Out?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="motherReferredOut"
-                            id="motherReferredOut"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.motherReferredOut}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Received Post Abortion Care (PAC)?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="motherReceivedPac"
-                            id="motherReceivedPac"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.motherReceivedPac}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Transportation Out</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="motherTransportationOut"
-                            id="motherTransportationOut"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.motherTransportationOut}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Ambulance">Ambulance</option>
-                            <option value="Others">Others</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>MDA Conducted? (if dead)</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="mdaConducted"
-                            id="mdaConducted"
-                            onChange={handleMaternalInterventionsChange}
-                            value={delivery.maternalInterventions.mdaConducted}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="N/A">N/A</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
+                    {/* If Alive: show Admitted, Discharged, Referred Out, PAC, Transportation Out */}
+                    {(delivery.maternalOutcome === "MATERNAL_OUTCOME_ALIVE" ||
+                      delivery.maternalOutcome === "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT") && (
+                      <>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Mother Admitted (reason)</Label>
+                            <InputGroup>
+                              <Input
+                                type="text"
+                                name="motherAdmittedReason"
+                                id="motherAdmittedReason"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.motherAdmittedReason}
+                                disabled={disabledField}
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Mother Discharged?</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="motherDischarged"
+                                id="motherDischarged"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.motherDischarged}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Mother Referred Out?</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="motherReferredOut"
+                                id="motherReferredOut"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.motherReferredOut}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Received Post Abortion Care (PAC)?</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="motherReceivedPac"
+                                id="motherReceivedPac"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.motherReceivedPac}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Transportation Out</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="motherTransportationOut"
+                                id="motherTransportationOut"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.motherTransportationOut}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Ambulance">Ambulance</option>
+                                <option value="Others">Others</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      </>
+                    )}
+                    {/* If Dead: show MDA Conducted */}
+                    {delivery.maternalOutcome === "MATERNAL_OUTCOME_DEAD" && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>MDA Conducted?</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="mdaConducted"
+                                id="mdaConducted"
+                                onChange={handleMaternalInterventionsChange}
+                                value={delivery.maternalInterventions.mdaConducted}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="N/A">N/A</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                    )}
                   </div>
                   {delivery.maternalOutcome !== "" &&
                   delivery.maternalOutcome !== "MATERNAL_OUTCOME_ACTIVE_IN_PMTCT" &&

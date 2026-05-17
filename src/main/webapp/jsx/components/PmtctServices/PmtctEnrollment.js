@@ -398,15 +398,19 @@ const AncPnc = (props) => {
         const updates = {};
         // Map syphilis from HTS to enrollment syphilisDetails
         if (htsData.syphilis) {
-          const mapped = htsData.syphilis === "reactive" ? "Positive"
-            : htsData.syphilis === "non-reactive" ? "Negative"
+          const mapped = ["reactive", "Reactive", "Positive"].includes(htsData.syphilis) ? "Positive"
+            : ["non-reactive", "Non-reactive", "Negative"].includes(htsData.syphilis) ? "Negative"
             : htsData.syphilis;
           updates.syphilisDetails = { ...enroll.syphilisDetails, testResult: mapped };
         }
         // Map full syphilis JSONB from HTS if available
         if (htsData.syphilisInfo) {
+          const rawResult = htsData.syphilisInfo.testResult || "";
+          const mappedResult = ["reactive", "Reactive"].includes(rawResult) ? "Positive"
+            : ["non-reactive", "Non-reactive"].includes(rawResult) ? "Negative"
+            : rawResult;
           updates.syphilisDetails = {
-            testResult: htsData.syphilisInfo.testResult || updates.syphilisDetails?.testResult || "",
+            testResult: mappedResult || updates.syphilisDetails?.testResult || "",
             treatment: htsData.syphilisInfo.treatment || "",
             drugName: htsData.syphilisInfo.drugName || "",
           };
@@ -448,8 +452,8 @@ const AncPnc = (props) => {
           const ancData = ancResponse.data;
           const updates = {};
           if (ancData.testResultSyphilis) {
-            const mapped = ancData.testResultSyphilis === "reactive" ? "Positive"
-              : ancData.testResultSyphilis === "non-reactive" ? "Negative"
+            const mapped = ["reactive", "Reactive", "Positive"].includes(ancData.testResultSyphilis) ? "Positive"
+              : ["non-reactive", "Non-reactive", "Negative"].includes(ancData.testResultSyphilis) ? "Negative"
               : ancData.testResultSyphilis;
             updates.syphilisDetails = { ...enroll.syphilisDetails, testResult: mapped };
           }

@@ -561,6 +561,11 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctEnrollmentService.getHIVStatus(hospitalNumber, patientUuid));
     }
 
+    @GetMapping(value = "hiv-status-detail")
+    public ResponseEntity<java.util.Map<String, Object>> getClientHivStatusDetail(@RequestParam String patientUuid) {
+        return ResponseEntity.ok(ancService.getHtsStatusWithDate(patientUuid));
+    }
+
     @GetMapping(value = "get-latest-pcr")
     public ResponseEntity<InfantPCRTestDto> getLastPCR(@RequestParam String infantHospitalNumber, @RequestParam String pmtctCycleUuid) {
         return ResponseEntity.ok(infantService.getLatestPCR(infantHospitalNumber, pmtctCycleUuid));
@@ -604,6 +609,15 @@ public class PMTCTController {
         if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"message\": \"pmtct cycle uuid is required\"}");
+        }
+        // Prevent saving a second initial PMTCT HTS record for the same cycle
+        if (pmtctHtsRequestDTO.getTestingType() != null
+                && !pmtctHtsRequestDTO.getTestingType().equalsIgnoreCase("RETESTING")
+                && pmtctHtsService.existsInitialHtsForCycle(
+                        pmtctHtsRequestDTO.getPatientUuid(),
+                        pmtctHtsRequestDTO.getPmtctCycleUuid())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"An initial PMTCT HTS record already exists for this cycle\"}");
         }
         return ResponseEntity.ok(this.pmtctHtsService.save(pmtctHtsRequestDTO));
     }

@@ -75,6 +75,7 @@ function PatientCard(props) {
   const [maternalOutcome, setMaternalOutcome] = useState("");
   const [lastestHivStatus, setLatestHivStatus] = useState("");
   const [mainDeliveryStatus, setMainDeliveryStatus] = useState(false);
+  const [numberOfInfantsAlive, setNumberOfInfantsAlive] = useState(0);
   const [checkForRetesting, setCheckForRetesting] = useState(true);
   const [isOnPMTCT, setIsOnPMTCT] = useState(false);
 
@@ -176,6 +177,23 @@ function PatientCard(props) {
               (each) => each.activityName == "Labour and Delivery"
             );
             setMainDeliveryStatus(hasDeliveryActivity);
+
+            // Fetch number of infants alive from the delivery record
+            if (hasDeliveryActivity && pmtctCycleUuid) {
+              axios
+                .get(
+                  `${baseUrl}pmtct/anc/view-delivery-with-uuid/${patientUuid}/${pmtctCycleUuid}`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                )
+                .then((deliveryRes) => {
+                  const alive = deliveryRes.data?.numberOfInfantsAlive;
+                  setNumberOfInfantsAlive(alive != null ? parseInt(alive) : 0);
+                })
+                .catch(() => setNumberOfInfantsAlive(0));
+            } else {
+              setNumberOfInfantsAlive(0);
+            }
+
             const hasRetestingActivity = response.data.some(
               (each) =>
                 (each.activityName &&
@@ -259,6 +277,21 @@ function PatientCard(props) {
           console.error("Error fetching patient info:", error);
         });
     }
+
+    // Auto-open a route if redirected from enrollment (e.g., L&D → HTS)
+    const autoOpenRoute = history.location?.state?.autoOpenRoute;
+    if (autoOpenRoute) {
+      if (autoOpenRoute === "pmtct-hts") {
+        setPmtctHtsRetestingType("pmtct-hts");
+      }
+      setActiveContent((prev) => ({
+        ...prev,
+        route: autoOpenRoute,
+        actionType: "create",
+        id: "",
+        obj: {},
+      }));
+    }
   }, []);
 
   // Cycle-dependent calls: only run when we have a valid cycle UUID
@@ -312,6 +345,7 @@ function PatientCard(props) {
             setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             activeContent={activeContent}
             mainDeliveryStatus={mainDeliveryStatus}
+            numberOfInfantsAlive={numberOfInfantsAlive}
             maternalOutcome={maternalOutcome}
             isOnPMTCT={isOnPMTCT}
             setIsOnPMTCT={setIsOnPMTCT}
@@ -405,6 +439,7 @@ function PatientCard(props) {
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
               selectedCycleId={selectedCycleId}
+              setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             />
           )}
 
@@ -415,6 +450,7 @@ function PatientCard(props) {
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
               selectedCycleId={selectedCycleId}
+              setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             />
           )}
 

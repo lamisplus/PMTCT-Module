@@ -143,7 +143,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "AND pp.archived = ?2 " +
                             "AND pp.facility_id = ?3 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
-                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, pa.id DESC " +
                     ") AS subquery ORDER BY personId DESC",
             countQuery =
@@ -165,7 +165,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "AND pp.archived = ?2 " +
                             "AND pp.facility_id = ?3 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
-                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                            "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
     Page<PatientPerson> getActiveOnANCBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
@@ -231,7 +231,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
-                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5) " +
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, pa.id DESC " +
                     ") AS subquery ORDER BY personId DESC",
             countQuery =
@@ -246,7 +246,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "WHERE pp.archived = ?1 " +
                             "  AND pp.facility_id = ?2 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
-                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 5)",
+                            "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
     Page<PatientPerson> getActiveOnANC(Integer archived, Long facilityId, Pageable pageable);

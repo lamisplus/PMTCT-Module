@@ -4995,4 +4995,22 @@
         </sql>
     </changeSet>
 
+    <!-- Add syphilis_info, hepatitis_b_info, hepatitis_c_info, pcv JSONB columns to pmtct_mother_visitation -->
+    <changeSet failOnError="false" author="system" id="2026-05-13-add-syphilis-hepatitis-jsonb-to-mother-visitation">
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN IF NOT EXISTS syphilis_info jsonb;
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN IF NOT EXISTS hepatitis_b_info jsonb;
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN IF NOT EXISTS hepatitis_c_info jsonb;
+            ALTER TABLE pmtct_mother_visitation ADD COLUMN IF NOT EXISTS pcv character varying;
+        </sql>
+    </changeSet>
+
+    <!-- Add referred_from_spokes_site and pcv columns to pmtct_anc -->
+    <changeSet failOnError="false" author="system" id="2026-05-15-add-referred-spokes-and-pcv-to-pmtct-anc">
+        <sql>
+            ALTER TABLE pmtct_anc ADD COLUMN IF NOT EXISTS referred_from_spokes_site character varying;
+            ALTER TABLE pmtct_anc ADD COLUMN IF NOT EXISTS pcv character varying;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

@@ -20,6 +20,7 @@ import {
   ListItemButton,
   Collapse,
   Box,
+  Tooltip,
 } from '@mui/material';
 import { convertMaternalCodeToValue } from "../../utils";
 
@@ -441,10 +442,12 @@ function PatientCard(props) {
               <div style={{ color: "#0f172a", fontWeight: "700", fontSize: "13px" }}>{patientGender}</div>
             </div>
             {patientAddress && (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#94a3b8", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "2px" }}>Address</div>
-              <div style={{ color: "#0f172a", fontWeight: "600", fontSize: "13px" }}>{patientAddress}</div>
-            </div>
+            <Tooltip title={patientAddress} arrow placement="bottom" enterDelay={200}>
+              <div style={{ textAlign: "center", maxWidth: "220px", cursor: "pointer" }}>
+                <div style={{ color: "#94a3b8", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "2px" }}>Address</div>
+                <div style={{ color: "#0f172a", fontWeight: "600", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{patientAddress}</div>
+              </div>
+            </Tooltip>
             )}
           </div>
 
