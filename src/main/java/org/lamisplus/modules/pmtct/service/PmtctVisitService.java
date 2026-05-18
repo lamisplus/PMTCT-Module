@@ -13,7 +13,6 @@ import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
-import org.lamisplus.modules.pmtct.repository.InfantPCRTestRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,6 @@ public class PmtctVisitService {
     private final ANCService ancService;
     private final UserService userService;
     ObjectMapper mapper = new ObjectMapper();
-    private final InfantPCRTestRepository infantPCRTestRepository;
     private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
     public PmtctVisitResponseDto save(PmtctVisitRequestDto pmtctVisitRequestDto) {

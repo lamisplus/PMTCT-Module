@@ -50,7 +50,6 @@ public class PMTCTEnrollmentService {
   private final CurrentUserOrganizationService currentUserOrganizationService;
 
   private final InfantVisitRepository infantVisitRepository;
-private final InfantPCRTestRepository   infantPCRTestRepository;
   private final InfantRepository infantRepository;
   private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
 
@@ -787,8 +786,8 @@ private DeliveryRepository deliveryRepository;
             visitDate = deliveryDate;
         }
 
-        // Get latest PCR info (most recent PCR test regardless of visit date)
-        InfantPCRTest lastPCR = infantPCRTestRepository.getLastPCR(infantHospitalNo);
+        // Get latest PCR from JSONB: check visits first, then infant registration
+        InfantPCRTestDto lastPCRDto = getLatestPCRFromJsonb(infant);
 
         // Calculate age between delivery date and last visit date (supports retrospective entry)
         long ageInWeeks = ChronoUnit.WEEKS.between(deliveryDate, visitDate);
@@ -796,57 +795,61 @@ private DeliveryRepository deliveryRepository;
         long ageInHours = ChronoUnit.HOURS.between(deliveryDate.atStartOfDay(), visitDate.atStartOfDay());
 
         // Determine expected PCR based on age and last PCR type (compliance check)
-        InfantPCRAlert result = determineExpectedPCR(ageInWeeks, ageInMonths, ageInHours, lastPCR, infantRes);
+        InfantPCRAlert result = determineExpectedPCR(ageInWeeks, ageInMonths, ageInHours, lastPCRDto, infantRes);
 
         // Counter-check: if child already has the expected PCR record type, remove the alert
         return counterCheckPCRRecord(result, infantHospitalNo);
     }
 
-    private InfantPCRAlert determineExpectedPCR(long ageInWeeks, long ageInMonths, long ageInHours, InfantPCRTest lastPCR, InfantPCRAlert  infantRes) {
-        System.out.println(infantRes.getInfantHospitalNo() + " " + "ageInWeeks: " + ageInWeeks + " ageInMonths " + ageInMonths +  " ageInHours " + ageInHours);
-
+    private InfantPCRAlert determineExpectedPCR(long ageInWeeks, long ageInMonths, long ageInHours, InfantPCRTestDto lastPCR, InfantPCRAlert  infantRes) {
         // PCR test type constants
         final String PCR_1ST = "INFANT_TESTING_PCR_1ST_PCR_4-6_WEEKS_OF_AGE_OR_1ST_CONTACT";
         final String PCR_2ND = "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED";
         final String PCR_3RD = "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE";
         final String PCR_4TH = "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)";
+        final String PCR_CONFIRMATORY = "INFANT_TESTING_PCR_CONFIRMATORY_PCR";
 
-
-        if (lastPCR != null ) {
+        if (lastPCR != null) {
             infantRes.setLastPCRTest(lastPCR);
             String lastPCRTestType = lastPCR.getTestType();
+            String lastPCRResult = lastPCR.getResults();
 
-            // If infant has previous PCR tests
+            // If Confirmatory PCR is positive, infant is confirmed HIV+ — no further PCR alerts
+            if (PCR_CONFIRMATORY.equals(lastPCRTestType)
+                    && lastPCRResult != null && lastPCRResult.contains("POSITIVE")) {
+                return infantRes;
+            }
 
-            // Check for 4th PCR (after 52 weeks / ~12 months)
+            // If any PCR result is positive, next required step is Confirmatory PCR
+            if (lastPCRResult != null && lastPCRResult.contains("POSITIVE")) {
+                infantRes.setAlertMessage("Infant due for Confirmatory PCR");
+                return infantRes;
+            }
+
+            // PCR result is negative — determine next PCR in sequence based on age
             if (ageInWeeks > 52 && !PCR_4TH.equals(lastPCRTestType)) {
-                infantRes.setAlertMessage( "Infant due for 4th PCR");
-            }else if (ageInMonths > 9 && !PCR_3RD.equals(lastPCRTestType)) {
+                infantRes.setAlertMessage("Infant due for 4th PCR");
+            } else if (ageInMonths > 9 && !PCR_3RD.equals(lastPCRTestType)) {
                 infantRes.setAlertMessage("Infant due for 3rd PCR");
-            }else if (ageInWeeks > 6 && !PCR_2ND.equals(lastPCRTestType)) {
+            } else if (ageInWeeks > 6 && !PCR_2ND.equals(lastPCRTestType)) {
                 infantRes.setAlertMessage("Infant due for 2nd PCR");
-            }else if (ageInHours > 72 && !PCR_1ST.equals(lastPCRTestType)) {
+            } else if (ageInHours > 72 && !PCR_1ST.equals(lastPCRTestType)) {
                 infantRes.setAlertMessage("Infant due for 1st PCR");
             }
-                return infantRes;
+            return infantRes;
         } else {
-            // If infant has no previous PCR tests
-
-            // Check for 4th PCR (after 52 weeks)
+            // If infant has no previous PCR tests — determine by age
             if (ageInWeeks > 52) {
                 infantRes.setAlertMessage("Infant due for 4th PCR");
-
-            }else if (ageInMonths > 9) {
+            } else if (ageInMonths > 9) {
                 infantRes.setAlertMessage("Infant due for 3rd PCR");
-            }else if (ageInWeeks > 6) {
+            } else if (ageInWeeks > 6) {
                 infantRes.setAlertMessage("Infant due for 2nd PCR");
-            }else if (ageInHours > 72) {
+            } else if (ageInHours > 72) {
                 infantRes.setAlertMessage("Infant due for 1st PCR");
             }
-            return infantRes; // No alert needed
-
+            return infantRes;
         }
-
     }
 
     /**
@@ -861,10 +864,26 @@ private DeliveryRepository deliveryRepository;
             return infantRes;
         }
 
-        // Get all PCR records for this infant
-        List<InfantPCRTest> allPCRTests = infantPCRTestRepository.findByInfantHospitalNumber(infantHospitalNo);
+        // Collect all PCR test types from JSONB (visits + registration)
+        List<String> allPCRTestTypes = new ArrayList<>();
 
-        if (allPCRTests == null || allPCRTests.isEmpty()) {
+        // From infant visits
+        List<InfantVisit> visits = infantVisitRepository
+            .getInfantVisitsByInfantHospitalNumberOrdered(infantHospitalNo);
+        for (InfantVisit visit : visits) {
+            if (visit.getInfantPcrData() != null && visit.getInfantPcrData().getTestType() != null) {
+                allPCRTestTypes.add(visit.getInfantPcrData().getTestType());
+            }
+        }
+
+        // From infant registration
+        Optional<Infant> infantOpt = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNo);
+        if (infantOpt.isPresent() && infantOpt.get().getInfantPcrData() != null
+                && infantOpt.get().getInfantPcrData().getTestType() != null) {
+            allPCRTestTypes.add(infantOpt.get().getInfantPcrData().getTestType());
+        }
+
+        if (allPCRTestTypes.isEmpty()) {
             return infantRes; // No records exist, keep the alert
         }
 
@@ -873,12 +892,15 @@ private DeliveryRepository deliveryRepository;
         final String PCR_2ND = "INFANT_TESTING_PCR_2ND_PCR_12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED";
         final String PCR_3RD = "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE";
         final String PCR_4TH = "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)";
+        final String PCR_CONFIRMATORY = "INFANT_TESTING_PCR_CONFIRMATORY_PCR";
 
         // Determine which PCR type the alert is about
         String alertMessage = infantRes.getAlertMessage();
         String expectedPCRType = null;
 
-        if (alertMessage.contains("1st PCR")) {
+        if (alertMessage.contains("Confirmatory PCR")) {
+            expectedPCRType = PCR_CONFIRMATORY;
+        } else if (alertMessage.contains("1st PCR")) {
             expectedPCRType = PCR_1ST;
         } else if (alertMessage.contains("2nd PCR")) {
             expectedPCRType = PCR_2ND;
@@ -889,9 +911,9 @@ private DeliveryRepository deliveryRepository;
         }
 
         if (expectedPCRType != null) {
-            // Check if any existing PCR record matches the expected type
-            for (InfantPCRTest pcrTest : allPCRTests) {
-                if (expectedPCRType.equals(pcrTest.getTestType())) {
+            // Check if any existing PCR test type matches the expected type
+            for (String testType : allPCRTestTypes) {
+                if (expectedPCRType.equals(testType)) {
                     // Child already has this PCR record, remove the alert
                     infantRes.setAlertMessage(null);
                     break;
@@ -902,6 +924,25 @@ private DeliveryRepository deliveryRepository;
         return infantRes;
     }
 
-
+    private InfantPCRTestDto getLatestPCRFromJsonb(Infant infant) {
+        String infantHospitalNo = infant.getInfantHospitalNumber();
+        // 1. Check InfantVisit JSONB (follow-up visits, newest first)
+        List<InfantVisit> visits = infantVisitRepository
+            .getInfantVisitsByInfantHospitalNumberOrdered(infantHospitalNo);
+        for (InfantVisit visit : visits) {
+            if (visit.getInfantPcrData() != null
+                    && visit.getInfantPcrData().getTestType() != null
+                    && !visit.getInfantPcrData().getTestType().isEmpty()) {
+                return visit.getInfantPcrData();
+            }
+        }
+        // 2. Fallback: Infant registration JSONB
+        if (infant.getInfantPcrData() != null
+                && infant.getInfantPcrData().getTestType() != null
+                && !infant.getInfantPcrData().getTestType().isEmpty()) {
+            return infant.getInfantPcrData();
+        }
+        return null;
+    }
 
 }

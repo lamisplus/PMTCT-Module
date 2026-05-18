@@ -252,8 +252,8 @@ const AncEnrollement = (props) => {
         setErrors({ ...errors, weight: "" });
       }
     } else if (name === "height" && value !== "") {
-      if (val < 0.48 || val > 2.16) {
-        setErrors({ ...errors, height: "Height must be between 0.48 and 2.16 m" });
+      if (val < 48 || val > 216) {
+        setErrors({ ...errors, height: "Height must be between 48 and 216 cm" });
       } else {
         setErrors({ ...errors, height: "" });
       }
@@ -405,8 +405,8 @@ const AncEnrollement = (props) => {
       newErrors.weight = "Weight must be between 30 and 150 kg";
       hasError = true;
     }
-    if (vs.height && (parseFloat(vs.height) < 0.48 || parseFloat(vs.height) > 2.16)) {
-      newErrors.height = "Height must be between 0.48 and 2.16 m";
+    if (vs.height && (parseFloat(vs.height) < 48 || parseFloat(vs.height) > 216)) {
+      newErrors.height = "Height must be between 48 and 216 cm";
       hasError = true;
     }
     if (vs.systolicBp && (parseFloat(vs.systolicBp) < 90 || parseFloat(vs.systolicBp) > 240)) {
@@ -693,7 +693,7 @@ const AncEnrollement = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Height (m)</Label>
+                        <Label>Height (cm)</Label>
                         <InputGroup>
                           <Input
                             type="number"
@@ -701,9 +701,9 @@ const AncEnrollement = (props) => {
                             id="height"
                             onChange={handleVitalSignsChange}
                             value={objValues.vitalSigns.height}
-                            step="0.01"
-                            min="0.48"
-                            max="2.16"
+                            step="0.1"
+                            min="48"
+                            max="216"
                             disabled={disabledField}
                           />
                         </InputGroup>

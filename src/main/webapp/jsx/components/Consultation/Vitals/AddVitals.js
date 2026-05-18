@@ -294,7 +294,7 @@ const AddVitals = (props) => {
                                         <Label >Height</Label>
                                         <InputGroup> 
                                         <InputGroupText>
-                                               m
+                                               cm
                                             </InputGroupText>
                                             <Input 
                                                 type="number"
@@ -305,8 +305,8 @@ const AddVitals = (props) => {
                                             />
                                             
                                         </InputGroup>
-                                        {vital.height > 3 ? (
-                                            <span className={classes.error}>{"Height cannot be greater than 3."}</span>
+                                        {vital.height > 216 ? (
+                                            <span className={classes.error}>{"Height cannot be greater than 216 cm."}</span>
                                         ) : "" }
                                         </FormGroup>
                                     </div>

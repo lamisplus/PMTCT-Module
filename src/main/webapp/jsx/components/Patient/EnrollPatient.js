@@ -1265,11 +1265,11 @@ const UserRegistration = (props) => {
                           </div>
                           <div className="form-group mb-3 col-md-4">
                             <FormGroup>
-                              <Label>Height (m)</Label>
+                              <Label>Height (cm)</Label>
                               <InputGroup>
-                                <Input type="number" name="height" id="height" onChange={handleInputChange} value={objValues.height} step="0.01" min="0.48" max="2.16" />
+                                <Input type="number" name="height" id="height" onChange={handleInputChange} value={objValues.height} step="0.1" min="48" max="216" />
                               </InputGroup>
-                              {objValues.height && (objValues.height < 0.48 || objValues.height > 2.16) ? (<span className={classes.error}>Height must be between 0.48 and 2.16 m</span>) : ""}
+                              {objValues.height && (objValues.height < 48 || objValues.height > 216) ? (<span className={classes.error}>Height must be between 48 and 216 cm</span>) : ""}
                             </FormGroup>
                           </div>
                           <div className="form-group mb-3 col-md-4">

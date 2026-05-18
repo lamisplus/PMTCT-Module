@@ -146,6 +146,9 @@ const ClinicVisit = (props) => {
   const [disableRapidField, setDisableRapidField] = useState(false);
   const [infantRecordClosed, setInfantRecordClosed] = useState(false);
   const [infantClosedOutcome, setInfantClosedOutcome] = useState("");
+  const [arvFilledAtRegistration, setArvFilledAtRegistration] = useState(false);
+  const [registrationArvData, setRegistrationArvData] = useState(null);
+  const [registrationCtxStatus, setRegistrationCtxStatus] = useState("");
 
   const [ageAtTestList, setAtTestList] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -204,6 +207,7 @@ const ClinicVisit = (props) => {
   const [pcrType, setPcrType] = useState([]);
   const pcrTypeFullRef = useRef([]);
   const currentVisitPCRTypeRef = useRef(null);
+  const visitHasOwnArvRef = useRef(false);
   const [latestPCR, setLatestPCR] = useState({});
   const [latestRapidTest, setLatestRapidTest] = useState({});
   const [showInfantVist, setShowInfantVist] = useState(true);
@@ -351,7 +355,9 @@ const ClinicVisit = (props) => {
         setPcrResult(response.data.INFANT_PCR_RESULT);
         setInfantOutcome(response.data.INFANT_OUTCOME_AT_18_MONTHS);
         setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
-        setPcrType(response.data.INFANT_TESTING_PCR);
+        // Only store the full PCR list in the ref — do NOT call setPcrType here.
+        // setPcrType is called by getLatestPCR() after filtering to the correct next type.
+        // Calling it here would override the filtered list due to a race condition.
         pcrTypeFullRef.current = response.data.INFANT_TESTING_PCR;
         setTimingProphylaxisList(response.data.TIMING_PROPHYLAXIS_WITHIN_72HRS);
 
@@ -460,6 +466,13 @@ const ClinicVisit = (props) => {
           resultInfo[0].patientUuid
         );
         setChoosenInfant(resultInfo[0]);
+        // For view/update: if the visit didn't save its own ARV but registration has it, show as read-only
+        const infant = resultInfo[0];
+        if (infant.infantArvDto && infant.infantArvDto.infantArvType && !visitHasOwnArvRef.current) {
+          setArvFilledAtRegistration(true);
+          setRegistrationArvData(infant.infantArvDto);
+          setRegistrationCtxStatus(infant.ctxStatus || "");
+        }
       })
 
       .catch((error) => {
@@ -524,14 +537,22 @@ const ClinicVisit = (props) => {
     let deliveryDate = moment(choosenInfant.dateOfDelivery);
     let vistDate  = moment(visitDate);
 
-    // If rapid test is positive, prompt for confirmatory PCR
-    if(vistDate.diff(deliveryDate, 'months') >= 18 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_POSITIVE"  && !latestPCR?.results){
-      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a Confirmatory PCR test.")
-      // Re-activate confirmatory PCR in dropdown
+    // If rapid test is positive, prompt for 3rd PCR (per PCR flow diagram)
+    if(vistDate.diff(deliveryDate, 'months') >= 9 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_POSITIVE"  && !latestPCR?.results){
+      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a 3rd PCR (DNA PCR @ 9 months).")
+      // Re-activate 3rd PCR in dropdown
       const newPCRList = pcrTypeFullRef.current || [];
-      const confirmatoryPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR");
-      if (confirmatoryPCR.length > 0) {
-        setPcrType(confirmatoryPCR);
+      const thirdPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE");
+      if (thirdPCR.length > 0) {
+        setPcrType(thirdPCR);
+      }
+    }
+    // If rapid test is negative, show 4th PCR
+    if(vistDate.diff(deliveryDate, 'months') >= 9 &&  latestRapidTest?.result === "INFANT_PCR_RESULT_NEGATIVE"){
+      const newPCRList = pcrTypeFullRef.current || [];
+      const fourthPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)");
+      if (fourthPCR.length > 0) {
+        setPcrType(fourthPCR);
       }
     }
 
@@ -558,9 +579,24 @@ const ClinicVisit = (props) => {
 
     let hasDonePCRTest = choosenInfant?.infantPCRTestDto?.id ? true : false
 
-        if(childAge  >= 18 && hasDonePCRTest){
+        if(childAge  >= 9 && hasDonePCRTest){
           setshowRapidTest(true)
-          setInfantRapidTestList(["First Rapid Antibody", "Second Rapid Antibody"])
+
+          // Per PCR flow diagram:
+          // 1st Rapid @9mo: after 2nd PCR negative
+          // 2nd Rapid @18mo: after 4th PCR negative
+          if(childAge >= 18 && latestPCR?.testType?.includes("4TH_PCR") && latestPCR?.results?.includes("NEGATIVE")){
+            setInfantRapidTestList(["Second Rapid Antibody"])
+          } else if(latestPCR?.testType?.includes("2ND_PCR") && latestPCR?.results?.includes("NEGATIVE")){
+            setInfantRapidTestList(["First Rapid Antibody"])
+          } else {
+            // Default: show based on age
+            if(childAge >= 18){
+              setInfantRapidTestList(["First Rapid Antibody", "Second Rapid Antibody"])
+            } else {
+              setInfantRapidTestList(["First Rapid Antibody"])
+            }
+          }
 
         }else{
           setshowRapidTest(false)
@@ -696,9 +732,13 @@ const ClinicVisit = (props) => {
         setInfantVisitRequestDto({ ...response.data.infantVisitRequestDto });
         if (response.data.infantArvDto) {
           setInfantArvDto({ ...response.data.infantArvDto });
+          setArvFilledAtRegistration(false);
+          visitHasOwnArvRef.current = true;
         } else {
-          // No ARV record exists - clear ctxStatus so ARV section appears empty
+          // No ARV record on this visit - clear ctxStatus so ARV section appears empty
           setInfantVisitRequestDto(prev => ({ ...prev, ctxStatus: "" }));
+          visitHasOwnArvRef.current = false;
+          // Registration ARV check will happen in filterOutTheChosenChildForView
         }
         if (response.data.infantMotherArtDto) {
           setInfantMotherArtDto({ ...response.data.infantMotherArtDto });
@@ -711,7 +751,7 @@ const ClinicVisit = (props) => {
         if (response.data.infantRapidAntiBodyTestDto) {
           setInfantRapidTestDTO({ ...response.data.infantRapidAntiBodyTestDto });
           // Ensure rapid test section is visible when viewing/updating a visit that has rapid test data
-          setshowRapidTest(false);
+          setshowRapidTest(true);
         }
         GetInfantDetail2({ ...response.data.infantVisitRequestDto });
 
@@ -787,21 +827,17 @@ const ClinicVisit = (props) => {
               })
   }
 
-    const getLatestPCR=(infantHospitalNo)=>{
-           let newPCRList = pcrTypeFullRef.current || [];
+    const filterAndSetPcrType = (latestPCRData) => {
+        let newPCRList = pcrTypeFullRef.current || [];
 
-              // Fetch only the latest PCR test for this infant
-              axios
-              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}&pmtctCycleUuid=${props?.latestPmtctCycle?.uuid}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .then((response) => {
-            const latestPCRData = response.data || null;
-            setLatestPCR(latestPCRData)
+        // If codesets haven't loaded yet, retry after a short delay
+        if (newPCRList.length === 0) {
+          setTimeout(() => filterAndSetPcrType(latestPCRData), 300);
+          return;
+        }
 
-          // check if the last PCR is Confirmatory and positive
-          if(latestPCRData && latestPCRData?.results?.includes("POSITIVE") && latestPCRData?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
-          //Deactive the whole form and display the child's HIV positive status on child's dashboard
+        // check if the last PCR is Confirmatory and positive
+        if(latestPCRData && latestPCRData?.results?.includes("POSITIVE") && latestPCRData?.testType === "INFANT_TESTING_PCR_CONFIRMATORY_PCR" ){
           setShowInfantVist(false)
         }else{
           setShowInfantVist(true)
@@ -834,19 +870,31 @@ const ClinicVisit = (props) => {
           filteredPCRList = newPCRList.filter(each => each.code === pcrOrder[0]);
         }
 
-            // On update/view, keep the current visit's PCR type in the dropdown
-            if (props?.activeContent?.actionType !== "create" && currentVisitPCRTypeRef.current) {
-              const currentType = currentVisitPCRTypeRef.current;
-              if (!filteredPCRList.some(item => item.code === currentType)) {
-                const fullType = newPCRList.find(item => item.code === currentType);
-                if (fullType) {
-                  filteredPCRList.push(fullType);
-                }
-              }
+        // On update/view, keep the current visit's PCR type in the dropdown
+        if (props?.activeContent?.actionType !== "create" && currentVisitPCRTypeRef.current) {
+          const currentType = currentVisitPCRTypeRef.current;
+          if (!filteredPCRList.some(item => item.code === currentType)) {
+            const fullType = newPCRList.find(item => item.code === currentType);
+            if (fullType) {
+              filteredPCRList.push(fullType);
             }
+          }
+        }
 
-            setPcrType(filteredPCRList)
+        setPcrType(filteredPCRList)
+    };
 
+    const getLatestPCR=(infantHospitalNo)=>{
+
+              // Fetch only the latest PCR test for this infant
+              axios
+              .get(`${baseUrl}pmtct/anc/get-latest-pcr?infantHospitalNumber=${infantHospitalNo}&pmtctCycleUuid=${props?.latestPmtctCycle?.uuid}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .then((response) => {
+            const latestPCRData = response.data || null;
+            setLatestPCR(latestPCRData)
+            filterAndSetPcrType(latestPCRData);
               })
               .catch((error) => {
               console.log(error)
@@ -1081,13 +1129,22 @@ const ClinicVisit = (props) => {
       ...infantRapidTestDTO,
       [e.target.name]: e.target.value,
     });
-    // Re-activate Confirmatory PCR when rapid test result is Positive
+    // Per PCR flow diagram:
+    // Rapid Positive → show 3rd PCR @9months (not Confirmatory directly)
+    // Rapid Negative → show 4th PCR (skip 3rd PCR)
     if (e.target.name === "result" && e.target.value === "INFANT_PCR_RESULT_POSITIVE") {
-      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a Confirmatory PCR test.");
+      setRapidResultMessage("Rapid Antibody Test is Positive. Kindly complete a 3rd PCR (DNA PCR @ 9 months).");
       const newPCRList = pcrTypeFullRef.current || [];
-      const confirmatoryPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR");
-      if (confirmatoryPCR.length > 0) {
-        setPcrType(confirmatoryPCR);
+      const thirdPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_CONFIRMATORY_PCR___IF_PREVIOUS_TEST_POSITIVE");
+      if (thirdPCR.length > 0) {
+        setPcrType(thirdPCR);
+      }
+    } else if (e.target.name === "result" && e.target.value === "INFANT_PCR_RESULT_NEGATIVE") {
+      // Rapid Negative → next step is 4th PCR
+      const newPCRList = pcrTypeFullRef.current || [];
+      const fourthPCR = newPCRList.filter(each => each.code === "INFANT_TESTING_PCR_4TH_PCR_(12_WEEKS_AFTER_CESSATION_OF_BREASTFEEDING_OR_AS_INDICATED)");
+      if (fourthPCR.length > 0) {
+        setPcrType(fourthPCR);
       }
     }
   };
@@ -1113,15 +1170,17 @@ const ClinicVisit = (props) => {
     temp.bodyWeight = infantVisitRequestDto.bodyWeight
       ? ""
       : "This field is required";
-      infantVisitRequestDto.ctxStatus === "YES" &&   (temp.dateOfCtx =  infantArvDto.dateOfCtx? "" : "This field is required");
-      infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" &&
-        infantArvDto.infantArvType &&
-        infantArvDto.infantArvType !==
-          "" && (
-            (temp.dateOfArv = infantArvDto.dateOfArv
-              ? ""
-              : "This field is required")
-          );
+      if (!arvFilledAtRegistration) {
+        infantVisitRequestDto.ctxStatus === "YES" &&   (temp.dateOfCtx =  infantArvDto.dateOfCtx? "" : "This field is required");
+        infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" &&
+          infantArvDto.infantArvType &&
+          infantArvDto.infantArvType !==
+            "" && (
+              (temp.dateOfArv = infantArvDto.dateOfArv
+                ? ""
+                : "This field is required")
+            );
+      }
 
 
    infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");
@@ -1149,7 +1208,7 @@ const ClinicVisit = (props) => {
       objValues.infantMotherArtDto.source = objValues.source;
 
 
-      if(infantArvDto.infantArvType){
+      if(!arvFilledAtRegistration && infantArvDto.infantArvType){
       objValues.infantArvDto = infantArvDto;
       objValues.infantArvDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantArvDto.source = objValues.source;
@@ -1320,6 +1379,7 @@ const ClinicVisit = (props) => {
     setChoosenInfant(obj);
     getLatestPCR(obj.hospitalNumber)
     getLatestRapidTest(obj.hospitalNumber, obj.patientUuid)
+    visitHasOwnArvRef.current = false;
 
     // Check if the infant record has a final outcome (record closure)
     const outcome = obj.infantOutcomeAt18Months || obj.infantOutcomeAt18_months || "";
@@ -1331,8 +1391,16 @@ const ClinicVisit = (props) => {
       setInfantRecordClosed(false);
       setInfantClosedOutcome("");
     }
-    // ARV fields should come from backend (infant visit response), not from registration
-    // setInfantVisitRequestDto({...infantVisitRequestDto, ctxStatus: obj.ctxStatus})
+    // Check if ARV/CTX was already filled at infant registration
+    if (obj.infantArvDto && obj.infantArvDto.infantArvType) {
+      setArvFilledAtRegistration(true);
+      setRegistrationArvData(obj.infantArvDto);
+      setRegistrationCtxStatus(obj.ctxStatus || "");
+    } else {
+      setArvFilledAtRegistration(false);
+      setRegistrationArvData(null);
+      setRegistrationCtxStatus("");
+    }
     let weeks = calculateAgeInWeek(obj.dateOfDelivery);
     setWeeksValue(weeks);
 
@@ -1385,12 +1453,9 @@ const ClinicVisit = (props) => {
           {/* === Infant Demographics Card === */}
           {choosenInfant && choosenInfant.hospitalNumber && (
             <div style={{
-              border: "1px solid #014d88",
-              borderRadius: "0.5rem",
               padding: "16px 20px",
               marginBottom: "20px",
               backgroundColor: "#eef2ff",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
             }}>
               <h6 style={{ color: "#014d88", fontWeight: "bold", marginBottom: "12px", fontSize: "14px" }}>
                 <ChildCareIcon style={{ fontSize: "16px", marginRight: "6px", verticalAlign: "text-bottom" }} />
@@ -2026,6 +2091,89 @@ const ClinicVisit = (props) => {
           </div>
 
           {/* === Infant ARV & CTX === */}
+          {arvFilledAtRegistration && registrationArvData ? (
+            <div className="col-md-12 mb-3">
+              <div style={{
+                ...sectionContainerStyle,
+                backgroundColor: "#f0fdf4",
+                borderLeft: "4px solid #22c55e",
+              }}>
+                <h6 style={sectionHeaderStyle}>
+                  <FavoriteIcon style={sectionIconStyle} />Infant ARV & CTX
+                  <span style={{ fontSize: "11px", fontWeight: "normal", color: "#15803d", marginLeft: "10px" }}>
+                    (Captured at Infant Registration)
+                  </span>
+                </h6>
+                <div className="row">
+                  <div className="col-md-3 mb-2">
+                    <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>CTX</span>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{registrationCtxStatus || "---"}</div>
+                  </div>
+                  {registrationCtxStatus === "YES" && (
+                    <>
+                      <div className="col-md-3 mb-2">
+                        <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Date of CTX Initiation</span>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                          {registrationArvData.dateOfCtx ? moment(registrationArvData.dateOfCtx).format("DD-MM-YYYY") : "---"}
+                        </div>
+                      </div>
+                      <div className="col-md-3 mb-2">
+                        <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Age at CTX Initiation</span>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                          {(agectx.find(a => a.code === registrationArvData.ageAtCtx) || {}).display || registrationArvData.ageAtCtx || "---"}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div className="col-md-3 mb-2">
+                    <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>ARV Prophylaxis Type</span>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                      {(infantArv.find(a => a.code === registrationArvData.infantArvType) || {}).display || registrationArvData.infantArvType || "---"}
+                    </div>
+                  </div>
+                  {registrationArvData.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)" && (
+                    <div className="col-md-3 mb-2">
+                      <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Other Prophylaxis Type</span>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{registrationArvData.otherProphylaxisType || "---"}</div>
+                    </div>
+                  )}
+                  {registrationArvData.infantArvType && registrationArvData.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" && (
+                    <div className="col-md-3 mb-2">
+                      <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Date of ARV Prophylaxis</span>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                        {registrationArvData.dateOfArv ? moment(registrationArvData.dateOfArv).format("DD-MM-YYYY") : "---"}
+                      </div>
+                    </div>
+                  )}
+                  <div className="col-md-3 mb-2">
+                    <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Timing of ARV Prophylaxis</span>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{registrationArvData.arvDeliveryPoint || "---"}</div>
+                  </div>
+                  {registrationArvData.arvDeliveryPoint && (
+                    <div className="col-md-3 mb-2">
+                      <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>
+                        {registrationArvData.arvDeliveryPoint === "Within 72 hour" ? "Timing Within 72 hrs" : "Timing After 72 hrs"}
+                      </span>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                        {(() => {
+                          const timingValue = registrationArvData.arvDeliveryPoint === "Within 72 hour"
+                            ? registrationArvData.timingOfAvrWithin72Hours
+                            : registrationArvData.timingOfAvrAfter72Hours;
+                          return (timingProphylaxisList.find(t => t.code === timingValue) || {}).display || timingValue || "---";
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                  <div className="col-md-3 mb-2">
+                    <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Place of Delivery</span>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                      {(placeOfDelivery.find(p => p.code === registrationArvData.infantArvTime) || {}).display || registrationArvData.infantArvTime || "---"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="col-md-12 mb-3">
             <div style={sectionContainerStyle}>
               <h6 style={sectionHeaderStyle}>
@@ -2314,6 +2462,7 @@ const ClinicVisit = (props) => {
               </div>
             </div>
           </div>
+          )}
 
           {/* === HBV Vaccination === */}
           <div className="col-md-12 mb-3">
@@ -2638,7 +2787,7 @@ const ClinicVisit = (props) => {
           </div>
 
           {/* === Rapid Antibody Test === */}
-          { !showRapidTest  && (
+          { showRapidTest  && (
           <div className="col-md-12 mb-3">
             <div style={sectionContainerStyle}>
               <h6 style={sectionHeaderStyle}>

@@ -1797,20 +1797,28 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
               {infantPCRTestDto.results === "INFANT_PCR_RESULT_POSITIVE" && (
                 <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "4px", padding: "10px", margin: "10px 0" }}>
                   <h4 style={{ color: "#856404", margin: 0 }}>
-                    A positive PCR result has been recorded. Confirmatory PCR is required.
+                    {props.activeContent?.actionType === "create"
+                      ? "You have selected a Positive PCR result."
+                      : "A positive PCR result has been recorded for this infant."}
                   </h4>
                   <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
-                    Please document the Confirmatory PCR on the Infant Follow-up Visit form. The infant cannot be classified as confirmed HIV-positive until the Confirmatory PCR result is entered.
+                    {props.activeContent?.actionType === "create"
+                      ? "After saving this registration, a Confirmatory PCR will need to be documented on the Infant Follow-up Visit form. The infant will not be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."
+                      : "A Confirmatory PCR is required. Please document it on the Infant Follow-up Visit form. The infant cannot be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."}
                   </p>
                 </div>
               )}
               {infantPCRTestDto.results === "INFANT_PCR_RESULT_INDETERMINATE" && (
                 <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "4px", padding: "10px", margin: "10px 0" }}>
                   <h4 style={{ color: "#856404", margin: 0 }}>
-                    Indeterminate PCR result — repeat testing is required.
+                    {props.activeContent?.actionType === "create"
+                      ? "You have selected an Indeterminate PCR result."
+                      : "An Indeterminate PCR result has been recorded for this infant."}
                   </h4>
                   <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
-                    The infant record cannot be closed with an Indeterminate result as the final status. Please schedule a repeat PCR test.
+                    {props.activeContent?.actionType === "create"
+                      ? "After saving, a repeat PCR test will need to be scheduled. The infant record cannot be closed with an Indeterminate result as the final status."
+                      : "A repeat PCR test is required. The infant record cannot be closed with an Indeterminate result as the final status. Please schedule a repeat PCR test."}
                   </p>
                 </div>
               )}

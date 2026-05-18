@@ -22,8 +22,6 @@ public class ANCAcivityTracker {
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     private final PmtctHtsRepository pmtctHtsRepository;
 
-    private  final InfantArvRepository infantArvRepository;
-
     private  final InfantVisitRepository infantVisitRepository;
 
     private  final InfantRepository infantRepository;
@@ -83,29 +81,27 @@ public class ANCAcivityTracker {
 //        return infantArvDate;
 //    }
 
-    public List<ActivityTracker> getInfanctVisitActivities(String hospitalNumber)
-    {
+    public List<ActivityTracker> getInfanctVisitActivities(String hospitalNumber) {
         ArrayList<ActivityTracker> activityTrackers = new ArrayList<>();
-        Optional<InfantArv> infantArvs = this.infantArvRepository.getByInfantHospitalNumber(hospitalNumber);
-        if (infantArvs.isPresent())
-        {
+        Optional<Infant> infantOpt = this.infantRepository.getInfantByInfantHospitalNumber(hospitalNumber);
+        if (infantOpt.isPresent() && infantOpt.get().getInfantArvData() != null
+                && infantOpt.get().getInfantArvData().getInfantArvType() != null
+                && !infantOpt.get().getInfantArvData().getInfantArvType().isEmpty()) {
             ActivityTracker activityTracker = new ActivityTracker();
             activityTracker.setActivityName("ARV and CTX Administration");
             activityTracker.setPath("apmtct_infant_arv");
             activityTracker.setEditable(true);
             activityTracker.setDeletable(true);
             activityTracker.setViewable(true);
-            activityTracker.setRecordId(infantArvs.get().getId());
-            activityTracker.setActivityDate(infantArvs.get().getVisitDate());
+            activityTracker.setRecordId(infantOpt.get().getId());
+            activityTracker.setActivityDate(infantOpt.get().getDateOfDelivery());
             activityTrackers.add(activityTracker);
         }
 
-        ///LocalDate arvDate = this.getInfantArvDate(hospitalNumber);
         List<InfantVisit> infantVisitList = this.infantVisitRepository.getPreArvVisits(hospitalNumber);
-        if (!(infantVisitList.isEmpty()))
-        {
+        if (!(infantVisitList.isEmpty())) {
             ActivityTracker activityTracker = new ActivityTracker();
-            infantVisitList.forEach(pmtctVisit ->{
+            infantVisitList.forEach(pmtctVisit -> {
                 activityTracker.setActivityName("Infant Post-ARV Visit");
                 activityTracker.setPath("pmtct_infant_visit");
                 activityTracker.setEditable(true);
@@ -114,16 +110,9 @@ public class ANCAcivityTracker {
                 activityTracker.setRecordId(pmtctVisit.getId());
                 activityTracker.setActivityDate(pmtctVisit.getVisitDate());
                 activityTrackers.add(activityTracker);
-            } );
-
+            });
         }
-
-
-
-
-
         return activityTrackers;
-
     }
 
     public SummaryChart getSummaryChart (String ancNo)

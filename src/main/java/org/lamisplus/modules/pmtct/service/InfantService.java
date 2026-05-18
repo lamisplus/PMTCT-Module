@@ -14,12 +14,10 @@ import org.lamisplus.modules.patient.service.PersonService;
 import org.lamisplus.modules.pmtct.domain.dto.*;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
-import org.lamisplus.modules.pmtct.domain.entity.InfantPCRTest;
-import org.lamisplus.modules.pmtct.domain.entity.InfantRapidAntiBodyTest;
+import org.lamisplus.modules.pmtct.domain.entity.InfantVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
-import org.lamisplus.modules.pmtct.repository.InfantPCRTestRepository;
-import org.lamisplus.modules.pmtct.repository.InfantRapidTestRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
+import org.lamisplus.modules.pmtct.repository.InfantVisitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,13 +43,12 @@ public class InfantService {
     private final ANCRepository ancRepository;
     private final PersonRepository personRepository;
     private final InfantRepository infantRepository;
-    private final InfantPCRTestRepository infantPCRTestRepository;
+    private final InfantVisitRepository infantVisitRepository;
     private final UserService userService;
     private final PersonService personService;
     private final InfantVisitService infantVisitService;
     private ObjectMapper mapper = new ObjectMapper();
     private final ApplicationCodesetRepository applicationCodesetRepository;
-    private final InfantRapidTestRepository rapidTestRepository;
 
 
     public InfantDtoResponse save(InfantDto infantDto) {
@@ -212,18 +209,8 @@ public class InfantService {
             }
         }
 
-        // Read from JSONB columns; fall back to satellite tables for pre-migration data
         InfantArvDto arvDto = infant.getInfantArvData();
-        if (arvDto == null) {
-            arvDto = infantVisitService.getInfantArvForRegistration(
-                    infant.getMotherPatientUuid(), infant.getInfantHospitalNumber(), infant.getDateOfDelivery());
-        }
-
         InfantPCRTestDto pcrDto = infant.getInfantPcrData();
-        if (pcrDto == null) {
-            pcrDto = infantVisitService.getInfantPCRTestForRegistration(
-                    infant.getInfantHospitalNumber(), infant.getDateOfDelivery());
-        }
 
         return InfantDto.builder()
                 .dateOfDelivery(infant.getDateOfDelivery())
@@ -444,55 +431,43 @@ public class InfantService {
     }
 
 
-    public InfantPCRTestDto convertInfanTPCREntityToDTO(InfantPCRTest infantPCREntity) {
-        InfantPCRTestDto infantPCRTestDto = new InfantPCRTestDto();
-        infantPCRTestDto.setId(infantPCREntity.getId());
-        infantPCRTestDto.setVisitDate(infantPCREntity.getVisitDate());
-        infantPCRTestDto.setInfantHospitalNumber(infantPCREntity.getInfantHospitalNumber());
-        infantPCRTestDto.setAncNumber(infantPCREntity.getAncNumber());
-        infantPCRTestDto.setAgeAtTest(infantPCREntity.getAgeAtTest());
-        infantPCRTestDto.setTestType(infantPCREntity.getTestType());
-        infantPCRTestDto.setDateSampleCollected(infantPCREntity.getDateSampleCollected());
-        infantPCRTestDto.setDateSampleSent(infantPCREntity.getDateSampleSent());
-        infantPCRTestDto.setDateResultReceivedAtFacility(infantPCREntity.getDateResultReceivedAtFacility());
-        infantPCRTestDto.setDateResultReceivedByCaregiver(infantPCREntity.getDateResultReceivedByCaregiver());
-        infantPCRTestDto.setResults(infantPCREntity.getResults());
-        infantPCRTestDto.setUuid(infantPCREntity.getUuid());
-        infantPCRTestDto.setUniqueUuid(infantPCREntity.getUniqueUuid());
-        infantPCRTestDto.setPmtctCycleUuid(infantPCREntity.getPmtctCycleUuid());
-        return infantPCRTestDto;
-
-    }
     public InfantPCRTestDto getLatestPCR(String infantHospitalNumber, String pmtctCycleUuid) {
-        if (!infantHospitalNumber.isEmpty()) {
-            InfantPCRTest pcrTest = infantPCRTestRepository.getLastPCRByCycle(infantHospitalNumber, pmtctCycleUuid);
-            if (pcrTest != null) {
-                return convertInfanTPCREntityToDTO(pcrTest);
+        if (infantHospitalNumber == null || infantHospitalNumber.isEmpty()) {
+            return new InfantPCRTestDto();
+        }
+        // 1. Check InfantVisit JSONB (follow-up visits, newest first)
+        List<InfantVisit> visits = infantVisitRepository
+            .getInfantVisitsByInfantHospitalNumberAndCycleUuid(infantHospitalNumber, pmtctCycleUuid);
+        for (InfantVisit visit : visits) {
+            if (visit.getInfantPcrData() != null
+                    && visit.getInfantPcrData().getTestType() != null
+                    && !visit.getInfantPcrData().getTestType().isEmpty()) {
+                return visit.getInfantPcrData();
             }
+        }
+        // 2. Fallback: Infant registration JSONB
+        Optional<Infant> infant = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+        if (infant.isPresent()
+                && infant.get().getInfantPcrData() != null
+                && infant.get().getInfantPcrData().getTestType() != null
+                && !infant.get().getInfantPcrData().getTestType().isEmpty()
+                && pmtctCycleUuid.equals(infant.get().getPmtctCycleUuid())) {
+            return infant.get().getInfantPcrData();
         }
         return new InfantPCRTestDto();
     }
 
     public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid, String pmtctCycleUuid) {
-
-        String lastVisitId = String.valueOf(rapidTestRepository.getLastInfantVisitByCycle(infantHospitalNumber, motherUuid, pmtctCycleUuid));
-
-        if(!lastVisitId.isEmpty() && !lastVisitId.equals("null")){
-        InfantRapidAntiBodyTest result= rapidTestRepository.getLastInfantRapid(lastVisitId);
-
-            if(result != null){
-                InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto = new InfantRapidAntiBodyTestDto();
-                infantRapidAntiBodyTestDto.setId(result.getUuid());
-                infantRapidAntiBodyTestDto.setRapidTestType(result.getRapidTestType());
-            infantRapidAntiBodyTestDto.setAncNumber(result.getAncNumber());
-            infantRapidAntiBodyTestDto.setAgeAtTest(result.getAgeAtTest());
-            infantRapidAntiBodyTestDto.setDateOfTest(result.getDateOfTest());
-            infantRapidAntiBodyTestDto.setResult(result.getResult());
-            infantRapidAntiBodyTestDto.setUniqueUuid(result.getUniqueUuid());
-            infantRapidAntiBodyTestDto.setUuid(result.getUuid());
-            infantRapidAntiBodyTestDto.setPmtctCycleUuid(result.getPmtctCycleUuid());
-
-            return infantRapidAntiBodyTestDto;
+        if (infantHospitalNumber == null || infantHospitalNumber.isEmpty()) {
+            return new InfantRapidAntiBodyTestDto();
+        }
+        List<InfantVisit> visits = infantVisitRepository
+            .getInfantVisitsByInfantHospitalNumberAndCycleUuid(infantHospitalNumber, pmtctCycleUuid);
+        for (InfantVisit visit : visits) {
+            if (visit.getRapidTestData() != null
+                    && visit.getRapidTestData().getResult() != null
+                    && !visit.getRapidTestData().getResult().isEmpty()) {
+                return visit.getRapidTestData();
             }
         }
         return new InfantRapidAntiBodyTestDto();
@@ -500,7 +475,24 @@ public class InfantService {
 
 
     public boolean firstPcrExist(String infantHospitalNumber) {
-      return  infantPCRTestRepository.checkPcrExist(infantHospitalNumber);
+        // Check infant registration JSONB
+        Optional<Infant> infant = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+        if (infant.isPresent() && infant.get().getInfantPcrData() != null
+                && infant.get().getInfantPcrData().getTestType() != null
+                && !infant.get().getInfantPcrData().getTestType().isEmpty()) {
+            return true;
+        }
+        // Check infant visit JSONB
+        List<InfantVisit> visits = infantVisitRepository
+            .getInfantVisitsByInfantHospitalNumberOrdered(infantHospitalNumber);
+        for (InfantVisit visit : visits) {
+            if (visit.getInfantPcrData() != null
+                    && visit.getInfantPcrData().getTestType() != null
+                    && !visit.getInfantPcrData().getTestType().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String convertSexCode(String sexCode) {

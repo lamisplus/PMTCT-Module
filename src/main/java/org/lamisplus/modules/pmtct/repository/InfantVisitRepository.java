@@ -46,4 +46,10 @@ public interface InfantVisitRepository extends CommonJpaRepository<InfantVisit, 
     @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND visit_date = ?2 AND uuid != CAST(?3 AS VARCHAR) AND archived = 0", nativeQuery = true)
     boolean existsByInfantHospitalNumberAndVisitDateAndIdNot(String hospitalNumber, LocalDate visitDate, String uuid);
 
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY visit_date DESC", nativeQuery = true)
+    List<InfantVisit> getInfantVisitsByInfantHospitalNumberAndCycleUuid(String infantHospitalNumber, String pmtctCycleUuid);
+
+    @Query(value = "SELECT * FROM pmtct_infant_visit WHERE infant_hospital_number = ?1 AND archived = 0 ORDER BY visit_date DESC", nativeQuery = true)
+    List<InfantVisit> getInfantVisitsByInfantHospitalNumberOrdered(String infantHospitalNumber);
+
 }

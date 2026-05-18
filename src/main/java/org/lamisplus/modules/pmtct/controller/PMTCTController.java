@@ -408,53 +408,6 @@ public class PMTCTController {
         return ResponseEntity.ok(infantVisitService.getSingleInfantVisit(id));
     }
 
-    @PostMapping(value = "infant-pcr-test")
-    public ResponseEntity<InfantPCRTest> InfantPCRTest(@Valid @RequestBody InfantPCRTestDto infantPCRTestDto) {
-        return ResponseEntity.ok(infantVisitService.save(infantPCRTestDto));
-    }
-
-    @GetMapping(value = "get-infant-prc-by-hospitalnumber")
-    public ResponseEntity<List<InfantPCRTest>> getInfantPCRTestByHospitalNumber(@RequestParam("hospitalNumber") String hospitalNumber) {
-        return ResponseEntity.ok(infantVisitService.getInfantPCRTestByHospitalNumber(hospitalNumber));
-    }
-
-    @GetMapping(value = "view-infant-prc/{id}")
-    public ResponseEntity<InfantPCRTest> viewInfantPCRTest(@PathVariable("id") String id) {
-        return ResponseEntity.ok(infantVisitService.getSingleInfantPCRTest(id));
-    }
-
-    @PostMapping(value = "infant-arv")
-    public ResponseEntity<InfantArv> InfantPCRTest(@Valid @RequestBody InfantArvDto infantArvDto) {
-        return ResponseEntity.ok(infantVisitService.save(infantArvDto));
-    }
-
-    @GetMapping(value = "get-infant-arv-by-hospitalnumber")
-    public ResponseEntity<List<InfantArv>> getInfantArvByHospitalNumber(@RequestParam("hospitalNumber") String hospitalNumber) {
-        return ResponseEntity.ok(infantVisitService.getInfantArvByHospitalNumber(hospitalNumber));
-    }
-
-    @GetMapping(value = "view-infant-avr/{id}")
-    public ResponseEntity<InfantArv> viewInfantArv(@PathVariable("id") String id) {
-        return ResponseEntity.ok(infantVisitService.getSingleInfantArv(id));
-    }
-
-    @PostMapping(value = "infant-mother-art")
-    public ResponseEntity<InfantMotherArt> createInpmfantMotherArt(@Valid @RequestBody InfantMotherArtDto infantMotherArtDto) {
-        return ResponseEntity.ok(infantVisitService.save(infantMotherArtDto));
-    }
-
-    @GetMapping(value = "get-infant-mother-art-by-anc-number/{ancNo}")
-    public ResponseEntity<List<InfantMotherArt>> getInfantMotherArtByAncNo(@PathVariable("ancNo") String ancNo) {
-        return ResponseEntity.ok(infantVisitService.getInfantMotherArtByANCNumber(ancNo));
-    }
-
-    @GetMapping(value = "view-infant-mother-art/{id}")
-    public ResponseEntity<InfantMotherArt> viewInfantMotherArt(@PathVariable("id") String id) {
-        return ResponseEntity.ok(infantVisitService.getSingleInfantMotherArt(id));
-    }
-
-//    , @RequestBody  InfantRapidAntiBodyTestDto infantRapidAntiBodyTestDto
-
     @PostMapping(value = "infant-visit-consolidated")
     public ResponseEntity<InfantVisitationConsolidatedDto> InfantVisitConsolidated(@Valid @RequestBody InfantVisitationConsolidatedDto infantVisitationConsolidatedDto) {
         return ResponseEntity.ok(infantVisitService.saveConsolidation(infantVisitationConsolidatedDto, infantVisitationConsolidatedDto.getInfantRapidAntiBodyTestDto()));
