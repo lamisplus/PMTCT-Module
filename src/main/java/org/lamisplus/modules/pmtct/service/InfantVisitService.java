@@ -72,7 +72,7 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(infantVisitRequestDto.getUniqueUuid());
         infantVisit.setPmtctCycleUuid(infantVisitRequestDto.getPmtctCycleUuid());
-        infantVisit.setArchived(0L);
+        infantVisit.setArchived(false);
         infantVisit.setSource(infantVisitRequestDto.getSource());
 
         return this.infantVisitRepository.save(infantVisit);
@@ -242,7 +242,7 @@ public class InfantVisitService
         infantVisit.setUuid(UUID.randomUUID().toString());
         infantVisit.setUniqueUuid(visitDto.getUniqueUuid());
         infantVisit.setPmtctCycleUuid(visitDto.getPmtctCycleUuid());
-        infantVisit.setArchived(0L);
+        infantVisit.setArchived(false);
         infantVisit.setSource(visitDto.getSource());
         infantVisit.setFacilityId(facilityId);
         infantVisit.setCreatedBy(user.getUserName());
@@ -305,13 +305,16 @@ public class InfantVisitService
         // Single save — all data in one row
         InfantVisit saved = this.infantVisitRepository.save(infantVisit);
 
-        // Touch the infant's lastModified
+        // Touch the infant's lastModified + save syphilis prophylaxis
         try {
             Optional<Infant> infants = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
             if (infants.isPresent()) {
                 Infant infant = infants.get();
                 infant.setLastModifiedDate(java.time.LocalDateTime.now());
                 infant.setLastModifiedBy(user.getUserName());
+                if (infantVisitationConsolidatedDto.getSyphilisProphylaxisDto() != null) {
+                    infant.setSyphilisProphylaxis(infantVisitationConsolidatedDto.getSyphilisProphylaxisDto());
+                }
                 infantRepository.save(infant);
             }
         } catch (Exception e) {
@@ -355,7 +358,7 @@ public class InfantVisitService
         if (infants.isPresent()){
             // Source ancNo from ANC via motherPatientUuid (authoritative source)
             String ancNo = null;
-            Optional<ANC> ancOpt = ancRepository.findANCByPatientUuidAndArchived(infants.get().getMotherPatientUuid(), 0L);
+            Optional<ANC> ancOpt = ancRepository.findANCByPatientUuidAndArchived(infants.get().getMotherPatientUuid(),false);
             if (ancOpt.isPresent()) {
                 ancNo = ancOpt.get().getAncNo();
             }
@@ -387,6 +390,16 @@ public class InfantVisitService
             infantVisitationConsolidatedDto.setInfantMotherArtDto(infantVisit.getMotherArtData());
             infantVisitationConsolidatedDto.setInfantRapidAntiBodyTestDto(infantVisit.getRapidTestData());
             infantVisitationConsolidatedDto.setInfantVisitHbvVaccinationDto(infantVisit.getHbvVaccinationData());
+
+            // Load syphilis prophylaxis from the Infant entity
+            try {
+                Optional<Infant> infantOpt = infantRepository.getInfantByInfantHospitalNumber(infantVisit.getInfantHospitalNumber());
+                if (infantOpt.isPresent() && infantOpt.get().getSyphilisProphylaxis() != null) {
+                    infantVisitationConsolidatedDto.setSyphilisProphylaxisDto(infantOpt.get().getSyphilisProphylaxis());
+                }
+            } catch (Exception e) {
+                log.warn("Could not load infant syphilis prophylaxis", e);
+            }
         }
 
         return infantVisitationConsolidatedDto;
@@ -440,13 +453,16 @@ public class InfantVisitService
 
         this.infantVisitRepository.save(exist);
 
-        // Touch the infant's lastModified
+        // Touch the infant's lastModified + save syphilis prophylaxis
         try {
             Optional<Infant> infants = infantRepository.getInfantByInfantHospitalNumber(visitDto.getInfantHospitalNumber());
             if (infants.isPresent()) {
                 Infant infant = infants.get();
                 infant.setLastModifiedDate(java.time.LocalDateTime.now());
                 infant.setLastModifiedBy(user.getUserName());
+                if (infantVisitationConsolidatedDto.getSyphilisProphylaxisDto() != null) {
+                    infant.setSyphilisProphylaxis(infantVisitationConsolidatedDto.getSyphilisProphylaxisDto());
+                }
                 infantRepository.save(infant);
             }
         } catch (Exception e) {
@@ -508,7 +524,7 @@ public class InfantVisitService
         // Soft delete the InfantVisit — JSONB data (ARV, PCR, MotherArt, Rapid) is embedded and archived with it
         Optional<InfantVisit> infantVisitOptional = this.infantVisitRepository.findById(id);
         infantVisitOptional.ifPresent(infantVisit -> {
-            infantVisit.setArchived(1L);
+            infantVisit.setArchived(true);
             this.infantVisitRepository.save(infantVisit);
         });
     }
@@ -528,6 +544,11 @@ public class InfantVisitService
         LocalDate date = lmd;
         date = date.plusMonths(1);
         return date;
+    }
+
+    public boolean isArtEnrollmentNoDuplicate(String artEnrollmentNo) {
+        if (artEnrollmentNo == null || artEnrollmentNo.trim().isEmpty()) return false;
+        return infantVisitRepository.existsByArtEnrollmentNo(artEnrollmentNo.trim());
     }
 
     public boolean isInfantVisitDateExists(String hospitalNumber, LocalDate visitDate, String excludeId) {

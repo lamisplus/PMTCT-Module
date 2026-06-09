@@ -33,7 +33,7 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private Double length;
     private String ctxStatus;
     private String pmtctCycleUuid;
-    private Long archived;
+    private Boolean archived;
     private String source;
 
     @Type(type = "jsonb")
@@ -59,7 +59,7 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 }

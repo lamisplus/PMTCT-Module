@@ -22,6 +22,6 @@ public class PmtctPregnancyCycleResponseDto {
     private String lastModifiedBy;
     private LocalDateTime lastModifiedDate;
     private String uuid;
-    private Long archived;
+    private Boolean archived;
     private Boolean isClosed;
 }

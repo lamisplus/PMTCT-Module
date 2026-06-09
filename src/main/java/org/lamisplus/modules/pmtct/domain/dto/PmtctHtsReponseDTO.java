@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class PmtctHtsReponseDTO {
     private Long id;
+    private String clientCode;
 
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
@@ -17,7 +18,7 @@ public class PmtctHtsReponseDTO {
     private String patientUuid;
     private String hospitalNumber;
     private String uuid;
-    private Long archived;
+    private Boolean archived;
     private String testingType;
     private String syphilis;
     private String hepatitisB;

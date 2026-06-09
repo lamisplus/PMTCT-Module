@@ -94,7 +94,8 @@ public class DeliveryService
                 PMTCTEnrollment pmtct = pmtctOptional.get();
                 delivery.setFacilityId(pmtct.getFacilityId());
             } else {
-                throw new RuntimeException("PMTCT enrollment is required before delivery can be saved");
+                // No enrollment yet (e.g. Labour & Delivery entry point) — use the current user's facility
+                delivery.setFacilityId(user.getCurrentOrganisationUnitId());
             }
         }
 
@@ -105,6 +106,7 @@ public class DeliveryService
             if (deliveryRequestDto.getGAWeeks() != null) delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
             if (deliveryRequestDto.getRomDeliveryInterval() != null) delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
             if (deliveryRequestDto.getModeOfDelivery() != null) delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            if (deliveryRequestDto.getModeOfDeliveryOther() != null) delivery.setModeOfDeliveryOther(deliveryRequestDto.getModeOfDeliveryOther());
             if (deliveryRequestDto.getEpisiotomy() != null) delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
             if (deliveryRequestDto.getVaginalTear() != null) delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
             if (deliveryRequestDto.getFeedingDecision() != null) delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
@@ -133,6 +135,7 @@ public class DeliveryService
             delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
             delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
             delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            delivery.setModeOfDeliveryOther(deliveryRequestDto.getModeOfDeliveryOther());
             delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
             delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
             delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
@@ -171,6 +174,7 @@ public class DeliveryService
         deliveryResponseDto.setGAWeeks(delivery.getGAWeeks());
         deliveryResponseDto.setRomDeliveryInterval(delivery.getRomDeliveryInterval());
         deliveryResponseDto.setModeOfDelivery(delivery.getModeOfDelivery());
+        deliveryResponseDto.setModeOfDeliveryOther(delivery.getModeOfDeliveryOther());
         deliveryResponseDto.setEpisiotomy(delivery.getEpisiotomy());
         deliveryResponseDto.setVaginalTear(delivery.getVaginalTear());
         deliveryResponseDto.setFeedingDecision(delivery.getFeedingDecision());
@@ -207,7 +211,7 @@ public class DeliveryService
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
         String fullName = "";
         if (persons.isPresent())
         { Person person = persons.get();
@@ -226,7 +230,7 @@ public class DeliveryService
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
-        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+        Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
         int age = 0;
         //System.out.println("HostpitalNumber in Age " + uuid);
         if (persons.isPresent()) {
@@ -316,6 +320,7 @@ public class DeliveryService
             delivery.setGAWeeks(deliveryRequestDto.getGAWeeks());
             delivery.setRomDeliveryInterval(deliveryRequestDto.getRomDeliveryInterval());
             delivery.setModeOfDelivery(deliveryRequestDto.getModeOfDelivery());
+            delivery.setModeOfDeliveryOther(deliveryRequestDto.getModeOfDeliveryOther());
             delivery.setEpisiotomy(deliveryRequestDto.getEpisiotomy());
             delivery.setVaginalTear(deliveryRequestDto.getVaginalTear());
             delivery.setFeedingDecision(deliveryRequestDto.getFeedingDecision());
@@ -364,7 +369,7 @@ public class DeliveryService
 
     public void deleteDelivery(String id) {
         Delivery existingDelivery = getSingleDelivery(id);
-        existingDelivery.setArchived(1L);
+        existingDelivery.setArchived(true);
         this.deliveryRepository.save(existingDelivery);
     }
 
@@ -405,8 +410,7 @@ public class DeliveryService
                         maternalOutcome.equals("MATERNAL_OUTCOME_DIED") ||
                         maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP") ||
                         maternalOutcome.equals("MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP") ||
-                        maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT") ||
-                        maternalOutcome.equals("MATERNAL_OUTCOME_COMPLETED_PMTCT")) {
+                        maternalOutcome.equals("MATERNAL_OUTCOME_TRANSFERRED_OUT")) {
                         cycle.setIsClosed(true);
                     } else {
                         cycle.setIsClosed(false);

@@ -64,6 +64,7 @@ const tableIcons = {
 
 const Patients = (props) => {
   const [showPPI, setShowPPI] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [modalShow, setModalShow] = useState(false);
   const [info, setInfo] = useState({});
   const [maternalOutcomeOptions, setMaternalOutcomeOptions] = useState(() => {
@@ -164,9 +165,10 @@ const Patients = (props) => {
           // { title: "ART Status", field: "status", filtering: false },
           { title: "Actions", field: "actions", filtering: false },
         ]}
-        //isLoading={loading}
+        isLoading={loading}
         data={(query) =>
-          new Promise((resolve, reject) =>
+          new Promise((resolve, reject) => {
+            setLoading(true);
             axios
               .get(
                 `${baseUrl}pmtct/anc/pmtct-from-person?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
@@ -174,6 +176,7 @@ const Patients = (props) => {
               )
               .then((response) => response)
               .then((result) => {
+                setLoading(false);
                 const records = (result.data && result.data.records) || [];
                 resolve({
                   data: records.map((row) => ({
@@ -276,10 +279,11 @@ const Patients = (props) => {
                 });
               })
               .catch((error) => {
+                setLoading(false);
                 console.error("Error fetching patient list:", error);
                 resolve({ data: [], page: query.page, totalCount: 0 });
-              })
-          )
+              });
+          })
         }
         options={{
           headerStyle: {
@@ -297,6 +301,11 @@ const Patients = (props) => {
           pageSizeOptions: [10, 20, 100],
           pageSize: 10,
           debounceInterval: 400,
+        }}
+        localization={{
+          body: {
+            emptyDataSourceMessage: loading ? "Loading patients..." : "No records to display",
+          },
         }}
         components={{
           Toolbar: (props) => (

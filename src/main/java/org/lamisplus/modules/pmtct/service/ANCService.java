@@ -27,6 +27,7 @@ import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.DeliveryRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.HtsEncounterProxyRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.springframework.beans.BeanUtils;
@@ -88,6 +89,9 @@ public class ANCService {
     @Autowired
     private PmtctHtsRepository pmtctHtsRepository;
 
+    @Autowired
+    private HtsEncounterProxyRepository htsEncounterProxyRepository;
+
     public ANCRequestDto save(ANCRequestDto ancRequestDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
@@ -98,7 +102,7 @@ public class ANCService {
 
             // Check for existing ANC to prevent duplicates
             Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
-                    person.getUuid(), ancRequestDto.getPmtctCycleUuid(), 0L);
+                    person.getUuid(), ancRequestDto.getPmtctCycleUuid(),false);
 
             ANC anc;
             boolean isExistingAnc = existingAnc.isPresent();
@@ -110,7 +114,7 @@ public class ANCService {
                 anc = new ANC();
                 anc.setUuid(UUID.randomUUID().toString());
                 anc.setPatientUuid(person.getUuid());
-                anc.setArchived(0L);
+                anc.setArchived(false);
                 anc.setFacilityId(person.getFacilityId());
                 anc.setCreatedDate(LocalDateTime.now());
                 anc.setLastModifiedDate(LocalDateTime.now());
@@ -135,13 +139,8 @@ public class ANCService {
                 if (ancRequestDto.getHepatitisBInfo() != null) anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
                 if (ancRequestDto.getHepatitisCInfo() != null) anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
                 if (ancRequestDto.getUrinalysis() != null) anc.setUrinalysis(ancRequestDto.getUrinalysis());
-                if (ancRequestDto.getHbPcv() != null) anc.setHbPcv(ancRequestDto.getHbPcv());
-                if (ancRequestDto.getBloodSugarGdm() != null) anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
-                if (ancRequestDto.getLlinGiven() != null) anc.setLlinGiven(ancRequestDto.getLlinGiven());
-                if (ancRequestDto.getIptDose() != null) anc.setIptDose(ancRequestDto.getIptDose());
-                if (ancRequestDto.getHematinicsGiven() != null) anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
-                if (ancRequestDto.getTdImmunization() != null) anc.setTdImmunization(ancRequestDto.getTdImmunization());
-                if (ancRequestDto.getAssociatedProblems() != null) anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                if (ancRequestDto.getLabTest() != null) anc.setLabTest(ancRequestDto.getLabTest());
+                if (ancRequestDto.getInterventions() != null) anc.setInterventions(ancRequestDto.getInterventions());
                 if (ancRequestDto.getOutcomeOfVisit() != null) anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
                 if (ancRequestDto.getReferralReason() != null) anc.setReferralReason(ancRequestDto.getReferralReason());
                 if (ancRequestDto.getTransportationOut() != null) anc.setTransportationOut(ancRequestDto.getTransportationOut());
@@ -161,13 +160,8 @@ public class ANCService {
                 anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
                 anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
                 anc.setUrinalysis(ancRequestDto.getUrinalysis());
-                anc.setHbPcv(ancRequestDto.getHbPcv());
-                anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
-                anc.setLlinGiven(ancRequestDto.getLlinGiven());
-                anc.setIptDose(ancRequestDto.getIptDose());
-                anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
-                anc.setTdImmunization(ancRequestDto.getTdImmunization());
-                anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                anc.setLabTest(ancRequestDto.getLabTest());
+                anc.setInterventions(ancRequestDto.getInterventions());
                 anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
                 anc.setReferralReason(ancRequestDto.getReferralReason());
                 anc.setTransportationOut(ancRequestDto.getTransportationOut());
@@ -181,7 +175,7 @@ public class ANCService {
 
                 // Check for existing ANC to prevent duplicates
                 Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
-                        patientUuid, ancRequestDto.getPmtctCycleUuid(), 0L);
+                        patientUuid, ancRequestDto.getPmtctCycleUuid(),false);
 
                 ANC anc;
                 if (existingAnc.isPresent()) {
@@ -191,7 +185,7 @@ public class ANCService {
                 } else {
                     anc = new ANC();
                     anc.setUuid(UUID.randomUUID().toString());
-                    anc.setArchived(0L);
+                    anc.setArchived(false);
                     anc.setCreatedDate(LocalDateTime.now());
                     anc.setLastModifiedDate(LocalDateTime.now());
                     anc.setCreatedBy(user.getUserName());
@@ -214,13 +208,8 @@ public class ANCService {
                     if (ancRequestDto.getHepatitisBInfo() != null) anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
                     if (ancRequestDto.getHepatitisCInfo() != null) anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
                     if (ancRequestDto.getUrinalysis() != null) anc.setUrinalysis(ancRequestDto.getUrinalysis());
-                    if (ancRequestDto.getHbPcv() != null) anc.setHbPcv(ancRequestDto.getHbPcv());
-                    if (ancRequestDto.getBloodSugarGdm() != null) anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
-                    if (ancRequestDto.getLlinGiven() != null) anc.setLlinGiven(ancRequestDto.getLlinGiven());
-                    if (ancRequestDto.getIptDose() != null) anc.setIptDose(ancRequestDto.getIptDose());
-                    if (ancRequestDto.getHematinicsGiven() != null) anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
-                    if (ancRequestDto.getTdImmunization() != null) anc.setTdImmunization(ancRequestDto.getTdImmunization());
-                    if (ancRequestDto.getAssociatedProblems() != null) anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                    if (ancRequestDto.getLabTest() != null) anc.setLabTest(ancRequestDto.getLabTest());
+                    if (ancRequestDto.getInterventions() != null) anc.setInterventions(ancRequestDto.getInterventions());
                     if (ancRequestDto.getOutcomeOfVisit() != null) anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
                     if (ancRequestDto.getReferralReason() != null) anc.setReferralReason(ancRequestDto.getReferralReason());
                     if (ancRequestDto.getTransportationOut() != null) anc.setTransportationOut(ancRequestDto.getTransportationOut());
@@ -238,13 +227,8 @@ public class ANCService {
                     anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
                     anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
                     anc.setUrinalysis(ancRequestDto.getUrinalysis());
-                    anc.setHbPcv(ancRequestDto.getHbPcv());
-                    anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
-                    anc.setLlinGiven(ancRequestDto.getLlinGiven());
-                    anc.setIptDose(ancRequestDto.getIptDose());
-                    anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
-                    anc.setTdImmunization(ancRequestDto.getTdImmunization());
-                    anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+                    anc.setLabTest(ancRequestDto.getLabTest());
+                    anc.setInterventions(ancRequestDto.getInterventions());
                     anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
                     anc.setReferralReason(ancRequestDto.getReferralReason());
                     anc.setTransportationOut(ancRequestDto.getTransportationOut());
@@ -378,13 +362,8 @@ public class ANCService {
         anc.setHepatitisBInfo(ancRequestDto.getHepatitisBInfo());
         anc.setHepatitisCInfo(ancRequestDto.getHepatitisCInfo());
         anc.setUrinalysis(ancRequestDto.getUrinalysis());
-        anc.setHbPcv(ancRequestDto.getHbPcv());
-        anc.setBloodSugarGdm(ancRequestDto.getBloodSugarGdm());
-        anc.setLlinGiven(ancRequestDto.getLlinGiven());
-        anc.setIptDose(ancRequestDto.getIptDose());
-        anc.setHematinicsGiven(ancRequestDto.getHematinicsGiven());
-        anc.setTdImmunization(ancRequestDto.getTdImmunization());
-        anc.setAssociatedProblems(ancRequestDto.getAssociatedProblems());
+        anc.setLabTest(ancRequestDto.getLabTest());
+        anc.setInterventions(ancRequestDto.getInterventions());
         anc.setOutcomeOfVisit(ancRequestDto.getOutcomeOfVisit());
         anc.setReferralReason(ancRequestDto.getReferralReason());
         anc.setTransportationOut(ancRequestDto.getTransportationOut());
@@ -427,14 +406,8 @@ public class ANCService {
         ancRespondDto.setHepatitisBInfo(anc.getHepatitisBInfo());
         ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
         ancRespondDto.setUrinalysis(anc.getUrinalysis());
-        ancRespondDto.setHbPcv(anc.getHbPcv());
-        ancRespondDto.setPcv(anc.getPcv());
-        ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
-        ancRespondDto.setLlinGiven(anc.getLlinGiven());
-        ancRespondDto.setIptDose(anc.getIptDose());
-        ancRespondDto.setHematinicsGiven(anc.getHematinicsGiven());
-        ancRespondDto.setTdImmunization(anc.getTdImmunization());
-        ancRespondDto.setAssociatedProblems(anc.getAssociatedProblems());
+        ancRespondDto.setLabTest(anc.getLabTest());
+        ancRespondDto.setInterventions(anc.getInterventions());
         ancRespondDto.setOutcomeOfVisit(anc.getOutcomeOfVisit());
         ancRespondDto.setReferralReason(anc.getReferralReason());
         ancRespondDto.setTransportationOut(anc.getTransportationOut());
@@ -452,7 +425,7 @@ public class ANCService {
 
     @SneakyThrows
     public ANC getAncByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid) {
-        return this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L)
+        return this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid,false)
                 .orElse(null);
     }
 
@@ -515,12 +488,12 @@ public class ANCService {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            persons = pmtctEnrollmentReporsitory.findFemalePersonBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.findFemalePersonBySearchParameters(queryParam, currentOrganisationUnitId, paging);
         } else {
             // Integer rec = ancRepository.getTotalAnc();
             //if (rec >= 1) {
             System.out.println("mycurrentOrganisationUnitId " + currentOrganisationUnitId);
-            persons = pmtctEnrollmentReporsitory.findFemalePerson(0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.findFemalePerson(currentOrganisationUnitId, paging);
             //} else persons = personRepository.findFemalePerson2(0, currentOrganisationUnitId, paging);
         }
 
@@ -557,13 +530,13 @@ public class ANCService {
         }
         Page<PatientPerson> persons = null;
         if ((searchValue == null) || (searchValue.equals("*"))) {
-            persons = ancRepository.getActiveOnANC(0, currentOrganisationUnitId, paging);
+            persons = ancRepository.getActiveOnANC(currentOrganisationUnitId, paging);
         } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
             //System.out.println("I got here Doc");
-            persons = ancRepository.getActiveOnANCBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = ancRepository.getActiveOnANCBySearchParameters(queryParam, currentOrganisationUnitId, paging);
         }
         System.out.println(persons);
         List<PatientPerson> personList = persons.getContent();
@@ -596,12 +569,12 @@ public class ANCService {
         }
         Page<PatientPerson> persons = null;
         if ((searchValue == null) || (searchValue.equals("*"))) {
-            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCT(0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCT(currentOrganisationUnitId, paging);
         } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCTBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = pmtctEnrollmentReporsitory.getActiveOnPMTCTBySearchParameters(queryParam, currentOrganisationUnitId, paging);
         }
         List<PatientPerson> personList = persons.getContent();
         ArrayList<PMTCTEnrollmentWithPersonRespondDto> pmtctResponseDtos = new ArrayList<>();
@@ -639,7 +612,7 @@ public class ANCService {
                     pmtctPersonDto.setContactPoint(person.getContactPoint());
 
                 }
-                Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(person.getUuid(), 0L);
+                Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(person.getUuid(),false);
                 if (ancs.isPresent()) {
                     pmtctPersonDto.setAncRegstrationStatus(Boolean.TRUE);
                 } else {
@@ -692,7 +665,7 @@ public class ANCService {
 
     public String myRecentAncNo(String patientUuid) {
         String ancNo = "";
-        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid, 0L);
+        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid,false);
         if (ancs.isPresent()) {
             ancNo = ancs.get().getAncNo();
         } else {
@@ -703,7 +676,7 @@ public class ANCService {
 
     public boolean activeOnANC(String patientUuid) {
         boolean ancNo = false;
-        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid, 0L);
+        Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndArchived(patientUuid,false);
         if (ancs.isPresent()) {
             ancNo = true;
         } else {
@@ -831,7 +804,7 @@ public class ANCService {
         List<ANC> ancList = this.ancRepository.findAll();
         List<ANCRespondDto> ancRespondDtoList = new ArrayList<>();
         ancList.forEach(anc -> {
-            if (anc.getArchived() == 0L) {
+            if (anc.getArchived() == false) {
                 Optional<User> currentUser = userService.getUserWithRoles();
                 Long facilityId = 0L;
                 if (currentUser.isPresent()) {
@@ -855,7 +828,7 @@ public class ANCService {
         List<ANC> ancList = this.ancRepository.findAll();
         List<ANCRespondDto> ancRespondDtoList = new ArrayList<>();
         ancList.forEach(anc -> {
-            if (anc.getArchived() != 0L) {
+            if (anc.getArchived() != false) {
                 Optional<User> currentUser = userService.getUserWithRoles();
                 Long facilityId = 0L;
                 if (currentUser.isPresent()) {
@@ -895,7 +868,7 @@ public class ANCService {
 
             // Check for existing ANC to prevent duplicates
             Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
-                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleUuid(), 0L);
+                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleUuid(),false);
 
             if (existingAnc.isPresent()) {
                 anc = existingAnc.get();
@@ -909,7 +882,7 @@ public class ANCService {
                 anc.setLastModifiedDate(LocalDateTime.now());
                 anc.setUuid(UUID.randomUUID().toString());
                 anc.setPatientUuid(person.getUuid());
-                anc.setArchived(0L);
+                anc.setArchived(false);
                 anc.setFacilityId(person.getFacilityId());
                 anc.setStatus("NV");
                 anc.setSource(ancEnrollementRequestDto.getSource());
@@ -930,14 +903,8 @@ public class ANCService {
             anc.setHepatitisBInfo(ancEnrollementRequestDto.getHepatitisBInfo());
             anc.setHepatitisCInfo(ancEnrollementRequestDto.getHepatitisCInfo());
             anc.setUrinalysis(ancEnrollementRequestDto.getUrinalysis());
-            anc.setHbPcv(ancEnrollementRequestDto.getHbPcv());
-            anc.setPcv(ancEnrollementRequestDto.getPcv());
-            anc.setBloodSugarGdm(ancEnrollementRequestDto.getBloodSugarGdm());
-            anc.setLlinGiven(ancEnrollementRequestDto.getLlinGiven());
-            anc.setIptDose(ancEnrollementRequestDto.getIptDose());
-            anc.setHematinicsGiven(ancEnrollementRequestDto.getHematinicsGiven());
-            anc.setTdImmunization(ancEnrollementRequestDto.getTdImmunization());
-            anc.setAssociatedProblems(ancEnrollementRequestDto.getAssociatedProblems());
+            anc.setLabTest(ancEnrollementRequestDto.getLabTest());
+            anc.setInterventions(ancEnrollementRequestDto.getInterventions());
             anc.setOutcomeOfVisit(ancEnrollementRequestDto.getOutcomeOfVisit());
             anc.setReferralReason(ancEnrollementRequestDto.getReferralReason());
             anc.setTransportationOut(ancEnrollementRequestDto.getTransportationOut());
@@ -985,14 +952,8 @@ public class ANCService {
         ancRespondDto.setHepatitisBInfo(anc.getHepatitisBInfo());
         ancRespondDto.setHepatitisCInfo(anc.getHepatitisCInfo());
         ancRespondDto.setUrinalysis(anc.getUrinalysis());
-        ancRespondDto.setHbPcv(anc.getHbPcv());
-        ancRespondDto.setPcv(anc.getPcv());
-        ancRespondDto.setBloodSugarGdm(anc.getBloodSugarGdm());
-        ancRespondDto.setLlinGiven(anc.getLlinGiven());
-        ancRespondDto.setIptDose(anc.getIptDose());
-        ancRespondDto.setHematinicsGiven(anc.getHematinicsGiven());
-        ancRespondDto.setTdImmunization(anc.getTdImmunization());
-        ancRespondDto.setAssociatedProblems(anc.getAssociatedProblems());
+        ancRespondDto.setLabTest(anc.getLabTest());
+        ancRespondDto.setInterventions(anc.getInterventions());
         ancRespondDto.setOutcomeOfVisit(anc.getOutcomeOfVisit());
         ancRespondDto.setReferralReason(anc.getReferralReason());
         ancRespondDto.setTransportationOut(anc.getTransportationOut());
@@ -1023,7 +984,7 @@ public class ANCService {
             anc.setUuid(UUID.randomUUID().toString());
             anc.setPatientUuid(person.getUuid());
             anc.setStaticHivStatus(ancWithPersonRequestDto.getStaticHivStatus());
-            anc.setArchived(0L);
+            anc.setArchived(false);
             anc.setFacilityId(person.getFacilityId());
             anc.setAncSetting(ancWithPersonRequestDto.getAncSetting());
             anc.setStatus("NV");
@@ -1040,13 +1001,8 @@ public class ANCService {
             anc.setHepatitisBInfo(ancWithPersonRequestDto.getHepatitisBInfo());
             anc.setHepatitisCInfo(ancWithPersonRequestDto.getHepatitisCInfo());
             anc.setUrinalysis(ancWithPersonRequestDto.getUrinalysis());
-            anc.setHbPcv(ancWithPersonRequestDto.getHbPcv());
-            anc.setBloodSugarGdm(ancWithPersonRequestDto.getBloodSugarGdm());
-            anc.setLlinGiven(ancWithPersonRequestDto.getLlinGiven());
-            anc.setIptDose(ancWithPersonRequestDto.getIptDose());
-            anc.setHematinicsGiven(ancWithPersonRequestDto.getHematinicsGiven());
-            anc.setTdImmunization(ancWithPersonRequestDto.getTdImmunization());
-            anc.setAssociatedProblems(ancWithPersonRequestDto.getAssociatedProblems());
+            anc.setLabTest(ancWithPersonRequestDto.getLabTest());
+            anc.setInterventions(ancWithPersonRequestDto.getInterventions());
             anc.setOutcomeOfVisit(ancWithPersonRequestDto.getOutcomeOfVisit());
             anc.setReferralReason(ancWithPersonRequestDto.getReferralReason());
             anc.setTransportationOut(ancWithPersonRequestDto.getTransportationOut());
@@ -1079,29 +1035,33 @@ public class ANCService {
             pmtctWithPersonRespondDto.setPmtctCycleUuid(cycleUuid);
 
             // Use cycle UUID to get enrollment data for the latest pregnancy cycle
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
+            try {
+                Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid,false);
 
-            if (enrollment.isPresent()) {
-                PMTCTEnrollment enrollmentData = enrollment.get();
-                // Set all enrollment-related data from the latest cycle enrollment
-                pmtctWithPersonRespondDto.setPmtctEnrollmentDate(enrollmentData.getPmtctEnrollmentDate());
-                pmtctWithPersonRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
-                pmtctWithPersonRespondDto.setArtStartTime(enrollmentData.getArtStartTime());
-                pmtctWithPersonRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
-                pmtctWithPersonRespondDto.setTbStatus(enrollmentData.getTbStatus());
-                pmtctWithPersonRespondDto.setPmtctRegStatus(true);
-                pmtctWithPersonRespondDto.setHivStatus(enrollmentData.getHivStatus());
+                if (enrollment.isPresent()) {
+                    PMTCTEnrollment enrollmentData = enrollment.get();
+                    // Set all enrollment-related data from the latest cycle enrollment
+                    pmtctWithPersonRespondDto.setPmtctEnrollmentDate(enrollmentData.getPmtctEnrollmentDate());
+                    pmtctWithPersonRespondDto.setArtStartDate(enrollmentData.getArtStartDate());
+                    pmtctWithPersonRespondDto.setArtStartTime(enrollmentData.getArtStartTime());
+                    pmtctWithPersonRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
+                    pmtctWithPersonRespondDto.setTbStatus(enrollmentData.getTbStatus());
+                    pmtctWithPersonRespondDto.setPmtctRegStatus(true);
+                    pmtctWithPersonRespondDto.setHivStatus(enrollmentData.getHivStatus());
 
-                // Get ANC data for the latest cycle — source ancNo from ANC (authoritative source)
-                Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(person.getPatientUuid(), cycleUuid, 0L);
-                if(ancs.isPresent()) {
-                    ANC anc = ancs.get();
-                    pmtctWithPersonRespondDto.setAncNo(anc.getAncNo());
-                    pmtctWithPersonRespondDto.setGravida(anc.getGravida());
-                    pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
+                    // Get ANC data for the latest cycle — source ancNo from ANC (authoritative source)
+                    Optional<ANC> ancs = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(person.getPatientUuid(), cycleUuid,false);
+                    if(ancs.isPresent()) {
+                        ANC anc = ancs.get();
+                        pmtctWithPersonRespondDto.setAncNo(anc.getAncNo());
+                        pmtctWithPersonRespondDto.setGravida(anc.getGravida());
+                        pmtctWithPersonRespondDto.setGAWeeks(anc.getGAWeeks());
+                    }
+                } else {
+                    // No enrollment found for the latest cycle
+                    pmtctWithPersonRespondDto.setPmtctRegStatus(false);
                 }
-            } else {
-                // No enrollment found for the latest cycle
+            } catch (Exception e) {
                 pmtctWithPersonRespondDto.setPmtctRegStatus(false);
             }
         } else {
@@ -1162,31 +1122,37 @@ public class ANCService {
 
         // Check if person has a valid pmtctCycleUuid (means they have an active ANC enrollment)
         if (pmtctCycleUuid != null) {
-            // Get enrollment data for additional fields not in the ANC query
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(pmtctCycleUuid, 0L);
+            try {
+                // Get enrollment data for additional fields not in the ANC query
+                Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(pmtctCycleUuid,false);
 
-            if (enrollment.isPresent()) {
-                PMTCTEnrollment enrollmentData = enrollment.get();
+                if (enrollment.isPresent()) {
+                    PMTCTEnrollment enrollmentData = enrollment.get();
 
-                // Set enrollment-related data
-                ancRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
-                ancRespondDto.setTbStatus(enrollmentData.getTbStatus());
-                ancRespondDto.setHivStatus(enrollmentData.getHivStatus());
-                ancRespondDto.setPmtctRegStatus(true);
+                    // Set enrollment-related data
+                    ancRespondDto.setEntryPoint(enrollmentData.getEntryPoint());
+                    ancRespondDto.setTbStatus(enrollmentData.getTbStatus());
+                    ancRespondDto.setHivStatus(enrollmentData.getHivStatus());
+                    ancRespondDto.setPmtctRegStatus(true);
 
-                // Get delivery status for the latest cycle
-                boolean deliveryStatus = Boolean.FALSE;
-                try {
-                    Optional<Delivery> deliveryOpt = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(person.getPatientUuid(), pmtctCycleUuid);
-                    deliveryStatus = deliveryOpt.isPresent();
-                } catch (Exception e) { }
-                ancRespondDto.setDeliveryStatus(deliveryStatus);
+                    // Get delivery status for the latest cycle
+                    boolean deliveryStatus = Boolean.FALSE;
+                    try {
+                        Optional<Delivery> deliveryOpt = this.deliveryRepository.findDeliveryByPatientUuidAndPmtctCycleUuid(person.getPatientUuid(), pmtctCycleUuid);
+                        deliveryStatus = deliveryOpt.isPresent();
+                    } catch (Exception e) { }
+                    ancRespondDto.setDeliveryStatus(deliveryStatus);
 
-                // Get PMTCT enrollment details for the latest cycle
-                PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByPatientUuid(person.getPatientUuid());
-                ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
-            } else {
-                // No enrollment found for the latest cycle
+                    // Get PMTCT enrollment details for the latest cycle
+                    try {
+                        PMTCTEnrollmentRespondDto pmtctEnrollmentRespondDto = this.pmtctEnrollmentService.getSinglePmtctEnrollmentByPatientUuid(person.getPatientUuid());
+                        ancRespondDto.setPmtctEnrollmentRespondDto(pmtctEnrollmentRespondDto);
+                    } catch (Exception e) { }
+                } else {
+                    // No enrollment found for the latest cycle
+                    ancRespondDto.setPmtctRegStatus(false);
+                }
+            } catch (Exception e) {
                 ancRespondDto.setPmtctRegStatus(false);
             }
 
@@ -1220,7 +1186,7 @@ public class ANCService {
 
 //    public boolean activeOnPMTCTByPatientUuid(String patientUuid) {
 //        boolean active = false;
-//        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPatientUuid(patientUuid);//.findANCByPatientUuidAndArchived(patientUuid, 0L);
+//        Optional<PMTCTEnrollment> pmtctEnrollment = pmtctEnrollmentReporsitory.getByPatientUuid(patientUuid);//.findANCByPatientUuidAndArchived(patientUuid,false);
 //        if (pmtctEnrollment.isPresent()) {
 //            active = true;
 //        } else {
@@ -1250,7 +1216,7 @@ public class ANCService {
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
         existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setPatientUuid(anc.getPatientUuid());
-        // existingAnc.setArchived(1L); // Removed: This was auto-archiving ANC records when graduating
+        // existingAnc.setArchived(true); // Removed: This was auto-archiving ANC records when graduating
         existingAnc.setStatus(visitStatus);
         existingAnc.setStaticHivStatus(anc.getStaticHivStatus());
 
@@ -1277,7 +1243,7 @@ public class ANCService {
         existingAnc.setSourceOfReferral(anc.getSourceOfReferral());
         existingAnc.setCommunitySetting(anc.getCommunitySetting());
         existingAnc.setPatientUuid(anc.getPatientUuid());
-        existingAnc.setArchived(0L);
+        existingAnc.setArchived(false);
         existingAnc.setStatus(visitStatus);
         existingAnc.setPreviouslyKnownHivStatus(anc.getPreviouslyKnownHivStatus());
         existingAnc.setUuid(anc.getUuid());
@@ -1399,11 +1365,11 @@ public class ANCService {
             }
         } catch (Exception e) { }
 
-        // 5. Check pmtct_hts table for maternal retesting results
+        // 5. Check hts_encounter table for PMTCT HTS records
         try {
-            Optional<String> pmtctHtsResult = pmtctHtsRepository.findLatestFinalResult(patientUuid);
-            if (pmtctHtsResult.isPresent() && pmtctHtsResult.get() != null) {
-                allStatuses.add(pmtctHtsResult.get());
+            Optional<String> newHtsResult = htsEncounterProxyRepository.findLatestFinalResult(patientUuid);
+            if (newHtsResult.isPresent() && newHtsResult.get() != null) {
+                allStatuses.add(newHtsResult.get());
             }
         } catch (Exception e) { }
 
@@ -1450,13 +1416,33 @@ public class ANCService {
         try {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             if (currentUser.isPresent()) {
-                Optional<HtsClientProjection> htsOptional = ancRepository
-                        .getHtsRecordByPersonsUuidAAndFacilityId(patientUuid, currentUser.get()
-                                .getCurrentOrganisationUnitId());
-                if (htsOptional.isPresent()) {
-                    HtsClientProjection hts = htsOptional.get();
-                    result.put("result", hts.getHivTestResult() != null ? hts.getHivTestResult() : "");
-                    result.put("dateVisit", hts.getDateVisit());
+                // Check hts_encounter table first (PMTCT HTS records)
+                Optional<HtsEncounterProxy> encounterOptional = htsEncounterProxyRepository
+                        .findLatestByPatientUuid(patientUuid);
+                if (encounterOptional.isPresent()) {
+                    HtsEncounterProxy encounter = encounterOptional.get();
+                    JsonNode obs = encounter.getObservation();
+                    String hivResult = "";
+                    if (obs != null) {
+                        // Use finalHivTestResult, falling back to confirmatoryHivTest
+                        if (obs.has("finalHivTestResult") && !obs.get("finalHivTestResult").asText("").isEmpty()) {
+                            hivResult = obs.get("finalHivTestResult").asText("");
+                        } else if (obs.has("confirmatoryHivTest")) {
+                            hivResult = obs.get("confirmatoryHivTest").asText("");
+                        }
+                    }
+                    result.put("result", hivResult);
+                    result.put("dateVisit", encounter.getDateOfVisit());
+                } else {
+                    // Fallback: check hts_client table (HTS module records)
+                    Optional<HtsClientProjection> htsOptional = ancRepository
+                            .getHtsRecordByPersonsUuidAAndFacilityId(patientUuid, currentUser.get()
+                                    .getCurrentOrganisationUnitId());
+                    if (htsOptional.isPresent()) {
+                        HtsClientProjection hts = htsOptional.get();
+                        result.put("result", hts.getHivTestResult() != null ? hts.getHivTestResult() : "");
+                        result.put("dateVisit", hts.getDateVisit());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -1514,7 +1500,7 @@ public class ANCService {
         }
 
         // Fallback: check ANC record for this cycle
-        Optional<ANC> anc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
+        Optional<ANC> anc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid,false);
         if(anc.isPresent() && anc.get().getLMP() != null) {
             return anc.get().getLMP();
         }
@@ -1558,7 +1544,7 @@ public class ANCService {
 
     public void deleteANC(String id) {
         ANC existingANC = this.getSingleAnc(id);
-        existingANC.setArchived(1L);
+        existingANC.setArchived(true);
         ancRepository.save(existingANC);
     }
 
@@ -1660,7 +1646,7 @@ public class ANCService {
         ANCEnrollmentCheckDto response = new ANCEnrollmentCheckDto();
 
         // Get the ANC record for this patient and cycle
-        Optional<ANC> ancOptional = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
+        Optional<ANC> ancOptional = ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid,false);
 
         if (ancOptional.isPresent()) {
             ANC anc = ancOptional.get();

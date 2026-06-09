@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,4 +20,6 @@ public class DeliveryBabyInfoDto {
     private String babyDeadWithin7Days;
     private String babyLiveBirthHivPositive;
     private String sexOfBaby;
+    private List<BabyAliveOutcomeDto> aliveOutcomes;
+    private List<BabyDeadOutcomeDto> deadOutcomes;
 }

@@ -61,7 +61,7 @@ const PmtctHts = (props) => {
           {
             address: "",
             altPhoneNumber: "",
-            archived: 0,
+            archived: false,
             currentlyLiveWithPartner: true,
             datePartnerCameForTesting: "",
             dob: "",
@@ -70,7 +70,7 @@ const PmtctHts = (props) => {
             firstName: "",
             hangOutSpots: "",
             htsClient: {
-              archived: 0,
+              archived: false,
               breastFeeding: 0,
               capturedBy: "",
               cd4: {},
@@ -93,7 +93,7 @@ const PmtctHts = (props) => {
               person: {
                 active: "",
                 address: {},
-                archived: 0,
+                archived: false,
                 contact: {},
                 contactPoint: {},
                 createdDate: "",

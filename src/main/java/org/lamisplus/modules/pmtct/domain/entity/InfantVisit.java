@@ -46,7 +46,7 @@ public class InfantVisit implements Serializable, Persistable<String> {
     @Column(name = "unique_uuid")
     private String uniqueUuid;
     private String pmtctCycleUuid;
-    private Long archived;
+    private Boolean archived;
     private Long facilityId;
     @Column(name = "created_date", updatable = false)
     @CreatedDate
@@ -94,7 +94,7 @@ public class InfantVisit implements Serializable, Persistable<String> {
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 

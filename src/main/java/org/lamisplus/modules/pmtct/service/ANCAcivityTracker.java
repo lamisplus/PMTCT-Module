@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.lamisplus.modules.pmtct.domain.dto.ActivityTracker;
 import org.lamisplus.modules.pmtct.domain.dto.SummaryChart;
 import org.lamisplus.modules.pmtct.domain.entity.*;
+import org.lamisplus.modules.pmtct.domain.entity.HtsEncounterProxy;
 import org.lamisplus.modules.pmtct.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class ANCAcivityTracker {
     private final PmtctVisitRepository pmtctVisitRepository;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     private final PmtctHtsRepository pmtctHtsRepository;
+    private final HtsEncounterProxyRepository htsEncounterProxyRepository;
 
     private  final InfantVisitRepository infantVisitRepository;
 
@@ -29,7 +31,7 @@ public class ANCAcivityTracker {
 
 
     private String resolvePatientUuidFromAncNo(String ancNo) {
-        Optional<ANC> ancOpt = this.ancRepository.getByAncNoAndArchived(ancNo, 0L);
+        Optional<ANC> ancOpt = this.ancRepository.getByAncNoAndArchived(ancNo,false);
         return ancOpt.map(ANC::getPatientUuid).orElse(null);
     }
 
@@ -229,7 +231,7 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndArchived(patientUuid,0L);
+        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndArchived(patientUuid,false);
         if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -244,24 +246,26 @@ public class ANCAcivityTracker {
         }
 
 
-        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPatientUuidAndUnarchived(patientUuid);
-        if (!(pmtctHtsRecord.isEmpty()))
-        {
-            pmtctHtsRecord.forEach(pmtctHtsRec ->{
+        // Get HTS activity records from hts_encounter table
+        List<HtsEncounterProxy> htsEncounterRecords = this.htsEncounterProxyRepository.findByPatientUuidAndUnarchived(patientUuid);
+        if (!htsEncounterRecords.isEmpty()) {
+            htsEncounterRecords.forEach(proxy -> {
                 ActivityTracker activityTracker = new ActivityTracker();
-
-                activityTracker.setActivityName("PMTCT HTS");
+                String testingType = "";
+                if (proxy.getObservation() != null && proxy.getObservation().has("testingType")) {
+                    testingType = proxy.getObservation().get("testingType").asText("");
+                }
+                activityTracker.setActivityName("RETESTING".equalsIgnoreCase(testingType) ? "Retesting" : "PMTCT HTS");
+                activityTracker.setTestingType(testingType);
                 activityTracker.setPath("pmtct-hts");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
                 activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctHtsRec.getUuid());
-                activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
+                activityTracker.setRecordId(String.valueOf(proxy.getId()));
+                activityTracker.setActivityDate(proxy.getDateOfVisit());
                 activityTrackers.add(activityTracker);
-            } );
+            });
         }
-
-
 
 
         return activityTrackers;
@@ -368,7 +372,7 @@ public class ANCAcivityTracker {
             activityTrackers.add(activityTracker);
         }
 
-        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid, 0L);
+        Optional<ANC> ancs = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(patientUuid, pmtctCycleUuid,false);
         if (ancs.isPresent())
         {
             ActivityTracker activityTracker = new ActivityTracker();
@@ -383,24 +387,26 @@ public class ANCAcivityTracker {
         }
 
 
-        List<PmtctHts> pmtctHtsRecord = this.pmtctHtsRepository.findByPatientUuidAndPmtctCycleIdAndUnarchived(patientUuid, pmtctCycleUuid);
-        if (!(pmtctHtsRecord.isEmpty()))
-        {
-            pmtctHtsRecord.forEach(pmtctHtsRec ->{
+        // Get HTS activity records from hts_encounter table
+        List<HtsEncounterProxy> htsEncounterRecords = this.htsEncounterProxyRepository.findByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
+        if (!htsEncounterRecords.isEmpty()) {
+            htsEncounterRecords.forEach(proxy -> {
                 ActivityTracker activityTracker = new ActivityTracker();
-
-                activityTracker.setActivityName("PMTCT HTS");
+                String testingType = "";
+                if (proxy.getObservation() != null && proxy.getObservation().has("testingType")) {
+                    testingType = proxy.getObservation().get("testingType").asText("");
+                }
+                activityTracker.setActivityName("RETESTING".equalsIgnoreCase(testingType) ? "Retesting" : "PMTCT HTS");
+                activityTracker.setTestingType(testingType);
                 activityTracker.setPath("pmtct-hts");
                 activityTracker.setEditable(true);
                 activityTracker.setDeletable(true);
                 activityTracker.setViewable(true);
-                activityTracker.setRecordId(pmtctHtsRec.getUuid());
-                activityTracker.setActivityDate(pmtctHtsRec.getDateOfHivTest());
+                activityTracker.setRecordId(String.valueOf(proxy.getId()));
+                activityTracker.setActivityDate(proxy.getDateOfVisit());
                 activityTrackers.add(activityTracker);
-            } );
+            });
         }
-
-
 
 
         return activityTrackers;

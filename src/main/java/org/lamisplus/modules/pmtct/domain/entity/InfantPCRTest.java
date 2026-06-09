@@ -42,7 +42,7 @@ public class InfantPCRTest implements Serializable, Persistable<String> {
     private String  uniqueUuid;
     @Column(name = "mother_patient_uuid")
     private String motherPatientUuid;
-    private Long archived;
+    private Boolean archived;
     private String pmtctCycleUuid;
     private Long facilityId;
 
@@ -66,7 +66,7 @@ public class InfantPCRTest implements Serializable, Persistable<String> {
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 

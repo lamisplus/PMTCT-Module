@@ -179,7 +179,7 @@ public class HTSPatient {
 
      @Basic
      @Column(name = "archived")
-     private int archived=0;
+     private Boolean archived = false;
 
      @Type(type = "jsonb")
      @Basic(fetch = FetchType.LAZY)

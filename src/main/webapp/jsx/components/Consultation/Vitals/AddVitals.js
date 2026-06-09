@@ -225,45 +225,40 @@ const AddVitals = (props) => {
                                     </div>
                                     <div className="form-group mb-3 col-md-6">
                                         <FormGroup>
-                                        <Label >Blood Presure</Label>
-                                        <InputGroup>
-                                        <InputGroupText>
-                                            systolic(mmHg)
-                                            </InputGroupText> 
-                                            <Input 
+                                        <Label>Blood Pressure (mmHg)</Label>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <Input
                                                 type="number"
                                                 name="systolic"
                                                 id="systolic"
+                                                placeholder="Systolic"
                                                 onChange={handleInputChangeVitalSignDto}
-                                                value={vital.systolic} 
+                                                value={vital.systolic}
+                                                style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: vital.systolic && (parseFloat(vital.systolic) < 90 || parseFloat(vital.systolic) > 240) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                                             />
-                                           
-                                        </InputGroup>
-                                        {vital.systolic > 200 ? (
-                                                <span className={classes.error}>{"Blood Pressure cannot be greater than 200."}</span>
-                                            ) : "" }
-                                        </FormGroup>
-                                    </div>
-                                    <div className="form-group mb-3 col-md-6">
-                                        <FormGroup>
-                                        <Label >Blood Presure</Label>
-                                        
-                                        <InputGroup> 
-                                        <InputGroupText>
-                                            diastolic (mmHg)
-                                            </InputGroupText>
-                                            <Input 
-                                                type="text"
+                                            <span style={{ fontWeight: "bold", color: "#64748b", fontSize: "18px" }}>/</span>
+                                            <Input
+                                                type="number"
                                                 name="diastolic"
                                                 id="diastolic"
+                                                placeholder="Diastolic"
                                                 onChange={handleInputChangeVitalSignDto}
-                                                value={vital.diastolic} 
+                                                value={vital.diastolic}
+                                                style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: vital.diastolic && (parseFloat(vital.diastolic) < 60 || parseFloat(vital.diastolic) > 140) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                                             />
-                                            
-                                        </InputGroup>
-                                        {vital.diastolic > 200 ? (
-                                            <span className={classes.error}>{"Blood Pressure cannot be greater than 200."}</span>
-                                        ) : "" }
+                                        </div>
+                                        <div style={{ display: "flex", gap: "6px" }}>
+                                            <div style={{ flex: 1 }}>
+                                                {vital.systolic > 200 ? (
+                                                    <span className={classes.error}>{"Systolic must be between 90 and 240"}</span>
+                                                ) : "" }
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                {vital.diastolic > 200 ? (
+                                                    <span className={classes.error}>{"Diastolic must be between 60 and 140"}</span>
+                                                ) : "" }
+                                            </div>
+                                        </div>
                                         </FormGroup>
                                     </div>
                                     <div className="form-group mb-3 col-md-6">

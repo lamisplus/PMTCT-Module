@@ -113,10 +113,11 @@ const Labourpartner = (props) => {
   });
   useEffect(() => {
     GET_CODESETS()
-    // Fetch ANC id using patientUuid + pmtctCycleUuid
+    // Fetch ANC id using patientUuid + pmtctCycleUuid (only for ANC entry point)
+    const entryPoint = props.patientObj?.entryPoint || props.latestPmtctCycle?.entryPoint;
     const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
     const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid || props.patientObj.pmtctCycleUuid;
-    if (patientUuid && pmtctCycleUuid) {
+    if (entryPoint === "PMTCT_ENTRY_POINT_ANC" && patientUuid && pmtctCycleUuid) {
       axios.get(`${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       ).then((response) => {

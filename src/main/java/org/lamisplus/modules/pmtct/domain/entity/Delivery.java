@@ -23,15 +23,16 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private Integer gAWeeks;
     private String romDeliveryInterval;
     private String modeOfDelivery;
+    private String modeOfDeliveryOther;
     private String episiotomy;
     private String vaginalTear;
     private String feedingDecision;
     private String maternalOutcome;
     private String childGivenArvWithin72;
     private String childStatus;
-    private String hivExposedInfantGivenHbWithin24hrs;
+    private Boolean hivExposedInfantGivenHbWithin24hrs;
     @Column(name = "non_hbv_exposed_infant_given_hb_within_24hrs")
-    private String nonHbvExposedInfantGivenHbWithin24hrs;
+    private Boolean nonHbvExposedInfantGivenHbWithin24hrs;
     private String deliveryTime;
     private String onArt;
     private String artStartedLdWard;
@@ -48,7 +49,7 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     private String patientUuid;
     private String placeOfDelivery;
     private String pmtctCycleUuid;
-    private Long archived;
+    private Boolean archived;
     private String source;
 
     @Type(type = "jsonb")
@@ -74,7 +75,7 @@ public class Delivery extends PMTCTTransactionalEntity implements Serializable, 
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 

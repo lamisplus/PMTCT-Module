@@ -14,6 +14,8 @@ public class ANCRequestDto implements Serializable
     private String source;
     private String id;
     private String ancNo;
+    private String ancAttendance;
+    private String referredFromSpokesSite;
     private String ancSetting;
     private String communitySetting;
 
@@ -40,13 +42,8 @@ public class ANCRequestDto implements Serializable
     private HepatitisBDto hepatitisBInfo;
     private HepatitisCDto hepatitisCInfo;
     private UrinalysisDto urinalysis;
-    private String hbPcv;
-    private String bloodSugarGdm;
-    private String llinGiven;
-    private String iptDose;
-    private String hematinicsGiven;
-    private String tdImmunization;
-    private String associatedProblems;
+    private LabTestDto labTest;
+    private InterventionsDto interventions;
     private String outcomeOfVisit;
     private String referralReason;
     private String transportationOut;

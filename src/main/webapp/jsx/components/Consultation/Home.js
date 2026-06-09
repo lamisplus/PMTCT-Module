@@ -148,6 +148,8 @@ const ClinicVisit = (props) => {
   const [regimenType, setRegimenType] = useState([]);
   const [selectedRegimenLineId, setSelectedRegimenLineId] = useState("");
   const [cycleClosed, setCycleClosed] = useState(false);
+  const [lmpDate, setLmpDate] = useState("");
+  const [ancRegistrationDate, setAncRegistrationDate] = useState("");
 
   const [objValues, setObjValues] = useState({
     dateOfViralLoad: "",
@@ -163,10 +165,6 @@ const ClinicVisit = (props) => {
     currentArtStatus: "",
     mothersArtRegimen: "",
     regimenLineId: "",
-    currentHbvStatus: "",
-    nameOfHbvDrug: "",
-    currentSyphilisStatus: "",
-    nameOfSyphilisDrug: "",
     infantFeedingPractice: "",
     infantOnCtx: "",
     referredToTreatment: "",
@@ -211,20 +209,22 @@ const ClinicVisit = (props) => {
     associatedProblems: "",
     referralReason: "",
     transportationOut: "",
-    hepatitisCTestResult: "",
-    referredForHcv: "",
     outcomeOfVisit: "",
     // ANC Revisit - Syphilis (JSONB)
     syphilisInfo: {
       testedSyphilis: "",
       testResultSyphilis: "",
       treatedSyphilis: "",
+      currentSyphilisStatus: "",
+      nameOfSyphilisDrug: "",
     },
     // ANC Revisit - Hepatitis B (JSONB)
     hepatitisBInfo: {
       testedHepatitisB: "",
       hepatitisB: "",
       referredHepatitisB: "",
+      currentHbvStatus: "",
+      nameOfHbvDrug: "",
     },
     // ANC Revisit - Hepatitis C (JSONB)
     hepatitisCInfo: {
@@ -377,6 +377,62 @@ const ClinicVisit = (props) => {
     }
   };
 
+  // Fallback: fetch LMP from PMTCT Enrollment (Mother Clinical Information)
+  // Used for L&D and postpartum entry points where no ANC record exists
+  const fetchLmpFromEnrollment = (patientUuid, pmtctCycleUuid) => {
+    axios
+      .get(`${baseUrl}pmtct/anc/getAllActivities/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const enrollmentActivity = (res.data || []).find(
+          (a) => a.path === "pmtct-enrollment"
+        );
+        if (enrollmentActivity?.recordId) {
+          axios
+            .get(`${baseUrl}pmtct/anc/view-pmtct-enrollment/${enrollmentActivity.recordId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((enrollRes) => {
+              if (enrollRes.data?.lmp) {
+                setLmpDate(enrollRes.data.lmp);
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  };
+
+  const fetchLmpDate = () => {
+    const pmtctCycleUuid = props.latestPmtctCycle?.uuid || props.patientObj?.pmtctCycleUuid;
+    const patientUuid = props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid;
+    if (patientUuid && pmtctCycleUuid) {
+      axios
+        .get(`${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          if (response.data?.lmp) {
+            setLmpDate(response.data.lmp);
+          }
+          if (response.data?.dateOfEnrollment) {
+            setAncRegistrationDate(response.data.dateOfEnrollment);
+          }
+          // If no LMP from ANC, fall back to PMTCT Enrollment (for L&D/postpartum entry points)
+          if (!response.data?.lmp) {
+            fetchLmpFromEnrollment(patientUuid, pmtctCycleUuid);
+          }
+        })
+        .catch(() => {
+          // ANC record not found — try PMTCT Enrollment fallback
+          fetchLmpFromEnrollment(patientUuid, pmtctCycleUuid);
+        });
+    }
+  };
+
   useEffect(() => {
     GET_CODESETS();
     getInitialVisitDate();
@@ -384,6 +440,7 @@ const ClinicVisit = (props) => {
     getLatestArtRegimen();
     checkCycleClosed();
     fetchAncVisitCount();
+    fetchLmpDate();
 
     if (
       props.activeContent.id &&
@@ -406,6 +463,17 @@ const ClinicVisit = (props) => {
     }
   }, [props.latestPmtctCycle?.uuid]);
 
+  // Auto-calculate Gestational Age from LMP and visit date (ANC Revisit)
+  useEffect(() => {
+    if (lmpDate && objValues.dateOfVisit) {
+      const lmp = new Date(lmpDate);
+      const visitDate = new Date(objValues.dateOfVisit);
+      if (visitDate >= lmp) {
+        const gaWeeks = Math.floor((visitDate - lmp) / (1000 * 60 * 60 * 24 * 7));
+        setObjValues((prev) => ({ ...prev, gaWeeks: gaWeeks }));
+      }
+    }
+  }, [objValues.dateOfVisit, lmpDate]);
 
   const GetVisit = (id) => {
     axios
@@ -413,14 +481,65 @@ const ClinicVisit = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        // Convert null values to empty strings so controlled inputs display properly
         const data = response.data;
+        // Convert null flat values to empty strings, but preserve nested JSONB objects
         const sanitized = {};
         Object.keys(data).forEach((key) => {
-          sanitized[key] = data[key] !== null && data[key] !== undefined ? data[key] : "";
+          if (data[key] !== null && data[key] !== undefined) {
+            sanitized[key] = data[key];
+          } else {
+            sanitized[key] = "";
+          }
         });
+        // Ensure JSONB nested objects fallback to proper shape (not empty string)
+        const safeSyphilis = sanitized.syphilisInfo && typeof sanitized.syphilisInfo === "object"
+          ? { testedSyphilis: "", testResultSyphilis: "", treatedSyphilis: "", currentSyphilisStatus: "", nameOfSyphilisDrug: "", ...sanitized.syphilisInfo }
+          : { testedSyphilis: "", testResultSyphilis: "", treatedSyphilis: "", currentSyphilisStatus: "", nameOfSyphilisDrug: "" };
+        // Convert Boolean values from API to "Yes"/"No" strings for dropdown compatibility
+        const boolToYesNo = (val) => val === true ? "Yes" : val === false ? "No" : val || "";
+        const safeHepB = sanitized.hepatitisBInfo && typeof sanitized.hepatitisBInfo === "object"
+          ? { testedHepatitisB: "", hepatitisB: "", referredHepatitisB: "", currentHbvStatus: "", nameOfHbvDrug: "", ...sanitized.hepatitisBInfo }
+          : { testedHepatitisB: "", hepatitisB: "", referredHepatitisB: "", currentHbvStatus: "", nameOfHbvDrug: "" };
+        safeHepB.testedHepatitisB = boolToYesNo(safeHepB.testedHepatitisB);
+        safeHepB.treatedHepatitisB = boolToYesNo(safeHepB.treatedHepatitisB);
+        safeHepB.referredHepatitisB = boolToYesNo(safeHepB.referredHepatitisB);
+        const safeHepC = sanitized.hepatitisCInfo && typeof sanitized.hepatitisCInfo === "object"
+          ? { testedHepatitisC: "", hepatitisC: "", referredHepatitisC: "", ...sanitized.hepatitisCInfo }
+          : { testedHepatitisC: "", hepatitisC: "", referredHepatitisC: "" };
+        safeHepC.testedHepatitisC = boolToYesNo(safeHepC.testedHepatitisC);
+        safeHepC.treatedHepatitisC = boolToYesNo(safeHepC.treatedHepatitisC);
+        safeHepC.referredHepatitisC = boolToYesNo(safeHepC.referredHepatitisC);
+        // Flatten nested JSONB objects into flat form state
+        const vs = sanitized.vitalSigns && typeof sanitized.vitalSigns === "object" ? sanitized.vitalSigns : {};
+        const cn = sanitized.counselling && typeof sanitized.counselling === "object" ? sanitized.counselling : {};
+        const lt = sanitized.labTest && typeof sanitized.labTest === "object" ? sanitized.labTest : {};
+        const iv = sanitized.interventions && typeof sanitized.interventions === "object" ? sanitized.interventions : {};
         setObjValues({
           ...sanitized,
+          weight: vs.weight || sanitized.weight || "",
+          height: vs.height || sanitized.height || "",
+          sfhLength: vs.sfhLength || sanitized.sfhLength || "",
+          systolic: vs.systolic || sanitized.systolic || "",
+          diastolic: vs.diastolic || sanitized.diastolic || "",
+          counsellingHts: cn.counsellingHts || sanitized.counsellingHts || "",
+          counsellingFgm: cn.counsellingFgm || sanitized.counsellingFgm || "",
+          counsellingFp: cn.counsellingFp || sanitized.counsellingFp || "",
+          counsellingMaternalNutrition: cn.counsellingMaternalNutrition || sanitized.counsellingMaternalNutrition || "",
+          counsellingEarlyBf: cn.counsellingEarlyBf || sanitized.counsellingEarlyBf || "",
+          counsellingExclusiveBf: cn.counsellingExclusiveBf || sanitized.counsellingExclusiveBf || "",
+          hbPcv: lt.hbPcv || sanitized.hbPcv || "",
+          pcv: lt.pcv || sanitized.pcv || "",
+          bloodSugarGdm: lt.bloodSugarGdm || sanitized.bloodSugarGdm || "",
+          urinalysisSugar: lt.urinalysisSugar || sanitized.urinalysisSugar || "",
+          urinalysisProteins: lt.urinalysisProteins || sanitized.urinalysisProteins || "",
+          llinGiven: iv.llinGiven || sanitized.llinGiven || "",
+          iptDose: iv.iptDose || sanitized.iptDose || "",
+          hematinicsGiven: iv.hematinicsGiven || sanitized.hematinicsGiven || "",
+          tdImmunization: iv.tdImmunization || sanitized.tdImmunization || "",
+          associatedProblems: iv.associatedProblems || sanitized.associatedProblems || "",
+          syphilisInfo: safeSyphilis,
+          hepatitisBInfo: safeHepB,
+          hepatitisCInfo: safeHepC,
           pmtctCycleUuid:
             sanitized.pmtctCycleUuid || props?.latestPmtctCycle?.uuid,
           source: sanitized.source || "WEB",
@@ -521,23 +640,36 @@ const ClinicVisit = (props) => {
       setObjValues({ ...objValues, dateOfmeternalOutcome: "", [e.target.name]: e.target.value });
       return;
     }
-    if (e.target.name === "currentHbvStatus" &&
-      e.target.value !== "Positive on Treatment" &&
-      e.target.value !== "Positive on Prophylaxis"
-    ) {
-      setObjValues({ ...objValues, nameOfHbvDrug: "", [e.target.name]: e.target.value });
+    if (e.target.name === "currentHbvStatus") {
+      const clearDrug = e.target.value !== "Positive on Treatment" && e.target.value !== "Positive on Prophylaxis";
+      setObjValues({ ...objValues, hepatitisBInfo: { ...objValues.hepatitisBInfo, currentHbvStatus: e.target.value, ...(clearDrug ? { nameOfHbvDrug: "" } : {}) } });
       return;
     }
-    if (e.target.name === "currentSyphilisStatus" &&
-      e.target.value !== "Positive on Treatment"
-    ) {
-      setObjValues({ ...objValues, nameOfSyphilisDrug: "", [e.target.name]: e.target.value });
+    if (e.target.name === "currentSyphilisStatus") {
+      const clearDrug = e.target.value !== "Positive on Treatment";
+      setObjValues({ ...objValues, syphilisInfo: { ...objValues.syphilisInfo, currentSyphilisStatus: e.target.value, ...(clearDrug ? { nameOfSyphilisDrug: "" } : {}) } });
+      return;
+    }
+    if (e.target.name === "nameOfHbvDrug") {
+      setObjValues({ ...objValues, hepatitisBInfo: { ...objValues.hepatitisBInfo, nameOfHbvDrug: e.target.value } });
+      return;
+    }
+    if (e.target.name === "nameOfSyphilisDrug") {
+      setObjValues({ ...objValues, syphilisInfo: { ...objValues.syphilisInfo, nameOfSyphilisDrug: e.target.value } });
       return;
     }
     if (e.target.name === "hepatitisCTestResult" &&
       e.target.value !== "Positive"
     ) {
-      setObjValues({ ...objValues, referredForHcv: "", [e.target.name]: e.target.value });
+      setObjValues({ ...objValues, hepatitisCInfo: { ...objValues.hepatitisCInfo, hepatitisC: e.target.value, referredHepatitisC: "" } });
+      return;
+    }
+    if (e.target.name === "hepatitisCTestResult") {
+      setObjValues({ ...objValues, hepatitisCInfo: { ...objValues.hepatitisCInfo, hepatitisC: e.target.value } });
+      return;
+    }
+    if (e.target.name === "referredForHcv") {
+      setObjValues({ ...objValues, hepatitisCInfo: { ...objValues.hepatitisCInfo, referredHepatitisC: e.target.value } });
       return;
     }
     if (e.target.name === "weight" && e.target.value !== "") {
@@ -620,15 +752,20 @@ const ClinicVisit = (props) => {
       objValues.nextAppointmentDate < objValues.dateOfVisit) {
       temp.nextAppointmentDate = "Next Appointment Date must be on or after the current visit date";
     }
+    // Validate HB (g/dL), PCV (%), and Blood Sugar ranges
+    if (objValues.hbPcv && (parseInt(objValues.hbPcv) < 0 || parseInt(objValues.hbPcv) > 25 || !Number.isInteger(Number(objValues.hbPcv)))) {
+      temp.hbPcv = "HBV must be between 0 and 25 g/dL";
+    }
+    if (objValues.pcv && (parseInt(objValues.pcv) < 0 || parseInt(objValues.pcv) > 70 || !Number.isInteger(Number(objValues.pcv)))) {
+      temp.pcv = "PCV must be between 0% and 70%";
+    }
+    if (objValues.bloodSugarGdm && (parseInt(objValues.bloodSugarGdm) < 0 || parseInt(objValues.bloodSugarGdm) > 500 || !Number.isInteger(Number(objValues.bloodSugarGdm)))) {
+      temp.bloodSugarGdm = "Blood Sugar must be between 0 and 500 mg/dL";
+    }
 
     // Counselling fields mandatory
     const counsellingFields = [
       { key: "counsellingHts", label: "HTS Counselling" },
-      { key: "counsellingFgm", label: "FGM Counselling" },
-      { key: "counsellingFp", label: "Family Planning Counselling" },
-      { key: "counsellingMaternalNutrition", label: "Maternal Nutrition Counselling" },
-      { key: "counsellingEarlyBf", label: "Early Breastfeeding Counselling" },
-      { key: "counsellingExclusiveBf", label: "Exclusive Breastfeeding Counselling" },
     ];
     counsellingFields.forEach(({ key, label }) => {
       if (!objValues[key]) {
@@ -652,15 +789,15 @@ const ClinicVisit = (props) => {
       temp.currentArtStatus = objValues.currentArtStatus ? "" : "This field is required";
       temp.mothersArtRegimen = objValues.mothersArtRegimen ? "" : "This field is required";
       if (
-        (objValues.currentHbvStatus === "Positive on Treatment" ||
-          objValues.currentHbvStatus === "Positive on Prophylaxis") &&
-        !objValues.nameOfHbvDrug
+        (objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Treatment" ||
+          objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Prophylaxis") &&
+        !objValues.hepatitisBInfo?.nameOfHbvDrug
       ) {
         temp.nameOfHbvDrug = "This field is required";
       }
       if (
-        objValues.currentSyphilisStatus === "Positive on Treatment" &&
-        !objValues.nameOfSyphilisDrug
+        objValues.syphilisInfo?.currentSyphilisStatus === "Positive on Treatment" &&
+        !objValues.syphilisInfo?.nameOfSyphilisDrug
       ) {
         temp.nameOfSyphilisDrug = "This field is required";
       }
@@ -696,16 +833,78 @@ const ClinicVisit = (props) => {
     return Object.values(temp).every((x) => x == "");
   };
 
+  // Build nested JSONB payload from flat form state for the backend DTOs
+  const buildPayload = () => {
+    const payload = { ...objValues };
+    payload.vitalSigns = {
+      weight: objValues.weight ? parseFloat(objValues.weight) : null,
+      height: objValues.height ? parseFloat(objValues.height) : null,
+      sfhLength: objValues.sfhLength ? parseFloat(objValues.sfhLength) : null,
+      systolic: objValues.systolic ? parseFloat(objValues.systolic) : null,
+      diastolic: objValues.diastolic ? parseFloat(objValues.diastolic) : null,
+    };
+    payload.counselling = {
+      counsellingHts: objValues.counsellingHts,
+      counsellingFgm: objValues.counsellingFgm,
+      counsellingFp: objValues.counsellingFp,
+      counsellingMaternalNutrition: objValues.counsellingMaternalNutrition,
+      counsellingEarlyBf: objValues.counsellingEarlyBf,
+      counsellingExclusiveBf: objValues.counsellingExclusiveBf,
+    };
+    payload.labTest = {
+      hbPcv: objValues.hbPcv,
+      pcv: objValues.pcv,
+      bloodSugarGdm: objValues.bloodSugarGdm,
+      urinalysisSugar: objValues.urinalysisSugar,
+      urinalysisProteins: objValues.urinalysisProteins,
+    };
+    payload.interventions = {
+      llinGiven: objValues.llinGiven,
+      iptDose: objValues.iptDose,
+      hematinicsGiven: objValues.hematinicsGiven,
+      tdImmunization: objValues.tdImmunization,
+      associatedProblems: objValues.associatedProblems,
+    };
+    // Remove flat fields that are now inside nested objects
+    delete payload.weight;
+    delete payload.height;
+    delete payload.sfhLength;
+    delete payload.systolic;
+    delete payload.diastolic;
+    delete payload.counsellingHts;
+    delete payload.counsellingFgm;
+    delete payload.counsellingFp;
+    delete payload.counsellingMaternalNutrition;
+    delete payload.counsellingEarlyBf;
+    delete payload.counsellingExclusiveBf;
+    delete payload.hbPcv;
+    delete payload.pcv;
+    delete payload.bloodSugarGdm;
+    delete payload.urinalysisSugar;
+    delete payload.urinalysisProteins;
+    delete payload.llinGiven;
+    delete payload.iptDose;
+    delete payload.hematinicsGiven;
+    delete payload.tdImmunization;
+    delete payload.associatedProblems;
+    return payload;
+  };
+
   /**** Submit Button Processing  */
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validate()) {
-      setSaving(true);
+    if (!validate()) {
+      toast.error("Please fill all required fields and correct validation errors", {
+        position: toast.POSITION.BOTTOM_CENTER,
+      });
+      return;
+    }
+    setSaving(true);
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
           .put(
             `${baseUrl}pmtct/anc/update-mother-visit/${props.activeContent.id}`,
-            objValues,
+            buildPayload(),
             { headers: { Authorization: `Bearer ${token}` } },
           )
           .then((response) => {
@@ -737,7 +936,7 @@ const ClinicVisit = (props) => {
           });
       } else {
         axios
-          .post(`${baseUrl}pmtct/anc/pmtct-visit`, objValues, {
+          .post(`${baseUrl}pmtct/anc/pmtct-visit`, buildPayload(), {
             headers: { Authorization: `Bearer ${token}` },
           })
           .then((response) => {
@@ -768,7 +967,6 @@ const ClinicVisit = (props) => {
             }
           });
       }
-    }
   };
 
   const handleReopenCycle = () => {
@@ -886,7 +1084,9 @@ const ClinicVisit = (props) => {
                             id="dateOfVisit"
                             value={objValues.dateOfVisit}
                             onChange={handleInputChange}
-                            min={props.patientObj.dateOfEnrollment}
+                            min={ancRegistrationDate && ancRegistrationDate > (props.patientObj.dateOfEnrollment || "")
+                              ? ancRegistrationDate
+                              : props.patientObj.dateOfEnrollment}
                             max={moment(new Date()).format("YYYY-MM-DD")}
                             disabled={disabledField}
                           />
@@ -1046,49 +1246,62 @@ const ClinicVisit = (props) => {
                     </div>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                          <Label>Blood Pressure - Systolic (mmHg)</Label>
-                          <InputGroup>
+                          <Label>Blood Pressure (mmHg)</Label>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <Input
                               type="number"
                               name="systolic"
                               id="systolic"
+                              placeholder="Systolic"
                               value={objValues.systolic}
                               onChange={handleInputChange}
                               min="90"
                               max="240"
                               disabled={disabledField}
+                              style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: objValues.systolic && (parseFloat(objValues.systolic) < 90 || parseFloat(objValues.systolic) > 240) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                             />
-                          </InputGroup>
-                          {errors.systolic !== "" ? (
-                            <span className={classes.error}>{errors.systolic}</span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
-                      </div>
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>Blood Pressure - Diastolic (mmHg)</Label>
-                          <InputGroup>
+                            <span style={{ fontWeight: "bold", color: "#64748b", fontSize: "18px" }}>/</span>
                             <Input
                               type="number"
                               name="diastolic"
                               id="diastolic"
+                              placeholder="Diastolic"
                               value={objValues.diastolic}
                               onChange={handleInputChange}
                               min="60"
                               max="140"
                               disabled={disabledField}
+                              style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: objValues.diastolic && (parseFloat(objValues.diastolic) < 60 || parseFloat(objValues.diastolic) > 140) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                             />
-                          </InputGroup>
-                          {errors.diastolic !== "" ? (
-                            <span className={classes.error}>{errors.diastolic}</span>
-                          ) : (
-                            ""
-                          )}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <div style={{ flex: 1 }}>
+                              {errors.systolic !== "" ? (
+                                <span className={classes.error}>{errors.systolic}</span>
+                              ) : ""}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              {errors.diastolic !== "" ? (
+                                <span className={classes.error}>{errors.diastolic}</span>
+                              ) : ""}
+                            </div>
+                          </div>
                         </FormGroup>
                       </div>
-                      {isAncRevisit && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>LMP</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="lmpDate"
+                              id="lmpDate"
+                              value={lmpDate || "N/A"}
+                              disabled={true}
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>Gestational Age (weeks)</Label>
@@ -1101,12 +1314,11 @@ const ClinicVisit = (props) => {
                               onChange={handleInputChange}
                               min="1"
                               max="45"
-                              disabled={disabledField}
+                              disabled={true}
                             />
                           </InputGroup>
                         </FormGroup>
                       </div>
-                      )}
                   </div>
                 </div>
               </div>
@@ -1139,7 +1351,7 @@ const ClinicVisit = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>FGM Counselling <span style={{ color: "red" }}> *</span></Label>
+                        <Label>FGM Counselling</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1157,9 +1369,10 @@ const ClinicVisit = (props) => {
                         {errors.counsellingFgm !== "" ? (<span className={classes.error}>{errors.counsellingFgm}</span>) : ""}
                       </FormGroup>
                     </div>
+                    {isAncRevisit && (
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Family Planning Counselling <span style={{ color: "red" }}> *</span></Label>
+                        <Label>Family Planning Counselling</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1177,9 +1390,10 @@ const ClinicVisit = (props) => {
                         {errors.counsellingFp !== "" ? (<span className={classes.error}>{errors.counsellingFp}</span>) : ""}
                       </FormGroup>
                     </div>
+                    )}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Maternal Nutrition Counselling <span style={{ color: "red" }}> *</span></Label>
+                        <Label>Maternal Nutrition Counselling</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1199,7 +1413,7 @@ const ClinicVisit = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Early Breastfeeding Counselling <span style={{ color: "red" }}> *</span></Label>
+                        <Label>Early Breastfeeding Counselling</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1219,7 +1433,7 @@ const ClinicVisit = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Exclusive Breastfeeding Counselling <span style={{ color: "red" }}> *</span></Label>
+                        <Label>Exclusive Breastfeeding Counselling</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1454,7 +1668,7 @@ const ClinicVisit = (props) => {
                     <AssessmentIcon style={sectionIconStyle} />Lab Tests
                   </h6>
                   <div className="row">
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>HB (g/dl)</Label>
                         <InputGroup>
@@ -1464,14 +1678,18 @@ const ClinicVisit = (props) => {
                             id="hbPcv"
                             step="1"
                             min="0"
+                            max="25"
                             value={objValues.hbPcv}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {objValues.hbPcv && (parseInt(objValues.hbPcv) < 0 || parseInt(objValues.hbPcv) > 25 || !Number.isInteger(Number(objValues.hbPcv))) ? (
+                          <span className={classes.error}>HBV must be between 0 and 25 g/dL</span>
+                        ) : ""}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>PCV (%)</Label>
                         <InputGroup>
@@ -1481,15 +1699,18 @@ const ClinicVisit = (props) => {
                             id="pcv"
                             step="1"
                             min="0"
-                            max="100"
+                            max="70"
                             value={objValues.pcv}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {objValues.pcv && (parseInt(objValues.pcv) < 0 || parseInt(objValues.pcv) > 70 || !Number.isInteger(Number(objValues.pcv))) ? (
+                          <span className={classes.error}>PCV must be between 0% and 70%</span>
+                        ) : ""}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Blood Sugar (Gestational Diabetes)</Label>
                         <InputGroup>
@@ -1499,11 +1720,15 @@ const ClinicVisit = (props) => {
                             id="bloodSugarGdm"
                             step="1"
                             min="0"
+                            max="500"
                             value={objValues.bloodSugarGdm}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           />
                         </InputGroup>
+                        {objValues.bloodSugarGdm && (parseInt(objValues.bloodSugarGdm) < 0 || parseInt(objValues.bloodSugarGdm) > 500 || !Number.isInteger(Number(objValues.bloodSugarGdm))) ? (
+                          <span className={classes.error}>Blood Sugar must be between 0 and 500 mg/dL</span>
+                        ) : ""}
                       </FormGroup>
                     </div>
                     <div className="form-group mb-3 col-md-4">
@@ -1547,7 +1772,7 @@ const ClinicVisit = (props) => {
                     <HealingIcon style={sectionIconStyle} />Interventions
                   </h6>
                   <div className="row">
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>LLIN Given</Label>
                         <InputGroup>
@@ -1566,7 +1791,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>IPT Dose</Label>
                         <InputGroup>
@@ -1587,7 +1812,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Hematinics Given</Label>
                         <InputGroup>
@@ -1606,7 +1831,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>TD Immunization</Label>
                         <InputGroup>
@@ -1629,7 +1854,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Associated Problems</Label>
                         <InputGroup>
@@ -1644,7 +1869,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-3">
+                    <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Outcome of Visit</Label>
                         <InputGroup>
@@ -1726,10 +1951,7 @@ const ClinicVisit = (props) => {
                           >
                             <option value="">Select</option>
                             <option value="Ambulance">Ambulance</option>
-                            <option value="Private Vehicle">Private Vehicle</option>
-                            <option value="Public Transport">Public Transport</option>
-                            <option value="On Foot">On Foot</option>
-                            <option value="Other">Other</option>
+                            <option value="Others">Others</option>
                           </Input>
                         </InputGroup>
                       </FormGroup>
@@ -1838,7 +2060,7 @@ const ClinicVisit = (props) => {
                             type="select"
                             name="currentHbvStatus"
                             id="currentHbvStatus"
-                            value={objValues.currentHbvStatus}
+                            value={objValues.hepatitisBInfo?.currentHbvStatus || ""}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           >
@@ -1857,8 +2079,8 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    {(objValues.currentHbvStatus === "Positive on Treatment" ||
-                      objValues.currentHbvStatus === "Positive on Prophylaxis") && (
+                    {(objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Treatment" ||
+                      objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Prophylaxis") && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>
@@ -1869,7 +2091,7 @@ const ClinicVisit = (props) => {
                               type="text"
                               name="nameOfHbvDrug"
                               id="nameOfHbvDrug"
-                              value={objValues.nameOfHbvDrug}
+                              value={objValues.hepatitisBInfo?.nameOfHbvDrug || ""}
                               onChange={handleInputChange}
                               maxLength="100"
                               disabled={disabledField}
@@ -1893,7 +2115,7 @@ const ClinicVisit = (props) => {
                             type="select"
                             name="currentSyphilisStatus"
                             id="currentSyphilisStatus"
-                            value={objValues.currentSyphilisStatus}
+                            value={objValues.syphilisInfo?.currentSyphilisStatus || ""}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           >
@@ -1909,7 +2131,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    {objValues.currentSyphilisStatus === "Positive on Treatment" && (
+                    {objValues.syphilisInfo?.currentSyphilisStatus === "Positive on Treatment" && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>
@@ -1920,7 +2142,7 @@ const ClinicVisit = (props) => {
                               type="text"
                               name="nameOfSyphilisDrug"
                               id="nameOfSyphilisDrug"
-                              value={objValues.nameOfSyphilisDrug}
+                              value={objValues.syphilisInfo?.nameOfSyphilisDrug || ""}
                               onChange={handleInputChange}
                               maxLength="100"
                               disabled={disabledField}
@@ -1944,7 +2166,7 @@ const ClinicVisit = (props) => {
                             type="select"
                             name="hepatitisCTestResult"
                             id="hepatitisCTestResult"
-                            value={objValues.hepatitisCTestResult}
+                            value={objValues.hepatitisCInfo?.hepatitisC || ""}
                             onChange={handleInputChange}
                             disabled={disabledField}
                           >
@@ -1956,7 +2178,7 @@ const ClinicVisit = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    {objValues.hepatitisCTestResult === "Positive" && (
+                    {objValues.hepatitisCInfo?.hepatitisC === "Positive" && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>Referred for HCV Treatment</Label>
@@ -1965,7 +2187,7 @@ const ClinicVisit = (props) => {
                               type="select"
                               name="referredForHcv"
                               id="referredForHcv"
-                              value={objValues.referredForHcv}
+                              value={objValues.hepatitisCInfo?.referredHepatitisC || ""}
                               onChange={handleInputChange}
                               disabled={disabledField}
                             >
@@ -2319,8 +2541,7 @@ const ClinicVisit = (props) => {
                   objValues.maternalOutcome !== "MATERNAL_OUTCOME_DIED" &&
                   objValues.maternalOutcome !== "MATERNAL_OUTCOME_DEAD" &&
                   objValues.maternalOutcome !== "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" &&
-                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP" &&
-                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_COMPLETED_PMTCT" ? (
+                  objValues.maternalOutcome !== "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP" ? (
                     <h2 style={{ color: "red" }}>Kindly fill tracking form</h2>
                   ) : (
                     ""
@@ -2330,8 +2551,7 @@ const ClinicVisit = (props) => {
                     objValues.maternalOutcome === "MATERNAL_OUTCOME_DIED" ||
                     objValues.maternalOutcome === "MATERNAL_OUTCOME_DEAD" ||
                     objValues.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP" ||
-                    objValues.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP" ||
-                    objValues.maternalOutcome === "MATERNAL_OUTCOME_COMPLETED_PMTCT") && (
+                    objValues.maternalOutcome === "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP") && (
                     <div style={{
                       backgroundColor: "#fff3cd",
                       border: "1px solid #ffc107",

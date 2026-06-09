@@ -14,16 +14,16 @@ import java.util.Optional;
 
 public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, String> {
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and date_of_visit > ?2 and archived = 0 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and date_of_visit > ?2 and archived = false order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisitsByPatientUuid(String patientUuid, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and pmtct_cycle_uuid = ?2 and date_of_visit > ?3 and archived = 0 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and pmtct_cycle_uuid = ?2 and date_of_visit > ?3 and archived = false order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getPNCVisitsByPatientUuidAndCycleUuid(String patientUuid, String pmtctCycleUuid, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and date_of_visit <= ?2 and archived = 0 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and date_of_visit <= ?2 and archived = false order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getANCVisitsByPatientUuid(String patientUuid, LocalDate deliveryDate);
 
-        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and pmtct_cycle_uuid = ?2 and date_of_visit <= ?3 and archived = 0 order by date_of_visit DESC", nativeQuery = true)
+        @Query(value = "SELECT * FROM public.pmtct_mother_visitation where patient_uuid = ?1 and pmtct_cycle_uuid = ?2 and date_of_visit <= ?3 and archived = false order by date_of_visit DESC", nativeQuery = true)
         List<PmtctVisit> getANCVisitsByPatientUuidAndCycleUuid(String patientUuid, String pmtctCycleUuid, LocalDate deliveryDate);
 
         @Query(value = "SELECT count(*) FROM public.pmtct_mother_visitation where patient_uuid = ?1", nativeQuery = true)
@@ -59,7 +59,7 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, St
                 "ORDER BY h.visit_date DESC, h.id DESC LIMIT 1", nativeQuery = true)
         Optional<String> findLatestArtRegimenFromPharmacy(String patientUuid);
 
-        @Query(value = "SELECT maternal_outcome FROM public.pmtct_mother_visitation WHERE pmtct_cycle_uuid = ?1 AND archived = 0 ORDER BY date_of_visit DESC, id DESC LIMIT 1", nativeQuery = true)
+        @Query(value = "SELECT maternal_outcome FROM public.pmtct_mother_visitation WHERE pmtct_cycle_uuid = ?1 AND archived = false ORDER BY date_of_visit DESC, id DESC LIMIT 1", nativeQuery = true)
         Optional<String> findLatestMaternalOutcomeByCycleUuid(String pmtctCycleUuid);
 
 }

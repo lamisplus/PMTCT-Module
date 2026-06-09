@@ -19,14 +19,15 @@ public class DeliveryResponseDto implements Serializable {
     private Integer gAWeeks;
     private String romDeliveryInterval;
     private String modeOfDelivery;
+    private String modeOfDeliveryOther;
     private String episiotomy;
     private String vaginalTear;
     private String feedingDecision;
     private String maternalOutcome;
     private String childGivenArvWithin72;
     private String childStatus;
-    private String hivExposedInfantGivenHbWithin24hrs;
-    private String nonHbvExposedInfantGivenHbWithin24hrs;
+    private Boolean hivExposedInfantGivenHbWithin24hrs;
+    private Boolean nonHbvExposedInfantGivenHbWithin24hrs;
     private String deliveryTime;
     private String onArt;
     public String artStartedLdWard;

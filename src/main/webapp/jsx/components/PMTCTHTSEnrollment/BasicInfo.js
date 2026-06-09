@@ -144,10 +144,10 @@ const BasicInfo = (props) => {
       // BATCH API
  const GET_CODESETS = () => {
 
-   GET_CODESETS_IN_BATCH("TARGET_GROUP", "INDEX_TESTING", "PREGANACY_STATUS", "COUNSELING_TYPE", "TEST_SETTING", "SOURCE_REFERRAL","GENDER","PLACE_OF_DELIVERY").then((response)=>{
+   GET_CODESETS_IN_BATCH("TARGET_GROUP", "INDEX_TESTING", "PREGNANCY_STATUS", "COUNSELING_TYPE", "TEST_SETTING", "SOURCE_REFERRAL","GENDER","PLACE_OF_DELIVERY").then((response)=>{
       setKP(response.data.TARGET_GROUP);
        setIndexTesting(response.data.INDEX_TESTING);
-       setPregnancyStatus(response.data.PREGANACY_STATUS)
+       setPregnancyStatus(response.data.PREGNANCY_STATUS)
        setCounselingType(response.data.COUNSELING_TYPE);
         setEnrollSetting(response.data.TEST_SETTING)
         setSourceReferral(response.data.SOURCE_REFERRAL)

@@ -16,14 +16,8 @@ import { Card, CardContent } from "@material-ui/core";
 import SaveIcon from "@material-ui/icons/Save";
 import CancelIcon from "@material-ui/icons/Cancel";
 import PersonIcon from "@material-ui/icons/Person";
-import FitnessCenterIcon from "@material-ui/icons/FitnessCenter";
-import LocalHospitalIcon from "@material-ui/icons/LocalHospital";
 import AssignmentIcon from "@material-ui/icons/Assignment";
-import HealingIcon from "@material-ui/icons/Healing";
 import PeopleIcon from "@material-ui/icons/People";
-import TimelineIcon from "@material-ui/icons/Timeline";
-import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
-import ChildCareIcon from "@material-ui/icons/ChildCare";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,9 +30,8 @@ import "./patient.css";
 import PmtctEnrollment from "../PmtctServices/PmtctEnrollment";
 // import Form from 'react-bootstrap/Form';
 import { Modal } from "react-bootstrap";
-import { calculateGestationalAge } from "../../utils";
-import FacilitySearchDropdown from "./FacilitySearchDropdown";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import AncFormFields from "../PmtctServices/AncFormFields";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 import LabourDelivery from "../PmtctServices/LabourDelivery";
 library.add(faCheckSquare, faCoffee, faEdit, faTrash);
@@ -106,30 +99,6 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "12.8px",
   },
 }));
-
-const sectionContainerStyle = {
-  border: "1px solid #e0e0e0",
-  borderRadius: "0.35rem",
-  padding: "15px 10px",
-  backgroundColor: "#f8f9fa",
-};
-
-const sectionHeaderStyle = {
-  backgroundColor: "transparent",
-  color: "#2d3748",
-  padding: "8px 12px",
-  borderRadius: "0.25rem",
-  fontSize: "13px",
-  fontWeight: "bold",
-  marginBottom: "12px",
-};
-
-const sectionIconStyle = {
-  fontSize: "16px",
-  color: "#014d88",
-  marginRight: "6px",
-  verticalAlign: "text-bottom",
-};
 
 const UserRegistration = (props) => {
   const [basicInfo, setBasicInfo] = useState({
@@ -255,7 +224,7 @@ const UserRegistration = (props) => {
     pmtctCycleUuid: "",
     referredFromSpokesSite: "",
     // NHMIS fields
-    ancAttendance: "New",
+    ancAttendance: "New ANC",
     weight: "",
     height: "",
     systolic: "",
@@ -300,6 +269,8 @@ const UserRegistration = (props) => {
   const [canProceedWithEnrollment, setCanProceedWithEnrollment] = useState(true);
   const hasValidatedRef = useRef(false);
   const hasCheckedHivStatusRef = useRef(false);
+  const objValuesRef = useRef(objValues);
+  useEffect(() => { objValuesRef.current = objValues; }, [objValues]);
   const [pendingHivPositiveToast, setPendingHivPositiveToast] = useState(false);
 
   const validateEnrollment = async (patientUuid) => {
@@ -499,13 +470,13 @@ const UserRegistration = (props) => {
       "ENROLLMENT_SETTING",
       "COMMUNITY_PMTCT",
       "SEX",
-      "PREGANACY_STATUS",
+      "PREGNANCY_STATUS",
       "SOURCE_REFERRAL_PMTCT"
     ).then((response) => {
       setANCSetting(response.data.ENROLLMENT_SETTING);
       setCommunitySetting(response.data.COMMUNITY_PMTCT);
       getSex(response.data.SEX);
-      setPregnancyStatus(response.data.PREGANACY_STATUS);
+      setPregnancyStatus(response.data.PREGNANCY_STATUS);
       setGenders(response.data.SEX);
       setSourceOfReferral(response.data.SOURCE_REFERRAL_PMTCT);
     });
@@ -641,28 +612,35 @@ const UserRegistration = (props) => {
   /*****  Validation  */
   const validate = () => {
     let temp = { ...errors };
-    temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
-    temp.gravida = objValues.gravida ? "" : "This field is required";
-    temp.lmp = objValues.lmp ? "" : "This field is required";
-    temp.parity = objValues.parity !== "" ? "" : "This field is required";
-    temp.testedSyphilis = objValues.testedSyphilis
-      ? ""
-      : "This field is required";
-    objValues.testResultSyphilis === "Positive" &&
-      (temp.treatedSyphilis = objValues.treatedSyphilis
-        ? ""
-        : "This field is required");
-    // temp.sourceOfReferral = objValues.sourceOfReferral
-    //   ? ""
-    //   : "This field is required";
-    objValues.testedSyphilis === "Yes" &&
-      (temp.testResultSyphilis = objValues.testResultSyphilis
-        ? ""
-        : "This field is required");
     temp.ancNo = objValues.ancNo ? "" : "This field is required";
 
+    // Counselling mandatory validation
+    if (!objValues.counsellingHts) temp.counsellingHts = "HIV Testing Services is required";
+
+    // Vital signs range validation
+    if (objValues.weight && (parseFloat(objValues.weight) < 30 || parseFloat(objValues.weight) > 150)) {
+      temp.weight = "Weight must be between 30 and 150 kg";
+    }
+    if (objValues.height && (parseFloat(objValues.height) < 48.26 || parseFloat(objValues.height) > 216.408)) {
+      temp.height = "Height must be between 48.26 and 216.408 cm";
+    }
+    if (objValues.systolic && (parseFloat(objValues.systolic) < 90 || parseFloat(objValues.systolic) > 240)) {
+      temp.systolic = "Systolic BP must be between 90 and 240";
+    }
+    if (objValues.diastolic && (parseFloat(objValues.diastolic) < 60 || parseFloat(objValues.diastolic) > 140)) {
+      temp.diastolic = "Diastolic BP must be between 60 and 140";
+    }
+
+    // HB and PCV range validation
+    if (objValues.hbPcv && (parseFloat(objValues.hbPcv) < 4 || parseFloat(objValues.hbPcv) > 20)) {
+      temp.hbPcv = "HB must be between 4 and 20 g/dl";
+    }
+    if (objValues.pcv && (parseFloat(objValues.pcv) < 0 || parseFloat(objValues.pcv) > 100)) {
+      temp.pcv = "PCV must be between 0 and 100%";
+    }
+
     setErrors({ ...temp });
-    return Object.values(temp).every((x) => x === "");
+    return Object.values(temp).every((x) => x === "" || x === undefined);
   };
   //Handle Input Change for Basic Infor
   const handleInputChangeBasic = (e) => {
@@ -671,178 +649,32 @@ const UserRegistration = (props) => {
     setBasicInfo({ ...basicInfo, [e.target.name]: e.target.value });
   };
 
-  const handleInputChange = (e) => {
-    setErrors({ ...errors, [e.target.name]: "" });
-    if (e.target.name === "ancNo" && e.target.value !== "") {
-      async function getAncNumber() {
-        const ancNumber = e.target.value;
-        const ancNo = {
-          ancNo: ancNumber,
-        };
-        const response = await axios.post(
-          `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNumber}`,
-          ancNo,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "text/plain",
-            },
-          }
-        );
-        if (response.data === true) {
-          toast.error("ANC number already exist");
-          setAncNumberCheck(response.data);
-        } else {
-          setAncNumberCheck(false);
-        }
-      }
-      getAncNumber();
-    }
-    if (
-      e.target.name === "dateOfEnrollment" &&
-      e.target.value !== "" &&
-      objValues.lmp !== ""
-    ) {
-      let response = calculateGestationalAge(e.target.value, objValues.lmp);
-
-      if (response > 0) {
-        objValues.gaweeks = response;
-        setObjValues({ ...objValues, [e.target.name]: e.target.value });
-      } else {
-        // objValues.gaweeks = response;
-        toast.error("Please select a valid date");
-        setObjValues({ ...objValues, [e.target.name]: "" });
-      }
-    }
-
-    //Check for lmp and make an API call
-    if (e.target.name === "lmp" && e.target.value !== "") {
-      // async function getGa() {
-      //   const ga = e.target.value;
-      //   const response = await axios.get(
-      //     `${baseUrl}pmtct/anc/calculate-ga/${ga}`,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //         "Content-Type": "text/plain",
-      //       },
-      //     }
-      //   );
-      let response = calculateGestationalAge(
-        objValues.dateOfEnrollment,
-        e.target.value
+  const checkAncNumber = async (ancNo) => {
+    try {
+      const response = await axios.post(
+        `${baseUrl}pmtct/anc/exist/anc-number?ancNo=${ancNo}`,
+        { ancNo },
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "text/plain" } }
       );
-
-      if (response > 0) {
-        objValues.gaweeks = response;
-        setObjValues({ ...objValues, [e.target.name]: e.target.value });
+      if (response.data === true) {
+        toast.error("ANC number already exist");
+        setAncNumberCheck(true);
       } else {
-        // objValues.gaweeks = response;
-        toast.error("Please select a valid date");
-        setObjValues({ ...objValues, [e.target.name]: e.target.value });
+        setAncNumberCheck(false);
       }
-    }
-    //   getGa();
-    // }
-    if (
-      e.target.name === "parity" &&
-      e.target.value !== "" &&
-      e.target.value < 0
-    ) {
-      //The field will  not accept zero as a value
-      return;
-    } //gravida
-    if (
-      e.target.name === "gravida" &&
-      e.target.value !== "" &&
-      e.target.value <= 0
-    ) {
-      //The field will  not accept zero as a value
-      return;
-    }
-    if (
-      e.target.name === "testedSyphilis" &&
-      e.target.value !== "" &&
-      e.target.value === "Yes"
-    ) {
-      //The field will  not accept zero as a value
-      objValues.testResultSyphilis = "";
-      objValues.referredSyphilisTreatment = "";
-      objValues.treatedSyphilis = "";
-      setObjValues({ ...objValues, ["testResultSyphilis"]: "" });
-      setObjValues({ ...objValues, ["referredSyphilisTreatment"]: "" });
-      setObjValues({ ...objValues, ["treatedSyphilis"]: "" });
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    }
-    if (
-      e.target.name === "testResultSyphilis" &&
-      e.target.value !== "" &&
-      e.target.value === "Positive"
-    ) {
-      //The field will  not accept zero as a value
-      objValues.treatedSyphilis = "";
-      objValues.referredSyphilisTreatment = "";
-      setObjValues({ ...objValues, ["treatedSyphilis"]: "" });
-      setObjValues({ ...objValues, ["referredSyphilisTreatment"]: "" });
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    }
-
-    if (e.target.name === "ancSetting") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        communitySetting: "",
-      });
-    } else if (e.target.name === "testedHepatitisB") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        dateOfHepatitisB: "",
-        hepatitisB: "",
-      });
-    } else if (e.target.name === "hepatitisB") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        treatedHepatitisB: "",
-        referredHepatitisB: "",
-      });
-    } else if (e.target.name === "testedHepatitisC") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        dateOfHepatitisC: "",
-        hepatitisC: "",
-      });
-    } else if (e.target.name === "hepatitisC") {
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        treatedHepatitisC: "",
-        referredHepatitisC: "",
-      });
-    } else if (e.target.name === "previouslyKnownHivStatus") {
-      let newStaticHivStatus = "";
-      if (e.target.value === "Yes") {
-        newStaticHivStatus = "Positive";
-      } else if (e.target.value === "No") {
-        // Auto-populate from patientObj?.dynamicHivStatus if available
-        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
-      } else if (e.target.value === "Not tested") {
-        // Auto-populate from patientObj?.dynamicHivStatus if available
-        newStaticHivStatus = patientObj?.dynamicHivStatus || "";
-      }
-      setObjValues({
-        ...objValues,
-        [e.target.name]: e.target.value,
-        staticHivStatus: newStaticHivStatus,
-      });
-    } else {
-      setObjValues({ ...objValues, [e.target.name]: e.target.value });
-    }
+    } catch (e) {}
   };
 
-  //Handle CheckBox
+  // Adapter for AncFormFields: receives (fieldName, value) and updates flat state
+  const handleFieldChange = (name, value) => {
+    if (name === "__clearError__") {
+      setErrors((prev) => ({ ...prev, [value]: "" }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setObjValues((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleCancel = () => {
     history.push({ pathname: "/" });
   };
@@ -863,10 +695,75 @@ const UserRegistration = (props) => {
         const checkIfCycleIsCreated = await createCycle();
 
         if (checkIfCycleIsCreated?.status) {
-          objValues.entryPoint = locationState.entrypointValue;
-          objValues.patient_uuid = patientObj.patientUuid || patientObj?.uuid;
-          objValues.pmtctCycleUuid = checkIfCycleIsCreated?.response?.uuid;
-          objValues.source = "WEB";
+          const current = objValuesRef.current;
+          const payload = {
+            ancNo: current.ancNo,
+            ancAttendance: current.ancAttendance,
+            referredFromSpokesSite: current.referredFromSpokesSite,
+            dateOfEnrollment: current.dateOfEnrollment,
+            gravida: current.gravida,
+            parity: current.parity,
+            lmp: current.lmp,
+            gaweeks: current.gaweeks,
+            labTest: {
+              hbPcv: current.hbPcv,
+              pcv: current.pcv,
+              bloodSugarGdm: current.bloodSugarGdm,
+            },
+            interventions: {
+              llinGiven: current.llinGiven,
+              iptDose: current.iptDose,
+              hematinicsGiven: current.hematinicsGiven,
+              tdImmunization: current.tdImmunization,
+              associatedProblems: current.associatedProblems,
+            },
+            outcomeOfVisit: current.outcomeOfVisit,
+            referralReason: current.referralReason,
+            transportationOut: current.transportationOut,
+            // Nested objects matching backend DTOs
+            vitalSigns: {
+              weight: current.weight ? parseFloat(current.weight) : null,
+              height: current.height ? parseFloat(current.height) : null,
+              systolic: current.systolic ? parseFloat(current.systolic) : null,
+              diastolic: current.diastolic ? parseFloat(current.diastolic) : null,
+            },
+            counselling: {
+              hts: current.counsellingHts,
+              fgm: current.counsellingFgm,
+              fp: current.counsellingFp,
+              maternalNutrition: current.counsellingMaternalNutrition,
+              earlyBf: current.counsellingEarlyBf,
+              exclusiveBf: current.counsellingExclusiveBf,
+            },
+            syphilisInfo: {
+              testedSyphilis: current.testedSyphilis,
+              testResultSyphilis: current.testResultSyphilis,
+              treatedSyphilis: current.treatedSyphilis,
+              referredSyphilisTreatment: current.referredSyphilisTreatment,
+            },
+            hepatitisBInfo: {
+              testedHepatitisB: current.testedHepatitisB,
+              dateOfHepatitisB: current.dateOfHepatitisB,
+              hepatitisB: current.hepatitisB,
+              treatedHepatitisB: current.treatedHepatitisB,
+              referredHepatitisB: current.referredHepatitisB,
+            },
+            hepatitisCInfo: {
+              testedHepatitisC: current.testedHepatitisC,
+              dateOfHepatitisC: current.dateOfHepatitisC,
+              hepatitisC: current.hepatitisC,
+              treatedHepatitisC: current.treatedHepatitisC,
+              referredHepatitisC: current.referredHepatitisC,
+            },
+            urinalysis: {
+              sugar: current.urinalysisSugar,
+              proteins: current.urinalysisProteins,
+            },
+            entryPoint: locationState.entrypointValue,
+            patient_uuid: patientObj.patientUuid || patientObj?.uuid,
+            pmtctCycleUuid: checkIfCycleIsCreated?.response?.uuid,
+            source: "WEB",
+          };
           let url = "";
           if (locationState.showANC) {
             // ANC ENTRY POINT
@@ -876,7 +773,7 @@ const UserRegistration = (props) => {
             url = `${baseUrl}pmtct/anc/pmtct-enrollment`;
           }
 
-          const response = await axios.post(url, objValues, {
+          const response = await axios.post(url, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -891,6 +788,7 @@ const UserRegistration = (props) => {
               },
               postValue: locationState.postValue,
               entrypointValue: locationState.entrypointValue,
+              autoOpenRoute: "pmtct-hts",
             },
           });
         } else {
@@ -1144,525 +1042,34 @@ const UserRegistration = (props) => {
                   </div>
                   <div className="card-body" style={{ backgroundColor: "rgb(248, 249, 250)" }}>
 
-                    {/* === Registration Information === */}
-                    <div className="col-md-12 mb-3 mt-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <PersonIcon style={sectionIconStyle} />Registration Information
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>ANC No <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="text" name="ancNo" id="ancNo" onChange={handleInputChange} value={objValues.ancNo} />
-                              </InputGroup>
-                              {errors.ancNo !== "" ? (<span className={classes.error}>{errors.ancNo}</span>) : ""}
-                              {ancNumberCheck === true ? (<span className={classes.error}>{"ANC number already exist"}</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Date of Enrollment <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="dateOfEnrollment" id="dateOfEnrollment" onChange={handleInputChange} value={objValues.dateOfEnrollment} min={minAncDates.minDateOfEnrollment ? minAncDates.minDateOfEnrollment : patientObj.dateOfRegistration} max={moment(new Date()).format("YYYY-MM-DD")} />
-                              </InputGroup>
-                              {errors.dateOfEnrollment !== "" ? (<span className={classes.error}>{errors.dateOfEnrollment}</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>ANC Attendance</Label>
-                              <InputGroup>
-                                <Input type="select" name="ancAttendance" id="ancAttendance" onChange={handleInputChange} value={objValues.ancAttendance} disabled={true}>
-                                  <option value="">Select</option>
-                                  <option value="New">New</option>
-                                  <option value="Revisit">Revisit</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Referred from Spokes Site</Label>
-                              <InputGroup>
-                                <Input type="select" name="referredFromSpokesSite" id="referredFromSpokesSite" onChange={handleInputChange} value={objValues.referredFromSpokesSite}>
-                                  <option value="">Select</option>
-                                  <option value="Yes">Yes</option>
-                                  <option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Obstetric History === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <ChildCareIcon style={sectionIconStyle} />Obstetric History
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Parity <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="number" name="parity" id="parity" onChange={handleInputChange} value={objValues.parity} min={0} />
-                              </InputGroup>
-                              {errors.parity !== "" ? (<span className={classes.error}>{errors.parity}</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Gravida <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="number" name="gravida" id="gravida" onChange={handleInputChange} value={objValues.gravida} min="1" />
-                              </InputGroup>
-                              {errors.gravida !== "" ? (<span className={classes.error}>{errors.gravida}</span>) : ""}
-                              {objValues.gravida < objValues.parity ? (<span className={classes.error}>Gravida should not be less Parity</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Date Of Last Menstrual Period <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="date" onKeyPress={(e) => { e.preventDefault(); }} name="lmp" id="lmp" onChange={handleInputChange} value={objValues.lmp} min={minAncDates.minLmp ? minAncDates.minLmp : undefined} max={objValues.dateOfEnrollment ? objValues.dateOfEnrollment : moment(new Date()).format("YYYY-MM-DD")} />
-                              </InputGroup>
-                              {errors.lmp !== "" ? (<span className={classes.error}>{errors.lmp}</span>) : ""}
-                              {objValues.gaweeks === 0 ? (<span className={classes.error}>Invalid date</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Gestational Age (Weeks) <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="text" name="gaweeks" id="gaweeks" onChange={handleInputChange} value={objValues.gaweeks} disabled />
-                              </InputGroup>
-                              {errors.gaweeks !== "" ? (<span className={classes.error}>{errors.gaweeks}</span>) : ""}
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Vital Signs === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <FitnessCenterIcon style={sectionIconStyle} />Vital Signs
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Weight (kg)</Label>
-                              <InputGroup>
-                                <Input type="number" name="weight" id="weight" onChange={handleInputChange} value={objValues.weight} step="0.1" min="30" max="150" />
-                              </InputGroup>
-                              {objValues.weight && (objValues.weight < 30 || objValues.weight > 150) ? (<span className={classes.error}>Body weight must not be greater than 150 and less than 30</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Height (cm)</Label>
-                              <InputGroup>
-                                <Input type="number" name="height" id="height" onChange={handleInputChange} value={objValues.height} step="0.1" min="48" max="216" />
-                              </InputGroup>
-                              {objValues.height && (objValues.height < 48 || objValues.height > 216) ? (<span className={classes.error}>Height must be between 48 and 216 cm</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Blood Pressure (Systolic)</Label>
-                              <InputGroup>
-                                <Input type="number" name="systolic" id="systolic" onChange={handleInputChange} value={objValues.systolic} min="90" max="240" />
-                              </InputGroup>
-                              {objValues.systolic && (objValues.systolic < 90 || objValues.systolic > 240) ? (<span className={classes.error}>Systolic BP must be between 90 and 240</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Blood Pressure (Diastolic)</Label>
-                              <InputGroup>
-                                <Input type="number" name="diastolic" id="diastolic" onChange={handleInputChange} value={objValues.diastolic} min="60" max="140" />
-                              </InputGroup>
-                              {objValues.diastolic && (objValues.diastolic < 60 || objValues.diastolic > 140) ? (<span className={classes.error}>Diastolic BP must be between 60 and 140</span>) : ""}
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Counselling === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <TimelineIcon style={sectionIconStyle} />Counselling
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>HIV Testing Services <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingHts" id="counsellingHts" onChange={handleInputChange} value={objValues.counsellingHts}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Female Genital Mutilation (FGM) <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingFgm" id="counsellingFgm" onChange={handleInputChange} value={objValues.counsellingFgm}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Family Planning <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingFp" id="counsellingFp" onChange={handleInputChange} value={objValues.counsellingFp}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Maternal Nutrition <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingMaternalNutrition" id="counsellingMaternalNutrition" onChange={handleInputChange} value={objValues.counsellingMaternalNutrition}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Early Initiation of Breastfeeding <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingEarlyBf" id="counsellingEarlyBf" onChange={handleInputChange} value={objValues.counsellingEarlyBf}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Exclusive Breastfeeding <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="counsellingExclusiveBf" id="counsellingExclusiveBf" onChange={handleInputChange} value={objValues.counsellingExclusiveBf}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Syphilis Information === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <LocalHospitalIcon style={sectionIconStyle} />Syphilis Information
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Tested for Syphilis <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="testedSyphilis" id="testedSyphilis" onChange={handleInputChange} value={objValues.testedSyphilis}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                              {errors.testedSyphilis !== "" ? (<span className={classes.error}>{errors.testedSyphilis}</span>) : ""}
-                            </FormGroup>
-                          </div>
-                          {objValues.testedSyphilis === "Yes" && (
-                            <>
-                              <div className="form-group mb-3 col-md-4">
-                                <FormGroup>
-                                  <Label>Syphilis Test Result <span style={{ color: "red" }}> *</span></Label>
-                                  <InputGroup>
-                                    <Input type="select" name="testResultSyphilis" id="testResultSyphilis" onChange={handleInputChange} value={objValues.testResultSyphilis}>
-                                      <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
-                                    </Input>
-                                  </InputGroup>
-                                  {errors.testResultSyphilis !== "" ? (<span className={classes.error}>{errors.testResultSyphilis}</span>) : ""}
-                                </FormGroup>
-                              </div>
-                              {objValues.testResultSyphilis === "Positive" && (
-                                <>
-                                  <div className="form-group mb-3 col-md-4">
-                                    <FormGroup>
-                                      <Label>Treated for Syphilis <span style={{ color: "red" }}> *</span></Label>
-                                      <InputGroup>
-                                        <Input type="select" name="treatedSyphilis" id="treatedSyphilis" onChange={handleInputChange} value={objValues.treatedSyphilis}>
-                                          <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                        </Input>
-                                      </InputGroup>
-                                      {errors.treatedSyphilis !== "" ? (<span className={classes.error}>{errors.treatedSyphilis}</span>) : ""}
-                                    </FormGroup>
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Hepatitis Information === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <LocalHospitalIcon style={sectionIconStyle} />Hepatitis Information
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Tested for Hepatitis B <span style={{ color: "red" }}> *</span></Label>
-                              <InputGroup>
-                                <Input type="select" name="testedHepatitisB" id="testedHepatitisB" onChange={handleInputChange} value={objValues.testedHepatitisB}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          {objValues.testedHepatitisB === "Yes" && (
-                            <>
-                              <div className="form-group mb-3 col-md-4">
-                                <FormGroup>
-                                  <Label>Hepatitis B Test Result</Label>
-                                  <InputGroup>
-                                    <Input type="select" name="hepatitisB" id="hepatitisB" onChange={handleInputChange} value={objValues.hepatitisB}>
-                                      <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
-                                    </Input>
-                                  </InputGroup>
-                                </FormGroup>
-                              </div>
-                              {objValues.hepatitisB === "Positive" && (
-                                <div className="form-group mb-3 col-md-4">
-                                  <FormGroup>
-                                    <Label>Referred Hepatitis B +ve Client</Label>
-                                    <InputGroup>
-                                      <Input type="select" name="referredHepatitisB" id="referredHepatitisB" onChange={handleInputChange} value={objValues.referredHepatitisB}>
-                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                      </Input>
-                                    </InputGroup>
-                                  </FormGroup>
-                                </div>
-                              )}
-                            </>
-                          )}
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Tested for Hepatitis C</Label>
-                              <InputGroup>
-                                <Input type="select" name="testedHepatitisC" id="testedHepatitisC" onChange={handleInputChange} value={objValues.testedHepatitisC}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          {objValues.testedHepatitisC === "Yes" && (
-                            <>
-                              <div className="form-group mb-3 col-md-4">
-                                <FormGroup>
-                                  <Label>Hepatitis C Test Result</Label>
-                                  <InputGroup>
-                                    <Input type="select" name="hepatitisC" id="hepatitisC" onChange={handleInputChange} value={objValues.hepatitisC}>
-                                      <option value="">Select</option><option value="Positive">Positive</option><option value="Negative">Negative</option>
-                                    </Input>
-                                  </InputGroup>
-                                </FormGroup>
-                              </div>
-                              {objValues.hepatitisC === "Positive" && (
-                                <div className="form-group mb-3 col-md-4">
-                                  <FormGroup>
-                                    <Label>Referred Hepatitis C +ve Client</Label>
-                                    <InputGroup>
-                                      <Input type="select" name="referredHepatitisC" id="referredHepatitisC" onChange={handleInputChange} value={objValues.referredHepatitisC}>
-                                        <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                      </Input>
-                                    </InputGroup>
-                                  </FormGroup>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Haematology & Lab Tests === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <HealingIcon style={sectionIconStyle} />Haematology & Lab Tests
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>HB (g/dl)</Label>
-                              <InputGroup>
-                                <Input type="number" name="hbPcv" id="hbPcv" onChange={handleInputChange} value={objValues.hbPcv} min="0" />
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>PCV (%)</Label>
-                              <InputGroup>
-                                <Input type="number" name="pcv" id="pcv" onChange={handleInputChange} value={objValues.pcv} min="0" max="100" />
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Blood Sugar (Gestational Diabetes)</Label>
-                              <InputGroup>
-                                <Input type="number" name="bloodSugarGdm" id="bloodSugarGdm" onChange={handleInputChange} value={objValues.bloodSugarGdm} min="0" />
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Urinalysis - Sugar</Label>
-                              <InputGroup>
-                                <Input type="select" name="urinalysisSugar" id="urinalysisSugar" onChange={handleInputChange} value={objValues.urinalysisSugar}>
-                                  <option value="">Select</option><option value="Normal">Normal</option><option value="Abnormal">Abnormal</option><option value="Not Done">Not Done</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Urinalysis - Proteins</Label>
-                              <InputGroup>
-                                <Input type="select" name="urinalysisProteins" id="urinalysisProteins" onChange={handleInputChange} value={objValues.urinalysisProteins}>
-                                  <option value="">Select</option><option value="Normal">Normal</option><option value="Abnormal">Abnormal</option><option value="Not Done">Not Done</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Preventive Services === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <HealingIcon style={sectionIconStyle} />Preventive Services
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>LLIN Given (Mosquito Net)?</Label>
-                              <InputGroup>
-                                <Input type="select" name="llinGiven" id="llinGiven" onChange={handleInputChange} value={objValues.llinGiven}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Dose of IPT Given</Label>
-                              <InputGroup>
-                                <Input type="select" name="iptDose" id="iptDose" onChange={handleInputChange} value={objValues.iptDose}>
-                                  <option value="">Select</option><option value="IPT1">IPT 1</option><option value="IPT2">IPT 2</option><option value="IPT3">IPT 3</option><option value="IPT4">IPT 4</option><option value="None">None</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Hematinics Given (Iron & Folic Acid)?</Label>
-                              <InputGroup>
-                                <Input type="select" name="hematinicsGiven" id="hematinicsGiven" onChange={handleInputChange} value={objValues.hematinicsGiven}>
-                                  <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>TD Immunization</Label>
-                              <InputGroup>
-                                <Input type="select" name="tdImmunization" id="tdImmunization" onChange={handleInputChange} value={objValues.tdImmunization}>
-                                  <option value="">Select</option><option value="Td1">Td1</option><option value="Td2">Td2</option><option value="Td3">Td3</option><option value="Td4">Td4</option><option value="Td5">Td5</option><option value="None">None</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* === Visit Outcome === */}
-                    <div className="col-md-12 mb-3">
-                      <div style={sectionContainerStyle}>
-                        <h6 style={sectionHeaderStyle}>
-                          <AssignmentTurnedInIcon style={sectionIconStyle} />Visit Outcome
-                        </h6>
-                        <div className="row">
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Associated Problems</Label>
-                              <InputGroup>
-                                <Input type="textarea" name="associatedProblems" id="associatedProblems" onChange={handleInputChange} value={objValues.associatedProblems} style={{ height: "41px" }} />
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          <div className="form-group mb-3 col-md-4">
-                            <FormGroup>
-                              <Label>Outcome of Visit</Label>
-                              <InputGroup>
-                                <Input type="select" name="outcomeOfVisit" id="outcomeOfVisit" onChange={handleInputChange} value={objValues.outcomeOfVisit}>
-                                  <option value="">Select</option><option value="Not Treated">Not Treated (NT)</option><option value="Treated">Treated (T)</option><option value="Admitted">Admitted (A)</option><option value="Referred Out">Referred Out (RO)</option>
-                                </Input>
-                              </InputGroup>
-                            </FormGroup>
-                          </div>
-                          {objValues.outcomeOfVisit === "Referred Out" && (
-                            <>
-                              <div className="form-group mb-3 col-md-4">
-                                <FormGroup>
-                                  <Label>Reason for Referral</Label>
-                                  <InputGroup>
-                                    <Input type="text" name="referralReason" id="referralReason" onChange={handleInputChange} value={objValues.referralReason} />
-                                  </InputGroup>
-                                </FormGroup>
-                              </div>
-                              <div className="form-group mb-3 col-md-4">
-                                <FormGroup>
-                                  <Label>Transportation Out</Label>
-                                  <InputGroup>
-                                    <Input type="select" name="transportationOut" id="transportationOut" onChange={handleInputChange} value={objValues.transportationOut}>
-                                      <option value="">Select</option><option value="Ambulance">Ambulance</option><option value="Others">Others</option>
-                                    </Input>
-                                  </InputGroup>
-                                </FormGroup>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <AncFormFields
+                      values={objValues}
+                      errors={errors}
+                      onChange={handleFieldChange}
+                      showHivFields={false}
+                      showAncSetting={false}
+                      showFacilityField={false}
+                      ancNoValidator={checkAncNumber}
+                      minDates={minAncDates}
+                    />
+                    {ancNumberCheck === true ? (<span className={classes.error}>{"ANC number already exist"}</span>) : ""}
 
                   </div>
                 </div>
               ) :(
                 <>
-                  {/* lastPmtctHtsRecord?.finalResult === "Positive" */}
-                  {patientObj.dynamicHivStatus === "Positive" ||
+                  {/* L&D entry: ALWAYS show Labour & Delivery first, regardless of HIV status */}
+                  {locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D" ? (
+                    <LabourDelivery
+                      patientObj={patientObj}
+                      setActiveContent={setActiveContent}
+                      activeContent={activeContent}
+                      latestPmtctCycle={latestPmtctCycle}
+                      handleRoute={handleRoute}
+                      onEnrollPatient={true}
+                      entrypointValue={locationState.entrypointValue}
+                    />
+                  ) : patientObj.dynamicHivStatus === "Positive" ||
                   lastPmtctHtsRecord?.finalResult === "Positive" ? (
                     <PmtctEnrollment
                       newRegDate={""}
@@ -1686,16 +1093,6 @@ const UserRegistration = (props) => {
                       lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult}
                       canProceedWithEnrollment={canProceedWithEnrollment}
                       latestPmtctCycle={latestPmtctCycle}
-                    />
-                  ) : locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D" ? (
-                    <LabourDelivery
-                      patientObj={patientObj}
-                      setActiveContent={setActiveContent}
-                      activeContent={activeContent}
-                      latestPmtctCycle={latestPmtctCycle}
-                      handleRoute={handleRoute}
-                      onEnrollPatient={true}
-                      entrypointValue={locationState.entrypointValue}
                     />
                   ) : (
                     <PmtctHtsForm
@@ -1723,9 +1120,7 @@ const UserRegistration = (props) => {
 
               {locationState.showANC && (
                 <>
-                  {objValues.gaweeks > 0 &&
-                    ancNumberCheck !== true &&
-                    objValues.gravida >= objValues.parity && (
+                  {ancNumberCheck !== true && (
                       <MatButton
                         type="submit"
                         variant="contained"

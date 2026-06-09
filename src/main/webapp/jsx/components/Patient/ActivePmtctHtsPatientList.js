@@ -72,6 +72,7 @@ const PmtctHtsPatients = (props) => {
   );
 
   const [showPPI, setShowPPI] = useState(true);
+  const [loading, setLoading] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
       setShowPPI(false);
@@ -168,6 +169,7 @@ const PmtctHtsPatients = (props) => {
   );
 
   const getData = async (query) => {
+    setLoading(true);
     try {
       const searchParam = query.search || "*";
       const response = await axios.get(
@@ -175,12 +177,14 @@ const PmtctHtsPatients = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      setLoading(false);
       return {
         data: response.data.records || [],
         page: query?.page || 0,
         totalCount: response.data.totalRecords || 0,
       };
     } catch (error) {
+      setLoading(false);
       console.error("Error fetching PMTCT HTS patients:", error);
       return {
         data: [],
@@ -196,7 +200,13 @@ const PmtctHtsPatients = (props) => {
         icons={tableIcons}
         title="PMTCT HTS Patients"
         columns={columns}
+        isLoading={loading}
         data={getData}
+        localization={{
+          body: {
+            emptyDataSourceMessage: loading ? "Loading patients..." : "No records to display",
+          },
+        }}
         options={{
           headerStyle: {
             backgroundColor: "#014d88",

@@ -1,5 +1,7 @@
 package org.lamisplus.modules.pmtct.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,10 +9,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HepatitisBDto {
-    private String testedHepatitisB;
+    @JsonDeserialize(using = YesNoBooleanDeserializer.class)
+    private Boolean testedHepatitisB;
     private String dateOfHepatitisB;
     private String hepatitisB;
-    private String treatedHepatitisB;
-    private String referredHepatitisB;
+    @JsonDeserialize(using = YesNoBooleanDeserializer.class)
+    private Boolean treatedHepatitisB;
+    @JsonDeserialize(using = YesNoBooleanDeserializer.class)
+    private Boolean referredHepatitisB;
+    // MIP Card fields (merged from legacy flat columns)
+    private String currentHbvStatus;
+    private String nameOfHbvDrug;
 }

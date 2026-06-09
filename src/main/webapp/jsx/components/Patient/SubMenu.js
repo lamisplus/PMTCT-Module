@@ -178,7 +178,7 @@ function SubMenu(props) {
     let thePmtctCycleUuid = pmtctCycleUuid || props.latestPmtctCycle?.uuid;
     if (thePmtctCycleUuid) {
       const patientUuid =
-        props.patientObj.patient_uuid || props.patientObj.patientUuid;
+        props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
 
       const htsUrl = `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${thePmtctCycleUuid}`;
 

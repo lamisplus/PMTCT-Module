@@ -76,6 +76,7 @@ const ANCPatients = (props) => {
 
 
   const [showPPI, setShowPPI] = useState(true);
+  const [loading, setLoading] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
       setShowPPI(false);
@@ -164,10 +165,11 @@ const ANCPatients = (props) => {
   );
  
   const getData = async (query) => {
+    setLoading(true);
     try {
      const response = await  axios
       .get(
-`${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,   
+`${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchParam=${query.search}`,
      { headers: { Authorization: `Bearer ${token}` } }
       )
  
@@ -240,12 +242,14 @@ const ANCPatients = (props) => {
         // });
     
         
+        setLoading(false);
         return {
         data: response.data.records,
         page: query?.page || 0,
         totalCount: response.data.records.length || 0,
       };
     } catch (error) {
+      setLoading(false);
       return {
         data: [],
         page: 0,
@@ -260,8 +264,13 @@ const ANCPatients = (props) => {
         icons={tableIcons}
         title="Find Patient "
         columns={columns}
-        //isLoading={loading}
+        isLoading={loading}
         data={getData}
+        localization={{
+          body: {
+            emptyDataSourceMessage: loading ? "Loading patients..." : "No records to display",
+          },
+        }}
         options={{
           headerStyle: {
             backgroundColor: "#014d88",

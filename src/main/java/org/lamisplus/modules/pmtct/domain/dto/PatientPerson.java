@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public interface PatientPerson {
    String getFullName();
    String getSex();
-   int getAge();
+   Integer getAge();
    String getUuid();
    Long getId();
 

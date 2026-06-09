@@ -199,7 +199,7 @@ function PatientCard(props) {
                 (each.activityName &&
                   each.activityName.toUpperCase().includes("RETESTING")) ||
                 (each.activityName &&
-                  each.activityName.toUpperCase().includes("PMTCT-HTS"))
+                  each.activityName.toUpperCase().includes("PMTCT HTS"))
             );
             setCheckForRetesting(hasRetestingActivity ? false : true);
           } else {
@@ -515,6 +515,7 @@ function PatientCard(props) {
               activeContent={activeContent}
               latestPmtctCycle={latestPmtctCycle}
               selectedCycleId={selectedCycleId}
+              setPmtctHtsRetestingType={setPmtctHtsRetestingType}
             />
           )}
 

@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public interface InfantRepository extends CommonJpaRepository<Infant, String> {
 
-    @Query(value = "SELECT * FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND archived = 0", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND archived = false", nativeQuery = true)
     List<Infant> findInfantByMotherPatientUuid(String patientUuid);
 
     List<Infant> findInfantsByInfantHospitalNumber(String infantHospitalNumber);
@@ -41,10 +41,10 @@ public interface InfantRepository extends CommonJpaRepository<Infant, String> {
     void updateDeliveryDate(LocalDate deliveryDate , String patientUuid, String pmtctCycleUuid);
 
 
-    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND archived = 0 ", nativeQuery = true)
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND archived = false ", nativeQuery = true)
     List<Infant> getAllInfantByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_uuid=?2 AND archived = 0 ", nativeQuery = true)
+    @Query(value = "SELECT *  FROM pmtct_infant_information WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND pmtct_cycle_uuid=?2 AND archived = false ", nativeQuery = true)
     List<Infant> getAllInfantByPatientUuidAndCycleUuid(String patientUuid, String pmtctCycleUuid);
 
 

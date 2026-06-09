@@ -26,7 +26,7 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     @Column(name = "gaweeks")
     private Integer gAWeeks;
     private String patientUuid;
-    private Long archived;
+    private Boolean archived;
     private String status;
     private String staticHivStatus;
     private String sourceOfReferral;
@@ -64,14 +64,14 @@ public class ANC extends PMTCTTransactionalEntity implements Serializable, Persi
     @Column(columnDefinition = "jsonb")
     private UrinalysisDto urinalysis;
 
-    private String hbPcv;
-    private String pcv;
-    private String bloodSugarGdm;
-    private String llinGiven;
-    private String iptDose;
-    private String hematinicsGiven;
-    private String tdImmunization;
-    private String associatedProblems;
+    @Type(type = "jsonb")
+    @Column(name = "lab_test", columnDefinition = "jsonb")
+    private LabTestDto labTest;
+
+    @Type(type = "jsonb")
+    @Column(name = "interventions", columnDefinition = "jsonb")
+    private InterventionsDto interventions;
+
     private String outcomeOfVisit;
     private String referralReason;
     private String transportationOut;

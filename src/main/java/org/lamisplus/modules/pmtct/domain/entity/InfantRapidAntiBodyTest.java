@@ -35,7 +35,7 @@ public class InfantRapidAntiBodyTest implements Serializable {
     private String uuid;
     @Column(name = "mother_patient_uuid")
     private String motherPatientUuid;
-    private Long archived;
+    private Boolean archived;
     private String pmtctCycleUuid;
     private Long facilityId;
 
@@ -59,7 +59,7 @@ public class InfantRapidAntiBodyTest implements Serializable {
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 }

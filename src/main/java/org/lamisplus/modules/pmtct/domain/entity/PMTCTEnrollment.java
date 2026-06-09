@@ -38,7 +38,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     private String tbStatus;
     @Column(name = "patient_uuid")
     private String patientUuid;
-    private Long archived;
+    private Boolean archived;
     public String hivStatus;
     private LocalDate lmp;
 
@@ -62,7 +62,7 @@ public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Seriali
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {
-            this.archived = 0L;
+            this.archived = false;
         }
     }
 

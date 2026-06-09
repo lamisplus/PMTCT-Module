@@ -59,6 +59,7 @@ const tableIcons = {
 
 const Patients = (props) => {
   const [showPPI, setShowPPI] = useState(true);
+  const [loading, setLoading] = useState(true);
   const handleCheckBox = (e) => {
     if (e.target.checked) {
       setShowPPI(false);
@@ -92,9 +93,10 @@ const Patients = (props) => {
           // { title: "ART Status", field: "status", filtering: false },
           { title: "Actions", field: "actions", filtering: false },
         ]}
-        //isLoading={loading}
+        isLoading={loading}
         data={(query) =>
-          new Promise((resolve, reject) =>
+          new Promise((resolve, reject) => {
+            setLoading(true);
             axios
               .get(
                 `${baseUrl}pmtct/anc/all-active-anc?pageSize=${query.pageSize}&pageNo=${query.page}&searchValue=${query.search}`,
@@ -102,6 +104,7 @@ const Patients = (props) => {
               )
               .then((response) => response)
               .then((result) => {
+                setLoading(false);
                 resolve({
                   data: result.data.records.map((row) => ({
                     name: (
@@ -170,8 +173,18 @@ const Patients = (props) => {
                   totalCount: result.data.totalRecords,
                 });
               })
-          )
+              .catch((error) => {
+                setLoading(false);
+                console.error("Error fetching ANC patients:", error);
+                resolve({ data: [], page: query.page, totalCount: 0 });
+              });
+          })
         }
+        localization={{
+          body: {
+            emptyDataSourceMessage: loading ? "Loading patients..." : "No records to display",
+          },
+        }}
         options={{
           headerStyle: {
             backgroundColor: "#014d88",

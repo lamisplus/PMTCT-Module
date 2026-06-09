@@ -63,6 +63,8 @@ const PatientnHistory = (props) => {
         ///GET LIST OF Patients
         const PatientHistory =()=>{
             setLoading(true)
+            const entryPoint = props.patientObj?.entryPoint || props.latestPmtctCycle?.entryPoint;
+            if (entryPoint !== "PMTCT_ENTRY_POINT_ANC") { setLoading(false); return; }
             const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
             const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid || props.patientObj.pmtctCycleUuid;
             axios

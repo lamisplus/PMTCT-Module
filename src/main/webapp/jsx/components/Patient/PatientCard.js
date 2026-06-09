@@ -128,6 +128,8 @@ function PatientCard(props) {
   };
 
   const getCycleAncNo = () => {
+    const entryPoint = patientObj?.entryPoint || props.latestPmtctCycle?.entryPoint;
+    if (entryPoint !== "PMTCT_ENTRY_POINT_ANC") return;
     const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
     if (!pmtctCycleUuid) return;
     const patientUuid = patientObj?.patient_uuid || patientObj?.patientUuid || patientObj?.uuid;
@@ -374,8 +376,16 @@ function PatientCard(props) {
     try { addressData = JSON.parse(addressData); } catch (e) { addressData = null; }
   }
   const patientAddress = (addressData && typeof addressData === 'object') ? getAddress(addressData) : "";
-  const hivStatusLabel = confirmStatus === 'Unknown' ? 'Not Tested' : confirmStatus === 'reactive' ? 'Positive' : confirmStatus === 'non-reactive' ? 'Negative' : confirmStatus;
-  const hivStatusColor = (confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626" : (confirmStatus === "Negative" || confirmStatus === 'non-reactive') ? "#16a34a" : "#6b7280";
+  // When a retesting record exists, show the retesting outcome instead of the raw result
+  const hivStatusLabel = retestStatus?.remainedHivNegative ? 'Remained HIV Negative'
+    : retestStatus?.seroconverted ? 'Seroconverted to HIV Positive'
+    : confirmStatus === 'Unknown' ? 'Not Tested'
+    : confirmStatus === 'reactive' ? 'Positive'
+    : confirmStatus === 'non-reactive' ? 'Negative'
+    : confirmStatus;
+  const hivStatusColor = (retestStatus?.seroconverted || confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626"
+    : (retestStatus?.remainedHivNegative || confirmStatus === "Negative" || confirmStatus === 'non-reactive') ? "#16a34a"
+    : "#6b7280";
 
   return (
     <div className={classes.root}>
@@ -408,7 +418,7 @@ function PatientCard(props) {
                 {patientName}
               </h4>
               <span style={{ color: "#94a3b8", fontSize: "12px", fontWeight: "500" }}>
-                Hospital No: <span style={{ color: "#0f172a", fontWeight: "600" }}>{patientObj?.hospitalNumber || "---"}</span>
+                Hospital No: <span style={{ color: "#0f172a", fontWeight: "600" }}>{patientObj?.hospitalNumber || (patientObj?.identifier?.identifier?.find(obj => obj.type === "HospitalNumber")?.value) || "---"}</span>
               </span>
             </div>
           </div>
@@ -504,20 +514,7 @@ function PatientCard(props) {
             </span>
           </div>
 
-          {/* Seroconversion */}
-          {(retestStatus?.seroconverted || retestStatus?.remainedHivNegative) && (
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "7px",
-              padding: "7px 14px", borderRadius: "6px",
-              background: retestStatus?.seroconverted ? "#fef2f2" : "#f0fdf4",
-              boxShadow: retestStatus?.seroconverted ? "0 1px 4px rgba(220,38,38,0.12)" : "0 1px 4px rgba(22,163,74,0.12)",
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={retestStatus?.remainedHivNegative ? "#16a34a" : "#dc2626"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              <span style={{ fontSize: "11.5px", color: retestStatus?.remainedHivNegative ? "#16a34a" : "#dc2626", fontWeight: "700" }}>
-                {retestStatus?.seroconverted ? "Seroconverted" : "Remained HIV -ve"}
-              </span>
-            </div>
-          )}
+          {/* Seroconversion badge removed — retesting status now reflected in the HIV badge */}
 
           {/* Maternal Outcome */}
           {props.maternalOutcome && (

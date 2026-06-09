@@ -37,7 +37,13 @@ const RecentHistory = (props) => {
  const [unknownStatus, setUnknownStatus] =useState(props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown");
     const [showHTSStatus, setShowHTSStatus] = useState(props.lastestHivStatus !== "Unknown"? false : unknownStatus);
     
+  // Resolve patientUuid consistently across all API calls
+  const resolvedPatientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
+  const resolvedCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
+
   useEffect(() => {
+    let cancelled = false;
+
     if (props?.allEntryPoint) {
       // getPatientEntryType();
     }
@@ -45,37 +51,74 @@ const RecentHistory = (props) => {
     let generalStatus = props?.patientObj?.staticHivStatus === "Unknown" || props?.patientObj?.hivStatus === "Unknown" ||  props?.patientObj?.dynamicHivStatus  === "Unknown"
     setShowHTSStatus(props.lastestHivStatus !== "Unknown" && props.lastestHivStatus !== ""? false : generalStatus)
 
-    InfantInfo();
-    RecentActivities();
-    SummaryChart();
-  }, [props.patientObj.id, props.selectedCycleId]);
-  ///GET LIST OF Infants
+    if (!resolvedCycleUuid || !resolvedPatientUuid) return;
 
-  const InfantInfo = () => {
+    // Fetch infants
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${resolvedPatientUuid}?pmtctCycleUuid=${resolvedCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (!cancelled) setInfants(response.data);
+      })
+      .catch(() => {});
 
-      const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
-      // Use selectedCycleId if available, otherwise use latestPmtctCycle
-      const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
+    // Fetch recent activities, then enrich HTS records with testingType
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/getAllActivities/${resolvedPatientUuid}?pmtctCycleUuid=${resolvedCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (cancelled) return;
+        const activities = response.data || [];
+        // For HTS activities missing testingType, fetch the record detail
+        const htsActivities = activities.filter(
+          (a) => a.path === "pmtct-hts" && !a.testingType && a.recordId
+        );
+        if (htsActivities.length > 0) {
+          Promise.all(
+            htsActivities.map((a) =>
+              axios
+                .get(`${baseUrl}pmtct/anc/view-pmtct-hts-enrollment/${a.recordId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .then((res) => ({ recordId: a.recordId, testingType: res.data?.testingType || "" }))
+                .catch(() => ({ recordId: a.recordId, testingType: "" }))
+            )
+          ).then((results) => {
+            if (cancelled) return;
+            const typeMap = {};
+            results.forEach((r) => { typeMap[r.recordId] = r.testingType; });
+            const enriched = activities.map((a) =>
+              a.path === "pmtct-hts" && typeMap[a.recordId]
+                ? { ...a, testingType: typeMap[a.recordId] }
+                : a
+            );
+            setRecentActivities(enriched);
+            checkForPmtctEnrollment(enriched);
+          });
+        } else {
+          setRecentActivities(activities);
+          checkForPmtctEnrollment(activities);
+        }
+      })
+      .catch(() => {});
 
-      if (!pmtctCycleUuid) {
-        console.error("pmtctCycleUuid is required");
-        return;
-      }
+    // Fetch summary chart
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${resolvedPatientUuid}?pmtctCycleUuid=${resolvedCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (!cancelled) setSummaryChart(response.data);
+      })
+      .catch(() => {});
 
-      axios
-        .get(
-          `${baseUrl}pmtct/anc/get-infant-by-mother-person-uuid/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-          setInfants(response.data);
-        })
-
-        .catch((error) => {
-          //console.log(error);
-        });
-    
-  };
+    return () => { cancelled = true; };
+  }, [props.patientObj.id, props.selectedCycleId, props.latestPmtctCycle?.uuid]);
 
   // Function to check if pmtct_enrollment exists in activities
   const checkForPmtctEnrollment = (activities) => {
@@ -94,64 +137,44 @@ const RecentHistory = (props) => {
     }
   };
 
+  // Standalone fetch for use by delete handlers
   const RecentActivities = () => {
-
-    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
-    // Use selectedCycleId if available, otherwise use latestPmtctCycle
-    const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
-
-    if (!pmtctCycleUuid) {
-      console.error("pmtctCycleUuid is required");
-      return;
-    }
+    if (!resolvedCycleUuid || !resolvedPatientUuid) return;
 
     axios
       .get(
-        `${baseUrl}pmtct/anc/getAllActivities/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${baseUrl}pmtct/anc/getAllActivities/${resolvedPatientUuid}?pmtctCycleUuid=${resolvedCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
         setRecentActivities(response.data);
-
-        // Check if pmtct_enrollment exists in activities
         checkForPmtctEnrollment(response.data);
       })
-      .catch((error) => {
-        //console.log(error);
-      });
-    // }
+      .catch(() => {});
   };
   const SummaryChart = () => {
-    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
-    // Use selectedCycleId if available, otherwise use latestPmtctCycle
-    const pmtctCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
-
-    if (!pmtctCycleUuid) {
-      console.error("pmtctCycleUuid is required");
-      return;
-    }
+    if (!resolvedCycleUuid || !resolvedPatientUuid) return;
 
     axios
       .get(
-        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${baseUrl}pmtct/anc/get-pmtct-summary-chart/${resolvedPatientUuid}?pmtctCycleUuid=${resolvedCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
         setSummaryChart(response.data);
       })
-      .catch((error) => {
-        //console.log(error);
-      });
+      .catch(() => {});
   };
   // Map activity names for display
   const displayActivityName = (name, data) => {
     if (!name) return name;
     if (name.toLowerCase() === "pmtct enrollment") return "Mother Clinical Information";
-    if (name.toLowerCase() === "initial" || name.toLowerCase() === "retesting") return "PMTCT HTS";
+    // For HTS records, check testingType from payload first, then fall back to activityName
+    if (name.toLowerCase() === "pmtct hts" || name.toLowerCase() === "retesting" || name.toLowerCase() === "initial") {
+      if (data?.testingType && data.testingType.toUpperCase() === "RETESTING") return "Retesting";
+      if (name.toLowerCase() === "retesting") return "Retesting";
+      return "PMTCT HTS";
+    }
     if (name.toLowerCase() === "mother follow up visit" || name.toLowerCase() === "mother follow-up visit") {
       if (data && data.visitType === "ANC_REVISIT") return "ANC Revisit";
       return name;
@@ -239,7 +262,10 @@ const RecentHistory = (props) => {
       });
 
       console.log("setPmtctHtsRetestingType", row)
-      props.setPmtctHtsRetestingType(row?.activityName.toLowerCase())
+      // Check testingType from payload first, fall back to activityName
+      const isRetesting = (row?.testingType && row.testingType.toUpperCase() === "RETESTING")
+        || row?.activityName?.toLowerCase() === "retesting";
+      props.setPmtctHtsRetestingType(isRetesting ? "retesting" : "pmtct-hts")
     }else {
     }
   };

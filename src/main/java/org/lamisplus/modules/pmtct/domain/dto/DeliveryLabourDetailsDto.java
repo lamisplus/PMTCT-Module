@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class DeliveryLabourDetailsDto {
     private String decisionSeekingCare;
     private String transportationIn;
+    private String transportationInOther;
     private Integer parity;
     private String partographUsed;
     private String whoTookDelivery;

@@ -1,5 +1,8 @@
 package org.lamisplus.modules.pmtct.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
@@ -18,6 +21,7 @@ import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.HtsEncounterProxyRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,13 +47,315 @@ public class PmtctHtsService {
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentReporsitory;
     private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
     private final ANCRepository ancRepository;
+    private final HtsEncounterProxyRepository htsEncounterProxyRepository;
+    private final ObjectMapper objectMapper;
 
 
     public PmtctHtsReponseDTO save(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
-        System.out.println(pmtctHtsRequestDTO);
-        return convertEntitytoRespondDto(converRequestDtotoEntity(pmtctHtsRequestDTO));
+        // Delegate to hts_encounter table — pmtct_hts is no longer used for writes
+        return saveToHtsEncounter(pmtctHtsRequestDTO);
     }
 
+    /**
+     * Checks if there are un-migrated active records in pmtct_hts for the current facility.
+     * Returns the count so the frontend can show a notification banner.
+     */
+    public long getUnmigratedRecordCount() {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        if (!currentUser.isPresent()) {
+            return 0;
+        }
+        Long facilityId = currentUser.get().getCurrentOrganisationUnitId();
+        return pmtctHtsRepository.countActiveMigratableRecords(facilityId);
+    }
+
+
+    // ══════════════════ HTS ENCOUNTER PROXY (saves to hts_encounter table) ══════════════════
+
+    public PmtctHtsReponseDTO saveToHtsEncounter(PmtctHtsRequestDTO dto) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        // Resolve patient_id from patient_uuid
+        Optional<Person> personOpt = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(
+                dto.getPatientUuid(), facilityId, 0);
+        if (!personOpt.isPresent()) {
+            throw new EntityNotFoundException(Person.class, "uuid", dto.getPatientUuid());
+        }
+        Person person = personOpt.get();
+
+        // Build proxy entity targeting hts_encounter table
+        HtsEncounterProxy encounter = new HtsEncounterProxy();
+        encounter.setPersonId(person.getId());
+        encounter.setPatientUuid(UUID.fromString(dto.getPatientUuid()));
+        // Frontend is responsible for generating and verifying uniqueness of clientCode
+        encounter.setClientCode(dto.getClientCode() != null ? dto.getClientCode().trim() : "");
+        encounter.setDateOfVisit(dto.getDateOfHivTest());
+        encounter.setFacilityId(facilityId);
+        encounter.setSetting(dto.getTestSetting() != null ? dto.getTestSetting() : "");
+        encounter.setPmtctHts(true);
+        encounter.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
+        encounter.setArchived(false);
+        encounter.setObservation(buildPmtctObservation(dto));
+
+        // Manually set audit fields (Spring JPA auditing not configured in PMTCT module)
+        encounter.setCreatedBy(user.getUserName());
+        encounter.setCreatedDate(java.time.LocalDateTime.now());
+        encounter.setLastModifiedBy(user.getUserName());
+        encounter.setLastModifiedDate(java.time.LocalDateTime.now());
+
+        HtsEncounterProxy saved = this.htsEncounterProxyRepository.save(encounter);
+
+        // Update pregnancy cycle status to ACTIVE
+        if (dto.getPmtctCycleUuid() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(dto.getPmtctCycleUuid());
+        }
+
+        return convertProxyToResponseDto(saved, person);
+    }
+
+    public PmtctHtsReponseDTO updateHtsEncounter(Long id, PmtctHtsRequestDTO dto) {
+        HtsEncounterProxy existing = this.htsEncounterProxyRepository.findByIdAndArchived(id, false)
+                .orElseThrow(() -> new EntityNotFoundException(HtsEncounterProxy.class, "id", id + ""));
+
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        // Update columns
+        existing.setDateOfVisit(dto.getDateOfHivTest());
+        existing.setSetting(dto.getTestSetting() != null ? dto.getTestSetting() : "");
+        existing.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
+        existing.setObservation(buildPmtctObservation(dto));
+
+        // Update audit fields
+        existing.setLastModifiedBy(user.getUserName());
+        existing.setLastModifiedDate(java.time.LocalDateTime.now());
+
+        HtsEncounterProxy saved = this.htsEncounterProxyRepository.save(existing);
+
+        // Update pregnancy cycle status to ACTIVE
+        if (dto.getPmtctCycleUuid() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(dto.getPmtctCycleUuid());
+        }
+
+        // Resolve person for response
+        Optional<Person> personOpt = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(
+                dto.getPatientUuid(), facilityId, 0);
+        return convertProxyToResponseDto(saved, personOpt.orElse(null));
+    }
+
+    private JsonNode buildPmtctObservation(PmtctHtsRequestDTO dto) {
+        ObjectNode obs = objectMapper.createObjectNode();
+
+        // HIV Test Results
+        putIfNotEmpty(obs, "finalHivTestResult", dto.getFinalResult());
+        if (dto.getInitialHivTest() != null) {
+            putIfNotEmpty(obs, "initialHivTest", dto.getInitialHivTest().getResult());
+        }
+        // confirmatoryHivTest: store ONLY the result string (no dateOfTest)
+        if (dto.getConfirmatoryHivTest() != null) {
+            putIfNotEmpty(obs, "confirmatoryHivTest", dto.getConfirmatoryHivTest().getResult());
+        }
+        // tieBreaker, tieBreaker2, retesting, confirmatoryTest2: EXCLUDED (obsolete)
+
+        // PMTCT Metadata
+        putIfNotEmpty(obs, "pmtctCycleUuid", dto.getPmtctCycleUuid());
+        putIfNotEmpty(obs, "testingType", dto.getTestingType());
+        putIfNotEmpty(obs, "testEntryPoint", dto.getTestEntryPoint());
+        putIfNotEmpty(obs, "testSetting", dto.getTestSetting());
+        // Map testSetting into the correct HTS observation key based on entry point
+        if (isCommunityEntry(dto.getTestEntryPoint())) {
+            putIfNotEmpty(obs, "communityEntryPoint", dto.getTestSetting());
+        } else {
+            putIfNotEmpty(obs, "facilitySetting", dto.getTestSetting());
+        }
+        putIfNotEmpty(obs, "stageOfPregnancy", dto.getStageOfPregnancy());
+        putIfNotEmpty(obs, "hospitalNumber", dto.getHospitalNumber());
+        putIfNotEmpty(obs, "pmtctTestEntryPoint", dto.getPmtctTestEntryPoint());
+
+        // Serology — syphilis and hepatitisB go inside their nested objects only
+        putIfNotEmpty(obs, "hepatitisC", dto.getHepatitisC());
+        if (dto.getSyphilisInfo() != null) {
+            obs.set("syphilisInfo", objectMapper.valueToTree(dto.getSyphilisInfo()));
+        }
+        if (dto.getHbvInfo() != null) {
+            obs.set("hbvInfo", objectMapper.valueToTree(dto.getHbvInfo()));
+        }
+        if (dto.getPartnerInfo() != null) {
+            obs.set("partnerInfo", objectMapper.valueToTree(dto.getPartnerInfo()));
+        }
+
+        // PMTCT Register fields
+        putIfNotEmpty(obs, "pregnancyStatusAtEntry", dto.getPregnancyStatusAtEntry());
+        putIfNotEmpty(obs, "previouslyKnownHivPositive", dto.getPreviouslyKnownHivPositive());
+        putIfNotEmpty(obs, "enrolledOnArt", dto.getEnrolledOnArt());
+        putIfNotEmpty(obs, "typeOfHivTest", dto.getTypeOfHivTest());
+        putIfNotEmpty(obs, "hivEarlyDetect", dto.getHivEarlyDetect());
+        putIfNotEmpty(obs, "hivEarlyDetectViralLoad", dto.getHivEarlyDetectViralLoad());
+        putIfNotEmpty(obs, "confirmatoryFromSpokes", dto.getConfirmatoryFromSpokes());
+        putIfNotEmpty(obs, "initiatedOnProphylaxis", dto.getInitiatedOnProphylaxis());
+        putIfNotEmpty(obs, "tbReferred", dto.getTbReferred());
+        putIfNotEmpty(obs, "tbScreeningStatus", dto.getTbScreeningStatus());
+        putIfNotEmpty(obs, "viralLoadMonitoring", dto.getViralLoadMonitoring());
+
+        return obs;
+    }
+
+    private void putIfNotEmpty(ObjectNode node, String key, String value) {
+        node.put(key, value != null ? value : "");
+    }
+
+    private String mapToHtsSetting(String testEntryPoint) {
+        if (testEntryPoint == null) return "HTS_ENTRY_POINT_FACILITY";
+        String upper = testEntryPoint.toUpperCase();
+        if (upper.contains("COMMUNITY")) {
+            return "HTS_ENTRY_POINT_COMMUNITY";
+        }
+        // ENROLLMENT_SETTING_FACILITY, PMTCT_ANC, PMTCT_L&D, PMTCT_POSTPARTUM, etc.
+        return "HTS_ENTRY_POINT_FACILITY";
+    }
+
+    private boolean isCommunityEntry(String testEntryPoint) {
+        return testEntryPoint != null && testEntryPoint.toUpperCase().contains("COMMUNITY");
+    }
+
+    private PmtctHtsReponseDTO convertProxyToResponseDto(HtsEncounterProxy saved, Person person) {
+        PmtctHtsReponseDTO resp = new PmtctHtsReponseDTO();
+        resp.setId(saved.getId());
+        resp.setClientCode(saved.getClientCode());
+        resp.setUuid(saved.getUuid() != null ? saved.getUuid().toString() : null);
+        resp.setDateOfHivTest(saved.getDateOfVisit());
+        resp.setSource(saved.getSource());
+
+        // Extract fields from observation JSONB
+        JsonNode obs = saved.getObservation();
+        if (obs != null) {
+            resp.setFinalResult(textOrNull(obs, "finalHivTestResult"));
+            resp.setTestEntryPoint(textOrNull(obs, "testEntryPoint"));
+            resp.setTestSetting(textOrNull(obs, "testSetting"));
+            resp.setStageOfPregnancy(textOrNull(obs, "stageOfPregnancy"));
+            resp.setTestingType(textOrNull(obs, "testingType"));
+            resp.setPmtctCycleUuid(textOrNull(obs, "pmtctCycleUuid"));
+            resp.setHepatitisC(textOrNull(obs, "hepatitisC"));
+            resp.setPmtctTestEntryPoint(textOrNull(obs, "pmtctTestEntryPoint"));
+            resp.setPregnancyStatusAtEntry(textOrNull(obs, "pregnancyStatusAtEntry"));
+            resp.setPreviouslyKnownHivPositive(textOrNull(obs, "previouslyKnownHivPositive"));
+            resp.setEnrolledOnArt(textOrNull(obs, "enrolledOnArt"));
+            resp.setTypeOfHivTest(textOrNull(obs, "typeOfHivTest"));
+            resp.setHivEarlyDetect(textOrNull(obs, "hivEarlyDetect"));
+            resp.setHivEarlyDetectViralLoad(textOrNull(obs, "hivEarlyDetectViralLoad"));
+            resp.setConfirmatoryFromSpokes(textOrNull(obs, "confirmatoryFromSpokes"));
+            resp.setInitiatedOnProphylaxis(textOrNull(obs, "initiatedOnProphylaxis"));
+            resp.setTbReferred(textOrNull(obs, "tbReferred"));
+            resp.setTbScreeningStatus(textOrNull(obs, "tbScreeningStatus"));
+            resp.setViralLoadMonitoring(textOrNull(obs, "viralLoadMonitoring"));
+
+            // initialHivTest: stored as flat string; backward compat for old JSON object format
+            JsonNode initialNode = obs.get("initialHivTest");
+            if (initialNode != null && !initialNode.isNull()) {
+                HivTestDto initial = new HivTestDto();
+                if (initialNode.isTextual()) {
+                    // New format: flat string e.g. "reactive"
+                    initial.setResult(initialNode.asText());
+                } else if (initialNode.isObject()) {
+                    // Old format: JSON object e.g. {"result":"reactive","dateOfTest":"..."}
+                    initial.setResult(textOrNull(initialNode, "result"));
+                }
+                resp.setInitialHivTest(initial);
+            }
+
+            // confirmatoryHivTest: stored as flat string, reconstruct as HivTestDto with result only
+            String confirmatoryResult = textOrNull(obs, "confirmatoryHivTest");
+            if (confirmatoryResult != null && !confirmatoryResult.isEmpty()) {
+                HivTestDto confirmatory = new HivTestDto();
+                confirmatory.setResult(confirmatoryResult);
+                resp.setConfirmatoryHivTest(confirmatory);
+            }
+
+            // Nested JSONB objects — syphilis and hepatitisB live inside these
+            try {
+                JsonNode syphilisNode = obs.get("syphilisInfo");
+                if (syphilisNode != null && !syphilisNode.isNull()) {
+                    SyphilisDetailsDto syphDto = objectMapper.treeToValue(syphilisNode, SyphilisDetailsDto.class);
+                    resp.setSyphilisInfo(syphDto);
+                    resp.setSyphilis(syphDto.getTestResult());
+                }
+            } catch (Exception e) { /* skip deserialization error */ }
+            // Backward compat: old records may only have flat "syphilis" key
+            if (resp.getSyphilis() == null) {
+                resp.setSyphilis(textOrNull(obs, "syphilis"));
+            }
+
+            try {
+                JsonNode hbvNode = obs.get("hbvInfo");
+                if (hbvNode != null && !hbvNode.isNull()) {
+                    HbvInfoDto hbvDto = objectMapper.treeToValue(hbvNode, HbvInfoDto.class);
+                    resp.setHbvInfo(hbvDto);
+                    resp.setHepatitisB(hbvDto.getTestResult());
+                }
+            } catch (Exception e) { /* skip deserialization error */ }
+            // Backward compat: old records may only have flat "hepatitisB" key
+            if (resp.getHepatitisB() == null) {
+                resp.setHepatitisB(textOrNull(obs, "hepatitisB"));
+            }
+
+            try {
+                JsonNode partnerNode = obs.get("partnerInfo");
+                if (partnerNode != null && !partnerNode.isNull()) {
+                    resp.setPartnerInfo(objectMapper.treeToValue(partnerNode, PartnerInfoDto.class));
+                }
+            } catch (Exception e) { /* skip deserialization error */ }
+        }
+
+        // Person info
+        if (person != null) {
+            resp.setPatientUuid(person.getUuid());
+            resp.setPersonId(person.getId());
+            resp.setHospitalNumber(person.getHospitalNumber());
+            resp.setFirstName(person.getFirstName());
+            resp.setSurname(person.getSurname());
+            resp.setOtherName(person.getOtherName());
+            resp.setSex(person.getSex());
+            resp.setDateOfBirth(person.getDateOfBirth());
+            resp.setAge(calculateAge(person.getDateOfBirth()));
+            resp.setFullName(person.getFullName());
+            if (person.getAddress() != null) {
+                resp.setAddress(person.getAddress().toString());
+            }
+            if (person.getContactPoint() != null) {
+                resp.setContactPoint(person.getContactPoint().toString());
+            }
+        }
+
+        return resp;
+    }
+
+    private PmtctHtsReponseDTO convertProxyToResponseDtoWithPersonLookup(HtsEncounterProxy proxy) {
+        Person person = null;
+        try {
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = currentUser.get();
+            Long facilityId = user.getCurrentOrganisationUnitId();
+            Optional<Person> personOpt = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(
+                    proxy.getPatientUuid().toString(), facilityId, 0);
+            if (personOpt.isPresent()) {
+                person = personOpt.get();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return convertProxyToResponseDto(proxy, person);
+    }
+
+    private String textOrNull(JsonNode node, String field) {
+        JsonNode child = node.get(field);
+        if (child == null || child.isNull()) return null;
+        return child.asText();
+    }
+
+    // ══════════════════ END HTS ENCOUNTER PROXY ══════════════════
 
     public PmtctHtsReponseDTO convertEntitytoRespondDto(PmtctHts pmtctHts) {
         PmtctHtsReponseDTO pmtctHtsReponseDTO = new PmtctHtsReponseDTO();
@@ -134,7 +440,7 @@ public class PmtctHtsService {
         pmtctHts.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
         pmtctHts.setTestingType(pmtctHtsRequestDTO.getTestingType());
         pmtctHts.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
-        pmtctHts.setArchived(0L);
+        pmtctHts.setArchived(0);
         pmtctHts.setPatientUuid(pmtctHtsRequestDTO.getPatientUuid());
         pmtctHts.setRetesting(pmtctHtsRequestDTO.getRetesting());
         pmtctHts.setTieBreaker(pmtctHtsRequestDTO.getTieBreaker());
@@ -241,60 +547,86 @@ public class PmtctHtsService {
 
 
     public void deletePmtctHtsRecord(String id) throws Exception {
-        PmtctHts existingRec = this.pmtctHtsRepository.findById(id)
-                .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
-        existingRec.setArchived(1L);
-        pmtctHtsRepository.save(existingRec);
+        try {
+            // Numeric ID → hts_encounter table (post-migration records)
+            Long htsId = Long.parseLong(id);
+            HtsEncounterProxy proxy = this.htsEncounterProxyRepository.findByIdAndArchived(htsId, false)
+                    .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
+            proxy.setArchived(true);
+            htsEncounterProxyRepository.save(proxy);
+        } catch (NumberFormatException e) {
+            // UUID ID → legacy pmtct_hts table (pre-migration records)
+            PmtctHts legacyRecord = this.pmtctHtsRepository.findById(id)
+                    .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
+            legacyRecord.setArchived(1);
+            pmtctHtsRepository.save(legacyRecord);
+        }
     }
 
 
     public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(String id) {
-        return convertEntitytoRespondDto(pmtctHtsRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(PmtctHts.class, "Id", id+ "") ));
+        try {
+            // Numeric ID → hts_encounter table (post-migration records)
+            Long htsId = Long.parseLong(id);
+            HtsEncounterProxy proxy = htsEncounterProxyRepository.findByIdAndArchived(htsId, false)
+                    .orElseThrow(() -> new EntityNotFoundException(HtsEncounterProxy.class, "Id", id));
+            Optional<User> currentUser = this.userService.getUserWithRoles();
+            User user = currentUser.get();
+            Long facilityId = user.getCurrentOrganisationUnitId();
+            Optional<Person> personOpt = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(
+                    proxy.getPatientUuid().toString(), facilityId, 0);
+            return convertProxyToResponseDto(proxy, personOpt.orElse(null));
+        } catch (NumberFormatException e) {
+            // UUID ID → legacy pmtct_hts table (pre-migration records)
+            PmtctHts legacyRecord = this.pmtctHtsRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException(PmtctHts.class, "Id", id));
+            return convertEntitytoRespondDto(legacyRecord);
+        }
     }
 
     public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String patientUuid) {
-        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentById(patientUuid);
-
-        if (entity == null) {
+        Optional<HtsEncounterProxy> proxyOpt = htsEncounterProxyRepository.findLatestByPatientUuid(patientUuid);
+        if (!proxyOpt.isPresent()) {
             return null;
         }
-
-        return convertEntitytoRespondDto(entity);
+        return convertProxyToResponseDtoWithPersonLookup(proxyOpt.get());
     }
 
     public  PmtctHtsReponseDTO  getLastPMTCTHTSEnrollmentById(String patientUuid, String pmtctCycleUuid) {
-        PmtctHts entity = pmtctHtsRepository.findLatestPMTCTHTSEnrollmentByIdAndCycleId(patientUuid, pmtctCycleUuid);
-
-        if (entity == null) {
+        Optional<HtsEncounterProxy> proxyOpt = htsEncounterProxyRepository.findLatestByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
+        if (!proxyOpt.isPresent()) {
             return null;
         }
-
-        return convertEntitytoRespondDto(entity);
+        return convertProxyToResponseDtoWithPersonLookup(proxyOpt.get());
     }
 
     public  String  getLatestConfirmatoryResult(String patientUuid) {
-        return pmtctHtsRepository.findLatestFinalResult(patientUuid).orElse("");
+        return htsEncounterProxyRepository.findLatestFinalResult(patientUuid).orElse("");
     }
 
     public  String  getLatestConfirmatoryResult(String patientUuid, String pmtctCycleUuid) {
-        return pmtctHtsRepository.findLatestFinalResultByPatientUuidAndCycleId(patientUuid, pmtctCycleUuid).orElse("");
+        return htsEncounterProxyRepository.findLatestFinalResultByCycle(patientUuid, pmtctCycleUuid).orElse("");
     }
 
 
 
+    public boolean isClientCodeTaken(String code) {
+        return htsEncounterProxyRepository.isClientCodeTaken(code);
+    }
+
     public boolean confirmIfDateExist(String patientUuid, LocalDate dateOfHivTest) {
-        return pmtctHtsRepository.findIfDateExist(patientUuid, dateOfHivTest);
+        return htsEncounterProxyRepository.existsByPatientUuidAndDateOfVisit(patientUuid, dateOfHivTest);
     }
 
     public boolean existsInitialHtsForCycle(String patientUuid, String pmtctCycleUuid) {
         if (patientUuid == null || pmtctCycleUuid == null) return false;
-        return pmtctHtsRepository.existsInitialHtsForCycle(patientUuid, pmtctCycleUuid);
+        return htsEncounterProxyRepository.existsInitialHtsForCycle(patientUuid, pmtctCycleUuid);
     }
 //
 
     public HivRetestStatusResponse getHivRetestStatus(String patientUuid) {
 
-        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultList(patientUuid);
+        List<Object[]> results = htsEncounterProxyRepository.findLatestRetestingResult(patientUuid);
 
         if (results.isEmpty()) {
             return HivRetestStatusResponse.builder()
@@ -324,7 +656,7 @@ public class PmtctHtsService {
 
     public HivRetestStatusResponse getHivRetestStatus(String patientUuid, String pmtctCycleUuid) {
 
-        List<Object[]> results = pmtctHtsRepository.findLatestHivTestResultListByPatientUuidAndCycleId(patientUuid, pmtctCycleUuid);
+        List<Object[]> results = htsEncounterProxyRepository.findLatestRetestingResultByCycle(patientUuid, pmtctCycleUuid);
 
         if (results.isEmpty()) {
             return HivRetestStatusResponse.builder()
@@ -408,12 +740,12 @@ public class PmtctHtsService {
 
         Page<PatientPerson> persons = null;
         if ((searchValue == null) || (searchValue.equals("*"))) {
-            persons = pmtctHtsRepository.getActiveOnPmtctHts(0, currentOrganisationUnitId, paging);
+            persons = pmtctHtsRepository.getActiveOnPmtctHts(currentOrganisationUnitId, paging);
         } else {
             searchValue = searchValue.replaceAll("\\s", "");
             searchValue = searchValue.replaceAll(",", "");
             String queryParam = "%" + searchValue + "%";
-            persons = pmtctHtsRepository.getActiveOnPmtctHtsBySearchParameters(queryParam, 0, currentOrganisationUnitId, paging);
+            persons = pmtctHtsRepository.getActiveOnPmtctHtsBySearchParameters(queryParam, currentOrganisationUnitId, paging);
         }
 
         List<PatientPerson> personList = persons.getContent();
@@ -465,47 +797,93 @@ public class PmtctHtsService {
                 htsResponseDto.setAncNo(ancOpt.get().getAncNo());
             }
 
-            // Get HTS record for the latest cycle
-            Optional<PmtctHts> pmtctHtsOptional = pmtctHtsRepository.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
+            // Get HTS record for the latest cycle from hts_encounter
+            Optional<HtsEncounterProxy> proxyOptional = htsEncounterProxyRepository.findByCycleUuidAndArchived(cycleUuid);
 
-            if (pmtctHtsOptional.isPresent()) {
-                PmtctHts pmtctHts = pmtctHtsOptional.get();
-                htsResponseDto.setId(pmtctHts.getId());
-                htsResponseDto.setUuid(pmtctHts.getUuid());
-                htsResponseDto.setDateOfHivTest(pmtctHts.getDateOfHivTest());
-                htsResponseDto.setTestEntryPoint(pmtctHts.getTestEntryPoint());
-                htsResponseDto.setTestSetting(pmtctHts.getTestSetting());
-                htsResponseDto.setInitialHivTest(pmtctHts.getInitialHivTest());
-                htsResponseDto.setConfirmatoryHivTest(pmtctHts.getConfirmatoryHivTest());
-                htsResponseDto.setStageOfPregnancy(pmtctHts.getStageOfPregnancy());
-                htsResponseDto.setHepatitisB(pmtctHts.getHepatitisB());
-                htsResponseDto.setHepatitisC(pmtctHts.getHepatitisC());
-                htsResponseDto.setTestingType(pmtctHts.getTestingType());
-                htsResponseDto.setSyphilis(pmtctHts.getSyphilis());
-                htsResponseDto.setRetesting(pmtctHts.getRetesting());
-                htsResponseDto.setFinalResult(pmtctHts.getFinalResult());
+            if (proxyOptional.isPresent()) {
+                HtsEncounterProxy proxy = proxyOptional.get();
+                htsResponseDto.setId(proxy.getId());
+                htsResponseDto.setClientCode(proxy.getClientCode());
+                htsResponseDto.setUuid(proxy.getUuid() != null ? proxy.getUuid().toString() : null);
+                htsResponseDto.setDateOfHivTest(proxy.getDateOfVisit());
+                htsResponseDto.setSource(proxy.getSource());
+                JsonNode obs = proxy.getObservation();
+                if (obs != null) {
+                    htsResponseDto.setTestEntryPoint(textOrNull(obs, "testEntryPoint"));
+                    htsResponseDto.setTestSetting(textOrNull(obs, "testSetting"));
+                    htsResponseDto.setStageOfPregnancy(textOrNull(obs, "stageOfPregnancy"));
+                    htsResponseDto.setTestingType(textOrNull(obs, "testingType"));
+                    htsResponseDto.setFinalResult(textOrNull(obs, "finalHivTestResult"));
+                    htsResponseDto.setHepatitisC(textOrNull(obs, "hepatitisC"));
+                    htsResponseDto.setPregnancyStatusAtEntry(textOrNull(obs, "pregnancyStatusAtEntry"));
+                    htsResponseDto.setPreviouslyKnownHivPositive(textOrNull(obs, "previouslyKnownHivPositive"));
+                    htsResponseDto.setEnrolledOnArt(textOrNull(obs, "enrolledOnArt"));
+                    htsResponseDto.setTypeOfHivTest(textOrNull(obs, "typeOfHivTest"));
+                    htsResponseDto.setHivEarlyDetect(textOrNull(obs, "hivEarlyDetect"));
+                    htsResponseDto.setHivEarlyDetectViralLoad(textOrNull(obs, "hivEarlyDetectViralLoad"));
+                    htsResponseDto.setConfirmatoryFromSpokes(textOrNull(obs, "confirmatoryFromSpokes"));
+                    htsResponseDto.setInitiatedOnProphylaxis(textOrNull(obs, "initiatedOnProphylaxis"));
+                    htsResponseDto.setTbReferred(textOrNull(obs, "tbReferred"));
+                    htsResponseDto.setTbScreeningStatus(textOrNull(obs, "tbScreeningStatus"));
+                    htsResponseDto.setPmtctTestEntryPoint(textOrNull(obs, "pmtctTestEntryPoint"));
+                    htsResponseDto.setViralLoadMonitoring(textOrNull(obs, "viralLoadMonitoring"));
 
-                // PMTCT Register fields
-                htsResponseDto.setPregnancyStatusAtEntry(pmtctHts.getPregnancyStatusAtEntry());
-                htsResponseDto.setPreviouslyKnownHivPositive(pmtctHts.getPreviouslyKnownHivPositive());
-                htsResponseDto.setEnrolledOnArt(pmtctHts.getEnrolledOnArt());
-                htsResponseDto.setTypeOfHivTest(pmtctHts.getTypeOfHivTest());
-                htsResponseDto.setHivEarlyDetect(pmtctHts.getHivEarlyDetect());
-                htsResponseDto.setHivEarlyDetectViralLoad(pmtctHts.getHivEarlyDetectViralLoad());
-                htsResponseDto.setConfirmatoryFromSpokes(pmtctHts.getConfirmatoryFromSpokes());
-                htsResponseDto.setInitiatedOnProphylaxis(pmtctHts.getInitiatedOnProphylaxis());
-                htsResponseDto.setTbReferred(pmtctHts.getTbReferred());
-                htsResponseDto.setSyphilisInfo(pmtctHts.getSyphilisInfo());
-                htsResponseDto.setHbvInfo(pmtctHts.getHbvInfo());
-                htsResponseDto.setPartnerInfo(pmtctHts.getPartnerInfo());
-                htsResponseDto.setTbScreeningStatus(pmtctHts.getTbScreeningStatus());
-                htsResponseDto.setPmtctTestEntryPoint(pmtctHts.getPmtctTestEntryPoint());
-                htsResponseDto.setViralLoadMonitoring(pmtctHts.getViralLoadMonitoring());
-                htsResponseDto.setSource(pmtctHts.getSource());
+                    // initialHivTest: flat string; backward compat for old JSON object
+                    JsonNode initialNode = obs.get("initialHivTest");
+                    if (initialNode != null && !initialNode.isNull()) {
+                        HivTestDto initial = new HivTestDto();
+                        if (initialNode.isTextual()) {
+                            initial.setResult(initialNode.asText());
+                        } else if (initialNode.isObject()) {
+                            initial.setResult(textOrNull(initialNode, "result"));
+                        }
+                        htsResponseDto.setInitialHivTest(initial);
+                    }
+                    // confirmatoryHivTest
+                    String confirmatoryResult = textOrNull(obs, "confirmatoryHivTest");
+                    if (confirmatoryResult != null && !confirmatoryResult.isEmpty()) {
+                        HivTestDto confirmatory = new HivTestDto();
+                        confirmatory.setResult(confirmatoryResult);
+                        htsResponseDto.setConfirmatoryHivTest(confirmatory);
+                    }
+                    // Nested objects — syphilis and hepatitisB live inside these
+                    try {
+                        JsonNode syphilisNode = obs.get("syphilisInfo");
+                        if (syphilisNode != null && !syphilisNode.isNull()) {
+                            SyphilisDetailsDto syphDto = objectMapper.treeToValue(syphilisNode, SyphilisDetailsDto.class);
+                            htsResponseDto.setSyphilisInfo(syphDto);
+                            htsResponseDto.setSyphilis(syphDto.getTestResult());
+                        }
+                    } catch (Exception ignored) {}
+                    // Backward compat: old records may only have flat "syphilis" key
+                    if (htsResponseDto.getSyphilis() == null) {
+                        htsResponseDto.setSyphilis(textOrNull(obs, "syphilis"));
+                    }
+
+                    try {
+                        JsonNode hbvNode = obs.get("hbvInfo");
+                        if (hbvNode != null && !hbvNode.isNull()) {
+                            HbvInfoDto hbvDto = objectMapper.treeToValue(hbvNode, HbvInfoDto.class);
+                            htsResponseDto.setHbvInfo(hbvDto);
+                            htsResponseDto.setHepatitisB(hbvDto.getTestResult());
+                        }
+                    } catch (Exception ignored) {}
+                    // Backward compat: old records may only have flat "hepatitisB" key
+                    if (htsResponseDto.getHepatitisB() == null) {
+                        htsResponseDto.setHepatitisB(textOrNull(obs, "hepatitisB"));
+                    }
+
+                    try {
+                        JsonNode partnerNode = obs.get("partnerInfo");
+                        if (partnerNode != null && !partnerNode.isNull()) {
+                            htsResponseDto.setPartnerInfo(objectMapper.treeToValue(partnerNode, PartnerInfoDto.class));
+                        }
+                    } catch (Exception ignored) {}
+                }
             }
 
             // Use cycle UUID to get enrollment data for the latest pregnancy cycle
-            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid, 0L);
+            Optional<PMTCTEnrollment> enrollment = pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid,false);
 
             if (enrollment.isPresent()) {
                 PMTCTEnrollment enrollmentData = enrollment.get();

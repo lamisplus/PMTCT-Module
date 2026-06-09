@@ -902,89 +902,54 @@ const ClinicVisit = (props) => {
                         </div>
                       </div>
                       <div className="row">
-                        <div className="form-group mb-3 col-md-8">
+                        <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <FormLabelName>Blood Pressure</FormLabelName>
-                            <InputGroup>
-                              <InputGroupText
-                                addonType="append"
-                                style={{
-                                  backgroundColor: "#014D88",
-                                  color: "#fff",
-                                  border: "1px solid #014D88",
-                                  borderRadius: "0rem",
-                                }}
-                              >
-                                systolic(mmHg)
-                              </InputGroupText>
+                            <FormLabelName>Blood Pressure (mmHg)</FormLabelName>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               <Input
                                 type="number"
                                 name="systolic"
                                 id="systolic"
+                                placeholder="Systolic"
                                 min="90"
                                 max="240"
                                 onChange={handleInputChangeVitalSignDto}
                                 value={vital.systolic}
                                 onKeyUp={handleInputValueCheckSystolic}
-                                style={{
-                                  border: "1px solid #014D88",
-                                  borderRadius: "0rem",
-                                }}
+                                style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: vital.systolic && (parseFloat(vital.systolic) < 90 || parseFloat(vital.systolic) > 240) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                               />
-                              <InputGroupText
-                                addonType="append"
-                                style={{
-                                  backgroundColor: "#014D88",
-                                  color: "#fff",
-                                  border: "1px solid #014D88",
-                                  borderRadius: "0rem",
-                                }}
-                              >
-                                diastolic(mmHg)
-                              </InputGroupText>
+                              <span style={{ fontWeight: "bold", color: "#64748b", fontSize: "18px" }}>/</span>
                               <Input
                                 type="number"
                                 name="diastolic"
                                 id="diastolic"
-                                min={0}
+                                placeholder="Diastolic"
+                                min={60}
                                 max={140}
                                 onChange={handleInputChangeVitalSignDto}
                                 value={vital.diastolic}
                                 onKeyUp={handleInputValueCheckDiastolic}
-                                style={{
-                                  border: "1px solid #014D88",
-                                  borderRadius: "0rem",
-                                }}
+                                style={{ height: "35px", fontSize: "13px", flex: 1, borderColor: vital.diastolic && (parseFloat(vital.diastolic) < 60 || parseFloat(vital.diastolic) > 140) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                               />
-                            </InputGroup>
-                            {vitalClinicalSupport.systolic !== "" ? (
-                              <span className={classes.error}>
-                                {vitalClinicalSupport.systolic}
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                            {errors.systolic !== "" ? (
-                              <span className={classes.error}>
-                                {errors.systolic}
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                            {vitalClinicalSupport.diastolic !== "" ? (
-                              <span className={classes.error}>
-                                {vitalClinicalSupport.diastolic}
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                            {errors.diastolic !== "" ? (
-                              <span className={classes.error}>
-                                {errors.diastolic}
-                              </span>
-                            ) : (
-                              ""
-                            )}
+                            </div>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <div style={{ flex: 1 }}>
+                                {vitalClinicalSupport.systolic !== "" ? (
+                                  <span className={classes.error}>{vitalClinicalSupport.systolic}</span>
+                                ) : ""}
+                                {errors.systolic !== "" ? (
+                                  <span className={classes.error}>{errors.systolic}</span>
+                                ) : ""}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                {vitalClinicalSupport.diastolic !== "" ? (
+                                  <span className={classes.error}>{vitalClinicalSupport.diastolic}</span>
+                                ) : ""}
+                                {errors.diastolic !== "" ? (
+                                  <span className={classes.error}>{errors.diastolic}</span>
+                                ) : ""}
+                              </div>
+                            </div>
                           </FormGroup>
                         </div>
                       </div>

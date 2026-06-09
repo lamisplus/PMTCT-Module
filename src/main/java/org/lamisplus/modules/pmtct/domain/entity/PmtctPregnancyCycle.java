@@ -56,7 +56,7 @@ public class PmtctPregnancyCycle {
     private LocalDateTime lastModifiedDate = LocalDateTime.now();
 
     @Column(name = "archived")
-    private Long archived = 0L;
+    private Boolean archived = false;
 
     @Column(name = "is_closed")
     private Boolean isClosed = false;

@@ -82,14 +82,25 @@ export const calculateGestationalAge = (enrollmentDate, lmp) => {
   }
 
 
-
-
-
 }
 
+export const validateGestationalAge = (gaWeeks, min = 4, max = 45) => {
+  const ga = parseInt(gaWeeks);
+  if (isNaN(ga) || ga <= 0) {
+    return { valid: false, gaWeeks: ga, reason: "invalid" };
+  }
+  if (ga > max) {
+    return { valid: false, gaWeeks: ga, reason: "too_high" };
+  }
+  if (ga < min) {
+    return { valid: false, gaWeeks: ga, reason: "too_low" };
+  }
+  return { valid: true, gaWeeks: ga, reason: null };
+};
 
-
-
+export const addWeeksToDate = (dateStr, weeks) => {
+  return moment(dateStr).add(weeks, "weeks").format("YYYY-MM-DD");
+};
 
 export  const convertMaternalCodeToValue = (code) => {
   const stored = JSON.parse(localStorage.getItem("maternalOutcome"));

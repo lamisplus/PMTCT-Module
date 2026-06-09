@@ -7,11 +7,13 @@ import org.lamisplus.modules.pmtct.domain.dto.EnrollmentValidationDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleRequestDto;
 import org.lamisplus.modules.pmtct.domain.dto.PmtctPregnancyCycleResponseDto;
 import org.lamisplus.modules.pmtct.domain.entity.ANC;
+import org.lamisplus.modules.pmtct.domain.entity.HtsClientProjection;
 import org.lamisplus.modules.pmtct.domain.entity.PMTCTEnrollment;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctHts;
 import org.lamisplus.modules.pmtct.domain.entity.PmtctPregnancyCycle;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
+import org.lamisplus.modules.pmtct.repository.HtsEncounterProxyRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
@@ -32,6 +34,7 @@ public class PmtctPregnancyCycleService {
     private final UserService userService;
     private final ANCRepository ancRepository;
     private final PmtctHtsRepository pmtctHtsRepository;
+    private final HtsEncounterProxyRepository htsEncounterProxyRepository;
     private final PMTCTEnrollmentReporsitory pmtctEnrollmentRepository;
     private final PmtctVisitRepository pmtctVisitRepository;
 
@@ -53,12 +56,18 @@ public class PmtctPregnancyCycleService {
     }
 
     public PmtctPregnancyCycleResponseDto save(PmtctPregnancyCycleRequestDto requestDto) {
-        // Check if the patient already has an inactive record
+        // Check if the patient already has an inactive record created very recently (within 5 minutes)
+        // to prevent duplicate cycles from double-clicks, but allow new cycles for new pregnancies
         Optional<PmtctPregnancyCycle> existingInactiveCycle = pregnancyCycleRepository.findInactiveByPatientUuid(requestDto.getPatientUuid());
 
         if (existingInactiveCycle.isPresent()) {
-            // Return the existing inactive record instead of creating a new one
-            return convertToResponseDto(existingInactiveCycle.get());
+            PmtctPregnancyCycle existing = existingInactiveCycle.get();
+            LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+            if (existing.getCreatedDate() != null && existing.getCreatedDate().isAfter(fiveMinutesAgo)) {
+                // Recently created — likely a duplicate request from same session
+                return convertToResponseDto(existing);
+            }
+            // Older inactive cycle from a previous pregnancy — do not reuse
         }
 
         // No inactive record found, create a new one
@@ -78,7 +87,7 @@ public class PmtctPregnancyCycleService {
         pregnancyCycle.setLastModifiedBy(user.getUserName());
         pregnancyCycle.setLastModifiedDate(LocalDateTime.now());
         pregnancyCycle.setUuid(UUID.randomUUID().toString());
-        pregnancyCycle.setArchived(0L);
+        pregnancyCycle.setArchived(false);
         pregnancyCycle.setIsClosed(false);
 
         PmtctPregnancyCycle savedCycle = pregnancyCycleRepository.save(pregnancyCycle);
@@ -116,8 +125,7 @@ public class PmtctPregnancyCycleService {
         "MATERNAL_OUTCOME_DIED",
         "MATERNAL_OUTCOME_DEAD",
         "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
-        "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
-        "MATERNAL_OUTCOME_COMPLETED_PMTCT"
+        "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP"
     );
 
     public void updateMaternalOutcome(String cycleUuid, String maternalOutcome, String visitStatus) {
@@ -165,9 +173,14 @@ public class PmtctPregnancyCycleService {
         if (!Boolean.TRUE.equals(cycle.getIsClosed())) return false;
 
         // Verify the maternal outcome is actually terminal.
-        // If is_closed=true but outcome is non-terminal (e.g. Alive), auto-correct the flag.
+        // If is_closed=true but outcome is null/empty or non-terminal (e.g. Alive), auto-correct the flag.
         String outcome = cycle.getMaternalOutcome();
-        if (outcome != null && !TERMINAL_OUTCOMES.contains(outcome) && !TERMINAL_OUTCOMES.contains(outcome.trim().toUpperCase())) {
+        if (outcome == null || outcome.trim().isEmpty()) {
+            cycle.setIsClosed(false);
+            pregnancyCycleRepository.save(cycle);
+            return false;
+        }
+        if (!TERMINAL_OUTCOMES.contains(outcome) && !TERMINAL_OUTCOMES.contains(outcome.trim().toUpperCase())) {
             cycle.setIsClosed(false);
             pregnancyCycleRepository.save(cycle);
             return false;
@@ -304,34 +317,34 @@ public class PmtctPregnancyCycleService {
         }
         Long facilityId = currentUser.get().getCurrentOrganisationUnitId();
 
-        // Check PMTCT HTS records for positive result
-        List<PmtctHts> htsRecords = pmtctHtsRepository.findAll();
-        for (PmtctHts hts : htsRecords) {
-            if (patientUuid.equals(hts.getPatientUuid()) &&
-                hts.getArchived() != null && hts.getArchived() == 0L &&
-                facilityId.equals(hts.getFacilityId())) {
-                String finalResult = hts.getFinalResult();
-                if (isPositiveResult(finalResult)) {
-                    return "POSITIVE";
-                }
+        // Check hts_encounter table for PMTCT HTS records
+        Optional<String> newHtsResult = htsEncounterProxyRepository.findLatestFinalResult(patientUuid);
+        if (newHtsResult.isPresent() && isPositiveResult(newHtsResult.get())) {
+            return "POSITIVE";
+        }
+
+        // Check hts_client table for HTS module records (may be removed later)
+        try {
+            Optional<HtsClientProjection> htsClientResult = ancRepository
+                    .getHtsRecordByPersonsUuidAAndFacilityId(patientUuid, facilityId);
+            if (htsClientResult.isPresent() && isPositiveResult(htsClientResult.get().getHivTestResult())) {
+                return "POSITIVE";
             }
+        } catch (Exception e) {
+            // hts_client table may not exist - safe to ignore
         }
 
         // Check PMTCT Enrollment records for positive HIV status
-        List<PMTCTEnrollment> enrollments = pmtctEnrollmentRepository.findAll();
-        for (PMTCTEnrollment enrollment : enrollments) {
-            if (patientUuid.equals(enrollment.getPatientUuid()) &&
-                enrollment.getArchived() != null && enrollment.getArchived() == 0L &&
-                facilityId.equals(enrollment.getFacilityId())) {
-                String hivStatus = enrollment.getHivStatus();
-                if (isPositiveResult(hivStatus)) {
-                    return "POSITIVE";
-                }
+        PMTCTEnrollment enrollment = pmtctEnrollmentRepository.findByPatientUuidAndArchived(patientUuid, false);
+        if (enrollment != null && facilityId.equals(enrollment.getFacilityId())) {
+            String hivStatus = enrollment.getHivStatus();
+            if (isPositiveResult(hivStatus)) {
+                return "POSITIVE";
             }
         }
 
         // Check ANC records for positive HIV status
-        Optional<ANC> ancOptional = ancRepository.findLatestANCByPatientUuidAndArchived(patientUuid, 0L);
+        Optional<ANC> ancOptional = ancRepository.findLatestANCByPatientUuidAndArchived(patientUuid,false);
         if (ancOptional.isPresent()) {
             ANC anc = ancOptional.get();
             if (facilityId.equals(anc.getFacilityId())) {
@@ -356,6 +369,9 @@ public class PmtctPregnancyCycleService {
         }
 
         String normalizedResult = result.trim().toUpperCase();
+        if (normalizedResult.contains("NON-REACTIVE") || normalizedResult.contains("NON REACTIVE")) {
+            return false;
+        }
         return normalizedResult.contains("POSITIVE") ||
                normalizedResult.contains("REACTIVE") ||
                normalizedResult.equals("HIV_STATUS_POSITIVE");

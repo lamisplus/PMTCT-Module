@@ -15,5 +15,6 @@ public class ActivityTracker implements Serializable
     private boolean deletable;
     private boolean editable;
     private boolean viewable;
+    private String testingType;
 
 }

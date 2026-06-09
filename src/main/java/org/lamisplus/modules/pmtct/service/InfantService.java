@@ -60,7 +60,7 @@ public class InfantService {
         if (infantDto.getInfantHospitalNumber() != null && !infantDto.getInfantHospitalNumber().isEmpty()) {
             // Check pmtct_infant table
             Optional<Infant> existingInfant = infantRepository.getInfantByInfantHospitalNumber(infantDto.getInfantHospitalNumber());
-            if (existingInfant.isPresent() && (existingInfant.get().getArchived() == null || existingInfant.get().getArchived() == 0L)) {
+            if (existingInfant.isPresent() && (existingInfant.get().getArchived() == null || existingInfant.get().getArchived() == false)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Hospital number '" + infantDto.getInfantHospitalNumber() + "' already exists in infant records. Please use a unique hospital number.");
             }
@@ -120,7 +120,7 @@ public class InfantService {
         }
         infant.setPmtctCycleUuid(infantDto.getPmtctCycleUuid());
 
-        infant.setArchived(0L);
+        infant.setArchived(false);
         infant.setSource(infantDto.getSource());
 
         // Set JSONB data directly on the entity instead of satellite tables
@@ -296,10 +296,10 @@ public class InfantService {
          if (existingInfant.isPresent()) {
              infant.setCreatedBy(existingInfant.get().getCreatedBy());
              infant.setCreatedDate(existingInfant.get().getCreatedDate());
-             infant.setArchived(existingInfant.get().getArchived() != null ? existingInfant.get().getArchived() : 0L);
+             infant.setArchived(existingInfant.get().getArchived() != null ? existingInfant.get().getArchived() : false);
              infant.setInfantPatientUuid(existingInfant.get().getInfantPatientUuid());
          } else {
-             infant.setArchived(0L);
+             infant.setArchived(false);
          }
          infant.setLastModifiedBy(user.getUserName());
          infant.setLastModifiedDate(java.time.LocalDateTime.now());
@@ -375,7 +375,7 @@ public class InfantService {
     public CompletableFuture<Boolean> hospitalNumberExist(String hospitalNumber) {
         // Check pmtct_infant table
         Optional<Infant> infants = this.infantRepository.getInfantByInfantHospitalNumber(hospitalNumber);
-        if (infants.isPresent() && (infants.get().getArchived() == null || infants.get().getArchived() == 0L)) {
+        if (infants.isPresent() && (infants.get().getArchived() == null || infants.get().getArchived() == false)) {
             return CompletableFuture.completedFuture(true);
         }
         // Check patient_person table
@@ -396,7 +396,7 @@ public class InfantService {
         Infant exist = this.getSingleInfant(id);
 
         // Soft delete the Infant record — JSONB data (ARV, PCR) is embedded and archived with it
-        exist.setArchived(1L);
+        exist.setArchived(true);
         exist.setLastModifiedDate(java.time.LocalDateTime.now());
         exist.setLastModifiedBy(user.getUserName());
         this.infantRepository.save(exist);

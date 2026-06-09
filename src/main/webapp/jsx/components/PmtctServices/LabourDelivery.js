@@ -138,15 +138,12 @@ const LabourDelivery = (props) => {
   const [feedingDecision, setfeedingDecision] = useState([]);
   const [maternalOutCome, setmaternalOutCome] = useState([]);
   const [newGa, setNewGa] = useState("");
+  const [gaAutoCalculated, setGaAutoCalculated] = useState(false);
   const [saving, setSaving] = useState(false);
   const [disabledField, setSisabledField] = useState(false);
   const [errors, setErrors] = useState({});
   const [childStatus, setChildStatus] = useState([]);
-  const [bookingStatus, setBookingStatus] = useState([]);
-  const [romdelivery, setRomdelivery] = useState([]);
   const [disableDeliveryDate, setDisableDeliveryDate] = useState(false);
-  const [timehiv, setTimehiv] = useState([]);
-
   const [delivery, setDelivery] = useState({
     // Existing fields
     placeOfDelivery: "",
@@ -166,6 +163,7 @@ const LabourDelivery = (props) => {
     maternalOutcome: "",
     maternalOutcomeChild: "",
     modeOfDelivery: "",
+    modeOfDeliveryOther: "",
     onArt: "",
     referalSource: "",
     romDeliveryInterval: "",
@@ -176,6 +174,7 @@ const LabourDelivery = (props) => {
     labourDetails: {
       decisionSeekingCare: "",
       transportationIn: "",
+      transportationInOther: "",
       parity: "",
       partographUsed: "",
       whoTookDelivery: "",
@@ -197,6 +196,9 @@ const LabourDelivery = (props) => {
     },
     // NHMIS Baby Info (JSONB)
     babyInfo: {
+      aliveOutcomes: [],
+      deadOutcomes: [],
+      // Legacy flat fields kept for backward compat with old records
       babyAbortion: "",
       babyTimeOfDelivery: "",
       babyPreterm: "",
@@ -262,22 +264,57 @@ const LabourDelivery = (props) => {
         });
 
         // Set form state from the fetched record
-        setDelivery((prev) => ({
-          ...prev,
-          ...sanitized,
-          labourDetails: { ...prev.labourDetails, ...(data.labourDetails || {}) },
-          maternalInterventions: { ...prev.maternalInterventions, ...(data.maternalInterventions || {}) },
-          babyInfo: { ...prev.babyInfo, ...(data.babyInfo || {}) },
-          newbornCare: { ...prev.newbornCare, ...(data.newbornCare || {}) },
-          postpartumInfo: { ...prev.postpartumInfo, ...(data.postpartumInfo || {}) },
-          patientUuid: sanitized.patientUuid || prev.patientUuid,
-          pmtctCycleUuid: sanitized.pmtctCycleUuid || prev.pmtctCycleUuid,
-          source: sanitized.source || "WEB",
-        }));
+        setDelivery((prev) => {
+          const loadedBabyInfo = { ...prev.babyInfo, ...(data.babyInfo || {}) };
+
+          // Legacy migration: wrap old flat fields into single-element arrays
+          if (!loadedBabyInfo.aliveOutcomes || loadedBabyInfo.aliveOutcomes.length === 0) {
+            if (loadedBabyInfo.sexOfBaby || loadedBabyInfo.babyTimeOfDelivery || loadedBabyInfo.babyPreterm
+              || loadedBabyInfo.babyResuscitated || loadedBabyInfo.babyLiveBirthWeight || loadedBabyInfo.babyLiveBirthHivPositive) {
+              loadedBabyInfo.aliveOutcomes = [{
+                sexOfBaby: loadedBabyInfo.sexOfBaby || "",
+                babyTimeOfDelivery: loadedBabyInfo.babyTimeOfDelivery || "",
+                babyPreterm: loadedBabyInfo.babyPreterm || "",
+                babyNotBreathingAtBirth: loadedBabyInfo.babyNotBreathingAtBirth || "",
+                babyResuscitated: loadedBabyInfo.babyResuscitated || "",
+                babyLiveBirthWeight: loadedBabyInfo.babyLiveBirthWeight || "",
+                babyLiveBirthHivPositive: loadedBabyInfo.babyLiveBirthHivPositive || "",
+              }];
+            }
+          }
+          if (!loadedBabyInfo.deadOutcomes || loadedBabyInfo.deadOutcomes.length === 0) {
+            if (loadedBabyInfo.babyAbortion || loadedBabyInfo.babyStillBirthType || loadedBabyInfo.babyDeadWithin7Days) {
+              loadedBabyInfo.deadOutcomes = [{
+                babyAbortion: loadedBabyInfo.babyAbortion || "",
+                babyNotBreathingAtBirth: loadedBabyInfo.babyNotBreathingAtBirth || "",
+                babyStillBirthType: loadedBabyInfo.babyStillBirthType || "",
+                babyDeadWithin7Days: loadedBabyInfo.babyDeadWithin7Days || "",
+              }];
+            }
+          }
+
+          // Ensure arrays are always present
+          if (!loadedBabyInfo.aliveOutcomes) loadedBabyInfo.aliveOutcomes = [];
+          if (!loadedBabyInfo.deadOutcomes) loadedBabyInfo.deadOutcomes = [];
+
+          return {
+            ...prev,
+            ...sanitized,
+            labourDetails: { ...prev.labourDetails, ...(data.labourDetails || {}) },
+            maternalInterventions: { ...prev.maternalInterventions, ...(data.maternalInterventions || {}) },
+            babyInfo: loadedBabyInfo,
+            newbornCare: { ...prev.newbornCare, ...(data.newbornCare || {}) },
+            postpartumInfo: { ...prev.postpartumInfo, ...(data.postpartumInfo || {}) },
+            patientUuid: sanitized.patientUuid || prev.patientUuid,
+            pmtctCycleUuid: sanitized.pmtctCycleUuid || prev.pmtctCycleUuid,
+            source: sanitized.source || "WEB",
+          };
+        });
 
         // Set GA from the record directly; recalculate only if missing
         if (data.gaweeks) {
           setNewGa(data.gaweeks);
+          setGaAutoCalculated(true);
         } else if (data.dateOfDelivery) {
           // Only recalculate GA if not stored in the record (silent=true to avoid toast on load)
           getGestationalAge(data.dateOfDelivery, "dateOfDelivery", data.pmtctCycleUuid, true);
@@ -314,21 +351,15 @@ const LabourDelivery = (props) => {
   const GET_CODESETS = () => {
     GET_CODESETS_IN_BATCH(
       "MODE_DELIVERY",
-      "FEEDING DECISION",
+      "FEEDING_DECISION",
       "MATERNAL_OUTCOME",
       "CHILD_STATUS_DELIVERY",
-      "BOOKING STATUS",
-      "ROM_DELIVERY_INTERVAL",
-      "TIME_HIV_DIAGNOSIS_PMTCT",
       "PLACE_OF_DELIVERY"
     ).then((response) => {
       setDelieryMode(response.data.MODE_DELIVERY);
-      setfeedingDecision(response.data["FEEDING DECISION"]);
+      setfeedingDecision(response.data.FEEDING_DECISION);
       setmaternalOutCome(response.data.MATERNAL_OUTCOME);
       setChildStatus(response.data.CHILD_STATUS_DELIVERY);
-      setBookingStatus(response.data["BOOKING STATUS"]);
-      setRomdelivery(response.data.ROM_DELIVERY_INTERVAL);
-      setTimehiv(response.data.TIME_HIV_DIAGNOSIS_PMTCT);
       setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
     });
   };
@@ -347,9 +378,6 @@ const LabourDelivery = (props) => {
       { field: "modeOfDelivery", codesets: delieryMode },
       { field: "maternalOutcome", codesets: maternalOutCome },
       { field: "childStatus", codesets: childStatus },
-      { field: "bookingStatus", codesets: bookingStatus },
-      { field: "romDeliveryInterval", codesets: romdelivery },
-      { field: "deliveryTime", codesets: timehiv },
       { field: "placeOfDelivery", codesets: placeOfDelivery },
     ];
 
@@ -377,9 +405,6 @@ const LabourDelivery = (props) => {
     delieryMode,
     maternalOutCome,
     childStatus,
-    bookingStatus,
-    romdelivery,
-    timehiv,
     placeOfDelivery,
   ]);
 
@@ -410,31 +435,40 @@ const LabourDelivery = (props) => {
     if (response.data > 0) {
       setDelivery((prev) => ({ ...prev, gaweeks: response.data, dateOfDelivery: value }));
       setNewGa(response.data);
+      setGaAutoCalculated(true);
     } else {
       setDelivery((prev) => ({ ...prev, dateOfDelivery: value }));
-      if (!silent) {
-        toast.error("Please select a valid date");
-      }
+      setGaAutoCalculated(false);
     }
+  };
+
+  const isOtherModeOfDelivery = (value) => {
+    if (!value) return false;
+    if (value === "MODE_DELIVERY_OTHERS" || value === "MODE_DELIVERY_OTHER") return true;
+    const match = delieryMode.find((m) => m.code === value);
+    return match && match.display && match.display.toLowerCase().includes("other");
   };
 
   const handleInputChangeDeliveryDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
     if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
+      const today = moment(new Date()).format("YYYY-MM-DD");
+      if (e.target.value > today) {
+        toast.error("Date of Delivery cannot be a future date");
+        return;
+      }
+      const lmpDate = props.patientObj.lmp || "";
+      if (lmpDate && e.target.value < lmpDate) {
+        toast.error("Date of Delivery cannot be earlier than the Date of LMP");
+        return;
+      }
+      const enrollmentDate = props.patientObj.dateOfEnrollment || "";
+      if (enrollmentDate && e.target.value < enrollmentDate) {
+        toast.error("Date of Delivery cannot be earlier than the Date of ANC Registration");
+        return;
+      }
       getGestationalAge(e.target.value, e.target.name);
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
-    } else if (e.target.name === "childStatus") {
-      setDelivery({
-        ...delivery,
-        [e.target.name]: e.target.value,
-        numberOfInfantsAlive: "",
-        numberOfInfantsDead: "",
-      });
-      setErrors({
-        ...errors,
-        numberOfInfantsDead: "",
-        numberOfInfantsAlive: "",
-      });
     } else if (e.target.name === "gaweeks") {
       const val = e.target.value;
       if (val !== "" && (parseInt(val) < 0 || parseInt(val) > 45)) return;
@@ -447,35 +481,47 @@ const LabourDelivery = (props) => {
       const val = e.target.value;
       if (val !== "" && (parseInt(val) < 0 || parseInt(val) > 10)) return;
       const newDelivery = { ...delivery, [e.target.name]: val };
-      if (
-        newDelivery.childStatus &&
-        newDelivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
-        newDelivery.numberOfInfantsAlive !== "" &&
-        newDelivery.numberOfInfantsDead !== ""
-      ) {
-        const aliveCount = parseInt(newDelivery.numberOfInfantsAlive);
-        const deadCount = parseInt(newDelivery.numberOfInfantsDead);
-        if (aliveCount <= deadCount) {
-          setErrors({
-            ...errors,
-            numberOfInfantsAlive:
-              "Number of Child Alive must be greater than Number of Child Dead",
-          });
-        } else {
-          setErrors({ ...errors, numberOfInfantsAlive: "" });
-        }
+      setErrors({ ...errors, numberOfInfantsAlive: "" });
+
+      // Resize outcome arrays based on count
+      const updatedBabyInfo = { ...newDelivery.babyInfo };
+      if (e.target.name === "numberOfInfantsAlive") {
+        const count = parseInt(val) || 0;
+        const current = updatedBabyInfo.aliveOutcomes || [];
+        updatedBabyInfo.aliveOutcomes = Array.from({ length: count }, (_, i) =>
+          current[i] || {
+            sexOfBaby: "", babyTimeOfDelivery: "", babyPreterm: "",
+            babyNotBreathingAtBirth: "", babyResuscitated: "",
+            babyLiveBirthWeight: "", babyLiveBirthHivPositive: "",
+          }
+        );
       }
+      if (e.target.name === "numberOfInfantsDead") {
+        const count = parseInt(val) || 0;
+        const current = updatedBabyInfo.deadOutcomes || [];
+        updatedBabyInfo.deadOutcomes = Array.from({ length: count }, (_, i) =>
+          current[i] || {
+            babyAbortion: "", babyNotBreathingAtBirth: "",
+            babyStillBirthType: "", babyDeadWithin7Days: "",
+          }
+        );
+      }
+      newDelivery.babyInfo = updatedBabyInfo;
+
       setDelivery(newDelivery);
+    } else if (e.target.name === "modeOfDelivery" && !isOtherModeOfDelivery(e.target.value)) {
+      setDelivery({ ...delivery, [e.target.name]: e.target.value, modeOfDeliveryOther: "" });
     } else {
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     }
   };
 
   const handleLabourDetailsChange = (e) => {
-    setDelivery({
-      ...delivery,
-      labourDetails: { ...delivery.labourDetails, [e.target.name]: e.target.value },
-    });
+    const updated = { ...delivery.labourDetails, [e.target.name]: e.target.value };
+    if (e.target.name === "transportationIn" && e.target.value !== "Others") {
+      updated.transportationInOther = "";
+    }
+    setDelivery({ ...delivery, labourDetails: updated });
   };
 
   const handleMaternalInterventionsChange = (e) => {
@@ -506,6 +552,24 @@ const LabourDelivery = (props) => {
     });
   };
 
+  const handleAliveOutcomeChange = (index, e) => {
+    const updated = [...(delivery.babyInfo.aliveOutcomes || [])];
+    updated[index] = { ...updated[index], [e.target.name]: e.target.value };
+    setDelivery({
+      ...delivery,
+      babyInfo: { ...delivery.babyInfo, aliveOutcomes: updated },
+    });
+  };
+
+  const handleDeadOutcomeChange = (index, e) => {
+    const updated = [...(delivery.babyInfo.deadOutcomes || [])];
+    updated[index] = { ...updated[index], [e.target.name]: e.target.value };
+    setDelivery({
+      ...delivery,
+      babyInfo: { ...delivery.babyInfo, deadOutcomes: updated },
+    });
+  };
+
   const validate = () => {
     let temp = { ...errors };
     // artStartedLdWard validation removed — field hidden per feedback F6
@@ -530,38 +594,24 @@ const LabourDelivery = (props) => {
     temp.dateOfDelivery = delivery.dateOfDelivery
       ? ""
       : "This field is required";
-    temp.childStatus = delivery.childStatus ? "" : "This field is required";
+    // childStatus validation removed — field hidden
     // childGivenArvWithin72 validation removed — field hidden per feedback F6
-    // bookingStatus validation removed — field hidden per feedback F1
-    if (delivery.childStatus !== "" && delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH") {
-      if (!delivery.numberOfInfantsAlive && delivery.numberOfInfantsAlive !== 0) {
-        temp.numberOfInfantsAlive = "This field is required";
-      } else if (parseInt(delivery.numberOfInfantsAlive) < 0 || parseInt(delivery.numberOfInfantsAlive) > 10) {
-        temp.numberOfInfantsAlive = "Value must be between 0 and 10";
-      } else {
-        temp.numberOfInfantsAlive = "";
-      }
-      if (delivery.numberOfInfantsDead === "") {
-        temp.numberOfInfantsDead = "This field is required";
-      } else if (parseInt(delivery.numberOfInfantsDead) < 0 || parseInt(delivery.numberOfInfantsDead) > 10) {
-        temp.numberOfInfantsDead = "Value must be between 0 and 10";
-      } else {
-        temp.numberOfInfantsDead = "";
-      }
+    temp.bookingStatus = delivery.bookingStatus
+      ? ""
+      : "This field is required";
+    if (!delivery.numberOfInfantsAlive && delivery.numberOfInfantsAlive !== 0) {
+      temp.numberOfInfantsAlive = "This field is required";
+    } else if (parseInt(delivery.numberOfInfantsAlive) < 0 || parseInt(delivery.numberOfInfantsAlive) > 10) {
+      temp.numberOfInfantsAlive = "Value must be between 0 and 10";
+    } else {
+      temp.numberOfInfantsAlive = "";
     }
-
-    if (
-      delivery.childStatus &&
-      delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
-      delivery.numberOfInfantsAlive !== "" &&
-      delivery.numberOfInfantsDead !== ""
-    ) {
-      const aliveCount = parseInt(delivery.numberOfInfantsAlive);
-      const deadCount = parseInt(delivery.numberOfInfantsDead);
-      if (aliveCount <= deadCount) {
-        temp.numberOfInfantsAlive =
-          "Number of Child Alive must be greater than Number of Child Dead";
-      }
+    if (delivery.numberOfInfantsDead === "") {
+      temp.numberOfInfantsDead = "This field is required";
+    } else if (parseInt(delivery.numberOfInfantsDead) < 0 || parseInt(delivery.numberOfInfantsDead) > 10) {
+      temp.numberOfInfantsDead = "Value must be between 0 and 10";
+    } else {
+      temp.numberOfInfantsDead = "";
     }
 
     setErrors({ ...temp });
@@ -626,11 +676,7 @@ const LabourDelivery = (props) => {
         }
       }
 
-      const isChildAlive =
-        delivery.childStatus &&
-        delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH" &&
-        parseInt(delivery.numberOfInfantsAlive) >
-          parseInt(delivery.numberOfInfantsDead);
+      const isChildAlive = parseInt(delivery.numberOfInfantsAlive) >= 1;
 
       const defaultRoute = isChildAlive ? "infants" : "recent-history";
 
@@ -745,7 +791,30 @@ const LabourDelivery = (props) => {
                     <PersonIcon style={sectionIconStyle} />Patient & Booking Information
                   </h6>
                   <div className="row">
-                    {/* Booking Status hidden per feedback F1 */}
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>Type of Client <span style={{ color: "red" }}> *</span></Label>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="bookingStatus"
+                            id="bookingStatus"
+                            onChange={handleInputChangeDeliveryDto}
+                            value={delivery.bookingStatus}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select</option>
+                            <option value="Booked">Booked</option>
+                            <option value="Unbooked">Unbooked</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.bookingStatus !== "" ? (
+                          <span className={classes.error}>{errors.bookingStatus}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Decision in Seeking Care</Label>
@@ -784,6 +853,24 @@ const LabourDelivery = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
+                    {delivery.labourDetails.transportationIn === "Others" && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Specify</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="transportationInOther"
+                              id="transportationInOther"
+                              onChange={handleLabourDetailsChange}
+                              value={delivery.labourDetails.transportationInOther}
+                              disabled={disabledField}
+                              placeholder="Specify transportation"
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Parity</Label>
@@ -824,7 +911,12 @@ const LabourDelivery = (props) => {
                             id="dateOfDelivery"
                             onChange={handleInputChangeDeliveryDto}
                             value={delivery.dateOfDelivery}
-                            min={props.patientObj.dateOfEnrollment}
+                            min={(() => {
+                              const enrollment = props.patientObj.dateOfEnrollment || "";
+                              const lmp = props.patientObj.lmp || "";
+                              if (enrollment && lmp) return enrollment > lmp ? enrollment : lmp;
+                              return enrollment || lmp;
+                            })()}
                             max={moment(new Date()).format("YYYY-MM-DD")}
                             disabled={disableDeliveryDate ? disableDeliveryDate : disabledField}
                           />
@@ -848,7 +940,12 @@ const LabourDelivery = (props) => {
                             id="gaweeks"
                             onChange={handleInputChangeDeliveryDto}
                             value={newGa}
-                            disabled
+                            disabled={
+                              disabledField ||
+                              !(
+                                (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D"
+                              )
+                            }
                             min="0"
                             max="45"
                           />
@@ -891,6 +988,24 @@ const LabourDelivery = (props) => {
                         )}
                       </FormGroup>
                     </div>
+                    {delivery.modeOfDelivery && isOtherModeOfDelivery(delivery.modeOfDelivery) && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>Specify</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="modeOfDeliveryOther"
+                              id="modeOfDeliveryOther"
+                              onChange={handleInputChangeDeliveryDto}
+                              value={delivery.modeOfDeliveryOther}
+                              disabled={disabledField}
+                              placeholder="Specify mode of delivery"
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
                     {/* Episiotomy hidden per feedback F4 */}
                     {/* Vaginal Tear hidden per feedback F5 */}
                     <div className="form-group mb-3 col-md-4">
@@ -920,7 +1035,7 @@ const LabourDelivery = (props) => {
               <div className="col-md-12 mb-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
-                    <HealingIcon style={sectionIconStyle} />Active Management of 3rd Stage & Complications
+                    <HealingIcon style={sectionIconStyle} />Active Management of 3rd Stage of Labour & Complication
                   </h6>
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
@@ -991,7 +1106,7 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Eclampsia - Received MgSO4?</Label>
+                        <Label>Admitted with Eclampsia - Received MgSO4?</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1189,30 +1304,26 @@ const LabourDelivery = (props) => {
                     <ChildCareIcon style={sectionIconStyle} />Baby Outcome
                   </h6>
                   <div className="row">
+                    {/* Child Status — hidden, no longer needed */}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Child Status <span style={{ color: "red" }}> *</span>
+                          Number of Child Alive <span style={{ color: "red" }}> *</span>
                         </Label>
                         <InputGroup>
                           <Input
-                            type="select"
-                            name="childStatus"
-                            id="childStatus"
+                            type="number"
+                            name="numberOfInfantsAlive"
+                            id="numberOfInfantsAlive"
                             onChange={handleInputChangeDeliveryDto}
-                            value={delivery.childStatus}
+                            value={delivery.numberOfInfantsAlive}
                             disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            {childStatus.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
-                          </Input>
+                            min="0"
+                            max="10"
+                          />
                         </InputGroup>
-                        {errors.childStatus !== "" ? (
-                          <span className={classes.error}>{errors.childStatus}</span>
+                        {errors.numberOfInfantsAlive !== "" ? (
+                          <span className={classes.error}>{errors.numberOfInfantsAlive}</span>
                         ) : (
                           ""
                         )}
@@ -1220,252 +1331,251 @@ const LabourDelivery = (props) => {
                     </div>
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Abortion Type</Label>
+                        <Label>
+                          Number of Child Dead <span style={{ color: "red" }}> *</span>
+                        </Label>
                         <InputGroup>
                           <Input
-                            type="select"
-                            name="babyAbortion"
-                            id="babyAbortion"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyAbortion}
+                            type="number"
+                            name="numberOfInfantsDead"
+                            id="numberOfInfantsDead"
+                            onChange={handleInputChangeDeliveryDto}
+                            value={delivery.numberOfInfantsDead}
                             disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="IA">IA (Induced Abortion)</option>
-                            <option value="SA">SA (Spontaneous Abortion)</option>
-                            <option value="N/A">N/A</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Time of Delivery</Label>
-                        <InputGroup>
-                          <Input
-                            type="time"
-                            name="babyTimeOfDelivery"
-                            id="babyTimeOfDelivery"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyTimeOfDelivery}
-                            disabled={disabledField}
+                            min="0"
+                            max="10"
                           />
                         </InputGroup>
+                        {errors.numberOfInfantsDead !== "" ? (
+                          <span className={classes.error}>{errors.numberOfInfantsDead}</span>
+                        ) : (
+                          ""
+                        )}
                       </FormGroup>
                     </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Pre-term?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyPreterm"
-                            id="babyPreterm"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyPreterm}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Not Breathing / Not Crying at Birth?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyNotBreathingAtBirth"
-                            id="babyNotBreathingAtBirth"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyNotBreathingAtBirth}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Resuscitated with Ambu Bag & Mask?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyResuscitated"
-                            id="babyResuscitated"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyResuscitated}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                            <option value="N/A">N/A</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Live Birth Weight</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyLiveBirthWeight"
-                            id="babyLiveBirthWeight"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyLiveBirthWeight}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Less than 2.5kg">&lt; 2.5 kg</option>
-                            <option value="2.5kg or more">&ge; 2.5 kg</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Still Birth Type</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyStillBirthType"
-                            id="babyStillBirthType"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyStillBirthType}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="FSB">FSB (Fresh Still Birth)</option>
-                            <option value="MSB">MSB (Macerated Still Birth)</option>
-                            <option value="N/A">N/A</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Baby Dead Within 7 Days?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyDeadWithin7Days"
-                            id="babyDeadWithin7Days"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyDeadWithin7Days}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Live Birth by HIV Positive Woman?</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="babyLiveBirthHivPositive"
-                            id="babyLiveBirthHivPositive"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.babyLiveBirthHivPositive}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    <div className="form-group mb-3 col-md-4">
-                      <FormGroup>
-                        <Label>Sex of Baby</Label>
-                        <InputGroup>
-                          <Input
-                            type="select"
-                            name="sexOfBaby"
-                            id="sexOfBaby"
-                            onChange={handleBabyInfoChange}
-                            value={delivery.babyInfo.sexOfBaby}
-                            disabled={disabledField}
-                          >
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                          </Input>
-                        </InputGroup>
-                      </FormGroup>
-                    </div>
-                    {(delivery.childStatus
-                      ? delivery.childStatus !== "CHILD_STATUS_DELIVERY_STILL_BIRTH"
-                      : props?.activeContent?.actionType !== "create") && (
-                      <>
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>
-                              Number of Child Alive <span style={{ color: "red" }}> *</span>
-                            </Label>
-                            <InputGroup>
-                              <Input
-                                type="number"
-                                name="numberOfInfantsAlive"
-                                id="numberOfInfantsAlive"
-                                onChange={handleInputChangeDeliveryDto}
-                                value={delivery.numberOfInfantsAlive}
-                                disabled={disabledField}
-                                min="0"
-                                max="10"
-                              />
-                            </InputGroup>
-                            {errors.numberOfInfantsAlive !== "" ? (
-                              <span className={classes.error}>{errors.numberOfInfantsAlive}</span>
-                            ) : (
-                              ""
-                            )}
-                          </FormGroup>
-                        </div>
-                        <div className="form-group mb-3 col-md-4">
-                          <FormGroup>
-                            <Label>
-                              Number of Child Dead <span style={{ color: "red" }}> *</span>
-                            </Label>
-                            <InputGroup>
-                              <Input
-                                type="number"
-                                name="numberOfInfantsDead"
-                                id="numberOfInfantsDead"
-                                onChange={handleInputChangeDeliveryDto}
-                                value={delivery.numberOfInfantsDead}
-                                disabled={disabledField}
-                                min="0"
-                                max="10"
-                              />
-                            </InputGroup>
-                            {errors.numberOfInfantsDead !== "" ? (
-                              <span className={classes.error}>{errors.numberOfInfantsDead}</span>
-                            ) : (
-                              ""
-                            )}
-                          </FormGroup>
-                        </div>
-                      </>
-                    )}
                   </div>
+
+                  {/* Alive child outcome cards */}
+                  {parseInt(delivery.numberOfInfantsAlive) >= 1 &&
+                    (delivery.babyInfo.aliveOutcomes || []).map((outcome, i) => (
+                      <div key={`alive-${i}`} style={{
+                        border: "1px solid #b2dfdb",
+                        borderRadius: "0.35rem",
+                        padding: "12px 10px",
+                        marginBottom: "12px",
+                        backgroundColor: "#e0f2f1",
+                      }}>
+                        <h6 style={{ ...sectionHeaderStyle, color: "#00695c", marginBottom: "10px" }}>
+                          <ChildCareIcon style={{ ...sectionIconStyle, color: "#00695c" }} />
+                          Alive Child #{i + 1}
+                        </h6>
+                        <div className="row">
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Sex of Baby</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="sexOfBaby"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.sexOfBaby || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Time of Delivery</Label>
+                              <InputGroup>
+                                <Input
+                                  type="time"
+                                  name="babyTimeOfDelivery"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.babyTimeOfDelivery || ""}
+                                  disabled={disabledField}
+                                />
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Pre-term?</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyPreterm"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.babyPreterm || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          {/* Not Breathing / Not Crying at Birth — hidden for alive child */}
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Resuscitated with Ambu Bag & Mask?</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyResuscitated"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.babyResuscitated || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                  <option value="N/A">N/A</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Live Birth Weight</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyLiveBirthWeight"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.babyLiveBirthWeight || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Less than 2.5kg">&lt; 2.5 kg</option>
+                                  <option value="2.5kg or more">&ge; 2.5 kg</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Live Birth by HIV Positive Woman?</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyLiveBirthHivPositive"
+                                  onChange={(e) => handleAliveOutcomeChange(i, e)}
+                                  value={outcome.babyLiveBirthHivPositive || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                  {/* Dead child outcome cards */}
+                  {parseInt(delivery.numberOfInfantsDead) >= 1 &&
+                    (delivery.babyInfo.deadOutcomes || []).map((outcome, i) => (
+                      <div key={`dead-${i}`} style={{
+                        border: "1px solid #ffcdd2",
+                        borderRadius: "0.35rem",
+                        padding: "12px 10px",
+                        marginBottom: "12px",
+                        backgroundColor: "#ffebee",
+                      }}>
+                        <h6 style={{ ...sectionHeaderStyle, color: "#c62828", marginBottom: "10px" }}>
+                          <ChildCareIcon style={{ ...sectionIconStyle, color: "#c62828" }} />
+                          Dead Child #{i + 1}
+                        </h6>
+                        <div className="row">
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Abortion Type</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyAbortion"
+                                  onChange={(e) => handleDeadOutcomeChange(i, e)}
+                                  value={outcome.babyAbortion || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="IA">IA (Induced Abortion)</option>
+                                  <option value="SA">SA (Spontaneous Abortion)</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Not Breathing / Not Crying at Birth?</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyNotBreathingAtBirth"
+                                  onChange={(e) => handleDeadOutcomeChange(i, e)}
+                                  value={outcome.babyNotBreathingAtBirth || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Still Birth Type</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyStillBirthType"
+                                  onChange={(e) => handleDeadOutcomeChange(i, e)}
+                                  value={outcome.babyStillBirthType || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="FSB">FSB (Fresh Still Birth)</option>
+                                  <option value="MSB">MSB (Macerated Still Birth)</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Dead Within 7 Days?</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="babyDeadWithin7Days"
+                                  onChange={(e) => handleDeadOutcomeChange(i, e)}
+                                  value={outcome.babyDeadWithin7Days || ""}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
 
-              {/* === Delivery Attendant === */}
+              {/* === Delivery Attendant === (shown only when alive > 0 and alive > dead) */}
+              {parseInt(delivery.numberOfInfantsAlive) >= 1 &&
+               parseInt(delivery.numberOfInfantsAlive) > (parseInt(delivery.numberOfInfantsDead) || 0) && (
               <div className="col-md-12 mb-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
@@ -1528,8 +1638,11 @@ const LabourDelivery = (props) => {
                   </div>
                 </div>
               </div>
+              )}
 
-              {/* === Immediate Newborn Care === */}
+              {/* === Immediate Newborn Care === (shown only when alive > 0 and alive > dead) */}
+              {parseInt(delivery.numberOfInfantsAlive) >= 1 &&
+               parseInt(delivery.numberOfInfantsAlive) > (parseInt(delivery.numberOfInfantsDead) || 0) && (
               <div className="col-md-12 mb-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
@@ -1609,6 +1722,7 @@ const LabourDelivery = (props) => {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* === Postpartum Counselling & Family Planning === */}
               <div className="col-md-12 mb-3">

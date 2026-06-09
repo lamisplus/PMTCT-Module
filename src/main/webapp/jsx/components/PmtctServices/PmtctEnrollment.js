@@ -27,7 +27,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import { Message } from "semantic-ui-react";
-import { calculateGestationalAge } from "../../utils";
+import { calculateGestationalAge, addWeeksToDate } from "../../utils";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
@@ -168,7 +168,6 @@ const AncPnc = (props) => {
   const [enroll, setEnrollDto] = useState({
     hepatitisB: patientObj.hepatitisB || patientObj.hbvDetails?.testResult || "",
     urinalysis: patientObj.urinalysis || "",
-    ancNo: patientObj.ancNo || "",
     pmtctEnrollmentDate: "",
     dateOfDelivery: "",
     expectedDeliveryDate: "",
@@ -183,7 +182,7 @@ const AncPnc = (props) => {
     timeOfHivDiagnosis: "",
     tbStatus: "",
     hivStatus: getInitialHivStatus(),
-    lmp: props?.patientObj?.lmp || "",
+    lmp: "",
     gaweeks: "",
     pmtctType: entryValueDisplay.display,
     // Syphilis details (MIP Card 9a-9c) - stored as JSONB
@@ -202,7 +201,6 @@ const AncPnc = (props) => {
     },
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
-    ancNumber: props.patientObj.ancNo,
     motherArtInitiationTime: "",
     motherArtRegimen: "",
     regimenTypeId: props?.patientObj?.regimenTypeId
@@ -261,27 +259,16 @@ const AncPnc = (props) => {
       });
   };
 
-  const getPatientEntryType = (id) => {
-    if (locationState.entrypointValue) {
-      allNewEntryPoint.map((each, i) => {
-        if (each.code === locationState.entrypointValue) {
-          setEntryValueDisplay(each);
-        }
-      });
-    } else if (props.entrypointValue) {
-      props.allEntryPoint.map((each, i) => {
-        if (each.code === props.entrypointValue) {
-          setEntryValueDisplay(each);
-        }
-      });
-    } else if (enroll.entryPoint) {
-      // Fallback for view/update: match entry point from loaded enrollment data
-      const entryCode = mapEntryPointToCode(enroll.entryPoint);
-      allNewEntryPoint.forEach((each) => {
-        if (each.code === entryCode) {
-          setEntryValueDisplay(each);
-        }
-      });
+  const getPatientEntryType = () => {
+    const rawCode = locationState?.entrypointValue
+      || props.entrypointValue
+      || enroll.entryPoint;
+    if (!rawCode) return;
+
+    const normalizedCode = mapEntryPointToCode(rawCode);
+    const matched = allNewEntryPoint.find((each) => each.code === normalizedCode);
+    if (matched) {
+      setEntryValueDisplay(matched);
     }
   };
 
@@ -290,7 +277,7 @@ const AncPnc = (props) => {
       let payload2 = {
         patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
         maternalOutcome: "",
-        entryPoint: locationState.entrypointValue,
+        entryPoint: (locationState && locationState.entrypointValue) || props.entrypointValue,
         hivStatus: patientObj?.dynamicHivStatus,
         pregnancyOutcome: "",
         numberOfInfants: 0,
@@ -516,6 +503,12 @@ const AncPnc = (props) => {
       if (response.data && response.data.parity != null) {
         setParityFromAnc(response.data.parity);
       }
+      // Auto-populate LMP from ANC record only for ANC entry and when LMP is empty
+      const entryPoint = locationState?.entrypointValue || props.entrypointValue || enroll.entryPoint;
+      const isAncEntry = entryPoint === "PMTCT_ENTRY_POINT_ANC";
+      if (isAncEntry && response.data && response.data.lmp) {
+        setEnrollDto((prev) => prev.lmp ? prev : { ...prev, lmp: response.data.lmp });
+      }
     } catch (error) {
       // No ANC record — parity validation skipped
     }
@@ -538,6 +531,57 @@ const AncPnc = (props) => {
     }
   };
 
+  // Auto-populate Previously Known HIV+ and Unique ID from HTS/ART tables
+  const checkHistoricalHivAndArt = async (patientUuid) => {
+    try {
+      const personUuid =
+        patientObj?.person_Uuud ||
+        patientObj?.personUuud ||
+        patientObj?.patient_uuid ||
+        patientObj?.uuid;
+
+      if (!patientUuid) return;
+
+      const [htsRes, artRes] = await Promise.all([
+        axios.get(
+          `${baseUrl}pmtct/anc/hiv-status-detail?patientUuid=${patientUuid}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch(() => ({ data: { result: "", dateVisit: null } })),
+        axios.get(
+          `${baseUrl}pmtct/anc/art/?PatientUuid=${personUuid}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch(() => ({ data: [] })),
+      ]);
+
+      const htsData = htsRes?.data || {};
+      const htsResult = typeof htsData.result === "string" ? htsData.result : "";
+      const artData =
+        Array.isArray(artRes?.data) && artRes.data.length > 0
+          ? artRes.data[0]
+          : null;
+
+      const isPositive =
+        htsResult &&
+        (htsResult.toUpperCase().includes("POSITIVE") ||
+          htsResult.toUpperCase().includes("REACTIVE"));
+      const isOnArt = artData && artData.artStartDate != null;
+
+      if (isPositive || isOnArt) {
+        setEnrollDto((prev) => ({
+          ...prev,
+          hivStatus: prev.hivStatus || "Positive",
+        }));
+      }
+
+      // Auto-populate ART unique number from ART table if available
+      if (artData && artData.uniqueArtNumber) {
+        setArtUniqueNumber((prev) => prev || artData.uniqueArtNumber);
+      }
+    } catch (e) {
+      // Best-effort auto-population — silently fail
+    }
+  };
+
   useEffect(() => {
     GET_CODESETS();
     checkTimingOfART(0);
@@ -555,8 +599,12 @@ const AncPnc = (props) => {
       locationState?.patientObj?.patient_uuid;
     if (patientUuid) {
       checkPMTCTValidationDates(patientUuid);
-      getHistoricalHivStatus(patientUuid);
       getArtUniqueNumber();
+      // Auto-populate HIV status and unique ID only on create mode
+      if (!props.activeContent?.id || props.activeContent?.actionType === "create") {
+        getHistoricalHivStatus(patientUuid);
+        checkHistoricalHivAndArt(patientUuid);
+      }
     }
     console.log("PmtctEnrollment useEffect => activeContent:", JSON.stringify(props.activeContent));
     const pmtctRecordId = props.activeContent?.id;
@@ -587,7 +635,7 @@ const AncPnc = (props) => {
       });
     }
 
-    if (props.showLastHivTestMessage) {
+    if (props.showLastHivTestMessage && (!props.activeContent?.id || props.activeContent?.actionType === "create")) {
       toast.info("Last HIV test was Positive", {
         position: toast.POSITION.BOTTOM_CENTER,
       });
@@ -681,7 +729,6 @@ const AncPnc = (props) => {
     return (
       disableHIVStatus ||
       props.lastestConfirmatoryTest ||
-      patientObj?.ancNo ||
       props?.patientObj?.dynamicHivStatus
     );
   };
@@ -796,14 +843,14 @@ const AncPnc = (props) => {
     let GA = parseInt(ga);
 
     if (
-      locationState.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM" ||
+      (locationState && locationState.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM") ||
       props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"
     ) {
       enroll.artStartTime =
         "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)";
       updateMaxARTDate("pp");
     } else if (
-      locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D" ||
+      (locationState && locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D") ||
       props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"
     ) {
       enroll.artStartTime =
@@ -846,7 +893,7 @@ const AncPnc = (props) => {
   const getARTStartDate = (id) => {
     axios
       .get(
-        `${baseUrl}pmtct/anc/art/?PersonUuid=${
+        `${baseUrl}pmtct/anc/art/?PatientUuid=${
           props?.patientObj.person_Uuud
             ? props?.patientObj.person_Uuud
             : props?.patientObj?.personUuud
@@ -912,6 +959,13 @@ const AncPnc = (props) => {
     });
   };
 
+  const isOtherModeOfDelivery = (value) => {
+    if (!value) return false;
+    if (value === "MODE_DELIVERY_OTHERS" || value === "MODE_DELIVERY_OTHER") return true;
+    const match = deliveryModeList.find((m) => m.code === value);
+    return match && match.display && match.display.toLowerCase().includes("other");
+  };
+
   const handleInputChangeEnrollmentDto = (e) => {
     setErrors({ ...errors, [e.target.name]: "" });
 
@@ -925,7 +979,7 @@ const AncPnc = (props) => {
       }));
     }
     // Clear modeOfDeliveryOther when modeOfDelivery changes away from Others
-    if (e.target.name === "modeOfDelivery" && e.target.value !== "MODE_DELIVERY_OTHERS") {
+    if (e.target.name === "modeOfDelivery" && !isOtherModeOfDelivery(e.target.value)) {
       setEnrollDto({ ...enroll, [e.target.name]: e.target.value, modeOfDeliveryOther: "" });
     }
     // artStartTime
@@ -963,7 +1017,15 @@ const AncPnc = (props) => {
         e.target.value
       );
 
-      if (response > 0) {
+      if (response > 45) {
+        toast.error("Gestational age exceeds 45 weeks. Please select a valid date or update the enrollment date.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: "", dateOfDelivery: "" });
+        return;
+      } else if (response > 0 && response < 4) {
+        toast.error("Gestational age must be at least 4 weeks.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: "", dateOfDelivery: "" });
+        return;
+      } else if (response > 0) {
         enroll.gaweeks = response;
         let EDD = calculateExpectedDate(e.target.value);
         setEnrollDto({
@@ -973,27 +1035,28 @@ const AncPnc = (props) => {
           expectedDeliveryDate: EDD,
         });
       } else {
-        // enroll.gaweeks = response;
         toast.error("Please select a valid date");
-        setEnrollDto({ ...enroll, [e.target.name]: "", dateOfDelivery: "" });
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: "", dateOfDelivery: "" });
       }
-
-      // }
-      // getGa();
     } else if (
       e.target.name === "pmtctEnrollmentDate" &&
       e.target.value !== "" &&
       enroll.lmp !== ""
     ) {
       let response = calculateGestationalAge(e.target.value, enroll.lmp);
-      if (response > 0) {
+      if (response > 45) {
+        toast.error("Gestational age exceeds 45 weeks. Please select a valid date or update the LMP.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: "" });
+        return;
+      } else if (response > 0 && response < 4) {
+        toast.error("Gestational age must be at least 4 weeks.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: "" });
+        return;
+      } else if (response > 0) {
         checkTimingOfART(response);
-
         enroll.gaweeks = response;
       } else {
-        // enroll.gaweeks = response;
         toast.error("Please select a valid date");
-        // setEnrollDto({ ...enroll, [e.target.name]: e.target.value  });
       }
       let EDD = calculateExpectedDate(enroll.lmp);
       setEnrollDto({
@@ -1243,28 +1306,7 @@ const AncPnc = (props) => {
                     <EventNoteIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Enrollment Details
                   </h6>
                   <div className="row">
-                    {patientObj.ancNo && (
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>ANC ID</Label>
-                          <InputGroup>
-                            <Input
-                              type="text"
-                              name="ancNo"
-                              id="ancNo"
-                              onChange={handleInputChangeEnrollmentDto}
-                              value={patientObj.ancNo}
-                              disabled
-                            />
-                          </InputGroup>
-                          {errors.ancNo !== "" ? (
-                            <span className={classes.error}>{errors.ancNo}</span>
-                          ) : (
-                            ""
-                          )}
-                        </FormGroup>
-                      </div>
-                    )}
+                    {/* ANC ID field removed from enrollment form */}
                     {artUniqueNumber && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -1294,16 +1336,34 @@ const AncPnc = (props) => {
                             id="pmtctEnrollmentDate"
                             onChange={handleInputChangeEnrollmentDto}
                             value={enroll.pmtctEnrollmentDate}
-                            min={
-                              minPmtctEnrollmentDate
+                            min={(() => {
+                              const adminMin = minPmtctEnrollmentDate
                                 ? minPmtctEnrollmentDate
-                                : patientObj.ancNo
-                                  ? props.patientObj.dateOfEnrollment
-                                  : props?.newRegDate
-                                    ? props?.newRegDate
-                                    : ""
-                            }
-                            max={moment(new Date()).format("YYYY-MM-DD")}
+                                : props.patientObj.dateOfEnrollment || props?.newRegDate || "";
+                              // LMP-based bounds: enrollment date must produce GA between 4 and 45 weeks
+                              if (enroll.lmp) {
+                                const lmpBasedMin = addWeeksToDate(enroll.lmp, 4);
+                                const lmpBasedMax = addWeeksToDate(enroll.lmp, 45);
+                                // If adminMin exceeds lmpBasedMax, it came from invalid upstream data — discard it
+                                if (adminMin && adminMin > lmpBasedMax) {
+                                  return lmpBasedMin;
+                                }
+                                // Use the later of adminMin and lmpBasedMin
+                                if (adminMin && adminMin > lmpBasedMin) {
+                                  return adminMin;
+                                }
+                                return lmpBasedMin;
+                              }
+                              return adminMin || "";
+                            })()}
+                            max={(() => {
+                              const today = moment(new Date()).format("YYYY-MM-DD");
+                              if (enroll.lmp) {
+                                const lmpBasedMax = addWeeksToDate(enroll.lmp, 45);
+                                return lmpBasedMax < today ? lmpBasedMax : today;
+                              }
+                              return today;
+                            })()}
                             disabled={disabledField}
                           />
                         </InputGroup>
@@ -1328,12 +1388,16 @@ const AncPnc = (props) => {
                             id="lmp"
                             onChange={handleInputChangeEnrollmentDto}
                             value={enroll.lmp}
-                            max={
-                              enroll.pmtctEnrollmentDate
-                                ? enroll.pmtctEnrollmentDate
-                                : moment(new Date()).format("YYYY-MM-DD")
-                            }
-                            min={moment().subtract(294, "days").format("YYYY-MM-DD")}
+                            max={(() => {
+                              // LMP must be at least 4 weeks before enrollment date (GA >= 4)
+                              const refDate = enroll.pmtctEnrollmentDate || moment(new Date()).format("YYYY-MM-DD");
+                              return moment(refDate).subtract(4, "weeks").format("YYYY-MM-DD");
+                            })()}
+                            min={(() => {
+                              // LMP must be at most 45 weeks before enrollment date (GA <= 45)
+                              const refDate = enroll.pmtctEnrollmentDate || moment(new Date()).format("YYYY-MM-DD");
+                              return moment(refDate).subtract(45, "weeks").format("YYYY-MM-DD");
+                            })()}
                             disabled={disabledField || props?.ancEntryType}
                           />
                         </InputGroup>
@@ -1908,7 +1972,7 @@ const AncPnc = (props) => {
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    {enroll.modeOfDelivery && enroll.modeOfDelivery === "MODE_DELIVERY_OTHERS" && (
+                    {enroll.modeOfDelivery && isOtherModeOfDelivery(enroll.modeOfDelivery) && (
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>Specify</Label>

@@ -15,31 +15,31 @@ import org.springframework.data.jpa.repository.Modifying;
 import javax.transaction.Transactional;
 
 public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnrollment, String> {
-  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> getByPatientUuid(String patientUuid);
 
-  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> getByPatientUuidAndPmtctCycleId(String patientUuid, String pmtctCycleUuid);
 
 
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-  PMTCTEnrollment findByPatientUuidAndArchived(String patientUuid, Long archived);
+  PMTCTEnrollment findByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-  Optional<PMTCTEnrollment> findLatestByPatientUuidAndArchived(String patientUuid, Long archived);
+  Optional<PMTCTEnrollment> findLatestByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
   PMTCTEnrollment getPMTCTEnrollmentById(Long id);
 
   PMTCTEnrollment findPMTCTEnrollmentByPatientUuid(String patientUuid);
 
-  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT * FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<PMTCTEnrollment> findLatestPMTCTEnrollmentByPatientUuid(String patientUuid);
 
-  @Query(value = "SELECT hiv_status FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT hiv_status FROM pmtct_enrollment WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   Optional<String> findHivStatusByPatientUuid(String patientUuid);
 
   @Query(value = "SELECT * FROM pmtct_enrollment WHERE pmtct_cycle_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-  Optional<PMTCTEnrollment> findByPmtctCycleIdAndArchived(String pmtctCycleUuid, Long archived);
+  Optional<PMTCTEnrollment> findByPmtctCycleIdAndArchived(String pmtctCycleUuid, Boolean archived);
 
   @Query(
           value =
@@ -47,7 +47,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                   "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
-                          "  (SELECT anc_no FROM pmtct_anc WHERE patient_uuid = pp.uuid AND pmtct_cycle_uuid = pa.pmtct_cycle_uuid AND archived = 0 ORDER BY id DESC LIMIT 1) AS ancNo, " +
+                          "  (SELECT anc_no FROM pmtct_anc WHERE patient_uuid = pp.uuid AND pmtct_cycle_uuid = pa.pmtct_cycle_uuid AND archived = false ORDER BY id DESC LIMIT 1) AS ancNo, " +
                           "  pa.art_start_date AS artStartDate, " +
                           "  pp.date_of_birth AS dateOfBirth, " +
                           "  pp.id AS personId, " +
@@ -65,22 +65,22 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
                           "  COALESCE( ( " +
                           "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                          "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "  ), 0) AS pregnancyCount " +
                           "FROM patient_person pp " +
                           "INNER JOIN ( " +
                           "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                           "  FROM pmtct_enrollment " +
-                          "  WHERE archived = 0 " +
+                          "  WHERE archived = false " +
                           "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
                           ") pa ON pp.uuid = pa.patient_uuid " +
                           "  AND pa.pmtct_cycle_uuid = ( " +
                           "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                           "  ) " +
-                          "WHERE pp.archived = ?1 " +
-                          "  AND pp.facility_id = ?2 " +
+                          "WHERE pp.archived = 0 " +
+                          "  AND pp.facility_id = ?1 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
                           "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                           "ORDER BY pp.uuid, pa.id DESC " +
@@ -88,19 +88,19 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
-                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.patient_uuid AND pa.archived = 0 " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.patient_uuid AND pa.archived = false " +
                           "  AND pa.pmtct_cycle_uuid = ( " +
                           "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                           "  ) " +
-                          "WHERE pp.archived = ?1 " +
-                          "  AND pp.facility_id = ?2 " +
+                          "WHERE pp.archived = 0 " +
+                          "  AND pp.facility_id = ?1 " +
                           "  AND pp.sex ILIKE 'FEMALE' " +
                           "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
           nativeQuery = true
   )
-  Page<PatientPerson> getActiveOnPMTCT(Integer archived, Long facilityId, Pageable pageable);
+  Page<PatientPerson> getActiveOnPMTCT(Long facilityId, Pageable pageable);
 
 
   @Query(
@@ -109,7 +109,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                   "SELECT DISTINCT ON (pp.uuid) " +
                           "  pa.entry_point AS entryPoint, " +
                           "  pa.tb_status AS tbStatus, " +
-                          "  (SELECT anc_no FROM pmtct_anc WHERE patient_uuid = pp.uuid AND pmtct_cycle_uuid = pa.pmtct_cycle_uuid AND archived = 0 ORDER BY id DESC LIMIT 1) AS ancNo, " +
+                          "  (SELECT anc_no FROM pmtct_anc WHERE patient_uuid = pp.uuid AND pmtct_cycle_uuid = pa.pmtct_cycle_uuid AND archived = false ORDER BY id DESC LIMIT 1) AS ancNo, " +
                           "  pa.art_start_date AS artStartDate, " +
                           "  pp.date_of_birth AS dateOfBirth, " +
                           "  pp.id AS personId, " +
@@ -127,18 +127,18 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "  CAST(pp.contact_point AS TEXT) AS contactPoint, " +
                           "  COALESCE( ( " +
                           "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                          "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "  ), 0) AS pregnancyCount " +
                           "FROM patient_person pp " +
                           "INNER JOIN ( " +
                           "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                           "  FROM pmtct_enrollment " +
-                          "  WHERE archived = 0 " +
+                          "  WHERE archived = false " +
                           "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
                           ") pa ON pp.uuid = pa.patient_uuid " +
                           "  AND pa.pmtct_cycle_uuid = ( " +
                           "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                           "  ) " +
                           "WHERE ( " +
@@ -148,8 +148,8 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "   pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
                           "   pp.hospital_number ILIKE CONCAT('%', ?1, '%') " +
                           ") " +
-                          "AND pp.archived = ?2 " +
-                          "AND pp.facility_id = ?3 " +
+                          "AND pp.archived = 0 " +
+                          "AND pp.facility_id = ?2 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                           "ORDER BY pp.uuid, pa.id DESC " +
@@ -157,10 +157,10 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
-                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.patient_uuid AND pa.archived = 0 " +
+                          "INNER JOIN pmtct_enrollment pa ON pp.uuid = pa.patient_uuid AND pa.archived = false " +
                           "  AND pa.pmtct_cycle_uuid = ( " +
                           "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = 0 " +
+                          "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                           "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                           "  ) " +
                           "WHERE ( " +
@@ -170,13 +170,13 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                           "   pp.full_name ILIKE CONCAT('%', ?1, '%') OR " +
                           "   pp.hospital_number ILIKE CONCAT('%', ?1, '%') " +
                           ") " +
-                          "AND pp.archived = ?2 " +
-                          "AND pp.facility_id = ?3 " +
+                          "AND pp.archived = 0 " +
+                          "AND pp.facility_id = ?2 " +
                           "AND pp.sex ILIKE 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
           nativeQuery = true
   )
-  Page<PatientPerson> getActiveOnPMTCTBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
+  Page<PatientPerson> getActiveOnPMTCTBySearchParameters(String queryParam, Long facilityId, Pageable pageable);
 
 
 //  PMTCT FROM PERSON
@@ -199,7 +199,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "pp.is_date_of_birth_estimated AS isDateOfBirthEstimated, " +
                         "pp.facility_id AS facilityId, " +
                         "pp.emr_id AS emrId, " +
-                        "pp.nin_number AS niNumber, " +
+                        "pp.nin_number AS ninNumber, " +
                         "pp.date_of_birth AS dateOfBirth, " +
                         "pp.id, " +
                         "pp.uuid, " +
@@ -212,17 +212,17 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         "COUNT(DISTINCT ppc.uuid) AS pregnancyCount, " +
                         "CASE WHEN COUNT(ppc.uuid) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
                         "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
-                        "WHERE patient_uuid = pp.uuid AND archived = ?2 " +
+                        "WHERE patient_uuid = pp.uuid AND archived = false " +
                         "ORDER BY id DESC LIMIT 1) AS maternalOutcome, " +
                         "(SELECT visit_status FROM pmtct_pregnancy_cycle " +
-                        "WHERE patient_uuid = pp.uuid AND archived = ?2 " +
+                        "WHERE patient_uuid = pp.uuid AND archived = false " +
                         "ORDER BY id DESC LIMIT 1) AS visitStatus " +
                         "FROM patient_person pp " +
-                        "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = ?2 " +
-                        "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = ?2 " +
-                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
-                        "WHERE pp.archived = ?2 " +
-                        "AND pp.facility_id = ?3 " +
+                        "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = false " +
+                        "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = false " +
+                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
+                        "WHERE pp.archived = 0 " +
+                        "AND pp.facility_id = ?2 " +
                         "AND UPPER(pp.sex) = 'FEMALE' " +
                         "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                         "AND (" +
@@ -244,11 +244,11 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
         countQuery =
                 "SELECT COUNT(DISTINCT pp.uuid) " +
                         "FROM patient_person pp " +
-                        "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = ?2 " +
-                        "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = ?2 " +
-                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
-                        "WHERE pp.archived = ?2 " +
-                        "AND pp.facility_id = ?3 " +
+                        "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = false " +
+                        "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = false " +
+                        "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
+                        "WHERE pp.archived = 0 " +
+                        "AND pp.facility_id = ?2 " +
                         "AND UPPER(pp.sex) = 'FEMALE' " +
                         "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                         "AND (" +
@@ -260,7 +260,7 @@ public interface PMTCTEnrollmentReporsitory extends CommonJpaRepository<PMTCTEnr
                         ")",
         nativeQuery = true
 )
-Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
+Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Long facilityId, Pageable pageable);
 
   @Query(
           value =
@@ -281,7 +281,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "pp.is_date_of_birth_estimated AS isDateOfBirthEstimated, " +
                           "pp.facility_id AS facilityId, " +
                           "pp.emr_id AS emrId, " +
-                          "pp.nin_number AS niNumber, " +
+                          "pp.nin_number AS ninNumber, " +
                           "pp.date_of_birth AS dateOfBirth, " +
                           "pp.id, " +
                           "pp.uuid, " +
@@ -294,17 +294,17 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
                           "COUNT(DISTINCT ppc.uuid) AS pregnancyCount, " +
                           "CASE WHEN COUNT(ppc.uuid) > 0 THEN TRUE ELSE FALSE END AS hasExistingEnrollment, " +
                           "(SELECT maternal_outcome FROM pmtct_pregnancy_cycle " +
-                          "WHERE patient_uuid = pp.uuid AND archived = ?1 " +
+                          "WHERE patient_uuid = pp.uuid AND archived = false " +
                           "ORDER BY id DESC LIMIT 1) AS maternalOutcome, " +
                           "(SELECT visit_status FROM pmtct_pregnancy_cycle " +
-                          "WHERE patient_uuid = pp.uuid AND archived = ?1 " +
+                          "WHERE patient_uuid = pp.uuid AND archived = false " +
                           "ORDER BY id DESC LIMIT 1) AS visitStatus " +
                           "FROM patient_person pp " +
-                          "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = ?1 " +
-                          "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = ?1 " +
-                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
-                          "WHERE pp.archived = ?1 " +
-                          "AND pp.facility_id = ?2 " +
+                          "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = false " +
+                          "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = false " +
+                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
+                          "WHERE pp.archived = 0 " +
+                          "AND pp.facility_id = ?1 " +
                           "AND UPPER(pp.sex) = 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10 " +
                           "GROUP BY " +
@@ -319,16 +319,16 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
           countQuery =
                   "SELECT COUNT(DISTINCT pp.uuid) " +
                           "FROM patient_person pp " +
-                          "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = ?1 " +
-                          "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = ?1 " +
-                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
-                          "WHERE pp.archived = ?1 " +
-                          "AND pp.facility_id = ?2 " +
+                          "LEFT JOIN pmtct_anc pa ON pa.patient_uuid = pp.uuid AND pa.archived = false " +
+                          "LEFT JOIN pmtct_enrollment pe ON pe.patient_uuid = pp.uuid AND pe.archived = false " +
+                          "LEFT JOIN pmtct_pregnancy_cycle ppc ON ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
+                          "WHERE pp.archived = 0 " +
+                          "AND pp.facility_id = ?1 " +
                           "AND UPPER(pp.sex) = 'FEMALE' " +
                           "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth)) >= 10",
           nativeQuery = true
   )
-  Page<PatientInfo> findFemalePerson(Integer archived, Long facilityId, Pageable pageable);
+  Page<PatientInfo> findFemalePerson(Long facilityId, Pageable pageable);
 
 
 
@@ -370,14 +370,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
           "AND p.uuid = ?2 ORDER BY h.date_created DESC LIMIT 1 ")
   String getHtsClientHivStatus(String hospitalNumber, String patientUuid);
 
-  @Query(value = "select date_of_delivery from pmtct_enrollment where patient_uuid =?1 AND pmtct_cycle_uuid =?2 AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "select date_of_delivery from pmtct_enrollment where patient_uuid =?1 AND pmtct_cycle_uuid =?2 AND archived = false ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
   String getDateOfDelivery(String patientUuid, String pmtctCycleUuid);
 
 
   @Query(value = "SELECT * FROM public.pmtct_enrollment WHERE hiv_status = :hivStatus OR entry_point = :entryPoint", nativeQuery = true)
   List<PMTCTEnrollment> findByHivStatusOrEntryPoint(String hivStatus, String entryPoint);
 
-  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE patient_uuid = :patientUuid AND pmtct_cycle_uuid = :pmtctCycleUuid AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT * FROM public.pmtct_delivery WHERE patient_uuid = :patientUuid AND pmtct_cycle_uuid = :pmtctCycleUuid AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   DeliveryResponseDto findDeliveryByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid);
 
   @Query(value = "select * from pmtct_enrollment where patient_uuid = :patientUuid", nativeQuery = true)
@@ -417,7 +417,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 //  boolean checkForInfantHighRisk (String patientUuid);
 
 
-  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE patient_uuid = ?1 AND archived = 0 )", nativeQuery = true)
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_anc WHERE patient_uuid = ?1 AND archived = false )", nativeQuery = true)
   boolean checkPatientOnANC(String patientUuid);
 
   @Modifying
@@ -425,16 +425,16 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
   @Query(value = "UPDATE public.pmtct_enrollment SET lmp = CAST(?1 AS DATE ) WHERE patient_uuid = ?2", nativeQuery = true)
   void updateLmp(LocalDate lmp , String patientUuid);
 
-  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getPmtctEnrollmentDate(String patientUuid, String pmtctCycleUuid);
 
-  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getLatestPmtctEnrollmentDate(String patientUuid);
 
-  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "SELECT pmtct_enrollment_date FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   LocalDate getInitialVisitDate(String patientUuid, String pmtctCycleUuid);
 
-  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND archived = 0 )", nativeQuery = true)
+  @Query(value = "SELECT EXISTS (SELECT 1 FROM public.pmtct_enrollment WHERE patient_uuid = ?1 AND archived = false )", nativeQuery = true)
   boolean checkPatientOnPMTCT(String patientUuid);
   @Modifying
   @Transactional
@@ -445,13 +445,13 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
 
 
-  @Query(value = "select art_start_time from pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+  @Query(value = "select art_start_time from pmtct_enrollment WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
   String getMotherARTInitial (String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE patient_uuid =?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT rom_delivery_interval FROM public.pmtct_delivery WHERE patient_uuid =?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     String checkRuptureMembraneAt4hrs (String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE mother_patient_uuid =?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT  infant_arv_type  from pmtct_infant_arv WHERE mother_patient_uuid =?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     String getNVPandAZT (String patientUuid, String pmtctCycleUuid);
 
     @Query(value = "SELECT result_reported FROM laboratory_result  WHERE  patient_uuid = ?1 ORDER BY date_result_reported DESC LIMIT 1", nativeQuery = true)
@@ -469,14 +469,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Total ANC patients with enrollment date not blank
     @Query(value = "SELECT COUNT(DISTINCT pa.patient_uuid) FROM pmtct_anc pa " +
-            "WHERE pa.archived = 0 " +
+            "WHERE pa.archived = false " +
             "AND pa.facility_id = ?1 " +
             "AND pa.date_of_enrollment IS NOT NULL", nativeQuery = true)
     Long getTotalANCPatients(Long facilityId);
 
     // Total PMTCT patients with enrollment date not blank
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL", nativeQuery = true)
     Long getTotalPMTCTPatients(Long facilityId);
@@ -486,7 +486,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -498,7 +498,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // PMTCT Viral Load Denominator: HIV+ pregnant women enrolled on ART
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN hiv_art_clinical hac ON hac.person_uuid = pe.patient_uuid " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND hac.archived = 0", nativeQuery = true)
@@ -508,7 +508,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -523,7 +523,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -538,7 +538,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -554,7 +554,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -570,7 +570,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -586,7 +586,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN laboratory_result lr ON lr.patient_uuid = pe.patient_uuid " +
             "INNER JOIN laboratory_test lt ON lt.id = lr.test_id " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND lt.lab_test_id = 16 " +
@@ -601,67 +601,67 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // PMTCT Exit Tracked - Active in PMTCT Cohort (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%ACTIVE%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitActiveInCohort(Long facilityId);
 
     // PMTCT Exit Tracked - Transferred Out (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%TRANSFERRED OUT%' " +
             "AND UPPER(ppc.maternal_outcome) NOT LIKE '%ANOTHER PMTCT%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitTransferredOut(Long facilityId);
 
     // PMTCT Exit Tracked - Transferred to another PMTCT cohort (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%ANOTHER PMTCT%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitTransferredToAnotherPMTCT(Long facilityId);
 
     // PMTCT Exit Tracked - Transitioned to ART clinic (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%TRANSITIONED%ART%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitTransitionedToART(Long facilityId);
 
     // PMTCT Exit Tracked - Lost to follow-up (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%LOST%FOLLOW%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitLostToFollowUp(Long facilityId);
 
     // PMTCT Exit Tracked - Dead (latest cycle, enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
             "INNER JOIN pmtct_enrollment pe ON pe.patient_uuid = ppc.patient_uuid AND pe.pmtct_cycle_uuid = ppc.uuid " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%DEAD%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0) " +
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false) " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
     Long getPmtctExitDead(Long facilityId);
 
     // PMTCT Exit Denominator - Total on PMTCT (enrollment > 24 months)
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL " +
             "AND pe.pmtct_enrollment_date <= CURRENT_DATE - INTERVAL '24 months'", nativeQuery = true)
@@ -669,30 +669,30 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Mothers LTFU Numerator - HIV+ pregnant women with LTFU status (latest cycle)
     @Query(value = "SELECT COUNT(DISTINCT ppc.patient_uuid) FROM pmtct_pregnancy_cycle ppc " +
-            "WHERE ppc.archived = 0 " +
+            "WHERE ppc.archived = false " +
             "AND ppc.facility_id = ?1 " +
             "AND UPPER(ppc.maternal_outcome) LIKE '%LOST%FOLLOW%' " +
-            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = 0)", nativeQuery = true)
+            "AND ppc.id = (SELECT MAX(ppc2.id) FROM pmtct_pregnancy_cycle ppc2 WHERE ppc2.patient_uuid = ppc.patient_uuid AND ppc2.archived = false)", nativeQuery = true)
     Long getMothersLTFUNumerator(Long facilityId);
 
     // Mothers LTFU Denominator - HIV+ pregnant women on ART and PMTCT
     @Query(value = "SELECT COUNT(DISTINCT pe.patient_uuid) FROM pmtct_enrollment pe " +
             "INNER JOIN hiv_art_clinical hac ON hac.person_uuid = pe.patient_uuid AND hac.archived = 0 " +
-            "WHERE pe.archived = 0 " +
+            "WHERE pe.archived = false " +
             "AND pe.facility_id = ?1 " +
             "AND pe.pmtct_enrollment_date IS NOT NULL", nativeQuery = true)
     Long getMothersLTFUDenominator(Long facilityId);
 
     // Deliveries Total - date_of_delivery is not blank
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL", nativeQuery = true)
     Long getDeliveriesTotal(Long facilityId);
 
     // Deliveries Q1 (Oct-Dec)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (10, 11, 12)", nativeQuery = true)
@@ -700,7 +700,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Deliveries Q2 (Jan-Mar)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (1, 2, 3)", nativeQuery = true)
@@ -708,7 +708,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Deliveries Q3 (Apr-Jun)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (4, 5, 6)", nativeQuery = true)
@@ -716,7 +716,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // Deliveries Q4 (Jul-Sep)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND EXTRACT(MONTH FROM pd.date_of_delivery) IN (7, 8, 9)", nativeQuery = true)
@@ -724,7 +724,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // HEI Linked Total - live births (number_of_infants_alive - number_of_infants_dead >= 1)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1", nativeQuery = true)
@@ -732,7 +732,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // HEI Linked Q1 (Oct-Dec)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
@@ -741,7 +741,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // HEI Linked Q2 (Jan-Mar)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
@@ -750,7 +750,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // HEI Linked Q3 (Apr-Jun)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
@@ -759,7 +759,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
 
     // HEI Linked Q4 (Jul-Sep)
     @Query(value = "SELECT COUNT(DISTINCT pd.id) FROM pmtct_delivery pd " +
-            "WHERE pd.archived = 0 " +
+            "WHERE pd.archived = false " +
             "AND pd.facility_id = ?1 " +
             "AND pd.date_of_delivery IS NOT NULL " +
             "AND (COALESCE(pd.number_of_infants_alive, 0) - COALESCE(pd.number_of_infants_dead, 0)) >= 1 " +
@@ -769,14 +769,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // Infant Tested: Count distinct infants tested (PCR or Rapid Antibody)
     @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
             "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
-            "WHERE archived = 0 " +
+            "WHERE archived = false " +
             "AND facility_id = ?1 " +
             "AND infant_hospital_number IS NOT NULL " +
             "AND infant_hospital_number != '' " +
             "UNION " +
             "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
             "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
-            "WHERE ra.archived = 0 " +
+            "WHERE ra.archived = false " +
             "AND ra.facility_id = ?1 " +
             "AND iv.infant_hospital_number IS NOT NULL " +
             "AND iv.infant_hospital_number != '' " +
@@ -786,7 +786,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // Infant Positive: Count distinct infants with positive results (case-sensitive)
     @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
             "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
-            "WHERE archived = 0 " +
+            "WHERE archived = false " +
             "AND facility_id = ?1 " +
             "AND infant_hospital_number IS NOT NULL " +
             "AND infant_hospital_number != '' " +
@@ -794,7 +794,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "UNION " +
             "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
             "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
-            "WHERE ra.archived = 0 " +
+            "WHERE ra.archived = false " +
             "AND ra.facility_id = ?1 " +
             "AND iv.infant_hospital_number IS NOT NULL " +
             "AND iv.infant_hospital_number != '' " +
@@ -805,7 +805,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // Infant Negative: Count distinct infants with negative results (case-sensitive)
     @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM ( " +
             "SELECT infant_hospital_number FROM pmtct_infant_pcr " +
-            "WHERE archived = 0 " +
+            "WHERE archived = false " +
             "AND facility_id = ?1 " +
             "AND infant_hospital_number IS NOT NULL " +
             "AND infant_hospital_number != '' " +
@@ -813,7 +813,7 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
             "UNION " +
             "SELECT iv.infant_hospital_number FROM pmtct_infant_rapid_antibody ra " +
             "INNER JOIN pmtct_infant_visit iv ON ra.unique_uuid = iv.uuid " +
-            "WHERE ra.archived = 0 " +
+            "WHERE ra.archived = false " +
             "AND ra.facility_id = ?1 " +
             "AND iv.infant_hospital_number IS NOT NULL " +
             "AND iv.infant_hospital_number != '' " +
@@ -824,14 +824,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // PMTCT Exit Tracked - Infants: HIV-positive at 18 months (from latest cycle)
     @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
             "INNER JOIN pmtct_infant_visit iv ON iv.mother_patient_uuid = i.mother_patient_uuid " +
-            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = 0 " +
-            "WHERE i.archived = 0 " +
+            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = false " +
+            "WHERE i.archived = false " +
             "AND i.facility_id = ?1 " +
             "AND UPPER(iv.infant_outcome_at18_months) LIKE '%POSITIVE%' " +
             "AND i.pmtct_cycle_uuid = ( " +
             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
             "    WHERE ppc.patient_uuid = i.mother_patient_uuid " +
-            "    AND ppc.archived = 0 " +
+            "    AND ppc.archived = false " +
             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
             ")", nativeQuery = true)
     Long getInfantExitHivPositive(Long facilityId);
@@ -839,14 +839,14 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // PMTCT Exit Tracked - Infants: HIV-negative at 18 months (from latest cycle)
     @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
             "INNER JOIN pmtct_infant_visit iv ON iv.mother_patient_uuid = i.mother_patient_uuid " +
-            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = 0 " +
-            "WHERE i.archived = 0 " +
+            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = false " +
+            "WHERE i.archived = false " +
             "AND i.facility_id = ?1 " +
             "AND UPPER(iv.infant_outcome_at18_months) LIKE '%NEGATIVE%' " +
             "AND i.pmtct_cycle_uuid = ( " +
             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
             "    WHERE ppc.patient_uuid = i.mother_patient_uuid " +
-            "    AND ppc.archived = 0 " +
+            "    AND ppc.archived = false " +
             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
             ")", nativeQuery = true)
     Long getInfantExitHivNegative(Long facilityId);
@@ -854,64 +854,64 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Integer 
     // PMTCT Exit Tracked - Infants: HIV status unknown at 18 months (from latest cycle)
     @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
             "INNER JOIN pmtct_infant_visit iv ON iv.mother_patient_uuid = i.mother_patient_uuid " +
-            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = 0 " +
-            "WHERE i.archived = 0 " +
+            "AND iv.pmtct_cycle_uuid = i.pmtct_cycle_uuid AND iv.archived = false " +
+            "WHERE i.archived = false " +
             "AND i.facility_id = ?1 " +
             "AND UPPER(iv.infant_outcome_at18_months) LIKE '%UNKNOWN%' " +
             "AND i.pmtct_cycle_uuid = ( " +
             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
             "    WHERE ppc.patient_uuid = i.mother_patient_uuid " +
-            "    AND ppc.archived = 0 " +
+            "    AND ppc.archived = false " +
             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
             ")", nativeQuery = true)
     Long getInfantExitHivUnknown(Long facilityId);
 
     // PMTCT Exit Tracked - Infants: Total HEI exposed infants registered (denominator)
     @Query(value = "SELECT COUNT(DISTINCT i.id) FROM pmtct_infant_information i " +
-            "WHERE i.archived = 0 " +
+            "WHERE i.archived = false " +
             "AND i.facility_id = ?1", nativeQuery = true)
     Long getInfantExitDenominator(Long facilityId);
 
     // Key PMTCT Indicators - Pregnancy Cycles
-    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = 0 AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = false AND facility_id = ?1", nativeQuery = true)
     Long getTotalPregnancyCycles(Long facilityId);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = 0 AND (is_closed = false OR is_closed IS NULL) AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = false AND (is_closed = false OR is_closed IS NULL) AND facility_id = ?1", nativeQuery = true)
     Long getActivePregnancyCycles(Long facilityId);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = 0 AND is_closed = true AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_pregnancy_cycle WHERE archived = false AND is_closed = true AND facility_id = ?1", nativeQuery = true)
     Long getClosedPregnancyCycles(Long facilityId);
 
     // Key PMTCT Indicators - Visits
-    @Query(value = "SELECT COUNT(*) FROM pmtct_anc WHERE archived = 0 AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_anc WHERE archived = false AND facility_id = ?1", nativeQuery = true)
     Long getTotalANCVisits(Long facilityId);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_mother_visitation WHERE archived = 0 AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_mother_visitation WHERE archived = false AND facility_id = ?1", nativeQuery = true)
     Long getTotalMotherVisits(Long facilityId);
 
     // Infant Information Summary
-    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = 0 AND facility_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = false AND facility_id = ?1", nativeQuery = true)
     Long getTotalInfantsRegistered(Long facilityId);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = 0 AND facility_id = ?1 AND (birth_outcome IS NULL OR UPPER(birth_outcome) != 'DEAD')", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = false AND facility_id = ?1 AND (birth_outcome IS NULL OR UPPER(birth_outcome) != 'DEAD')", nativeQuery = true)
     Long getInfantsAlive(Long facilityId);
 
-    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = 0 AND ii.facility_id = ?1 AND ii.infant_arv_data IS NOT NULL AND ii.infant_arv_data->>'infantArvType' IS NOT NULL AND ii.infant_arv_data->>'infantArvType' != '' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = 0 AND iv.facility_id = ?1 AND iv.infant_arv_data IS NOT NULL AND iv.infant_arv_data->>'infantArvType' IS NOT NULL AND iv.infant_arv_data->>'infantArvType' != '') combined", nativeQuery = true)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = false AND ii.facility_id = ?1 AND ii.infant_arv_data IS NOT NULL AND ii.infant_arv_data->>'infantArvType' IS NOT NULL AND ii.infant_arv_data->>'infantArvType' != '' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = false AND iv.facility_id = ?1 AND iv.infant_arv_data IS NOT NULL AND iv.infant_arv_data->>'infantArvType' IS NOT NULL AND iv.infant_arv_data->>'infantArvType' != '') combined", nativeQuery = true)
     Long getInfantsOnARV(Long facilityId);
 
-    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = 0 AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = 0 AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL) combined", nativeQuery = true)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = false AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = false AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL) combined", nativeQuery = true)
     Long getInfantsWithPCRTest(Long facilityId);
 
-    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = 0 AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL AND UPPER(ii.infant_pcr_data->>'results') LIKE '%POSITIVE%' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = 0 AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL AND UPPER(iv.infant_pcr_data->>'results') LIKE '%POSITIVE%') combined", nativeQuery = true)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = false AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL AND UPPER(ii.infant_pcr_data->>'results') LIKE '%POSITIVE%' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = false AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL AND UPPER(iv.infant_pcr_data->>'results') LIKE '%POSITIVE%') combined", nativeQuery = true)
     Long getInfantsPCRPositive(Long facilityId);
 
-    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = 0 AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL AND UPPER(ii.infant_pcr_data->>'results') LIKE '%NEGATIVE%' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = 0 AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL AND UPPER(iv.infant_pcr_data->>'results') LIKE '%NEGATIVE%') combined", nativeQuery = true)
+    @Query(value = "SELECT COUNT(DISTINCT infant_hospital_number) FROM (SELECT ii.infant_hospital_number FROM pmtct_infant_information ii WHERE ii.archived = false AND ii.facility_id = ?1 AND ii.infant_pcr_data IS NOT NULL AND UPPER(ii.infant_pcr_data->>'results') LIKE '%NEGATIVE%' UNION SELECT iv.infant_hospital_number FROM pmtct_infant_visit iv WHERE iv.archived = false AND iv.facility_id = ?1 AND iv.infant_pcr_data IS NOT NULL AND UPPER(iv.infant_pcr_data->>'results') LIKE '%NEGATIVE%') combined", nativeQuery = true)
     Long getInfantsPCRNegative(Long facilityId);
 
-    @Query(value = "SELECT COUNT(DISTINCT iv.infant_hospital_number) FROM pmtct_infant_visit iv WHERE iv.archived = 0 AND iv.facility_id = ?1 AND iv.rapid_test_data IS NOT NULL", nativeQuery = true)
+    @Query(value = "SELECT COUNT(DISTINCT iv.infant_hospital_number) FROM pmtct_infant_visit iv WHERE iv.archived = false AND iv.facility_id = ?1 AND iv.rapid_test_data IS NOT NULL", nativeQuery = true)
     Long getInfantsWithRapidTest(Long facilityId);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = 0 AND facility_id = ?1 AND UPPER(birth_outcome) = 'DEAD'", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_infant_information WHERE archived = false AND facility_id = ?1 AND UPPER(birth_outcome) = 'DEAD'", nativeQuery = true)
     Long getInfantsDeceased(Long facilityId);
 
 }

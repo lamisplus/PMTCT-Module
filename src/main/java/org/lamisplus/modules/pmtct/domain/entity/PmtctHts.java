@@ -35,7 +35,7 @@ public class PmtctHts {
     private String stageOfPregnancy;
     @Column(name = "patient_uuid")
     private String patientUuid;
-    private Long archived;
+    private Integer archived;
     private String syphilis;
     @Column(name = "hepatitis_b")
     private String hepatitisB;

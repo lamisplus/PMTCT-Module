@@ -14,15 +14,15 @@ public interface InfantMotherArtRepository extends CommonJpaRepository<InfantMot
     Optional<InfantMotherArt> findByAncNumberAndVisitDate(String ancNo, LocalDate visitDate);
     Optional<InfantMotherArt> findByUniqueUuid(String uniqueUuid);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE anc_number = ?1 AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE anc_number = ?1 AND visit_date = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantMotherArt getLatestByAncNumberAndVisitDate(String ancNumber, LocalDate visitDate);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE unique_uuid = CAST(?1 AS VARCHAR) AND anc_number = CAST(?2 AS VARCHAR) AND visit_date = ?3 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE unique_uuid = CAST(?1 AS VARCHAR) AND anc_number = CAST(?2 AS VARCHAR) AND visit_date = ?3 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantMotherArt getByUniqueUuidAndAncNumberAndVisitDate(String uniqueUuid, String ancNumber, LocalDate visitDate);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE unique_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE unique_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantMotherArt getByUniqueUuidAndVisitDate(String uniqueUuid, LocalDate visitDate);
 
-    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM public.pmtct_infant_mother_art WHERE mother_patient_uuid = CAST(?1 AS VARCHAR) AND visit_date = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     InfantMotherArt getLatestByMotherPatientUuidAndVisitDate(String motherPatientUuid, LocalDate visitDate);
 }

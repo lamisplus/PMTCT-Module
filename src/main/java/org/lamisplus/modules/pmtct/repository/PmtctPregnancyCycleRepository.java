@@ -11,16 +11,16 @@ import java.util.Optional;
 @Repository
 public interface PmtctPregnancyCycleRepository extends CommonJpaRepository<PmtctPregnancyCycle, String> {
 
-    Optional<PmtctPregnancyCycle> findByPatientUuidAndArchivedAndIsClosed(String patientUuid, Long archived, Boolean isClosed);
+    Optional<PmtctPregnancyCycle> findByPatientUuidAndArchivedAndIsClosed(String patientUuid, Boolean archived, Boolean isClosed);
 
-    List<PmtctPregnancyCycle> findByPatientUuidAndArchived(String patientUuid, Long archived);
+    List<PmtctPregnancyCycle> findByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = 0 ORDER BY created_date DESC", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = false ORDER BY created_date DESC", nativeQuery = true)
     List<PmtctPregnancyCycle> findAllByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND archived = false ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
     Optional<PmtctPregnancyCycle> findLatestByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND pmtct_status = 'INACTIVE' AND archived = 0 ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_pregnancy_cycle WHERE patient_uuid = ?1 AND pmtct_status = 'INACTIVE' AND archived = false ORDER BY created_date DESC LIMIT 1", nativeQuery = true)
     Optional<PmtctPregnancyCycle> findInactiveByPatientUuid(String patientUuid);
 }

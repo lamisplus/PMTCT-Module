@@ -62,6 +62,9 @@ private ANCService ancService;
 @Autowired
 private DeliveryRepository deliveryRepository;
 
+@Autowired
+private HtsEncounterProxyRepository htsEncounterProxyRepository;
+
     public PMTCTEnrollmentRespondDto save(PMTCTEnrollmentRequestDto pmtctEnrollmentRequestDto) {
       //System.out.println(pmtctEnrollmentRequestDto);
      return convertEntitytoRespondDto(convertEntitytoRespondDto(pmtctEnrollmentRequestDto));
@@ -106,7 +109,7 @@ private DeliveryRepository deliveryRepository;
             pmtctEnrollment = new PMTCTEnrollment();
             pmtctEnrollment.setPatientUuid(person.getUuid());
             pmtctEnrollment.setUuid(UUID.randomUUID().toString());
-            pmtctEnrollment.setArchived(0L);
+            pmtctEnrollment.setArchived(false);
             pmtctEnrollment.setFacilityId(user.getCurrentOrganisationUnitId());
             pmtctEnrollment.setCreatedBy(user.getUserName());
             pmtctEnrollment.setCreatedDate(java.time.LocalDateTime.now());
@@ -354,7 +357,7 @@ private DeliveryRepository deliveryRepository;
 
 
            // Look up ANC by patientUuid to get ancNo, and Person for hospitalNumber
-           Optional<ANC> ancOpt = this.ancRepository.findANCByPatientUuidAndArchived(pmtctEnrollment.getPatientUuid(), 0L);
+           Optional<ANC> ancOpt = this.ancRepository.findANCByPatientUuidAndArchived(pmtctEnrollment.getPatientUuid(),false);
            if (ancOpt.isPresent()) {
                ANC anc = ancOpt.get();
                pmtctEnrollmentRespondDto.setAncNo(anc.getAncNo());
@@ -378,7 +381,7 @@ private DeliveryRepository deliveryRepository;
       Optional<User> currentUser = this.userService.getUserWithRoles();
       User user = (User) currentUser.get();
       Long facilityId = user.getCurrentOrganisationUnitId();
-      Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+      Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
       String fullName = "";
       if (persons.isPresent())
       { Person person = persons.get();
@@ -397,7 +400,7 @@ private DeliveryRepository deliveryRepository;
       Optional<User> currentUser = this.userService.getUserWithRoles();
       User user = (User) currentUser.get();
       Long facilityId = user.getCurrentOrganisationUnitId();
-      Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId,0);
+      Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(uuid, facilityId, 0);
       int age = 0;
       if (persons.isPresent()) {
         Person person = persons.get();
@@ -536,7 +539,7 @@ private DeliveryRepository deliveryRepository;
 
     public void deletePMTCT(String id) {
         PMTCTEnrollment existingPMTCTEnrollment = this.getSinglePmtctEnrollment(id);
-        existingPMTCTEnrollment.setArchived(1L);
+        existingPMTCTEnrollment.setArchived(true);
         this.pmtctEnrollmentReporsitory.save(existingPMTCTEnrollment);
     }
     public String getDeliveryDate(String patientUuid, String pmtctCycleUuid) {
@@ -565,13 +568,29 @@ private DeliveryRepository deliveryRepository;
     }
 
     public String getHIVStatus(String hospitalNumber, String patientUuid) {
-        if (!hospitalNumber.isEmpty()) {
-            return pmtctEnrollmentReporsitory.getHtsClientHivStatus(hospitalNumber, patientUuid);
-        } else {
-            return "";
+        // Check hts_encounter table first (PMTCT HTS records)
+        try {
+            Optional<String> encounterResult = htsEncounterProxyRepository.findLatestFinalResult(patientUuid);
+            if (encounterResult.isPresent() && !encounterResult.get().isEmpty()) {
+                return encounterResult.get();
+            }
+        } catch (Exception e) {
+            // Silently fail - best effort
         }
 
+        // Fallback: check hts_client table (HTS module records, may be removed later)
+        try {
+            if (!hospitalNumber.isEmpty()) {
+                String htsClientResult = pmtctEnrollmentReporsitory.getHtsClientHivStatus(hospitalNumber, patientUuid);
+                if (htsClientResult != null && !htsClientResult.isEmpty()) {
+                    return htsClientResult;
+                }
+            }
+        } catch (Exception e) {
+            // hts_client table may not exist - safe to ignore
+        }
 
+        return "";
     }
 
 

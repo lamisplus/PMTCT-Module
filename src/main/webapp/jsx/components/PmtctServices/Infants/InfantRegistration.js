@@ -395,17 +395,34 @@ const LabourinfantInfo = (props) => {
     setErrors({ ...errors, [e.target.name]: "" });
     //console.log(e.target.name),
     if(e.target.name === "dateOfCtx"){
-
+      const dob = infantInfo.dateOfDelivery;
+      if (dob && e.target.value < dob) {
+        setErrors({ ...errors, dateOfCtx: "Date of CTX Initiation must be on or after Date of Birth" });
+        return;
+      }
       let result =calculateAgeAtCTX(e.target.value)
-
+      setErrors({ ...errors, dateOfCtx: "" });
       setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , ageAtCtx:  result })
-  
+
     }else if(e.target.name === "dateOfArv"){
-
+      const dob = infantInfo.dateOfDelivery;
+      if (dob && e.target.value < dob) {
+        setErrors({ ...errors, dateOfArv: "Date of Initiation must be on or after Date of Birth" });
+        return;
+      }
       let result =calculateArvProphylaxis(e.target.value)
-
+      setErrors({ ...errors, dateOfArv: "" });
       setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value , infantArvTime:  result })
-  
+
+    }else if(e.target.name === "dateOfArvCompletion"){
+      const dob = infantInfo.dateOfDelivery;
+      if (dob && e.target.value < dob) {
+        setErrors({ ...errors, dateOfArvCompletion: "Date of ARV Completion must be on or after Date of Birth" });
+        return;
+      }
+      setErrors({ ...errors, dateOfArvCompletion: "" });
+      setInfantArvDto({...infantArvDto,[e.target.name]: e.target.value })
+
     }else if(e.target.name ===  "infantArvType"){
 
       setInfantArvDto({ ...infantArvDto, [e.target.name]: e.target.value });
@@ -568,8 +585,10 @@ const LabourinfantInfo = (props) => {
     }
   }, [props.patientObj.id, props.activeContent.id]);
 
-  // Fetch mother's syphilis status from enrollment
+  // Fetch mother's syphilis status from enrollment (only for ANC entry point)
   useEffect(() => {
+    const entryPoint = props.patientObj?.entryPoint || props.latestPmtctCycle?.entryPoint;
+    if (entryPoint !== "PMTCT_ENTRY_POINT_ANC") return;
     const patientUuid = props.patientObj.patient_uuid
       ? props.patientObj.patient_uuid
       : props.patientObj.patientUuid
@@ -673,7 +692,7 @@ const LabourinfantInfo = (props) => {
 
   //FORM VALIDATION
   const validate = () => {
-    let temp = { ...errors };
+    let temp = {};
     // temp.firstName = infantInfo.firstName ? "" : "This field is required";
     temp.surname = infantInfo.surname ? "" : "This field is required";
     temp.infantHospitalNumber = infantInfo.infantHospitalNumber
@@ -689,7 +708,16 @@ const LabourinfantInfo = (props) => {
     temp.dateOfDelivery = infantInfo.dateOfDelivery ? "" : "This field is required";
     if (infantInfo.birthOutcome !== "Dead") {
       infantInfo.ctxStatus === "YES" && ( temp.dateOfCtx =infantArvDto.dateOfCtx? "" : "This field is required");
+      if (infantArvDto.dateOfCtx && infantInfo.dateOfDelivery && infantArvDto.dateOfCtx < infantInfo.dateOfDelivery) {
+        temp.dateOfCtx = "Date of CTX Initiation must be on or after Date of Birth";
+      }
       infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+      if (infantArvDto.dateOfArv && infantInfo.dateOfDelivery && infantArvDto.dateOfArv < infantInfo.dateOfDelivery) {
+        temp.dateOfArv = "Date of Initiation must be on or after Date of Birth";
+      }
+      if (infantArvDto.dateOfArvCompletion && infantInfo.dateOfDelivery && infantArvDto.dateOfArvCompletion < infantInfo.dateOfDelivery) {
+        temp.dateOfArvCompletion = "Date of ARV Completion must be on or after Date of Birth";
+      }
       infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.infantArvType = infantArvDto.infantArvType? "" : "This field is required");
       infantArvDto.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)" && (temp.otherArvType = infantArvDto.otherArvType ? "" : "This field is required");
 
@@ -815,17 +843,9 @@ const LabourinfantInfo = (props) => {
   const calculateAgeAtTest= (mainSampleDate, nameInput)=>{
     let deliveryDate =   moment( infantInfo.dateOfDelivery? infantInfo.dateOfDelivery : newDateOfDelivery )
     let sampleDate = moment(mainSampleDate)
-//< 72 hrs
-//> 12 month
-// > 72 hrs < 2 month calculateAgeAtTest
-// 2-12 month
 
-
-
-let timeDiffinHrs =sampleDate.diff(deliveryDate, 'hours'); 
-let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months'); 
-
-// 
+    let timeDiffinHrs = sampleDate.diff(deliveryDate, 'hours');
+    let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
 
     if(timeDiffinHrs < 72){
 
@@ -835,7 +855,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
 
       setInfantPCRTestDto({...infantPCRTestDto,ageAtTest: "CHILD_TEST_AGE_>12_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
-    } else if(timeDiffinHrs > 72 && timeDiffinMonth < 2){
+    } else if(timeDiffinHrs >= 72 && timeDiffinMonth < 2){
 
       setInfantPCRTestDto({...infantPCRTestDto,ageAtTest:  "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS", [nameInput]: mainSampleDate, dateResultReceivedAtFacility: "", dateSampleSent: "" , dateResultReceivedByCaregiver: "" })
 
@@ -845,7 +865,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
 
     }
 
-    
+
 }
 
   return (
@@ -1229,11 +1249,11 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                 </div>
               </div>
               {infantInfo.birthOutcome !== "Dead" && (<>
-              {/* === Infant ARV & CTX === */}
+              {/* === Infant Prophylaxis === */}
               <div className="col-md-12 mb-3 mt-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
-                    <LocalHospitalIcon style={sectionIconStyle} />Infant ARV & CTX
+                    <LocalHospitalIcon style={sectionIconStyle} />Infant Prophylaxis
                   </h6>
                 <div className="row">
                   <div className="form-group mb-3 col-md-4">
@@ -1522,7 +1542,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                 <div className="row">
                   {hbvVaccinations.map((vac, index) => (
                     <React.Fragment key={index}>
-                      <div className=" mb-3 col-md-3">
+                      <div className=" mb-3 col-md-4">
                         <FormGroup>
                           <FormLabelName>{vac.dose}</FormLabelName>
                           <Input
@@ -1532,7 +1552,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                           />
                         </FormGroup>
                       </div>
-                      <div className=" mb-3 col-md-3">
+                      <div className=" mb-3 col-md-4">
                         <FormGroup>
                           <FormLabelName>Date of Vaccination</FormLabelName>
                           <Input
@@ -1557,8 +1577,8 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                           )}
                         </FormGroup>
                       </div>
-                      {vac.doseNumber === 1 && (
-                        <div className=" mb-3 col-md-3">
+                      {vac.doseNumber === 1 ? (
+                        <div className=" mb-3 col-md-4">
                           <FormGroup>
                             <FormLabelName>Timing</FormLabelName>
                             <Input
@@ -1573,19 +1593,20 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
                             </Input>
                           </FormGroup>
                         </div>
+                      ) : (
+                        <div className=" mb-3 col-md-4" style={{ display: "flex", alignItems: "flex-end", paddingBottom: "16px" }}>
+                          {index === hbvVaccinations.length - 1 && !disabledField && (
+                            <MatButton
+                              variant="contained"
+                              style={{ backgroundColor: "#992E62", color: "#fff", marginRight: "5px" }}
+                              onClick={() => removeHbvDose(index)}
+                              size="small"
+                            >
+                              Remove
+                            </MatButton>
+                          )}
+                        </div>
                       )}
-                      <div className=" mb-3 col-md-3" style={{ display: "flex", alignItems: "flex-end", paddingBottom: "16px" }}>
-                        {index === hbvVaccinations.length - 1 && !disabledField && (
-                          <MatButton
-                            variant="contained"
-                            style={{ backgroundColor: "#992E62", color: "#fff", marginRight: "5px" }}
-                            onClick={() => removeHbvDose(index)}
-                            size="small"
-                          >
-                            Remove
-                          </MatButton>
-                        )}
-                      </div>
                     </React.Fragment>
                   ))}
                   {hbvVaccinations.length < 3 && !disabledField && (
@@ -1607,7 +1628,7 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
               <div className="col-md-12 mb-3 mt-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
-                    <AssignmentIcon style={sectionIconStyle} />Infant PCR / HIV Test
+                    <AssignmentIcon style={sectionIconStyle} />Infant PCR Testing
                   </h6>
                 <div className="row">
                   <div className="form-group mb-3 col-md-4">
@@ -1738,25 +1759,24 @@ let timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
 
                   <div className="form-group mb-3 col-md-4">
                     <FormGroup>
-                      <FormLabelName>Age at Test(months)</FormLabelName>
+                      <FormLabelName>Age at Test</FormLabelName>
                       <Input
                         type="select"
                         name="ageAtTest"
                         id="ageAtTest"
                         value={infantPCRTestDto.ageAtTest}
                         onChange={handleInputChangeInfantPCRTestDto}
-                        // disabled={disabledField}
-                        // disabled={true}
-
+                        disabled={true}
                       >
                         <option value="select">Select </option>
-                        {ageAtTestList.length > 0 &&
-                          ageAtTestList.map((value) => (
-                            <option key={value.id} value={value.code}>
-                              {value.display}
-                            </option>
-                          ))}
+                        <option value="CHILD_TEST_AGE_<_72_HRS">&lt;72 hrs</option>
+                        <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">&gt;72 hrs - &lt; 2 months</option>
+                        <option value="CHILD_TEST_AGE_2-12_MONTHS">2-12 months</option>
+                        <option value="CHILD_TEST_AGE_>12_MONTHS">&gt;12 months</option>
                       </Input>
+                      <small style={{ color: "#667", display: "block", marginTop: "4px" }}>
+                        Auto-calculated from the date of delivery and sample collection date
+                      </small>
                       {errors.ageAtTest !== "" ? (
                         <span className={classes.error}>
                           {errors.ageAtTest}

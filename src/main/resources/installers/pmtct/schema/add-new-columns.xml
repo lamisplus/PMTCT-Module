@@ -2273,13 +2273,13 @@
                     mv.visit_status
                 FROM pmtct_mother_visitation mv
                 WHERE mv.visit_status IS NOT NULL
-                  AND mv.archived = 0
+                  AND CAST(mv.archived AS BOOLEAN) = false
                   AND mv.pmtct_cycle_id IS NOT NULL
                 ORDER BY mv.person_uuid, mv.pmtct_cycle_id, mv.date_of_visit DESC NULLS LAST, mv.id DESC
             ) latest_visit
             WHERE pc.person_uuid = latest_visit.person_uuid
               AND pc.id = latest_visit.pmtct_cycle_id
-              AND pc.archived = 0
+              AND CAST(pc.archived AS BOOLEAN) = false
               AND (pc.visit_status IS NULL OR pc.visit_status = '');
         </sql>
     </changeSet>
@@ -4456,12 +4456,12 @@
                     ) AS arv_json
                 FROM pmtct_infant_arv a
                 WHERE (a.unique_uuid IS NULL OR TRIM(a.unique_uuid) = '')
-                  AND a.archived = 0
+                  AND CAST(a.archived AS BOOLEAN) = false
                 ORDER BY a.infant_hospital_number, a.id DESC
             ) sub
             WHERE ii.infant_hospital_number = sub.infant_hospital_number
               AND ii.infant_arv_data IS NULL
-              AND ii.archived = 0;
+              AND CAST(ii.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4488,12 +4488,12 @@
                     ) AS pcr_json
                 FROM pmtct_infant_pcr p
                 WHERE (p.unique_uuid IS NULL OR TRIM(p.unique_uuid) = '')
-                  AND p.archived = 0
+                  AND CAST(p.archived AS BOOLEAN) = false
                 ORDER BY p.infant_hospital_number, p.id DESC
             ) sub
             WHERE ii.infant_hospital_number = sub.infant_hospital_number
               AND ii.infant_pcr_data IS NULL
-              AND ii.archived = 0;
+              AND CAST(ii.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4527,12 +4527,12 @@
                     ) AS arv_json
                 FROM pmtct_infant_arv a
                 WHERE a.unique_uuid IS NOT NULL AND TRIM(a.unique_uuid) != ''
-                  AND a.archived = 0
+                  AND CAST(a.archived AS BOOLEAN) = false
                 ORDER BY a.unique_uuid, a.id DESC
             ) sub
             WHERE iv.unique_uuid = sub.unique_uuid
               AND iv.infant_arv_data IS NULL
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4559,12 +4559,12 @@
                     ) AS pcr_json
                 FROM pmtct_infant_pcr p
                 WHERE p.unique_uuid IS NOT NULL AND TRIM(p.unique_uuid) != ''
-                  AND p.archived = 0
+                  AND CAST(p.archived AS BOOLEAN) = false
                 ORDER BY p.unique_uuid, p.id DESC
             ) sub
             WHERE iv.unique_uuid = sub.unique_uuid
               AND iv.infant_pcr_data IS NULL
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4587,12 +4587,12 @@
                     ) AS art_json
                 FROM pmtct_infant_mother_art m
                 WHERE m.unique_uuid IS NOT NULL AND TRIM(m.unique_uuid) != ''
-                  AND m.archived = 0
+                  AND CAST(m.archived AS BOOLEAN) = false
                 ORDER BY m.unique_uuid, m.id DESC
             ) sub
             WHERE iv.unique_uuid = sub.unique_uuid
               AND iv.mother_art_data IS NULL
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4616,12 +4616,12 @@
                     ) AS rapid_json
                 FROM pmtct_infant_rapid_antibody r
                 WHERE r.unique_uuid IS NOT NULL AND TRIM(r.unique_uuid) != ''
-                  AND r.archived = 0
+                  AND CAST(r.archived AS BOOLEAN) = false
                 ORDER BY r.unique_uuid, r.id DESC
             ) sub
             WHERE iv.unique_uuid = sub.unique_uuid
               AND iv.rapid_test_data IS NULL
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4656,14 +4656,14 @@
                     ) AS arv_json
                 FROM pmtct_infant_arv a
                 WHERE a.unique_uuid IS NOT NULL AND TRIM(a.unique_uuid) != ''
-                  AND a.archived = 0
+                  AND CAST(a.archived AS BOOLEAN) = false
                 ORDER BY a.infant_hospital_number, a.visit_date, a.id DESC
             ) sub
             WHERE iv.infant_hospital_number = sub.infant_hospital_number
               AND iv.visit_date = sub.visit_date
               AND iv.infant_arv_data IS NULL
               AND (iv.unique_uuid IS NULL OR TRIM(iv.unique_uuid) = '')
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4691,14 +4691,14 @@
                     ) AS pcr_json
                 FROM pmtct_infant_pcr p
                 WHERE p.unique_uuid IS NOT NULL AND TRIM(p.unique_uuid) != ''
-                  AND p.archived = 0
+                  AND CAST(p.archived AS BOOLEAN) = false
                 ORDER BY p.infant_hospital_number, p.visit_date, p.id DESC
             ) sub
             WHERE iv.infant_hospital_number = sub.infant_hospital_number
               AND iv.visit_date = sub.visit_date
               AND iv.infant_pcr_data IS NULL
               AND (iv.unique_uuid IS NULL OR TRIM(iv.unique_uuid) = '')
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4722,14 +4722,14 @@
                     ) AS art_json
                 FROM pmtct_infant_mother_art m
                 WHERE m.unique_uuid IS NOT NULL AND TRIM(m.unique_uuid) != ''
-                  AND m.archived = 0
+                  AND CAST(m.archived AS BOOLEAN) = false
                 ORDER BY m.anc_number, m.visit_date, m.id DESC
             ) sub
             WHERE iv.anc_number = sub.anc_number
               AND iv.visit_date = sub.visit_date
               AND iv.mother_art_data IS NULL
               AND (iv.unique_uuid IS NULL OR TRIM(iv.unique_uuid) = '')
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -4754,14 +4754,14 @@
                     ) AS rapid_json
                 FROM pmtct_infant_rapid_antibody r
                 WHERE r.unique_uuid IS NOT NULL AND TRIM(r.unique_uuid) != ''
-                  AND r.archived = 0
+                  AND CAST(r.archived AS BOOLEAN) = false
                 ORDER BY r.anc_number, r.date_of_test, r.id DESC
             ) sub
             WHERE iv.anc_number = sub.anc_number
               AND iv.visit_date = sub.date_of_test
               AND iv.rapid_test_data IS NULL
               AND (iv.unique_uuid IS NULL OR TRIM(iv.unique_uuid) = '')
-              AND iv.archived = 0;
+              AND CAST(iv.archived AS BOOLEAN) = false;
         </sql>
     </changeSet>
 
@@ -5010,6 +5010,856 @@
         <sql>
             ALTER TABLE pmtct_anc ADD COLUMN IF NOT EXISTS referred_from_spokes_site character varying;
             ALTER TABLE pmtct_anc ADD COLUMN IF NOT EXISTS pcv character varying;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate legacy hepatitis C columns from pmtct_mother_visitation into JSONB, then drop them -->
+    <changeSet failOnError="false" author="system" id="2026-05-26-migrate-mother-visit-hepc-legacy-to-jsonb">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="hepatitis_c_test_result" />
+        </preConditions>
+        <sql>
+            -- Migrate legacy hepatitis C data into hepatitis_c_info JSONB
+            UPDATE pmtct_mother_visitation
+            SET hepatitis_c_info = jsonb_build_object(
+                'testedHepatitisC', '',
+                'dateOfHepatitisC', '',
+                'hepatitisC', COALESCE(hepatitis_c_test_result, ''),
+                'treatedHepatitisC', '',
+                'referredHepatitisC', COALESCE(referred_for_hcv, '')
+            )
+            WHERE hepatitis_c_info IS NULL
+              AND (hepatitis_c_test_result IS NOT NULL
+                OR referred_for_hcv IS NOT NULL);
+
+            -- Drop legacy hepatitis C columns
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS hepatitis_c_test_result;
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS referred_for_hcv;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate legacy syphilis & HBV MIP Card columns from pmtct_mother_visitation into JSONB, then drop them -->
+    <changeSet failOnError="false" author="system" id="2026-05-26-migrate-mother-visit-syphilis-hbv-mip-to-jsonb">
+        <preConditions onFail="MARK_RAN">
+            <or>
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_syphilis_status" />
+                <columnExists tableName="pmtct_mother_visitation" columnName="current_hbv_status" />
+            </or>
+        </preConditions>
+        <sql>
+            -- Migrate legacy syphilis MIP Card data into syphilis_info JSONB
+            UPDATE pmtct_mother_visitation
+            SET syphilis_info = COALESCE(syphilis_info, '{}'::jsonb)
+                || jsonb_build_object(
+                    'currentSyphilisStatus', COALESCE(current_syphilis_status, ''),
+                    'nameOfSyphilisDrug', COALESCE(name_of_syphilis_drug, '')
+                )
+            WHERE current_syphilis_status IS NOT NULL
+               OR name_of_syphilis_drug IS NOT NULL;
+
+            -- Migrate legacy HBV MIP Card data into hepatitis_b_info JSONB
+            UPDATE pmtct_mother_visitation
+            SET hepatitis_b_info = COALESCE(hepatitis_b_info, '{}'::jsonb)
+                || jsonb_build_object(
+                    'currentHbvStatus', COALESCE(current_hbv_status, ''),
+                    'nameOfHbvDrug', COALESCE(name_of_hbv_drug, '')
+                )
+            WHERE current_hbv_status IS NOT NULL
+               OR name_of_hbv_drug IS NOT NULL;
+
+            -- Drop legacy syphilis MIP Card columns
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS current_syphilis_status;
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS name_of_syphilis_drug;
+
+            -- Drop legacy HBV MIP Card columns
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS current_hbv_status;
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN IF EXISTS name_of_hbv_drug;
+        </sql>
+    </changeSet>
+
+    <!-- Migrate legacy hepatitis B/C standalone columns from pmtct_anc into JSONB, then drop them -->
+    <changeSet failOnError="false" author="system" id="2026-05-26-migrate-hepatitis-legacy-to-jsonb">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="tested_hepatitisb" />
+        </preConditions>
+        <sql>
+            -- Migrate legacy hepatitis B data into hepatitis_b_info JSONB
+            UPDATE pmtct_anc
+            SET hepatitis_b_info = jsonb_build_object(
+                'testedHepatitisB', COALESCE(tested_hepatitisb, ''),
+                'dateOfHepatitisB', COALESCE(date_of_hepatitisb::text, ''),
+                'hepatitisB', '',
+                'treatedHepatitisB', COALESCE(treated_hepatitisb, ''),
+                'referredHepatitisB', COALESCE(referred_hepatitisb, '')
+            )
+            WHERE hepatitis_b_info IS NULL
+              AND (tested_hepatitisb IS NOT NULL
+                OR date_of_hepatitisb IS NOT NULL
+                OR treated_hepatitisb IS NOT NULL
+                OR referred_hepatitisb IS NOT NULL);
+
+            -- Migrate legacy hepatitis C data into hepatitis_c_info JSONB
+            UPDATE pmtct_anc
+            SET hepatitis_c_info = jsonb_build_object(
+                'testedHepatitisC', COALESCE(tested_hepatitisc, ''),
+                'dateOfHepatitisC', COALESCE(date_of_hepatitisc::text, ''),
+                'hepatitisC', '',
+                'treatedHepatitisC', COALESCE(treated_hepatitisc, ''),
+                'referredHepatitisC', COALESCE(referred_hepatitisc, '')
+            )
+            WHERE hepatitis_c_info IS NULL
+              AND (tested_hepatitisc IS NOT NULL
+                OR date_of_hepatitisc IS NOT NULL
+                OR treated_hepatitisc IS NOT NULL
+                OR referred_hepatitisc IS NOT NULL);
+
+            -- Drop legacy hepatitis B columns
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS date_of_hepatitisb;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS tested_hepatitisb;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS treated_hepatitisb;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS referred_hepatitisb;
+
+            -- Drop legacy hepatitis C columns
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS date_of_hepatitisc;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS tested_hepatitisc;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS treated_hepatitisc;
+            ALTER TABLE pmtct_anc DROP COLUMN IF EXISTS referred_hepatitisc;
+        </sql>
+    </changeSet>
+
+    <!-- Convert HBV prophylaxis columns from varchar to boolean -->
+    <changeSet id="20250529-alter-hbv-prophylaxis-to-boolean" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_delivery" columnName="hiv_exposed_infant_given_hb_within24hrs" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery
+                ALTER COLUMN hiv_exposed_infant_given_hb_within24hrs DROP DEFAULT,
+                ALTER COLUMN hiv_exposed_infant_given_hb_within24hrs TYPE boolean
+                    USING CASE
+                        WHEN hiv_exposed_infant_given_hb_within24hrs IS NULL THEN NULL
+                        WHEN lower(hiv_exposed_infant_given_hb_within24hrs) IN ('true', 'yes', '1') THEN true
+                        ELSE false
+                    END;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-alter-non-hbv-prophylaxis-to-boolean" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_delivery" columnName="non_hbv_exposed_infant_given_hb_within_24hrs" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery
+                ALTER COLUMN non_hbv_exposed_infant_given_hb_within_24hrs DROP DEFAULT,
+                ALTER COLUMN non_hbv_exposed_infant_given_hb_within_24hrs TYPE boolean
+                    USING CASE
+                        WHEN non_hbv_exposed_infant_given_hb_within_24hrs IS NULL THEN NULL
+                        WHEN lower(non_hbv_exposed_infant_given_hb_within_24hrs) IN ('true', 'yes', '1') THEN true
+                        ELSE false
+                    END;
+        </sql>
+    </changeSet>
+
+    <!-- Drop hospital_number from pmtct_enrollment — no longer used by Java entity -->
+    <changeSet id="20250529-drop-hospital-number-from-enrollment" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_enrollment" columnName="hospital_number" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment DROP COLUMN hospital_number;
+        </sql>
+    </changeSet>
+
+    <!-- Convert archived columns from bigint to boolean across all PMTCT tables -->
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-anc" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_anc'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-enrollment" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_enrollment'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_enrollment
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-delivery" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_delivery'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-mother-visitation" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_mother_visitation'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-information" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_information'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-visit" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_visit'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_visit
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-arv" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_arv'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_arv
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-pcr" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_pcr'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_pcr
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-rapid-antibody" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_rapid_antibody'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_rapid_antibody
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-infant-mother-art" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_infant_mother_art'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_mother_art
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-hts" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_hts'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <!-- Revert pmtct_hts.archived back to integer — this table is being migrated
+         to hts_encounter and will be retired. Keeping it as integer ensures the
+         migration script works regardless of installation order. -->
+    <changeSet id="20250530-revert-pmtct-hts-archived-to-integer" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_hts'
+                AND column_name = 'archived' AND data_type = 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_hts
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE integer
+                    USING CASE WHEN archived THEN 1 ELSE 0 END,
+                ALTER COLUMN archived SET DEFAULT 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-convert-archived-to-boolean-pmtct-pregnancy-cycle" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'pmtct_pregnancy_cycle'
+                AND column_name = 'archived' AND data_type != 'boolean'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_pregnancy_cycle
+                ALTER COLUMN archived DROP DEFAULT,
+                ALTER COLUMN archived TYPE boolean
+                    USING CASE WHEN archived IS NULL OR archived = 0 THEN false ELSE true END,
+                ALTER COLUMN archived SET DEFAULT false;
+        </sql>
+    </changeSet>
+
+    <!-- ========== JSONB consolidation for pmtct_mother_visitation ========== -->
+
+    <!-- Step 1: Add 4 JSONB columns -->
+    <changeSet id="20250529-add-jsonb-vital-signs" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="vital_signs" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD vital_signs jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-add-jsonb-counselling" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="counselling" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD counselling jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-add-jsonb-lab-test" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="lab_test" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD lab_test jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-add-jsonb-interventions" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_mother_visitation" columnName="interventions" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation ADD interventions jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Step 2: Migrate existing data from standalone columns into JSONB columns -->
+    <changeSet id="20250529-migrate-vital-signs-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="weight" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="vital_signs" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation
+            SET vital_signs = jsonb_build_object(
+                'weight', weight,
+                'height', height,
+                'sfhLength', sfh_length,
+                'systolic', systolic,
+                'diastolic', diastolic
+            )
+            WHERE vital_signs IS NULL
+              AND (weight IS NOT NULL OR height IS NOT NULL OR sfh_length IS NOT NULL
+                   OR systolic IS NOT NULL OR diastolic IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-migrate-counselling-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="counselling_hts" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="counselling" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation
+            SET counselling = jsonb_build_object(
+                'counsellingHts', counselling_hts,
+                'counsellingFgm', counselling_fgm,
+                'counsellingFp', counselling_fp,
+                'counsellingMaternalNutrition', counselling_maternal_nutrition,
+                'counsellingEarlyBf', counselling_early_bf,
+                'counsellingExclusiveBf', counselling_exclusive_bf
+            )
+            WHERE counselling IS NULL
+              AND (counselling_hts IS NOT NULL OR counselling_fgm IS NOT NULL OR counselling_fp IS NOT NULL
+                   OR counselling_maternal_nutrition IS NOT NULL OR counselling_early_bf IS NOT NULL
+                   OR counselling_exclusive_bf IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-migrate-lab-test-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="hb_pcv" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="lab_test" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation
+            SET lab_test = jsonb_build_object(
+                'hbPcv', hb_pcv,
+                'pcv', pcv,
+                'bloodSugarGdm', blood_sugar_gdm,
+                'urinalysisSugar', urinalysis_sugar,
+                'urinalysisProteins', urinalysis_proteins
+            )
+            WHERE lab_test IS NULL
+              AND (hb_pcv IS NOT NULL OR pcv IS NOT NULL OR blood_sugar_gdm IS NOT NULL
+                   OR urinalysis_sugar IS NOT NULL OR urinalysis_proteins IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-migrate-interventions-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="llin_given" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="interventions" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation
+            SET interventions = jsonb_build_object(
+                'llinGiven', llin_given,
+                'iptDose', ipt_dose,
+                'hematinicsGiven', hematinics_given,
+                'tdImmunization', td_immunization,
+                'associatedProblems', associated_problems
+            )
+            WHERE interventions IS NULL
+              AND (llin_given IS NOT NULL OR ipt_dose IS NOT NULL OR hematinics_given IS NOT NULL
+                   OR td_immunization IS NOT NULL OR associated_problems IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <!-- Step 3: Drop the old standalone columns -->
+    <changeSet id="20250529-drop-old-vital-signs-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="weight" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation
+                DROP COLUMN IF EXISTS weight,
+                DROP COLUMN IF EXISTS height,
+                DROP COLUMN IF EXISTS sfh_length,
+                DROP COLUMN IF EXISTS systolic,
+                DROP COLUMN IF EXISTS diastolic;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-drop-old-counselling-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="counselling_hts" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation
+                DROP COLUMN IF EXISTS counselling_hts,
+                DROP COLUMN IF EXISTS counselling_fgm,
+                DROP COLUMN IF EXISTS counselling_fp,
+                DROP COLUMN IF EXISTS counselling_maternal_nutrition,
+                DROP COLUMN IF EXISTS counselling_early_bf,
+                DROP COLUMN IF EXISTS counselling_exclusive_bf;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-drop-old-lab-test-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="hb_pcv" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation
+                DROP COLUMN IF EXISTS hb_pcv,
+                DROP COLUMN IF EXISTS pcv,
+                DROP COLUMN IF EXISTS blood_sugar_gdm,
+                DROP COLUMN IF EXISTS urinalysis_sugar,
+                DROP COLUMN IF EXISTS urinalysis_proteins;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-drop-old-interventions-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="llin_given" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation
+                DROP COLUMN IF EXISTS llin_given,
+                DROP COLUMN IF EXISTS ipt_dose,
+                DROP COLUMN IF EXISTS hematinics_given,
+                DROP COLUMN IF EXISTS td_immunization,
+                DROP COLUMN IF EXISTS associated_problems;
+        </sql>
+    </changeSet>
+
+    <!-- ========== JSONB consolidation for pmtct_anc (lab_test, interventions) ========== -->
+
+    <!-- Step 1: Add 2 JSONB columns to pmtct_anc -->
+    <changeSet id="20250529-add-jsonb-lab-test-to-anc" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="lab_test" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD lab_test jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-add-jsonb-interventions-to-anc" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_anc" columnName="interventions" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc ADD interventions jsonb;
+        </sql>
+    </changeSet>
+
+    <!-- Step 2: Migrate existing data into JSONB columns -->
+    <changeSet id="20250529-migrate-anc-lab-test-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="hb_pcv" />
+            <columnExists tableName="pmtct_anc" columnName="lab_test" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_anc
+            SET lab_test = jsonb_build_object(
+                'hbPcv', hb_pcv,
+                'pcv', pcv,
+                'bloodSugarGdm', blood_sugar_gdm
+            )
+            WHERE lab_test IS NULL
+              AND (hb_pcv IS NOT NULL OR pcv IS NOT NULL OR blood_sugar_gdm IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-migrate-anc-interventions-data" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="llin_given" />
+            <columnExists tableName="pmtct_anc" columnName="interventions" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_anc
+            SET interventions = jsonb_build_object(
+                'llinGiven', llin_given,
+                'iptDose', ipt_dose,
+                'hematinicsGiven', hematinics_given,
+                'tdImmunization', td_immunization,
+                'associatedProblems', associated_problems
+            )
+            WHERE interventions IS NULL
+              AND (llin_given IS NOT NULL OR ipt_dose IS NOT NULL OR hematinics_given IS NOT NULL
+                   OR td_immunization IS NOT NULL OR associated_problems IS NOT NULL);
+        </sql>
+    </changeSet>
+
+    <!-- Step 3: Drop old standalone columns from pmtct_anc -->
+    <changeSet id="20250529-drop-old-anc-lab-test-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="hb_pcv" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                DROP COLUMN IF EXISTS hb_pcv,
+                DROP COLUMN IF EXISTS pcv,
+                DROP COLUMN IF EXISTS blood_sugar_gdm;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250529-drop-old-anc-interventions-columns" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_anc" columnName="llin_given" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_anc
+                DROP COLUMN IF EXISTS llin_given,
+                DROP COLUMN IF EXISTS ipt_dose,
+                DROP COLUMN IF EXISTS hematinics_given,
+                DROP COLUMN IF EXISTS td_immunization,
+                DROP COLUMN IF EXISTS associated_problems;
+        </sql>
+    </changeSet>
+
+    <!-- Drop hospital_number from pmtct_mother_visitation -->
+    <changeSet id="20250529-drop-hospital-number-from-mother-visitation" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="pmtct_mother_visitation" columnName="hospital_number" />
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_mother_visitation DROP COLUMN hospital_number;
+        </sql>
+    </changeSet>
+
+    <!-- Normalize hepatitis B/C JSONB string values ("Yes"/"No"/"") to proper booleans (true/false/null) -->
+    <changeSet id="20260601-normalize-hepatitis-jsonb-to-boolean-pmtct-anc" author="dev" failOnError="false">
+        <sql>
+            -- Normalize hepatitis_b_info on pmtct_anc
+            UPDATE pmtct_anc
+            SET hepatitis_b_info = hepatitis_b_info
+                || CASE WHEN hepatitis_b_info->>'testedHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('testedHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'testedHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_b_info->>'treatedHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('treatedHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'treatedHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_b_info->>'referredHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('referredHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'referredHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+            WHERE hepatitis_b_info IS NOT NULL
+              AND (
+                  jsonb_typeof(hepatitis_b_info->'testedHepatitisB') = 'string'
+                  OR jsonb_typeof(hepatitis_b_info->'treatedHepatitisB') = 'string'
+                  OR jsonb_typeof(hepatitis_b_info->'referredHepatitisB') = 'string'
+              );
+
+            -- Normalize hepatitis_c_info on pmtct_anc
+            UPDATE pmtct_anc
+            SET hepatitis_c_info = hepatitis_c_info
+                || CASE WHEN hepatitis_c_info->>'testedHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('testedHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'testedHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_c_info->>'treatedHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('treatedHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'treatedHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_c_info->>'referredHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('referredHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'referredHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+            WHERE hepatitis_c_info IS NOT NULL
+              AND (
+                  jsonb_typeof(hepatitis_c_info->'testedHepatitisC') = 'string'
+                  OR jsonb_typeof(hepatitis_c_info->'treatedHepatitisC') = 'string'
+                  OR jsonb_typeof(hepatitis_c_info->'referredHepatitisC') = 'string'
+              );
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260601-normalize-hepatitis-jsonb-to-boolean-pmtct-visit" author="dev" failOnError="false">
+        <sql>
+            -- Normalize hepatitis_b_info on pmtct_mother_visitation
+            UPDATE pmtct_mother_visitation
+            SET hepatitis_b_info = hepatitis_b_info
+                || CASE WHEN hepatitis_b_info->>'testedHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('testedHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'testedHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_b_info->>'treatedHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('treatedHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'treatedHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_b_info->>'referredHepatitisB' IS NOT NULL THEN
+                    jsonb_build_object('referredHepatitisB',
+                        CASE lower(trim(hepatitis_b_info->>'referredHepatitisB'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+            WHERE hepatitis_b_info IS NOT NULL
+              AND (
+                  jsonb_typeof(hepatitis_b_info->'testedHepatitisB') = 'string'
+                  OR jsonb_typeof(hepatitis_b_info->'treatedHepatitisB') = 'string'
+                  OR jsonb_typeof(hepatitis_b_info->'referredHepatitisB') = 'string'
+              );
+
+            -- Normalize hepatitis_c_info on pmtct_mother_visitation
+            UPDATE pmtct_mother_visitation
+            SET hepatitis_c_info = hepatitis_c_info
+                || CASE WHEN hepatitis_c_info->>'testedHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('testedHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'testedHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_c_info->>'treatedHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('treatedHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'treatedHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+                || CASE WHEN hepatitis_c_info->>'referredHepatitisC' IS NOT NULL THEN
+                    jsonb_build_object('referredHepatitisC',
+                        CASE lower(trim(hepatitis_c_info->>'referredHepatitisC'))
+                            WHEN 'yes' THEN to_jsonb(true)
+                            WHEN 'true' THEN to_jsonb(true)
+                            WHEN 'no' THEN to_jsonb(false)
+                            WHEN 'false' THEN to_jsonb(false)
+                            ELSE 'null'::jsonb
+                        END)
+                   ELSE '{}'::jsonb END
+            WHERE hepatitis_c_info IS NOT NULL
+              AND (
+                  jsonb_typeof(hepatitis_c_info->'testedHepatitisC') = 'string'
+                  OR jsonb_typeof(hepatitis_c_info->'treatedHepatitisC') = 'string'
+                  OR jsonb_typeof(hepatitis_c_info->'referredHepatitisC') = 'string'
+              );
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" id="2026-06-04-add-mode-of-delivery-other-to-delivery" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_delivery" columnName="mode_of_delivery_other" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_delivery ADD COLUMN mode_of_delivery_other character varying(255);
         </sql>
     </changeSet>
 

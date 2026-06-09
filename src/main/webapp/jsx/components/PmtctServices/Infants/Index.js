@@ -7,6 +7,10 @@ import { toast } from "react-toastify";
 import { calculate_age } from "../../../utils";
 import ChildCareIcon from "@material-ui/icons/ChildCare";
 import PersonAddIcon from "@material-ui/icons/PersonAdd";
+import VisibilityIcon from "@material-ui/icons/Visibility";
+import EditIcon from "@material-ui/icons/Edit";
+import EventNoteIcon from "@material-ui/icons/EventNote";
+import DeleteIcon from "@material-ui/icons/Delete";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { Dropdown } from "react-bootstrap";
 
@@ -114,6 +118,7 @@ const InfantInformation = (props) => {
   const [delivery, setDelivery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [aliveChild, setAliveChild] = useState(0);
+  const [deadChild, setDeadChild] = useState(0);
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = useState(false);
   const [record, setRecord] = useState(null);
@@ -152,7 +157,9 @@ const InfantInformation = (props) => {
     if (data && data.dateOfDelivery) {
       setDelivery(data.dateOfDelivery);
       const alive = data.numberOfInfantsAlive;
+      const dead = data.numberOfInfantsDead;
       setAliveChild(alive != null && alive > 0 ? alive : 0);
+      setDeadChild(dead != null && dead > 0 ? dead : 0);
       return true;
     }
     return false;
@@ -335,7 +342,7 @@ const InfantInformation = (props) => {
                 outline: "none",
               }}
             />
-            {delivery && typeof delivery === "string" && delivery !== "" && (
+            {delivery && typeof delivery === "string" && delivery !== "" && infants.length < (aliveChild + deadChild) && (
               <button
                 style={addBtnStyle}
                 onClick={() => LoadPage(delivery, "create")}
@@ -419,11 +426,11 @@ const InfantInformation = (props) => {
                           Actions &#9662;
                         </Dropdown.Toggle>
                         <Dropdown.Menu style={{ zIndex: 1050 }}>
-                          <Dropdown.Item onClick={() => LoadPage(row, "view")}>View</Dropdown.Item>
-                          <Dropdown.Item onClick={() => LoadPage(row, "update")}>Edit</Dropdown.Item>
-                          <Dropdown.Item onClick={() => LoadVisitPage(row)}>Follow Up Visit</Dropdown.Item>
+                          <Dropdown.Item onClick={() => LoadPage(row, "view")}><VisibilityIcon style={{ fontSize: "16px", marginRight: "8px" }} />View Infant Info</Dropdown.Item>
+                          <Dropdown.Item onClick={() => LoadPage(row, "update")}><EditIcon style={{ fontSize: "16px", marginRight: "8px" }} />Edit Infant Info</Dropdown.Item>
+                          <Dropdown.Item onClick={() => LoadVisitPage(row)}><EventNoteIcon style={{ fontSize: "16px", marginRight: "8px" }} />Follow Up Visit</Dropdown.Item>
                           <Dropdown.Divider />
-                          <Dropdown.Item onClick={() => LoadModal(row)} style={{ color: "#dc2626" }}>Delete</Dropdown.Item>
+                          <Dropdown.Item onClick={() => LoadModal(row)} style={{ color: "#dc2626" }}><DeleteIcon style={{ fontSize: "16px", marginRight: "8px" }} />Delete</Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
                     </td>

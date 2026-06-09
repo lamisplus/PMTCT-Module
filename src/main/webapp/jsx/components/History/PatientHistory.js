@@ -67,10 +67,15 @@ const PatientnHistory = (props) => {
   let notToBeUpdated = ["pmtct_infant_information"];
 
   // Map activity names for display
-  const displayActivityName = (name) => {
+  const displayActivityName = (name, data) => {
     if (!name) return name;
     if (name.toLowerCase() === "pmtct enrollment") return "Mother Information- MIP1";
-    if (name.toLowerCase() === "initial" || name.toLowerCase() === "retesting") return "PMTCT HTS";
+    // For HTS records, check testingType from payload first, then fall back to activityName
+    if (name.toLowerCase() === "pmtct hts" || name.toLowerCase() === "retesting" || name.toLowerCase() === "initial") {
+      if (data?.testingType && data.testingType.toUpperCase() === "RETESTING") return "Retesting";
+      if (name.toLowerCase() === "retesting") return "Retesting";
+      return "PMTCT HTS";
+    }
     return name;
   };
 
@@ -101,6 +106,8 @@ const PatientnHistory = (props) => {
       let patientUuid=props.patientObj.patient_uuid
             ? props.patientObj.patient_uuid
             : props.patientObj.patientUuid
+            ? props.patientObj.patientUuid
+            : props.patientObj.uuid
       // ${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}
     axios
       .get(
@@ -111,7 +118,34 @@ const PatientnHistory = (props) => {
       )
       .then((response) => {
         setLoading(false);
-        setRecentActivities(response.data);
+        const activities = response.data || [];
+        // For HTS activities missing testingType, fetch the record detail
+        const htsActivities = activities.filter(
+          (a) => a.path === "pmtct-hts" && !a.testingType && a.recordId
+        );
+        if (htsActivities.length > 0) {
+          Promise.all(
+            htsActivities.map((a) =>
+              axios
+                .get(`${baseUrl}pmtct/anc/view-pmtct-hts-enrollment/${a.recordId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .then((res) => ({ recordId: a.recordId, testingType: res.data?.testingType || "" }))
+                .catch(() => ({ recordId: a.recordId, testingType: "" }))
+            )
+          ).then((results) => {
+            const typeMap = {};
+            results.forEach((r) => { typeMap[r.recordId] = r.testingType; });
+            const enriched = activities.map((a) =>
+              a.path === "pmtct-hts" && typeMap[a.recordId]
+                ? { ...a, testingType: typeMap[a.recordId] }
+                : a
+            );
+            setRecentActivities(enriched);
+          });
+        } else {
+          setRecentActivities(activities);
+        }
       })
 
       .catch((error) => {
@@ -180,7 +214,9 @@ const PatientnHistory = (props) => {
       });
 
       if (props.setPmtctHtsRetestingType) {
-        props.setPmtctHtsRetestingType(row?.activityName.toLowerCase())
+        const isRetesting = (row?.testingType && row.testingType.toUpperCase() === "RETESTING")
+          || row?.activityName?.toLowerCase() === "retesting";
+        props.setPmtctHtsRetestingType(isRetesting ? "retesting" : "pmtct-hts")
       }
     } else {
     }
@@ -370,7 +406,7 @@ const PatientnHistory = (props) => {
         data={
           recentActivities &&
           recentActivities.map((row) => ({
-            name: displayActivityName(row.activityName),
+            name: displayActivityName(row.activityName, row),
             date: row.activityDate,
             actions: !notToBeUpdated.includes(row.path) ? (
               <Dropdown className="dropdown">

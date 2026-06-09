@@ -15,34 +15,34 @@ import java.util.Optional;
 @Repository
 public interface ANCRepository extends CommonJpaRepository<ANC, String> {
     @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = CAST(?1 AS VARCHAR) AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    ANC findByAncNoAndArchived(String ancNo, Long archived);
+    ANC findByAncNoAndArchived(String ancNo, Boolean archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> findANCByPatientUuid(String PatientUuid);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> getByAncNoAndArchived(String ancNo, Long archived);
+    Optional<ANC> getByAncNoAndArchived(String ancNo, Boolean archived);
 
-    @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_anc WHERE anc_no = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> getByAncNo(String ancNo);
 
-    List<ANC> findByArchived(Long archived);
+    List<ANC> findByArchived(Boolean archived);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findANCByPatientUuidAndArchived(String patientUuid, Long archived);
+    Optional<ANC> findANCByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findLatestANCByPatientUuidAndArchived(String patientUuid, Long archived);
+    Optional<ANC> findLatestANCByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
     @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = ?3 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<ANC> findANCByPatientUuidAndCycleIdAndArchived(String patientUuid, String pmtctCycleUuid, Long archived);
+    Optional<ANC> findANCByPatientUuidAndCycleIdAndArchived(String patientUuid, String pmtctCycleUuid, Boolean archived);
 
     @Query(value = "SELECT count(*) FROM pmtct_anc pa", nativeQuery = true)
     Integer getTotalAnc();
 
     List<ANC> getANCByAncNo(String ancNo);
 
-    @Query(value = "SELECT COUNT(*) > 0 FROM pmtct_anc WHERE anc_no = ?1 AND archived = 0", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) > 0 FROM pmtct_anc WHERE anc_no = ?1 AND archived = false", nativeQuery = true)
     boolean existsByAnc(String ancNo);
 
     ANC getANCById(Long id);
@@ -50,7 +50,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
     @Query(value = "SELECT uuid FROM hiv_enrollment where person_uuid=?1", nativeQuery = true)
     Optional<String> findInHivEnrollmentByUuid(String uuid);
 
-    @Query(value = "SELECT static_hiv_status FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT static_hiv_status FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<String> findStaticHivStatusByPatientUuid(String patientUuid);
 
     /*@Query(value = "SELECT id, client_code AS clientCode, date_visit AS dateVisit, hc.patient_uuid AS patientUuid, " +
@@ -69,7 +69,7 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
             " ELSE hiv_test_result2 END)  AS hivTestResult FROM hts_client hc " +
             " INNER JOIN (SELECT person_uuid, MAX(date_visit) max_date " +
             " FROM hts_client " +
-            " WHERE archived=0 " +
+            " WHERE archived=0" +
             " GROUP BY person_uuid) p ON p.person_uuid=hc.person_uuid " +
             " AND p.max_date=hc.date_visit WHERE hc.person_uuid = ?1 and hc.facility_id =?2 ORDER BY id DESC", nativeQuery = true)
     Optional<HtsClientProjection> getHtsRecordByPersonsUuidAAndFacilityId(String puuid, Long facilityId);
@@ -113,18 +113,18 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "  COALESCE(( " +
                             "     SELECT COUNT(*) " +
                             "     FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
                             "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_anc " +
-                            "  WHERE archived = ?2 " +
+                            "  WHERE archived = false " +
                             "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
                             ") pa ON pp.uuid = pa.patient_uuid " +
                             "  AND pa.pmtct_cycle_uuid = ( " +
                             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
@@ -140,8 +140,8 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "   pp.full_name ILIKE ?1 OR " +
                             "   pp.hospital_number ILIKE ?1 " +
                             ") " +
-                            "AND pp.archived = ?2 " +
-                            "AND pp.facility_id = ?3 " +
+                            "AND pp.archived = 0 " +
+                            "AND pp.facility_id = ?2 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
                             "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, pa.id DESC " +
@@ -149,10 +149,10 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = ?2 " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = false " +
                             "  AND pa.pmtct_cycle_uuid = ( " +
                             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?2 " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "WHERE ( " +
@@ -162,13 +162,13 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "   pp.full_name ILIKE ?1 OR " +
                             "   pp.hospital_number ILIKE ?1 " +
                             ") " +
-                            "AND pp.archived = ?2 " +
-                            "AND pp.facility_id = ?3 " +
+                            "AND pp.archived = 0 " +
+                            "AND pp.facility_id = ?2 " +
                             "AND pp.sex ILIKE 'FEMALE' " +
                             "AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
-    Page<PatientPerson> getActiveOnANCBySearchParameters(String queryParam, Integer archived, Long facilityId, Pageable pageable);
+    Page<PatientPerson> getActiveOnANCBySearchParameters(String queryParam, Long facilityId, Pageable pageable);
 
 
     //    @Query(
@@ -208,18 +208,18 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "  pa.pmtct_cycle_uuid AS pmtctCycleUuid, " +
                             "  COALESCE( ( " +
                             "     SELECT COUNT(*) FROM pmtct_pregnancy_cycle ppc " +
-                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "     WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "  ), 0) AS pregnancyCount " +
                             "FROM patient_person pp " +
                             "INNER JOIN ( " +
                             "  SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid) * " +
                             "  FROM pmtct_anc " +
-                            "  WHERE archived = ?1 " +
+                            "  WHERE archived = false " +
                             "  ORDER BY patient_uuid, pmtct_cycle_uuid, id DESC " +
                             ") pa ON pp.uuid = pa.patient_uuid " +
                             "  AND pa.pmtct_cycle_uuid = ( " +
                             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
                             "LEFT JOIN ( " +
@@ -228,8 +228,8 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
                             "  WHERE is_commencement = true " +
                             "  ORDER BY person_uuid, visit_date ASC " +
                             ") hac ON pp.uuid = hac.person_uuid " +
-                            "WHERE pp.archived = ?1 " +
-                            "  AND pp.facility_id = ?2 " +
+                            "WHERE pp.archived = 0 " +
+                            "  AND pp.facility_id = ?1 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
                             "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10) " +
                             "ORDER BY pp.uuid, pa.id DESC " +
@@ -237,19 +237,19 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                             "FROM patient_person pp " +
-                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = ?1 " +
+                            "INNER JOIN pmtct_anc pa ON pp.uuid = pa.patient_uuid AND pa.archived = false " +
                             "  AND pa.pmtct_cycle_uuid = ( " +
                             "    SELECT ppc.uuid FROM pmtct_pregnancy_cycle ppc " +
-                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = ?1 " +
+                            "    WHERE ppc.patient_uuid = pp.uuid AND ppc.archived = false " +
                             "    ORDER BY ppc.created_date DESC LIMIT 1 " +
                             "  ) " +
-                            "WHERE pp.archived = ?1 " +
-                            "  AND pp.facility_id = ?2 " +
+                            "WHERE pp.archived = 0 " +
+                            "  AND pp.facility_id = ?1 " +
                             "  AND pp.sex ILIKE 'FEMALE' " +
                             "  AND (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM pp.date_of_birth) >= 10)",
             nativeQuery = true
     )
-    Page<PatientPerson> getActiveOnANC(Integer archived, Long facilityId, Pageable pageable);
+    Page<PatientPerson> getActiveOnANC(Long facilityId, Pageable pageable);
 
 
 

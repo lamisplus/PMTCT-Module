@@ -572,21 +572,21 @@ public class PMTCTController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"message\": \"An initial PMTCT HTS record already exists for this cycle\"}");
         }
-        return ResponseEntity.ok(this.pmtctHtsService.save(pmtctHtsRequestDTO));
+        return ResponseEntity.ok(this.pmtctHtsService.saveToHtsEncounter(pmtctHtsRequestDTO));
     }
 
 
 
     @DeleteMapping(value = "/delete/pmtct-hts/{id}")
     public ResponseEntity<String> deletePmtctHts(@PathVariable("id") String id) throws Exception {
+        // Routes by id type internally (Long → hts_encounter, UUID → pmtct_hts)
         this.pmtctHtsService.deletePmtctHtsRecord(id);
         return ResponseEntity.accepted().build();
     }
 
-
-
     @GetMapping(value = "view-pmtct-hts-enrollment/{id}")
     public ResponseEntity<PmtctHtsReponseDTO> viewPMTCTHTSEnrollmentById(@PathVariable("id") String id) {
+        // Routes by id type internally (Long → hts_encounter, UUID → pmtct_hts)
         return ResponseEntity.ok(pmtctHtsService.viewPMTCTHTSEnrollmentById(id));
     }
 
@@ -609,7 +609,17 @@ public class PMTCTController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"message\": \"pmtct cycle uuid is required\"}");
         }
-        return ResponseEntity.ok(pmtctHtsService.updatePmtctHts(id, pmtctHtsRequestDTO));
+        // Route: numeric id = hts_encounter (post-migration)
+        try {
+            Long htsId = Long.parseLong(id);
+            return ResponseEntity.ok(pmtctHtsService.updateHtsEncounter(htsId, pmtctHtsRequestDTO));
+        } catch (NumberFormatException e) {
+            // UUID-based IDs indicate un-migrated legacy records in pmtct_hts.
+            // After migration (pmtct-2.5.0), all records should have numeric IDs.
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"This record has a legacy UUID identifier and cannot be updated. "
+                            + "Please run the PMTCT HTS data migration (pmtct-2.5.0) to migrate records to the new format.\"}");
+        }
     }
 
 
@@ -748,6 +758,11 @@ public class PMTCTController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(value = "check-art-enrollment-duplicate")
+    public ResponseEntity<Boolean> checkArtEnrollmentDuplicate(@RequestParam String artEnrollmentNo) {
+        return ResponseEntity.ok(infantVisitService.isArtEnrollmentNoDuplicate(artEnrollmentNo));
+    }
+
     @GetMapping(value = "is-infant-visit-date-exists")
     public ResponseEntity<Boolean> isInfantVisitDateExists(
             @RequestParam String hospitalNumber,
@@ -777,6 +792,23 @@ public class PMTCTController {
     public ResponseEntity<PMTCTStatisticsDto> getPMTCTStatistics() {
         PMTCTStatisticsDto statistics = ancService.getPMTCTStatistics();
         return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping(value = "check-client-code")
+    public ResponseEntity<Boolean> isClientCodeTaken(@RequestParam String code) {
+        if (code == null || code.trim().isEmpty()) {
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(pmtctHtsService.isClientCodeTaken(code.trim()));
+    }
+
+    @GetMapping(value = "migration-status")
+    public ResponseEntity<java.util.Map<String, Object>> getMigrationStatus() {
+        long unmigratedCount = pmtctHtsService.getUnmigratedRecordCount();
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("migrationRequired", unmigratedCount > 0);
+        result.put("unmigratedCount", unmigratedCount);
+        return ResponseEntity.ok(result);
     }
 
 }

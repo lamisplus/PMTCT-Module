@@ -13,18 +13,18 @@ public interface DeliveryRepository extends CommonJpaRepository<Delivery, String
 {
     //Delivery getDeliveryById(Long id);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Delivery getDeliveryByPatientUuidAndPmtctCycleUuid(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByPatientUuid(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_delivery WHERE patient_uuid = ?1 AND pmtct_cycle_uuid = ?2 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<Delivery> findDeliveryByPatientUuidAndPmtctCycleUuid(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT date_of_delivery FROM public.pmtct_delivery WHERE patient_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT date_of_delivery FROM public.pmtct_delivery WHERE patient_uuid = ?1 AND archived = false ORDER BY id DESC LIMIT 1", nativeQuery = true)
     LocalDate getLatestDeliveryDate(String patientUuid);
 }

@@ -15,6 +15,7 @@ import java.time.LocalDate;
 public class PmtctHtsRequestDTO {
     @NotNull(message = "Source is required")
     private String source;
+    private String clientCode;
     private LocalDate dateOfHivTest;
     private String testEntryPoint;
     private String testSetting;
