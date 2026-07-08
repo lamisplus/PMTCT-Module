@@ -438,6 +438,10 @@ const RecentHistory = (props) => {
           RecentActivities();
           toggle();
           setSaving(false);
+          // Notify parent so PatientCard re-fetches HIV status after HTS deletion
+          if (props.setActiveContent) {
+            props.setActiveContent((prev) => ({ ...prev, actionType: "hts-deleted" }));
+          }
         })
         .catch((error) => {
           setSaving(false);

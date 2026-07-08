@@ -7,32 +7,33 @@
     <!-- Clears recorded MD5 checksums for schema.xml changesets so Liquibase
          recomputes them instead of throwing ValidationFailedException when
          schema.xml content has been modified since it was originally executed. -->
-    <changeSet failOnError="false" author="system" id="2026-05-14-clear-schema-xml-checksums" runAlways="true">
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-schema-xml-checksums">
         <sql>
             UPDATE databasechangelog SET md5sum = NULL
             WHERE filename = 'classpath:installers/pmtct/schema/schema.xml';
         </sql>
     </changeSet>
 
-    <changeSet failOnError="false" author="system" id="2026-05-14-clear-add-new-columns-checksums" runAlways="true">
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-add-new-columns-checksums">
         <sql>
             UPDATE databasechangelog SET md5sum = NULL
             WHERE filename = 'classpath:installers/pmtct/schema/add-new-columns.xml';
         </sql>
     </changeSet>
 
-    <changeSet failOnError="false" author="system" id="2026-05-14-clear-pregnancy-cycle-migration-checksums" runAlways="true">
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-pregnancy-cycle-migration-checksums">
         <sql>
             UPDATE databasechangelog SET md5sum = NULL
             WHERE filename = 'classpath:installers/pmtct/schema/pregnancy-cycle-migration.xml';
         </sql>
     </changeSet>
 
-    <changeSet failOnError="false" author="system" id="2026-05-14-clear-populate-facility-id-migration-checksums" runAlways="true">
+    <changeSet failOnError="false" author="system" id="2026-05-14-clear-populate-facility-id-migration-checksums">
         <sql>
             UPDATE databasechangelog SET md5sum = NULL
             WHERE filename = 'classpath:installers/pmtct/schema/populate-facility-id-migration.xml';
         </sql>
     </changeSet>
+
 
 </databaseChangeLog>

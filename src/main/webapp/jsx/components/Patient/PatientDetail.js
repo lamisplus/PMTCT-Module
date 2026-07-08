@@ -78,11 +78,25 @@ function PatientCard(props) {
   const [numberOfInfantsAlive, setNumberOfInfantsAlive] = useState(0);
   const [checkForRetesting, setCheckForRetesting] = useState(true);
   const [isOnPMTCT, setIsOnPMTCT] = useState(false);
+  // Bumped by PmtctHtsForm right after a successful save (PMTCT-HTS or Retesting) so
+  // the patient card refetches the HIV/serology summary immediately, independent of
+  // whatever activeContent route the form navigates to afterwards.
+  const [htsSavedTick, setHtsSavedTick] = useState(0);
+  const bumpHtsSavedTick = () => setHtsSavedTick((t) => t + 1);
 
   const patientObj =
     history.location && history.location.state
       ? history.location.state.patientObj
       : {};
+
+  // Single source of truth for the patient identifier. The 4 grids that route
+  // here (ANC, PMTCT, PMTCT-HTS, Checked-In) each return a differently-named
+  // field on their row objects (patient_uuid, patientUuid, or uuid) — see
+  // ANCRespondDto, PMTCTEnrollmentWithPersonRespondDto, PmtctHtsReponseDTO, and
+  // PersonResponseDto on the backend. Resolve it once here and pass it down,
+  // rather than re-deriving (and risking an incomplete fallback) in every child.
+  const patientUuid =
+    patientObj.patient_uuid || patientObj.patientUuid || patientObj.uuid;
 
   const [latestPmtctCycle, setLatestPmtctCycle] = useState({
     uuid: patientObj.pmtctCycleUuid,
@@ -102,10 +116,6 @@ function PatientCard(props) {
   // Handler for cycle selection changes
   const handleCycleChange = async (cycleId) => {
     setSelectedCycleId(cycleId);
-
-    // Fetch the selected cycle data
-    const patientUuid =
-      patientObj.patient_uuid || patientObj.patientUuid || patientObj.uuid;
 
     try {
       // Get all cycles and find the selected one
@@ -133,12 +143,6 @@ function PatientCard(props) {
   };
 
   const getLatestPmtctCycle = async () => {
-    const patientUuid = patientObj.patient_uuid
-      ? patientObj.patient_uuid
-      : patientObj.patientUuid
-      ? patientObj.patientUuid
-      : patientObj.uuid;
-
     await axios
       .get(
         `${baseUrl}pmtct/anc/get-latest-pregnancy-cycle?patientUuid=${patientUuid}`,
@@ -154,12 +158,6 @@ function PatientCard(props) {
       });
   };
   const RecentActivities = (cycleIdToUse) => {
-    const patientUuid = patientObj.patient_uuid
-      ? patientObj.patient_uuid
-      : patientObj.patientUuid
-      ? patientObj.patientUuid
-      : patientObj.uuid;
-
     // Use the provided cycleId, or fall back to selectedCycleId, latestPmtctCycle, or patientObj
     const pmtctCycleUuid = cycleIdToUse || selectedCycleId || latestPmtctCycle?.uuid || patientObj.pmtctCycleUuid;
 
@@ -213,12 +211,6 @@ function PatientCard(props) {
   };
 
   const getLatestMaternalOutcome = async () => {
-    const patientUuid = patientObj.patient_uuid
-      ? patientObj.patient_uuid
-      : patientObj.patientUuid
-      ? patientObj.patientUuid
-      : patientObj.uuid;
-
     const cycleId = selectedCycleId || latestPmtctCycle?.uuid || patientObj.pmtctCycleUuid;
     if (!cycleId) return;
 
@@ -294,12 +286,17 @@ function PatientCard(props) {
     }
   }, []);
 
+  // Re-fetch latest cycle whenever navigation changes (e.g. after HTS creates a new cycle)
+  useEffect(() => {
+    getLatestPmtctCycle();
+  }, [activeContent.route, activeContent.actionType]);
+
   // Cycle-dependent calls: only run when we have a valid cycle UUID
   useEffect(() => {
     if (!latestPmtctCycle?.uuid) return;
     getLatestMaternalOutcome();
     RecentActivities(selectedCycleId);
-  }, [activeContent, latestPmtctCycle?.uuid, selectedCycleId]);
+  }, [activeContent.route, activeContent.actionType, latestPmtctCycle?.uuid, selectedCycleId]);
 
   // Re-fetch cycle when user selects a different cycle manually
   useEffect(() => {
@@ -325,6 +322,7 @@ function PatientCard(props) {
           {/* Patient Card Detail */}
           <PatientCardDetail
             patientObj={patientObj}
+            patientUuid={patientUuid}
             setArt={setArt}
             setActiveContent={setActiveContent}
             activeContent={activeContent}
@@ -333,6 +331,7 @@ function PatientCard(props) {
             setLatestHivStatus={setLatestHivStatus}
             latestPmtctCycle={latestPmtctCycle}
             selectedCycleId={selectedCycleId}
+            htsSavedTick={htsSavedTick}
           />
 
           {/* Patient Dashboard menu */}
@@ -399,16 +398,11 @@ function PatientCard(props) {
               onEnrollPatient={false}
               entrypointValue={patientObj.entryPoint}
               patientAge={patientObj?.age}
-              patientUuid={
-                patientObj.patient_uuid
-                  ? patientObj.patient_uuid
-                  : patientObj.patientUuid
-                  ? patientObj.patientUuid
-                  : patientObj.uuid
-              }
+              patientUuid={patientUuid}
               latestPmtctCycle={latestPmtctCycle}
               hasPmtctHtsRecord={"omit"}
               selectedCycleId={selectedCycleId}
+              onSaved={bumpHtsSavedTick}
             />
           )}
 

@@ -80,3 +80,61 @@ export const getRoles = async () => {
   }
   return roles;
 };
+
+export const fetchAndStoreUsers = async () => {
+  try {
+    const cached = localStorage.getItem("facility_users");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+      // Cached array is empty — remove and refetch
+      localStorage.removeItem("facility_users");
+    }
+
+    const facilityId = getFacilityId();
+    const response = await axios.get(`${url}users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Handle both array responses and paginated Spring Boot Page responses
+    const rawData = Array.isArray(response.data)
+      ? response.data
+      : Array.isArray(response.data?.content)
+        ? response.data.content
+        : [];
+
+    const users = rawData
+      .filter((u) => !facilityId || String(u.currentOrganisationUnitId) === String(facilityId))
+      .map((u) => ({
+        id: u.id,
+        fullName: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+      }))
+      .filter((u) => u.fullName);
+
+    // Only cache non-empty results
+    if (users.length > 0) {
+      localStorage.setItem("facility_users", JSON.stringify(users));
+    }
+    return users;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+};
+
+export const getFacilityUsers = async () => {
+  const cached = localStorage.getItem("facility_users");
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch {
+      // corrupted cache — refetch
+    }
+  }
+  return fetchAndStoreUsers();
+};

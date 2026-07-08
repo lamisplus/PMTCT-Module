@@ -125,4 +125,26 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "ORDER BY id DESC")
     List<HtsEncounterProxy> findByPatientUuidAndUnarchived(String patientUuid);
+
+    @Query(nativeQuery = true, value
+            = "SELECT EXISTS(SELECT 1 FROM hts_encounter "
+            + "WHERE pmtct_hts = true AND archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND ("
+            + "    LOWER(COALESCE(observation->'syphilisInfo'->>'testResult', '')) IN ('positive', 'reactive')"
+            + "  )"
+            + ")")
+    boolean hasEverPositiveSyphilis(String patientUuid);
+
+    @Query(nativeQuery = true, value
+            = "SELECT EXISTS(SELECT 1 FROM hts_encounter "
+            + "WHERE pmtct_hts = true AND archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND ("
+            + "    LOWER(COALESCE(observation->'hbvInfo'->>'testResult', '')) IN ('positive', 'reactive') OR "
+            + "    LOWER(COALESCE(observation->>'hepatitisB', '')) IN ('positive', 'reactive') OR "
+            + "    LOWER(COALESCE(observation->>'hepatitisC', '')) IN ('positive', 'reactive')"
+            + "  )"
+            + ")")
+    boolean hasEverPositiveHepatitis(String patientUuid);
 }

@@ -249,9 +249,8 @@ public class PmtctPregnancyCycleService {
         validation.setLastMaternalOutcome(latestCycle.getMaternalOutcome());
 
         // List of negative outcomes that allow direct enrollment
+        // NOTE: LTFU is intentionally excluded — LTFU requires confirmation before re-enrollment
         List<String> negativeOutcomes = Arrays.asList(
-            "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
-            "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP",
             "MATERNAL_OUTCOME_DEAD",
             "MATERNAL_OUTCOME_TRANSFERRED_OUT",
             "MATERNAL_OUTCOME_TRANSFERRED_TO_ANOTHER_PMTCT_COHORT_(NEW_PREGNANCY)",
@@ -259,10 +258,24 @@ public class PmtctPregnancyCycleService {
             "MATERNAL_OUTCOME_TRANSITIONED_TO_ART_CLINIC"
         );
 
+        // LTFU outcomes that require confirmation before re-enrollment
+        List<String> ltfuOutcomes = Arrays.asList(
+            "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP",
+            "MATERNAL_OUTCOME_LOST_TO_FOLLOW_UP"
+        );
+
         String maternalOutcome = latestCycle.getMaternalOutcome() != null
             ? latestCycle.getMaternalOutcome().trim().toUpperCase()
             : "";
         Boolean isClosed = latestCycle.getIsClosed() != null ? latestCycle.getIsClosed() : false;
+
+        // LTFU always requires confirmation regardless of cycle closed status
+        if (ltfuOutcomes.stream().anyMatch(outcome -> outcome.equalsIgnoreCase(maternalOutcome))) {
+            validation.setCanEnrollDirectly(false);
+            validation.setRequiresConfirmation(true);
+            validation.setMessage("This client was previously Lost to Follow-Up (LTFU). Do you want to document a new enrolment?");
+            return validation;
+        }
 
         // Check if cycle is closed
         if (isClosed) {
@@ -298,6 +311,38 @@ public class PmtctPregnancyCycleService {
         }
 
         return validation;
+    }
+
+    /**
+     * Checks if a patient has ever tested positive for Syphilis or Hepatitis
+     * across ALL pregnancy cycles (pmtct_hts + hts_encounter tables).
+     * Used by the frontend to determine menu visibility for MIP and related forms.
+     */
+    public java.util.Map<String, Object> getHistoricalSerologyStatus(String patientUuid) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("syphilisEverPositive", false);
+        result.put("hepatitisEverPositive", false);
+
+        if (patientUuid == null || patientUuid.isEmpty()) {
+            return result;
+        }
+
+        try {
+            // Check hts_encounter table (post-migration records)
+            boolean syphFromHtsEnc = htsEncounterProxyRepository.hasEverPositiveSyphilis(patientUuid);
+            boolean hepFromHtsEnc = htsEncounterProxyRepository.hasEverPositiveHepatitis(patientUuid);
+
+            // Check pmtct_hts table (legacy records)
+            boolean syphFromLegacy = pmtctHtsRepository.hasEverPositiveSyphilis(patientUuid);
+            boolean hepFromLegacy = pmtctHtsRepository.hasEverPositiveHepatitis(patientUuid);
+
+            result.put("syphilisEverPositive", syphFromHtsEnc || syphFromLegacy);
+            result.put("hepatitisEverPositive", hepFromHtsEnc || hepFromLegacy);
+        } catch (Exception e) {
+            // Safe to return defaults on failure
+        }
+
+        return result;
     }
 
     /**

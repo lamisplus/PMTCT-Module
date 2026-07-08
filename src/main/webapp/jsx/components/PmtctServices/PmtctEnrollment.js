@@ -137,6 +137,8 @@ const AncPnc = (props) => {
   const [timeHivInitiation, setTimeHivInitiation] = useState([]);
   const [deliveryModeList, setDeliveryModeList] = useState([]);
   const [artUniqueNumber, setArtUniqueNumber] = useState("");
+  const [htsHivResult, setHtsHivResult] = useState("");
+  const [ancNumber, setAncNumber] = useState("");
   const [maxARTDate, setMaxARTDate] = useState(
     moment(new Date()).format("YYYY-MM-DD")
   );
@@ -382,6 +384,9 @@ const AncPnc = (props) => {
       );
       if (response.data) {
         const htsData = response.data;
+        // Auto-populate HIV Test Result and ANC Number for info display
+        if (htsData.finalResult) setHtsHivResult(htsData.finalResult);
+        if (htsData.ancNo) setAncNumber(htsData.ancNo);
         const updates = {};
         // Map syphilis from HTS to enrollment syphilisDetails
         if (htsData.syphilis) {
@@ -396,9 +401,14 @@ const AncPnc = (props) => {
           const mappedResult = ["reactive", "Reactive"].includes(rawResult) ? "Positive"
             : ["non-reactive", "Non-reactive"].includes(rawResult) ? "Negative"
             : rawResult;
+          // Map HTS treatment values to enrollment Yes/No
+          const htsTreatment = htsData.syphilisInfo.treatment || "";
+          const mappedTreatment = htsTreatment === "Treated" ? "Yes"
+            : htsTreatment === "Not Treated" ? "No"
+            : "";
           updates.syphilisDetails = {
             testResult: mappedResult || updates.syphilisDetails?.testResult || "",
-            treatment: htsData.syphilisInfo.treatment || "",
+            treatment: mappedTreatment,
             drugName: htsData.syphilisInfo.drugName || "",
           };
         }
@@ -531,6 +541,28 @@ const AncPnc = (props) => {
     }
   };
 
+  // Pre-populate ART Start Date and Timing from previous PMTCT enrollment (for subsequent pregnancy cycles)
+  const fetchPreviousCycleArtData = async (patientUuid) => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/latest-enrollment?patientUuid=${patientUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data) {
+        const prevEnrollment = response.data;
+        if (prevEnrollment.artStartDate || prevEnrollment.artStartTime) {
+          setEnrollDto((prev) => ({
+            ...prev,
+            artStartDate: prev.artStartDate || prevEnrollment.artStartDate || "",
+            artStartTime: prev.artStartTime || prevEnrollment.artStartTime || "",
+          }));
+        }
+      }
+    } catch (error) {
+      // No previous enrollment found — fields remain blank for manual entry
+    }
+  };
+
   // Auto-populate Previously Known HIV+ and Unique ID from HTS/ART tables
   const checkHistoricalHivAndArt = async (patientUuid) => {
     try {
@@ -604,6 +636,7 @@ const AncPnc = (props) => {
       if (!props.activeContent?.id || props.activeContent?.actionType === "create") {
         getHistoricalHivStatus(patientUuid);
         checkHistoricalHivAndArt(patientUuid);
+        fetchPreviousCycleArtData(patientUuid);
       }
     }
     console.log("PmtctEnrollment useEffect => activeContent:", JSON.stringify(props.activeContent));
@@ -643,6 +676,16 @@ const AncPnc = (props) => {
     // Fetch parity for gravida validation (both create and edit modes)
     if (patientUuid && props?.latestPmtctCycle?.uuid) {
       fetchParityFromAnc(patientUuid, props.latestPmtctCycle.uuid);
+    }
+    // Fetch HIV result and ANC number for display (all modes)
+    if (patientUuid && props?.latestPmtctCycle?.uuid) {
+      axios.get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${props.latestPmtctCycle.uuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).then((res) => {
+        if (res.data?.finalResult) setHtsHivResult(res.data.finalResult);
+        if (res.data?.ancNo) setAncNumber(res.data.ancNo);
+      }).catch(() => {});
     }
     // Auto-populate serology from HTS on create mode only
     if (!props.activeContent.id && patientUuid && props?.latestPmtctCycle?.uuid) {
@@ -1007,10 +1050,6 @@ const AncPnc = (props) => {
       } else {
         updateMaxARTDate("prior");
       }
-    } else if (e.target.name === "hivStatus") {
-      if (e.target.value !== "Positive") {
-        toast.error("Cannot enroll negative client on PMTCT");
-      }
     } else if (e.target.name === "lmp" && e.target.value !== "") {
       let response = calculateGestationalAge(
         enroll.pmtctEnrollmentDate,
@@ -1059,24 +1098,37 @@ const AncPnc = (props) => {
         toast.error("Please select a valid date");
       }
       let EDD = calculateExpectedDate(enroll.lmp);
+      // Clear delivery date if it now falls before the new enrollment date
+      let updatedDeliveryDate = enroll.dateOfDelivery;
+      if (updatedDeliveryDate && updatedDeliveryDate < e.target.value) {
+        updatedDeliveryDate = "";
+      }
       setEnrollDto({
         ...enroll,
         [e.target.name]: e.target.value,
         expectedDeliveryDate: EDD,
+        dateOfDelivery: updatedDeliveryDate,
       });
     } else if (e.target.name === "dateOfDelivery" && e.target.value !== "") {
       let Ga = calculateGaFromPmtct(e.target.value);
 
-      if (Ga > 0) {
+      if (Ga > 45) {
+        toast.error("Gestational age exceeds 45 weeks. Please check the Date of Delivery or LMP.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: enroll.lmp && enroll.pmtctEnrollmentDate ? calculateGestationalAge(enroll.pmtctEnrollmentDate, enroll.lmp) || "" : "" });
+        return;
+      } else if (Ga > 0 && Ga < 4) {
+        toast.error("Gestational age must be at least 4 weeks. Please check the Date of Delivery or LMP.");
+        setEnrollDto({ ...enroll, [e.target.name]: "", gaweeks: enroll.lmp && enroll.pmtctEnrollmentDate ? calculateGestationalAge(enroll.pmtctEnrollmentDate, enroll.lmp) || "" : "" });
+        return;
+      } else if (Ga > 0) {
         enroll.gaweeks = Ga;
         setEnrollDto({ ...enroll, [e.target.name]: e.target.value });
       } else {
-        enroll.gaweeks = Ga;
         toast.error("Please select a valid date");
         setEnrollDto({
           ...enroll,
-          [e.target.name]: e.target.value,
-          gaweeks: "",
+          [e.target.name]: "",
+          gaweeks: enroll.lmp && enroll.pmtctEnrollmentDate ? calculateGestationalAge(enroll.pmtctEnrollmentDate, enroll.lmp) || "" : "",
         });
       }
     } else {
@@ -1137,13 +1189,6 @@ const AncPnc = (props) => {
     temp.syphilisTestResult = enroll.syphilisDetails?.testResult ? "" : "This field is required";
     temp.hepatitisB = enroll.hepatitisB ? "" : "This field is required";
 
-    // Accept all positive HIV status variants (Positive, Known Positive, HIV_STATUS_POSITIVE, etc.)
-    const hivNormalized = (enroll.hivStatus || "").toString().toUpperCase();
-    temp.hivStatus =
-      hivNormalized.includes("POSITIVE")
-        ? ""
-        : "Cannot enroll negative client on PMTCT";
-
     setErrors({
       ...temp,
     });
@@ -1151,6 +1196,26 @@ const AncPnc = (props) => {
   };
 
   /**** Submit Button Processing  */
+
+  // Sanitize payload: convert empty strings to null for fields the backend
+  // expects as LocalDate, Integer, or Long — Jackson cannot deserialize ""
+  // into these types.  Also strip frontend-only keys the DTO does not know.
+  const sanitizePayload = (obj) => {
+    const typedFields = [
+      "dateOfDelivery", "expectedDeliveryDate", "artStartDate", "lmp",
+      "pmtctEnrollmentDate", "gravida", "gaweeks", "regimenTypeId",
+    ];
+    const frontendOnlyKeys = [
+      "ga", "pmtctType", "hepatitisB", "motherArtInitiationTime",
+    ];
+    const sanitized = { ...obj };
+    typedFields.forEach((field) => {
+      if (sanitized[field] === "" || sanitized[field] === undefined) sanitized[field] = null;
+    });
+    frontendOnlyKeys.forEach((key) => delete sanitized[key]);
+    return sanitized;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Ensure hepatitisB test result is synced into hbvDetails before submit
@@ -1181,47 +1246,80 @@ const AncPnc = (props) => {
       setSaving(true);
       if (props.activeContent && props.activeContent.actionType === "update") {
         //Perform operation for update action
+        const updatePayload = sanitizePayload({ ...enroll, source: enroll.source || "WEB" });
         axios
           .put(
             `${baseUrl}pmtct/anc/update-pmtct-enrollment/${props.activeContent.id}`,
-            { ...enroll, source: enroll.source || "WEB" },
+            updatePayload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
           .then((response) => {
             setSaving(false);
-            //props.patientObj.commenced=true
             toast.success("Record updated successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
             props.setActiveContent({
               ...props.activeContent,
               route: "recent-history",
+              actionType: "create",
+              id: "",
             });
           })
           .catch((error) => {
             setSaving(false);
-            toast.error("Something went wrong", {
+            const errMsg = error?.response?.data?.apierror?.message
+              || error?.response?.data?.message
+              || "Something went wrong";
+            toast.error(errMsg, {
               position: toast.POSITION.BOTTOM_CENTER,
             });
           });
       } else {
         //perform operation for save action
-        let payload = {
-          
+        // Resolve patientUuid from all possible sources
+        const resolvedPatientUuid =
+          props.patientObj.patient_uuid
+          || props.patientObj.patientUuid
+          || props.patientObj.uuid
+          || props.patientObj.personUuid
+          || props.patientObj.person_uuid
+          || locationState?.patientObj?.patientUuid
+          || locationState?.patientObj?.uuid
+          || locationState?.patientObj?.patient_uuid;
+
+        // Resolve entryPoint from all possible sources
+        const resolvedEntryPoint =
+          locationState?.entrypointValue
+          || props.entrypointValue
+          || enroll.entryPoint
+          || entryValueDisplay?.code
+          || props.patientObj?.entryPoint;
+
+        // Resolve pmtctCycleUuid from all possible sources
+        const resolvedCycleUuid =
+          pmtctCycleUuid
+          || props?.latestPmtctCycle?.uuid
+          || props.patientObj?.pmtctCycleUuid;
+
+        // Guard: prevent save if critical fields are missing
+        if (!resolvedPatientUuid) {
+          setSaving(false);
+          toast.error("Patient identifier is missing. Please go back and re-select the patient.", { position: toast.POSITION.BOTTOM_CENTER });
+          return;
+        }
+        if (!resolvedCycleUuid) {
+          setSaving(false);
+          toast.error("Pregnancy cycle is missing. Please ensure the patient has an active PMTCT cycle.", { position: toast.POSITION.BOTTOM_CENTER });
+          return;
+        }
+
+        let payload = sanitizePayload({
           ...enroll,
-          entryPoint: locationState.entrypointValue
-            ? locationState.entrypointValue
-            : props.entrypointValue,
-          patientUuid:
-            props.patientObj.patient_uuid
-              || props.patientObj.patientUuid
-              || props.patientObj.uuid
-              || (locationState && locationState.patientObj
-                ? (locationState.patientObj.patientUuid || locationState.patientObj.uuid)
-                : undefined),
-          pmtctCycleUuid: pmtctCycleUuid || props?.latestPmtctCycle?.uuid,
+          entryPoint: resolvedEntryPoint,
+          patientUuid: resolvedPatientUuid,
+          pmtctCycleUuid: resolvedCycleUuid,
           source: "WEB",
-        };
+        });
 
         axios
           .post(`${baseUrl}pmtct/anc/pmtct-enrollment`, payload, {
@@ -1239,13 +1337,17 @@ const AncPnc = (props) => {
               props.setActiveContent({
                 ...props.activeContent,
                 route: "recent-history",
+                actionType: "create",
+                id: "",
               });
             }
           })
           .catch((error) => {
-            console.log(error);
             setSaving(false);
-            toast.error("Something went wrong", {
+            const errMsg = error?.response?.data?.apierror?.message
+              || error?.response?.data?.message
+              || "Something went wrong";
+            toast.error(errMsg, {
               position: toast.POSITION.BOTTOM_CENTER,
             });
           });
@@ -1306,7 +1408,22 @@ const AncPnc = (props) => {
                     <EventNoteIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />Enrollment Details
                   </h6>
                   <div className="row">
-                    {/* ANC ID field removed from enrollment form */}
+                    {htsHivResult && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>HIV Test Result</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="htsHivResult"
+                              id="htsHivResult"
+                              value={htsHivResult}
+                              disabled
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
                     {artUniqueNumber && (
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -1317,6 +1434,22 @@ const AncPnc = (props) => {
                               name="artUniqueNumber"
                               id="artUniqueNumber"
                               value={artUniqueNumber}
+                              disabled
+                            />
+                          </InputGroup>
+                        </FormGroup>
+                      </div>
+                    )}
+                    {ancNumber && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <Label>ANC Number</Label>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="ancNumber"
+                              id="ancNumber"
+                              value={ancNumber}
                               disabled
                             />
                           </InputGroup>
@@ -1931,13 +2064,21 @@ const AncPnc = (props) => {
                             id="dateOfDelivery"
                             onChange={handleInputChangeEnrollmentDto}
                             value={enroll.dateOfDelivery}
-                            max={moment(new Date()).format("YYYY-MM-DD")}
-                            min={
-                              [minDeliveryDate, enroll.pmtctEnrollmentDate, enroll.lmp, props?.patientObj?.dateOfEnrollment]
-                                .filter(Boolean)
-                                .sort()
-                                .pop() || ""
-                            }
+                            max={(() => {
+                              const today = moment(new Date()).format("YYYY-MM-DD");
+                              if (enroll.lmp) {
+                                const lmpMax = addWeeksToDate(enroll.lmp, 45);
+                                return lmpMax < today ? lmpMax : today;
+                              }
+                              return today;
+                            })()}
+                            min={(() => {
+                              const candidates = [minDeliveryDate, enroll.pmtctEnrollmentDate, props?.patientObj?.dateOfEnrollment].filter(Boolean);
+                              if (enroll.lmp) {
+                                candidates.push(addWeeksToDate(enroll.lmp, 4));
+                              }
+                              return candidates.sort().pop() || "";
+                            })()}
                             disabled={disabledField}
                           />
                         </InputGroup>
@@ -2108,7 +2249,7 @@ const AncPnc = (props) => {
                   props.setActiveContent({
                     ...props.activeContent,
                     route: "recent-history",
-                    actionType: "",
+                    actionType: "create",
                     id: "",
                   })
                 }

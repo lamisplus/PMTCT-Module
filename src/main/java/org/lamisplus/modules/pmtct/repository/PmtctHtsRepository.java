@@ -54,6 +54,19 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
     @Query(value = "SELECT MIN(date_of_hiv_test) FROM pmtct_hts WHERE patient_uuid = ?1 AND archived = false AND (COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') IN ('Positive', 'reactive'))", nativeQuery = true)
     LocalDate findEarliestPositiveHivTestDate(String patientUuid);
 
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = false AND ("
+            + "LOWER(COALESCE(syphilis, '')) IN ('positive', 'reactive') OR "
+            + "LOWER(COALESCE(syphilis_info->>'testResult', '')) IN ('positive', 'reactive')"
+            + "))", nativeQuery = true)
+    boolean hasEverPositiveSyphilis(String patientUuid);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = false AND ("
+            + "LOWER(COALESCE(hepatitis_b, '')) IN ('positive', 'reactive') OR "
+            + "LOWER(COALESCE(hbv_info->>'testResult', '')) IN ('positive', 'reactive') OR "
+            + "LOWER(COALESCE(hepatitis_c, '')) IN ('positive', 'reactive')"
+            + "))", nativeQuery = true)
+    boolean hasEverPositiveHepatitis(String patientUuid);
+
 
     @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND archived = false AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
     List<Object[]> findLatestHivTestResultList(String patientUuid);

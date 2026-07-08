@@ -43,6 +43,17 @@ function PatientCard(props) {
   const patientObjs = props.patientObj ? props.patientObj : {};
   const [patientObj, setpatientObj] = useState(patientObjs);
 
+  // Single source of truth for the patient identifier on this component.
+  // PatientDetail resolves this once (across the 4 grids that route here — ANC,
+  // PMTCT, PMTCT-HTS, Checked-In — each returning a differently-named uuid field)
+  // and passes it down as `patientUuid`. The direct patientObj fallback below is
+  // only a safety net for callers that don't pass the prop.
+  const patientUuid =
+    props.patientUuid ||
+    props.patientObj?.patient_uuid ||
+    props.patientObj?.patientUuid ||
+    props.patientObj?.uuid;
+
   const [highRiskInfants, setHighRiskInfants] = useState([]);
   const [expandedHighRiskIndex, setExpandedHighRiskIndex] = useState(false);
   const [unsuppressedVl, setUnsuppressedVl] = useState(false);
@@ -73,6 +84,8 @@ function PatientCard(props) {
     seroconverted: '',
     remainedHivNegative: '',
   });
+  const [syphilisResult, setSyphilisResult] = useState(null);
+  const [hepatitisResult, setHepatitisResult] = useState(null);
 
   const [artModal, setArtModal] = useState(false);
   const Arttoggle = () => setArtModal(!artModal);
@@ -90,20 +103,62 @@ function PatientCard(props) {
     setExpandedHighRiskIndex(!expandedHighRiskIndex);
   };
 
-  const getHivRetestStatus = async () => {
-    if (props.latestPmtctCycle?.uuid) {
-      const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
-      try {
-        let url = `${baseUrl}pmtct/anc/get-hiv-retest-status?patientUuid=${patientUuid}&pmtctCycleUuid=${props.latestPmtctCycle.uuid}`;
-        const response = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setRetestStatus(response.data);
-        return response.data;
-      } catch (error) {
-        console.error("Error fetching HIV retest status:", error);
-        toast.error("Failed to load HIV retest status");
+  const fetchPatientHivSummary = async () => {
+    const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
+    if (!patientUuid || !pmtctCycleUuid) return;
+
+    try {
+      const response = await axios.get(
+        `${baseUrl}pmtct/anc/patient-hiv-summary?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = response.data;
+
+      // HIV status
+      setConfirmStatus(data.hivStatus || null);
+      setHasPmtctHtsRecord(data.hasHtsRecord);
+      setPmtctHtsFinalStatus(data.hivStatus || null);
+      if (props.setLatestHivStatus) {
+        props.setLatestHivStatus(data.hivStatus || null);
       }
+      if (props.setLastestConfirmatoryTest) {
+        props.setLastestConfirmatoryTest(data.hivStatus || null);
+      }
+
+      // Retest status
+      setRetestStatus({
+        remainedHivNegative: data.remainedHivNegative,
+        seroconverted: data.seroconverted,
+      });
+
+      // Serology from HTS record
+      if (data.syphilisResult) {
+        const norm = data.syphilisResult.trim().toLowerCase();
+        const isPositive = norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
+        setSyphilisResult(isPositive ? "Positive" : "Negative");
+      } else {
+        setSyphilisResult("");
+      }
+
+      const hepB = data.hepatitisBResult || "";
+      const hepC = data.hepatitisCResult || "";
+      if (hepB || hepC) {
+        const normB = hepB.trim().toLowerCase();
+        const normC = hepC.trim().toLowerCase();
+        const isPositive = normB.includes("positive") || (normB.includes("reactive") && !normB.includes("non-reactive") && !normB.includes("non reactive"))
+          || normC.includes("positive") || (normC.includes("reactive") && !normC.includes("non-reactive") && !normC.includes("non reactive"));
+        setHepatitisResult(isPositive ? "Positive" : "Negative");
+      } else {
+        setHepatitisResult("");
+      }
+    } catch (error) {
+      console.error("Error fetching patient HIV summary:", error);
+      setConfirmStatus(null);
+      setHasPmtctHtsRecord(false);
+      setPmtctHtsFinalStatus(null);
+      setRetestStatus(null);
+      setSyphilisResult("");
+      setHepatitisResult("");
     }
   };
 
@@ -132,7 +187,6 @@ function PatientCard(props) {
     if (entryPoint !== "PMTCT_ENTRY_POINT_ANC") return;
     const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
     if (!pmtctCycleUuid) return;
-    const patientUuid = patientObj?.patient_uuid || patientObj?.patientUuid || patientObj?.uuid;
     if (!patientUuid) return;
 
     axios
@@ -163,7 +217,6 @@ function PatientCard(props) {
       // Could not extract ART number from identifiers
     }
     // Fallback: fetch from HIV module via /art/ endpoint
-    const patientUuid = patientObj?.patient_uuid || patientObj?.patientUuid || patientObj?.uuid;
     if (patientUuid) {
       axios
         .get(`${baseUrl}pmtct/anc/art/?PatientUuid=${patientUuid}`, {
@@ -186,64 +239,56 @@ function PatientCard(props) {
     checkUnsuppressedVl();
   }, [props.patientObj]);
 
-  // Calls that depend on latestPmtctCycle being available
+  // Calls that depend on latestPmtctCycle being available.
+  // `activeContent` is a useState object in PatientDetail that only changes
+  // reference on a real navigation (not on every render), so depending on the
+  // whole object refetches on EVERY active-content change — including ones that
+  // keep the same route but change id/activeTab/obj (e.g. saving an HTS form).
+  // `htsSavedTick` is bumped by PmtctHtsForm right after a successful HTS/Retest
+  // save, so the card refreshes immediately even when the route doesn't change.
   useEffect(() => {
     if (!props.latestPmtctCycle?.uuid) return;
     getHETInfantStatus();
-    getHivRetestStatus();
-    getLatestConfirmatoryResult();
+    fetchPatientHivSummary();
     getHighRiskInfantStatus();
     getEntryPointDisplay();
     getCycleAncNo();
-  }, [props.activeContent, props.latestPmtctCycle?.uuid]);
+    fetchEnrollmentSerologyResults();
+  }, [props.activeContent, props.latestPmtctCycle?.uuid, props.htsSavedTick]);
 
-  const getLatestConfirmatoryResult = async () => {
-    if (props.latestPmtctCycle?.uuid) {
-      const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
-      await axios
-        .get(
-          `${baseUrl}pmtct/anc/get-confirmatory-latest-result?patientUuid=${patientUuid}&pmtctCycleUuid=${props.latestPmtctCycle.uuid}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then((response) => {
-          if (response.data !== null && response.data !== undefined && response.data !== '') {
-            props.setLastestConfirmatoryTest(response.data);
-            setConfirmStatus(response.data);
-            props.setLatestHivStatus(response.data);
-          } else {
-            const fallbackStatus =
-              props?.patientObj?.finalResult ||
-              props?.patientObj?.staticHivStatus ||
-              props?.patientObj?.hivStatus ||
-              props?.patientObj?.dynamicHivStatus;
-            if (fallbackStatus) {
-              setConfirmStatus(fallbackStatus);
-              props.setLatestHivStatus(fallbackStatus);
-            }
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching confirmatory result:", error);
-        });
-      await getPmtctHtsRecord(patientUuid, props.latestPmtctCycle.uuid);
-    }
-  };
-
-  const getPmtctHtsRecord = async (patientUuid, pmtctCycleUuid) => {
+  // Fetch syphilis & hepatitis results from PMTCT enrollment (MIP card) as fallback
+  const fetchEnrollmentSerologyResults = async () => {
+    if (!patientUuid) return;
     try {
       const response = await axios.get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
+        `${baseUrl}pmtct/anc/latest-enrollment?patientUuid=${patientUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data && response.data.finalResult) {
-        setPmtctHtsFinalStatus(response.data.finalResult);
-        setHasPmtctHtsRecord(true);
-      } else {
-        setHasPmtctHtsRecord(false);
+      if (response.data) {
+        const enrollment = response.data;
+        // Syphilis from enrollment syphilisDetails
+        const syphVal = enrollment.syphilisDetails?.testResult || "";
+        if (syphVal) {
+          setSyphilisResult((prev) => {
+            if (prev) return prev; // HTS data already populated
+            const norm = syphVal.trim().toLowerCase();
+            const isPositive = norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
+            return isPositive ? "Positive" : "Negative";
+          });
+        }
+        // Hepatitis B from enrollment hbvDetails
+        const hepVal = enrollment.hbvDetails?.testResult || "";
+        if (hepVal) {
+          setHepatitisResult((prev) => {
+            if (prev) return prev; // HTS data already populated
+            const norm = hepVal.trim().toLowerCase();
+            const isPositive = norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
+            return isPositive ? "Positive" : "Negative";
+          });
+        }
       }
     } catch (error) {
-      console.error("Error fetching PMTCT HTS record:", error);
-      setHasPmtctHtsRecord(false);
+      // No enrollment found — serology results remain from HTS or empty
     }
   };
 
@@ -271,7 +316,6 @@ function PatientCard(props) {
   };
 
   const getHighRiskInfantStatus = () => {
-    const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
     const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
     if (!pmtctCycleUuid) return;
 
@@ -324,7 +368,6 @@ function PatientCard(props) {
 
   const getHETInfantStatus = () => {
     if (props.latestPmtctCycle?.uuid) {
-      const patientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid;
       const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
       axios
         .get(
@@ -367,7 +410,12 @@ function PatientCard(props) {
     || [patientObj?.firstName, patientObj?.otherName, patientObj?.surname].filter(Boolean).join(" ")
     || "Unknown";
   const patientName = rawName.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const patientAge = patientObj?.age;
+  // Not every grid that routes here returns an `age` field — e.g. the
+  // Checked-In Patients grid's PersonResponseDto has no age, only dateOfBirth.
+  // Fall back to computing it so the card doesn't show blank for those patients.
+  const patientAge = patientObj?.age != null && patientObj?.age !== ""
+    ? patientObj.age
+    : (patientObj?.dateOfBirth ? Moment().diff(Moment(patientObj.dateOfBirth), "years") : "");
   const patientGender = (patientObj?.sex && patientObj.sex !== null) ? patientObj.sex : "Female";
 
   // Parse address: backend may return JSON string (CAST to TEXT) or parsed object
@@ -376,16 +424,21 @@ function PatientCard(props) {
     try { addressData = JSON.parse(addressData); } catch (e) { addressData = null; }
   }
   const patientAddress = (addressData && typeof addressData === 'object') ? getAddress(addressData) : "";
-  // When a retesting record exists, show the retesting outcome instead of the raw result
-  const hivStatusLabel = retestStatus?.remainedHivNegative ? 'Remained HIV Negative'
-    : retestStatus?.seroconverted ? 'Seroconverted to HIV Positive'
-    : confirmStatus === 'Unknown' ? 'Not Tested'
+  // HIV status badge — always shows raw HTS result
+  const hivStatusLabel = confirmStatus === 'Unknown' ? 'HIV Test Not Done'
     : confirmStatus === 'reactive' ? 'Positive'
     : confirmStatus === 'non-reactive' ? 'Negative'
-    : confirmStatus;
-  const hivStatusColor = (retestStatus?.seroconverted || confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626"
-    : (retestStatus?.remainedHivNegative || confirmStatus === "Negative" || confirmStatus === 'non-reactive') ? "#16a34a"
+    : confirmStatus || 'HIV Test Not Done';
+  const hivStatusColor = (confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626"
+    : (confirmStatus === "Negative" || confirmStatus === 'non-reactive') ? "#16a34a"
     : "#6b7280";
+
+  // Retesting badge — only shows when a retesting record exists
+  const hasRetestResult = retestStatus?.seroconverted || retestStatus?.remainedHivNegative;
+  const retestLabel = retestStatus?.seroconverted ? 'Seroconverted to HIV Positive'
+    : retestStatus?.remainedHivNegative ? 'Remained HIV Negative'
+    : null;
+  const retestColor = retestStatus?.seroconverted ? "#dc2626" : "#16a34a";
 
   return (
     <div className={classes.root}>
@@ -486,17 +539,29 @@ function PatientCard(props) {
           borderTop: "1px solid #f0f0f0",
           display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center",
         }}>
-          {/* HIV Status */}
-          {(confirmStatus) && (
+          {/* HIV Status — always visible */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "7px",
+            padding: "7px 14px", borderRadius: "6px",
+            background: (confirmStatus === "Positive" || confirmStatus === "reactive") ? "#fef2f2" : (confirmStatus === "Negative" || confirmStatus === "non-reactive") ? "#f0fdf4" : "#f8fafc",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hivStatusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "500" }}>HIV</span>
+            <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "700" }}>{hivStatusLabel}</span>
+          </div>
+
+          {/* Retesting Status — only visible when retesting record exists */}
+          {hasRetestResult && (
             <div style={{
               display: "inline-flex", alignItems: "center", gap: "7px",
               padding: "7px 14px", borderRadius: "6px",
-              background: (confirmStatus === "Positive" || confirmStatus === "reactive") ? "#fef2f2" : (confirmStatus === "Negative" || confirmStatus === "non-reactive") ? "#f0fdf4" : "#f8fafc",
+              background: retestStatus?.seroconverted ? "#fef2f2" : "#f0fdf4",
               boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hivStatusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "500" }}>HIV</span>
-              <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "700" }}>{hivStatusLabel}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={retestColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span style={{ fontSize: "11.5px", color: retestColor, fontWeight: "500" }}>Retest</span>
+              <span style={{ fontSize: "11.5px", color: retestColor, fontWeight: "700" }}>{retestLabel}</span>
             </div>
           )}
 
@@ -514,7 +579,33 @@ function PatientCard(props) {
             </span>
           </div>
 
-          {/* Seroconversion badge removed — retesting status now reflected in the HIV badge */}
+          {/* Syphilis Result */}
+          {syphilisResult && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "7px",
+              padding: "7px 14px", borderRadius: "6px",
+              background: syphilisResult === "Positive" ? "#fef2f2" : "#f0fdf4",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={syphilisResult === "Positive" ? "#dc2626" : "#16a34a"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span style={{ fontSize: "11.5px", color: syphilisResult === "Positive" ? "#dc2626" : "#16a34a", fontWeight: "500" }}>Syphilis</span>
+              <span style={{ fontSize: "11.5px", color: syphilisResult === "Positive" ? "#dc2626" : "#16a34a", fontWeight: "700" }}>{syphilisResult}</span>
+            </div>
+          )}
+
+          {/* Hepatitis Result */}
+          {hepatitisResult && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "7px",
+              padding: "7px 14px", borderRadius: "6px",
+              background: hepatitisResult === "Positive" ? "#fef2f2" : "#f0fdf4",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hepatitisResult === "Positive" ? "#dc2626" : "#16a34a"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span style={{ fontSize: "11.5px", color: hepatitisResult === "Positive" ? "#dc2626" : "#16a34a", fontWeight: "500" }}>Hepatitis</span>
+              <span style={{ fontSize: "11.5px", color: hepatitisResult === "Positive" ? "#dc2626" : "#16a34a", fontWeight: "700" }}>{hepatitisResult}</span>
+            </div>
+          )}
 
           {/* Maternal Outcome */}
           {props.maternalOutcome && (

@@ -470,8 +470,11 @@ const LabourDelivery = (props) => {
       getGestationalAge(e.target.value, e.target.name);
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     } else if (e.target.name === "gaweeks") {
+      // Only restrict to digits (max 2, since the valid range 5-45 never exceeds 2 digits) —
+      // don't reject the value here or partial input like "4" (on the way to "45") gets
+      // blocked. The 5-45 range itself is enforced by validate() on submit.
       const val = e.target.value;
-      if (val !== "" && (parseInt(val) < 0 || parseInt(val) > 45)) return;
+      if (val !== "" && !/^\d{0,2}$/.test(val)) return;
       setNewGa(val);
       setDelivery({ ...delivery, [e.target.name]: val });
     } else if (
@@ -582,10 +585,15 @@ const LabourDelivery = (props) => {
     temp.maternalOutcome = delivery.maternalOutcome
       ? ""
       : "This field is required";
-    if (!newGa) {
-      temp.gaweeks = "This field is required";
-    } else if (parseInt(newGa) < 0 || parseInt(newGa) > 45) {
-      temp.gaweeks = "Gestational age must be between 0 and 45 weeks";
+    const isLdEntry = (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D";
+    if (isLdEntry) {
+      if (!newGa) {
+        temp.gaweeks = "This field is required";
+      } else if (parseInt(newGa) < 5 || parseInt(newGa) > 45) {
+        temp.gaweeks = "Gestational age must be between 5 and 45 weeks";
+      } else {
+        temp.gaweeks = "";
+      }
     } else {
       temp.gaweeks = "";
     }
@@ -931,7 +939,26 @@ const LabourDelivery = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Gestational Age (weeks) <span style={{ color: "red" }}> *</span>
+                          Gestational Age (weeks)
+                          {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D" && (
+                            <span style={{ color: "red" }}> *</span>
+                          )}
+                          {" "}
+                          {(props.entrypointValue || props.patientObj?.entryPoint) !== "PMTCT_ENTRY_POINT_L&D" && (
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                color: newGa ? "#2e7d32" : "#8c959f",
+                                background: newGa ? "#e8f5e9" : "#f0f0f0",
+                                padding: "2px 7px",
+                                borderRadius: "8px",
+                              }}
+                            >
+                              {newGa ? "Auto-calculated" : "Pending..."}
+                            </span>
+                          )}
                         </Label>
                         <InputGroup>
                           <Input
@@ -946,7 +973,7 @@ const LabourDelivery = (props) => {
                                 (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D"
                               )
                             }
-                            min="0"
+                            min="5"
                             max="45"
                           />
                         </InputGroup>
@@ -954,6 +981,18 @@ const LabourDelivery = (props) => {
                           <span className={classes.error}>{errors.gaweeks}</span>
                         ) : (
                           ""
+                        )}
+                        {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D" && (
+                          <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                            Enter gestational age between 5 and 45 weeks
+                          </small>
+                        )}
+                        {!newGa && (props.entrypointValue || props.patientObj?.entryPoint) !== "PMTCT_ENTRY_POINT_L&D" && (
+                          <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                            {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_ANC"
+                              ? "Auto-calculated from LMP (ANC record) and Date of Delivery"
+                              : "Auto-calculated from LMP (MIP card) and Date of Delivery"}
+                          </small>
                         )}
                       </FormGroup>
                     </div>

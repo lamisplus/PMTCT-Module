@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Renames observation JSON keys on PMTCT-origin hts_encounter records (pmtct_hts = true)
+         so they match the HTS module's naming, allowing both to be queried by the same key.
+         Scoped to pmtct_hts = true only — genuine HTS-origin records are never touched.
+         Idempotent: the NOT (observation ?? 'newKey') guard makes it safe to re-run.
+         Note: the jsonb "key exists" operator is escaped as ?? because Liquibase runs <sql>
+         through a JDBC PreparedStatement, which otherwise treats a bare ? as a bind parameter
+         (pgjdbc unescapes ?? back to a literal ? without binding it). -->
+
+    <changeSet failOnError="false" author="system" id="2026-07-06-harmonize-typeOfHivTest-key">
+        <comment>Rename observation key typeOfHivTest -> typeOfHivTestDone on PMTCT-origin hts_encounter records to match HTS naming</comment>
+        <sql>
+            UPDATE hts_encounter
+            SET observation = (observation - 'typeOfHivTest')
+                || jsonb_build_object('typeOfHivTestDone', observation->>'typeOfHivTest')
+            WHERE pmtct_hts = true
+              AND observation ?? 'typeOfHivTest'
+              AND NOT (observation ?? 'typeOfHivTestDone');
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-07-06-harmonize-hivEarlyDetect-key">
+        <comment>Rename observation key hivEarlyDetect -> hivEarlyDetectResult on PMTCT-origin hts_encounter records to match HTS naming</comment>
+        <sql>
+            UPDATE hts_encounter
+            SET observation = (observation - 'hivEarlyDetect')
+                || jsonb_build_object('hivEarlyDetectResult', observation->>'hivEarlyDetect')
+            WHERE pmtct_hts = true
+              AND observation ?? 'hivEarlyDetect'
+              AND NOT (observation ?? 'hivEarlyDetectResult');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

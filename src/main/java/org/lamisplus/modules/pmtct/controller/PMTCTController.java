@@ -76,7 +76,11 @@ public class PMTCTController {
 
     @GetMapping("{id}")
     public ResponseEntity<ANC> getSingleANC(@PathVariable String id) {
-        return ResponseEntity.ok(ancService.getSingleAnc(id));
+        try {
+            return ResponseEntity.ok(ancService.getSingleAnc(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @GetMapping(value = "get-anc-by-person")
@@ -597,6 +601,13 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(patientUuid, pmtctCycleUuid));
     }
 
+    @GetMapping(value = "patient-hiv-summary")
+    public ResponseEntity<PatientHivSummaryDto> getPatientHivSummary(
+            @RequestParam String patientUuid,
+            @RequestParam String pmtctCycleUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getPatientHivSummary(patientUuid, pmtctCycleUuid));
+    }
+
     @GetMapping(value = "get-latest-pmtct-hts-by-person-uuid/{patientUuid}")
     public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSByPatientUuid(
             @PathVariable("patientUuid") String patientUuid) {
@@ -748,6 +759,21 @@ public class PMTCTController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(value = "latest-enrollment")
+    public ResponseEntity<?> getLatestEnrollmentByPatientUuid(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"message\": \"patient_uuid is required\"}");
+        }
+
+        PMTCTEnrollmentRespondDto enrollment = pmtctEnrollmentService.getSinglePmtctEnrollmentByPatientUuid(patientUuid);
+        if (enrollment == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"message\": \"No previous enrollment found\"}");
+        }
+        return ResponseEntity.ok(enrollment);
+    }
+
     @GetMapping(value = "validate-enrollment")
     public ResponseEntity<EnrollmentValidationDto> validateEnrollment(@RequestParam String patientUuid) {
         if (patientUuid == null || patientUuid.trim().isEmpty()) {
@@ -786,6 +812,14 @@ public class PMTCTController {
         }
 
         return ResponseEntity.ok(hivStatus);
+    }
+
+    @GetMapping(value = "historical-serology-status")
+    public ResponseEntity<java.util.Map<String, Object>> getHistoricalSerologyStatus(@RequestParam String patientUuid) {
+        if (patientUuid == null || patientUuid.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        return ResponseEntity.ok(pmtctPregnancyCycleService.getHistoricalSerologyStatus(patientUuid));
     }
 
     @GetMapping(value = "statistics")

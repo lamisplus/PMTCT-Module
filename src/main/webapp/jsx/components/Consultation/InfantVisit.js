@@ -377,6 +377,8 @@ const ClinicVisit = (props) => {
   };
 
   const [motherSyphilisPositive, setMotherSyphilisPositive] = useState(false);
+  const [motherSyphilisTestResult, setMotherSyphilisTestResult] = useState("");
+  const [motherSyphilisTreatment, setMotherSyphilisTreatment] = useState("");
   const [syphilisData, setSyphilisData] = useState({
     dateOfInitiation: "",
     ageAtInitiation: "",
@@ -793,34 +795,36 @@ const ClinicVisit = (props) => {
     }
   }, [props.patientObj.hospitalNumber, props.activeContent]);
 
-  // Fetch mother's syphilis status from ANC enrollment
+  // Pre-fill mother's syphilis status from PMTCT HTS
   useEffect(() => {
-    const entryPoint = props.patientObj?.entryPoint || props.latestPmtctCycle?.entryPoint;
-    if (entryPoint !== "PMTCT_ENTRY_POINT_ANC") return;
     const patientUuid = props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid
-      ? props.patientObj.patientUuid
-      : props.patientObj.uuid;
-    const pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
-    if (patientUuid && pmtctCycleUuid) {
-      axios
-        .get(`${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          if (response.data && response.data.syphilisDetails) {
-            const testResult = response.data.syphilisDetails.testResult;
-            if (testResult && testResult.toLowerCase() === "positive") {
-              setMotherSyphilisPositive(true);
+      || props.patientObj.patientUuid
+      || props.patientObj.uuid;
+    if (!patientUuid) return;
+
+    axios
+      .get(`${baseUrl}pmtct/anc/get-latest-pmtct-hts-by-person-uuid/${patientUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data && response.data.syphilisInfo) {
+          const testResult = (response.data.syphilisInfo.testResult || "").toLowerCase();
+          if (testResult === "positive" || testResult === "reactive") {
+            setMotherSyphilisPositive(true);
+            setMotherSyphilisTestResult(response.data.syphilisInfo.testResult);
+            const treatment = response.data.syphilisInfo.treatment || "";
+            if (treatment === "Treated") {
+              setMotherSyphilisTreatment("Yes");
+              setInfantMotherArtDto((prev) => prev.syphilisTreatmentReferral ? prev : { ...prev, syphilisTreatmentReferral: "Treated" });
+            } else if (treatment === "Not Treated") {
+              setMotherSyphilisTreatment("No");
+              setInfantMotherArtDto((prev) => prev.syphilisTreatmentReferral ? prev : { ...prev, syphilisTreatmentReferral: "Not Treated" });
             }
           }
-        })
-        .catch((error) => {
-          console.log("Error fetching mother syphilis status:", error);
-        });
-    }
-  }, [props.patientObj.id, props?.latestPmtctCycle?.uuid]);
+        }
+      })
+      .catch(() => {});
+  }, [props.patientObj.id]);
 
   //GEt visit information
   const GetVisit = (id) => {
@@ -2620,6 +2624,31 @@ const ClinicVisit = (props) => {
               <h6 style={sectionHeaderStyle}>
                 <HealingIcon style={sectionIconStyle} />Syphilis Prophylaxis / Treatment
               </h6>
+              <div className="row">
+                {/* Pre-filled mother's syphilis info from HTS/ANC */}
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Syphilis Testing</FormLabelName>
+                    <Input
+                      type="text"
+                      value={motherSyphilisTestResult}
+                      disabled={true}
+                      readOnly
+                    />
+                  </FormGroup>
+                </div>
+                <div className=" mb-3 col-md-4">
+                  <FormGroup>
+                    <FormLabelName>Syphilis Treatment</FormLabelName>
+                    <Input
+                      type="text"
+                      value={motherSyphilisTreatment}
+                      disabled={true}
+                      readOnly
+                    />
+                  </FormGroup>
+                </div>
+              </div>
               <div className="row">
                 <div className=" mb-3 col-md-4">
                   <FormGroup>

@@ -74,13 +74,14 @@ const Patients = (props) => {
 
 
   // Define negative maternal outcomes that should disable enrollment
-  // Note: LTFU clients ARE allowed to re-enroll into a new pregnancy cycle
   const negativeOutcomes = [
     "MATERNAL_OUTCOME_DEAD",
-    "MATERNAL_OUTCOME_TRANSFERRED_OUT"
+    "MATERNAL_OUTCOME_TRANSFERRED_OUT",
+    "MATERNAL_OUTCOME_LOST_TO_FOLLOW-UP"
   ];
     const negativeVisitStatus = [
       "VISIT_STATUS_PMTCT_DEAD",
+      "VISIT_STATUS_PMTCT_LOST_TO_FOLLOW-UP",
     ];
 
   // Helper function to check if maternal outcome or visit status is negative

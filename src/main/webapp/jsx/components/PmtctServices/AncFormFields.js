@@ -740,10 +740,11 @@ const AncFormFields = ({
               <FormGroup>
                 <Label>HB (g/dl)</Label>
                 <InputGroup>
-                  <Input type="number" name="hbPcv" id="hbPcv" onChange={onInputChange} value={values.hbPcv || ""} min="0" max="25" step="1" disabled={disabled} />
+                  <Input type="number" name="hbPcv" id="hbPcv" onChange={onInputChange} value={values.hbPcv || ""} min="0" max="25" step="0.1" disabled={disabled}
+                    style={{ borderColor: values.hbPcv && (parseFloat(values.hbPcv) < 0 || parseFloat(values.hbPcv) > 25) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }} />
                 </InputGroup>
-                {values.hbPcv && (parseInt(values.hbPcv) < 0 || parseInt(values.hbPcv) > 25 || !Number.isInteger(Number(values.hbPcv))) ? (
-                  <span style={errorStyle}>HBV must be between 0 and 25 g/dL</span>
+                {values.hbPcv && (parseFloat(values.hbPcv) < 0 || parseFloat(values.hbPcv) > 25) ? (
+                  <span style={errorStyle}>HB must be between 0 and 25 g/dL</span>
                 ) : ""}
                 {err("hbPcv")}
               </FormGroup>
@@ -752,9 +753,10 @@ const AncFormFields = ({
               <FormGroup>
                 <Label>PCV (%)</Label>
                 <InputGroup>
-                  <Input type="number" name="pcv" id="pcv" onChange={onInputChange} value={values.pcv || ""} min="0" max="70" step="1" disabled={disabled} />
+                  <Input type="number" name="pcv" id="pcv" onChange={onInputChange} value={values.pcv || ""} min="0" max="70" step="1" disabled={disabled}
+                    style={{ borderColor: values.pcv && (parseFloat(values.pcv) < 0 || parseFloat(values.pcv) > 70) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }} />
                 </InputGroup>
-                {values.pcv && (parseInt(values.pcv) < 0 || parseInt(values.pcv) > 70 || !Number.isInteger(Number(values.pcv))) ? (
+                {values.pcv && (parseFloat(values.pcv) < 0 || parseFloat(values.pcv) > 70) ? (
                   <span style={errorStyle}>PCV must be between 0% and 70%</span>
                 ) : ""}
                 {err("pcv")}
@@ -764,9 +766,10 @@ const AncFormFields = ({
               <FormGroup>
                 <Label>Blood Sugar (Gestational Diabetes)</Label>
                 <InputGroup>
-                  <Input type="number" name="bloodSugarGdm" id="bloodSugarGdm" onChange={onInputChange} value={values.bloodSugarGdm || ""} min="0" max="500" step="1" disabled={disabled} />
+                  <Input type="number" name="bloodSugarGdm" id="bloodSugarGdm" onChange={onInputChange} value={values.bloodSugarGdm || ""} min="0" max="500" step="1" disabled={disabled}
+                    style={{ borderColor: values.bloodSugarGdm && (parseFloat(values.bloodSugarGdm) < 0 || parseFloat(values.bloodSugarGdm) > 500) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }} />
                 </InputGroup>
-                {values.bloodSugarGdm && (parseInt(values.bloodSugarGdm) < 0 || parseInt(values.bloodSugarGdm) > 500 || !Number.isInteger(Number(values.bloodSugarGdm))) ? (
+                {values.bloodSugarGdm && (parseFloat(values.bloodSugarGdm) < 0 || parseFloat(values.bloodSugarGdm) > 500) ? (
                   <span style={errorStyle}>Blood Sugar must be between 0 and 500 mg/dL</span>
                 ) : ""}
               </FormGroup>

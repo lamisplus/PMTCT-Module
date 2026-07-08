@@ -484,8 +484,14 @@ const PmtctHtsForm = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       ).catch(() => ({ data: [] }));
 
-      Promise.all([htsPromise, artPromise])
-        .then(([htsRes, artRes]) => {
+      // Check latest HTS record across ALL cycles for serology pre-population
+      const serologyPromise = axios.get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-by-person-uuid/${patientUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => ({ data: {} }));
+
+      Promise.all([htsPromise, artPromise, serologyPromise])
+        .then(([htsRes, artRes, serologyRes]) => {
           const htsData = htsRes?.data || {};
           const htsResult = typeof htsData.result === "string" ? htsData.result : "";
           const htsDateVisit = htsData.dateVisit || null;
@@ -525,6 +531,55 @@ const PmtctHtsForm = (props) => {
             });
             setFinalResult((prev) => prev || "Positive");
           }
+
+          // Pre-populate syphilis/hepatitis from previous cycles if positive
+          const prevHts = serologyRes?.data || {};
+          if (prevHts.id) {
+            const checkPositive = (val) => {
+              if (!val) return false;
+              const norm = val.trim().toLowerCase();
+              return norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
+            };
+
+            const prevSyphResult = prevHts.syphilisInfo?.testResult || prevHts.syphilis || "";
+            const prevHepBResult = prevHts.hbvInfo?.testResult || prevHts.hepatitisB || "";
+            const prevHepCResult = prevHts.hepatitisC || "";
+
+            const hasPrevSyph = checkPositive(prevSyphResult);
+            const hasPrevHepB = checkPositive(prevHepBResult);
+            const hasPrevHepC = checkPositive(prevHepCResult);
+
+            if (hasPrevSyph || hasPrevHepB || hasPrevHepC) {
+              setPayload((prev) => {
+                const updates = {};
+                // Only pre-populate syphilis if positive and not already set
+                if (hasPrevSyph && !prev.syphilis) {
+                  updates.syphilis = prevSyphResult;
+                  if (prevHts.syphilisInfo?.treatment && !prev.syphilisTreatment)
+                    updates.syphilisTreatment = prevHts.syphilisInfo.treatment;
+                  if (prevHts.syphilisInfo?.drugName && !prev.syphilisDrugName)
+                    updates.syphilisDrugName = prevHts.syphilisInfo.drugName;
+                }
+                // Only pre-populate hepatitis B if positive and not already set
+                if (hasPrevHepB && !prev.hepatitisB) {
+                  updates.hepatitisB = prevHepBResult;
+                  if (prevHts.hbvInfo?.knownPositive && !prev.knownHbvPositive)
+                    updates.knownHbvPositive = prevHts.hbvInfo.knownPositive;
+                  if (prevHts.hbvInfo?.treatment && !prev.hepatitisBTreatment)
+                    updates.hepatitisBTreatment = prevHts.hbvInfo.treatment;
+                  if (prevHts.hbvInfo?.drugName && !prev.hbvDrugName)
+                    updates.hbvDrugName = prevHts.hbvInfo.drugName;
+                }
+                // Only pre-populate hepatitis C if positive and not already set
+                if (hasPrevHepC && !prev.hepatitisC) {
+                  updates.hepatitisC = prevHepCResult;
+                }
+
+                if (Object.keys(updates).length === 0) return prev;
+                return { ...prev, ...updates };
+              });
+            }
+          }
         })
         .catch(() => {
           // Silently fail — auto-population is best-effort, should not block the form
@@ -541,7 +596,7 @@ const PmtctHtsForm = (props) => {
     if (
       props?.patientObj?.id &&
       props?.activeContent?.id &&
-      props?.activeContent?.actionType !== "create"
+      (props?.activeContent?.actionType === "update" || props?.activeContent?.actionType === "view")
     ) {
       viewPmtctHtsRecord(props?.patientObj?.id);
 
@@ -556,11 +611,16 @@ const PmtctHtsForm = (props) => {
     ) {
       // New create — check historical HIV/ART status for auto-population
       checkHistoricalHivAndArt();
-      // Auto-populate Status at Entry with "Pregnant" for ANC context
+      // Auto-populate Status at Entry based on entry point
       if (isPmtctHts) {
+        const entryPoint = props?.entrypointValue || "";
+        const defaultStatus =
+          entryPoint === "PMTCT_ENTRY_POINT_POST-PARTUM"
+            ? "Breastfeeding"
+            : "Pregnant";
         setPayload((prev) => ({
           ...prev,
-          pregnancyStatusAtEntry: prev.pregnancyStatusAtEntry || "Pregnant",
+          pregnancyStatusAtEntry: prev.pregnancyStatusAtEntry || defaultStatus,
         }));
       }
 
@@ -700,6 +760,7 @@ const PmtctHtsForm = (props) => {
           partnerReferredTo: response.data.partnerInfo?.referral || "",
           viralLoadMonitoring: response.data.viralLoadMonitoring || "",
           pmtctTestEntryPoint: response.data.pmtctTestEntryPoint || "",
+          pmtctCycleUuid: response.data.pmtctCycleUuid || props?.selectedCycleId || props?.latestPmtctCycle?.uuid || "",
         });
 
         if (response.data.initialHivTest) {
@@ -755,7 +816,9 @@ const PmtctHtsForm = (props) => {
         }
       })
       .catch((error) => {
-        //console.log(error);
+        toast.error("Could not load HTS record. Please try again.", {
+          position: toast.POSITION.BOTTOM_CENTER,
+        });
       });
   };
 
@@ -1500,7 +1563,7 @@ const PmtctHtsForm = (props) => {
     
     // Create cycle if needed
     if (
-      props.onEnrollPatient 
+      props.onEnrollPatient
     ) {
       const checkIfCycleIsCreated = await createCycle();
       payload.pmtctCycleUuid = checkIfCycleIsCreated?.response?.uuid;
@@ -1512,7 +1575,8 @@ const PmtctHtsForm = (props) => {
         return; // Exit if cycle creation fails
       }
     } else {
-      payload.pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
+      // On update, preserve the cycle UUID loaded from the record; fall back to props
+      payload.pmtctCycleUuid = payload.pmtctCycleUuid || props?.selectedCycleId || props?.latestPmtctCycle?.uuid;
     }
 
 
@@ -1547,7 +1611,20 @@ const PmtctHtsForm = (props) => {
         });
       }
 
+      // Notify the patient card to refetch the HIV/serology summary right away —
+      // don't rely solely on the activeContent route change below, since some
+      // saves keep the same route/actionType and would otherwise leave the card stale.
+      props.onSaved && props.onSaved();
+
       // Handle post-submission routing
+      // Check if any positive result (HIV, Syphilis, or Hepatitis B) was recorded
+      const hasPositiveHiv = finalResult === "Positive";
+      const syphVal = (payload.syphilis || "").trim().toLowerCase();
+      const hasPositiveSyphilis = syphVal === "reactive" || syphVal === "positive";
+      const hepBVal = (payload.hepatitisB || "").trim().toLowerCase();
+      const hasPositiveHepatitis = hepBVal === "positive" || hepBVal === "reactive";
+      const shouldOpenMip = hasPositiveHiv || hasPositiveSyphilis || hasPositiveHepatitis;
+
       if (!isUpdate && props.handleRoute && props.onEnrollPatient) {
         const data = {
           ...props?.patientObj,
@@ -1560,15 +1637,15 @@ const PmtctHtsForm = (props) => {
           ancNo: props?.patientObj?.ancNo,
           patientUuid: props.patientUuid,
         };
-        // S/N 17: Positive confirmatory → auto-open MIP enrollment form
-        if (finalResult === "Positive") {
+        // Positive HIV, Syphilis, or Hepatitis → auto-open MIP enrollment form
+        if (shouldOpenMip) {
           props.handleRoute(data, { autoOpenRoute: "anc-pnc" });
         } else {
           props.handleRoute(data);
         }
       } else {
-        // S/N 17: Positive confirmatory → navigate to MIP enrollment form
-        if (finalResult === "Positive" && !isUpdate) {
+        // Positive HIV, Syphilis, or Hepatitis → navigate to MIP enrollment form
+        if (shouldOpenMip && !isUpdate) {
           props.setActiveContent({
             ...props.activeContent,
             route: "anc-pnc",
@@ -1766,7 +1843,7 @@ const PmtctHtsForm = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>Setting</Label>
+                        <Label>Setting <span style={{ color: "red" }}> *</span></Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -1970,7 +2047,7 @@ const PmtctHtsForm = (props) => {
                   {/* Type of HIV Test */}
                   <div className="form-group mb-3 col-md-4">
                     <FormGroup>
-                      <Label>Type of HIV Test</Label>
+                      <Label>Type of HIV Test <span style={{ color: "red" }}> *</span></Label>
                       <InputGroup>
                         <Input
                           type="select"
@@ -1996,7 +2073,7 @@ const PmtctHtsForm = (props) => {
                     <>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                          <Label>HIV Early Detect Result</Label>
+                          <Label>HIV Early Detect Result <span style={{ color: "red" }}> *</span></Label>
                           <InputGroup>
                             <Input
                               type="select"

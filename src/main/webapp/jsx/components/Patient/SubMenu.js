@@ -40,6 +40,8 @@ function SubMenu(props) {
     );
     return isPositive ? "Positive" : (props?.patientObj?.staticHivStatus || props?.patientObj?.hivStatus || props?.patientObj?.dynamicHivStatus);
   });
+  const [isSyphilisPositive, setIsSyphilisPositive] = useState(false);
+  const [isHepatitisPositive, setIsHepatitisPositive] = useState(false);
   const [allPmtctCycleRecord, setAllPmtctCycleRecord] = useState([]);
 
   // Use selectedCycleId from props if available, otherwise use local state
@@ -134,7 +136,7 @@ function SubMenu(props) {
 
     // isOnPMTCT is now driven by RecentHistory.checkForPmtctEnrollment (cycle-aware)
     // Do not override it here with the patient-level prop, which is not cycle-specific
-  }, [props.activeContent?.route, props.mainDeliveryStatus, selectedCycleId]);
+  }, [props.activeContent?.route, props.activeContent?.actionType, props.mainDeliveryStatus, selectedCycleId]);
 
 
   const loadAncPnc = (row) => {
@@ -185,24 +187,66 @@ function SubMenu(props) {
       try {
         const htsRes = await axios.get(htsUrl, { headers: { Authorization: `Bearer ${token}` } });
 
-        // Derive HIV status from the HTS record: finalResult, then confirmatory result
-        const hivStatus = htsRes.data?.finalResult
-          ? htsRes.data.finalResult
-          : htsRes.data?.confirmatoryHivTest?.result
-          ? htsRes.data.confirmatoryHivTest.result
-          : props?.patientObj?.staticHivStatus
-          ? props?.patientObj?.staticHivStatus
-          : props?.patientObj?.hivStatus
-          ? props?.patientObj?.hivStatus
-          : props.patientObj.dynamicHivStatus;
-
         const hasExistingHts = !!(htsRes.data?.id);
 
+        // If no HTS record exists (e.g. deleted), reset to "no record" state
+        if (!hasExistingHts) {
+          setIsSyphilisPositive(false);
+          setIsHepatitisPositive(false);
+          setPatientStatus(null);
+          showRetestingMenu(null, false);
+          setMenuReady(true);
+          return;
+        }
+
+        // Derive HIV status from the HTS record only — do NOT fall back to patient-level props
+        const hivStatus = htsRes.data?.finalResult
+          || htsRes.data?.confirmatoryHivTest?.result
+          || null;
+
+        // Helper to check if a test value indicates positive
+        const checkPositive = (val) => {
+          if (!val) return false;
+          const norm = val.trim().toLowerCase();
+          return norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
+        };
+
+        // Check syphilis positive status from CURRENT cycle
+        const syphilisResult = htsRes.data?.syphilisInfo?.testResult || htsRes.data?.syphilis || "";
+        let syphPositive = checkPositive(syphilisResult);
+
+        // Check hepatitis positive status from CURRENT cycle (Hep B or Hep C)
+        const hepBResult = htsRes.data?.hbvInfo?.testResult || htsRes.data?.hepatitisB || "";
+        const hepCResult = htsRes.data?.hepatitisC || "";
+        let hepPositive = checkPositive(hepBResult) || checkPositive(hepCResult);
+
+        // If syphilis or hepatitis are not positive from current cycle,
+        // check historical data from ALL cycles (positive status carries forward)
+        if (!syphPositive || !hepPositive) {
+          try {
+            const histRes = await axios.get(
+              `${baseUrl}pmtct/anc/historical-serology-status?patientUuid=${patientUuid}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!syphPositive && histRes.data?.syphilisEverPositive) syphPositive = true;
+            if (!hepPositive && histRes.data?.hepatitisEverPositive) hepPositive = true;
+          } catch (histErr) {
+            // Silent fail — historical check is best-effort
+          }
+        }
+
+        setIsSyphilisPositive(syphPositive);
+        setIsHepatitisPositive(hepPositive);
         setPatientStatus(hivStatus);
         showRetestingMenu(hivStatus, hasExistingHts);
         setMenuReady(true);
       } catch (error) {
         console.error("Error fetching confirmatory result:", error);
+        // On error, reset to "no record" state so menu shows PMTCT HTS
+        setIsSyphilisPositive(false);
+        setIsHepatitisPositive(false);
+        setPatientStatus(null);
+        showRetestingMenu(null, false);
         setMenuReady(true);
       }
     } else {
@@ -292,9 +336,9 @@ const showRetestingMenu = (patientHivStatus, hasExistingHts = false) => {
               </Menu.Item>
             )}
 
-            {(["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) || isOnPMTCT === true) && (
+            {(["positive", "reactive"].includes((patientStatus || "")?.trim()?.toLowerCase()) || isSyphilisPositive || isHepatitisPositive || isOnPMTCT === true) && (
               <>
-                {/* Mother Clinical Information / Mother Infant Pair — always visible for HIV+ patients */}
+                {/* Mother Clinical Information / Mother Infant Pair — visible for HIV+, Syphilis+, or Hepatitis+ patients */}
                 {isOnPMTCT !== true && permissions.genAndPmtct && (
                   <Menu.Item onClick={() => loadAncPnc()} style={menuItemStyle("anc-pnc")}>
                     {deliveryStatus ? "Mother Infant Pair" : "Mother Clinical Information"}

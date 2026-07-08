@@ -150,6 +150,24 @@ const ClinicVisit = (props) => {
   const [cycleClosed, setCycleClosed] = useState(false);
   const [lmpDate, setLmpDate] = useState("");
   const [ancRegistrationDate, setAncRegistrationDate] = useState("");
+  const [htsHivResult, setHtsHivResult] = useState("");
+  const [artUniqueNumber, setArtUniqueNumber] = useState("");
+  const [ancNumber, setAncNumber] = useState("");
+  const [userList, setUserList] = useState([]);
+
+  // Build current user's full name for pre-populating signature
+  const getCurrentUserFullName = () => {
+    try {
+      const stored = localStorage.getItem("user_account");
+      if (stored) {
+        const account = JSON.parse(stored);
+        return `${account.firstName || ""} ${account.lastName || ""}`.trim();
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return "";
+  };
 
   const [objValues, setObjValues] = useState({
     dateOfViralLoad: "",
@@ -180,7 +198,7 @@ const ClinicVisit = (props) => {
     resultOfViralLoad: "",
     visitStatus: "",
     timeOfViralLoad: "",
-    signature: "",
+    signature: getCurrentUserFullName(),
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
     source: "WEB",
     visitType: activeVisitType,
@@ -433,6 +451,47 @@ const ClinicVisit = (props) => {
     }
   };
 
+  const fetchHtsAndUniqueIds = () => {
+    const pmtctCycleUuid =
+      props.latestPmtctCycle?.uuid || props.patientObj?.pmtctCycleUuid;
+    const patientUuid = props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid;
+    if (!patientUuid || !pmtctCycleUuid) return;
+
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (response.data) {
+          if (response.data.finalResult) {
+            setHtsHivResult(response.data.finalResult);
+          }
+          if (response.data.ancNo) {
+            setAncNumber(response.data.ancNo);
+          }
+        }
+      })
+      .catch(() => {});
+
+    // Extract ART unique number from patient identifier
+    try {
+      const identifierObj = patientObj?.identifier;
+      if (identifierObj && identifierObj.identifier && Array.isArray(identifierObj.identifier)) {
+        const artId = identifierObj.identifier.find(
+          (id) => id.type === "UniqueId" || id.type === "HivUniqueId" || id.type === "ARTNumber"
+        );
+        if (artId && artId.value) {
+          setArtUniqueNumber(artId.value);
+        }
+      }
+    } catch (error) {
+      // Could not extract ART number
+    }
+  };
+
   useEffect(() => {
     GET_CODESETS();
     getInitialVisitDate();
@@ -441,6 +500,26 @@ const ClinicVisit = (props) => {
     checkCycleClosed();
     fetchAncVisitCount();
     fetchLmpDate();
+    fetchHtsAndUniqueIds();
+    // Fetch facility users for Signature dropdown
+    axios.get(`${baseUrl}users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((response) => {
+      const rawData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.content)
+          ? response.data.content
+          : [];
+      const users = rawData
+        .map((u) => ({
+          id: u.id,
+          fullName: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        }))
+        .filter((u) => u.fullName);
+      setUserList(users);
+    }).catch((err) => {
+      console.error("Failed to fetch users for signature:", err);
+    });
 
     if (
       props.activeContent.id &&
@@ -696,6 +775,24 @@ const ClinicVisit = (props) => {
         setErrors({ ...temp, diastolic: "Diastolic BP must be between 60 and 140" });
       }
     }
+    if (e.target.name === "hbPcv" && e.target.value !== "") {
+      const val = parseFloat(e.target.value);
+      if (val < 0 || val > 25) {
+        setErrors({ ...temp, hbPcv: "HB must be between 0 and 25 g/dL" });
+      }
+    }
+    if (e.target.name === "pcv" && e.target.value !== "") {
+      const val = parseFloat(e.target.value);
+      if (val < 0 || val > 70) {
+        setErrors({ ...temp, pcv: "PCV must be between 0% and 70%" });
+      }
+    }
+    if (e.target.name === "bloodSugarGdm" && e.target.value !== "") {
+      const val = parseFloat(e.target.value);
+      if (val < 0 || val > 500) {
+        setErrors({ ...temp, bloodSugarGdm: "Blood Sugar must be between 0 and 500 mg/dL" });
+      }
+    }
     setObjValues({ ...objValues, [e.target.name]: e.target.value });
   };
 
@@ -753,8 +850,8 @@ const ClinicVisit = (props) => {
       temp.nextAppointmentDate = "Next Appointment Date must be on or after the current visit date";
     }
     // Validate HB (g/dL), PCV (%), and Blood Sugar ranges
-    if (objValues.hbPcv && (parseInt(objValues.hbPcv) < 0 || parseInt(objValues.hbPcv) > 25 || !Number.isInteger(Number(objValues.hbPcv)))) {
-      temp.hbPcv = "HBV must be between 0 and 25 g/dL";
+    if (objValues.hbPcv && (parseFloat(objValues.hbPcv) < 0 || parseFloat(objValues.hbPcv) > 25)) {
+      temp.hbPcv = "HB must be between 0 and 25 g/dL";
     }
     if (objValues.pcv && (parseInt(objValues.pcv) < 0 || parseInt(objValues.pcv) > 70 || !Number.isInteger(Number(objValues.pcv)))) {
       temp.pcv = "PCV must be between 0% and 70%";
@@ -1061,6 +1158,67 @@ const ClinicVisit = (props) => {
                   </span>
                 )}
               </div>
+
+              {/* === HIV Test Result & Unique IDs === */}
+              {(htsHivResult || artUniqueNumber || ancNumber) && (
+                <div className="col-md-12 mb-3 mt-3">
+                  <div style={sectionContainerStyle}>
+                    <h6 style={sectionHeaderStyle}>
+                      <AssessmentIcon style={sectionIconStyle} />HIV Test Result &amp; Unique IDs
+                    </h6>
+                    <div className="row">
+                      {htsHivResult && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>HIV Test Result</Label>
+                            <InputGroup>
+                              <Input
+                                type="text"
+                                name="htsHivResult"
+                                id="htsHivResult"
+                                value={htsHivResult}
+                                disabled
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      )}
+                      {artUniqueNumber && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Unique ART Number</Label>
+                            <InputGroup>
+                              <Input
+                                type="text"
+                                name="artUniqueNumber"
+                                id="artUniqueNumber"
+                                value={artUniqueNumber}
+                                disabled
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      )}
+                      {ancNumber && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>ANC Number</Label>
+                            <InputGroup>
+                              <Input
+                                type="text"
+                                name="ancNumber"
+                                id="ancNumber"
+                                value={ancNumber}
+                                disabled
+                              />
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* === Visit Information === */}
               <div className="col-md-12 mb-3 mt-3">
@@ -1676,16 +1834,17 @@ const ClinicVisit = (props) => {
                             type="number"
                             name="hbPcv"
                             id="hbPcv"
-                            step="1"
+                            step="0.1"
                             min="0"
                             max="25"
                             value={objValues.hbPcv}
                             onChange={handleInputChange}
                             disabled={disabledField}
+                            style={{ borderColor: objValues.hbPcv && (parseFloat(objValues.hbPcv) < 0 || parseFloat(objValues.hbPcv) > 25) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                           />
                         </InputGroup>
-                        {objValues.hbPcv && (parseInt(objValues.hbPcv) < 0 || parseInt(objValues.hbPcv) > 25 || !Number.isInteger(Number(objValues.hbPcv))) ? (
-                          <span className={classes.error}>HBV must be between 0 and 25 g/dL</span>
+                        {objValues.hbPcv && (parseFloat(objValues.hbPcv) < 0 || parseFloat(objValues.hbPcv) > 25) ? (
+                          <span className={classes.error}>HB must be between 0 and 25 g/dL</span>
                         ) : ""}
                       </FormGroup>
                     </div>
@@ -1703,9 +1862,10 @@ const ClinicVisit = (props) => {
                             value={objValues.pcv}
                             onChange={handleInputChange}
                             disabled={disabledField}
+                            style={{ borderColor: objValues.pcv && (parseFloat(objValues.pcv) < 0 || parseFloat(objValues.pcv) > 70) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                           />
                         </InputGroup>
-                        {objValues.pcv && (parseInt(objValues.pcv) < 0 || parseInt(objValues.pcv) > 70 || !Number.isInteger(Number(objValues.pcv))) ? (
+                        {objValues.pcv && (parseFloat(objValues.pcv) < 0 || parseFloat(objValues.pcv) > 70) ? (
                           <span className={classes.error}>PCV must be between 0% and 70%</span>
                         ) : ""}
                       </FormGroup>
@@ -1724,9 +1884,10 @@ const ClinicVisit = (props) => {
                             value={objValues.bloodSugarGdm}
                             onChange={handleInputChange}
                             disabled={disabledField}
+                            style={{ borderColor: objValues.bloodSugarGdm && (parseFloat(objValues.bloodSugarGdm) < 0 || parseFloat(objValues.bloodSugarGdm) > 500) ? "#e53e3e" : "#d2d6dc", borderWidth: "1.5px" }}
                           />
                         </InputGroup>
-                        {objValues.bloodSugarGdm && (parseInt(objValues.bloodSugarGdm) < 0 || parseInt(objValues.bloodSugarGdm) > 500 || !Number.isInteger(Number(objValues.bloodSugarGdm))) ? (
+                        {objValues.bloodSugarGdm && (parseFloat(objValues.bloodSugarGdm) < 0 || parseFloat(objValues.bloodSugarGdm) > 500) ? (
                           <span className={classes.error}>Blood Sugar must be between 0 and 500 mg/dL</span>
                         ) : ""}
                       </FormGroup>
@@ -2607,13 +2768,20 @@ const ClinicVisit = (props) => {
                         </Label>
                         <InputGroup>
                           <Input
-                            type="text"
+                            type="select"
                             name="signature"
                             id="signature"
                             value={objValues.signature}
                             onChange={handleInputChange}
                             disabled={disabledField}
-                          />
+                          >
+                            <option value="">-- Select User --</option>
+                            {userList.map((user) => (
+                              <option key={user.id} value={user.fullName}>
+                                {user.fullName}
+                              </option>
+                            ))}
+                          </Input>
                         </InputGroup>
                         {errors.signature !== "" ? (
                           <span className={classes.error}>{errors.signature}</span>

@@ -191,8 +191,10 @@ public class PmtctHtsService {
         putIfNotEmpty(obs, "pregnancyStatusAtEntry", dto.getPregnancyStatusAtEntry());
         putIfNotEmpty(obs, "previouslyKnownHivPositive", dto.getPreviouslyKnownHivPositive());
         putIfNotEmpty(obs, "enrolledOnArt", dto.getEnrolledOnArt());
-        putIfNotEmpty(obs, "typeOfHivTest", dto.getTypeOfHivTest());
-        putIfNotEmpty(obs, "hivEarlyDetect", dto.getHivEarlyDetect());
+        // Keys conform to the HTS module's naming (typeOfHivTestDone, hivEarlyDetectResult)
+        // so both modules' records can be queried by the same observation key.
+        putIfNotEmpty(obs, "typeOfHivTestDone", dto.getTypeOfHivTest());
+        putIfNotEmpty(obs, "hivEarlyDetectResult", dto.getHivEarlyDetect());
         putIfNotEmpty(obs, "hivEarlyDetectViralLoad", dto.getHivEarlyDetectViralLoad());
         putIfNotEmpty(obs, "confirmatoryFromSpokes", dto.getConfirmatoryFromSpokes());
         putIfNotEmpty(obs, "initiatedOnProphylaxis", dto.getInitiatedOnProphylaxis());
@@ -243,8 +245,8 @@ public class PmtctHtsService {
             resp.setPregnancyStatusAtEntry(textOrNull(obs, "pregnancyStatusAtEntry"));
             resp.setPreviouslyKnownHivPositive(textOrNull(obs, "previouslyKnownHivPositive"));
             resp.setEnrolledOnArt(textOrNull(obs, "enrolledOnArt"));
-            resp.setTypeOfHivTest(textOrNull(obs, "typeOfHivTest"));
-            resp.setHivEarlyDetect(textOrNull(obs, "hivEarlyDetect"));
+            resp.setTypeOfHivTest(textOrNullWithFallback(obs, "typeOfHivTestDone", "typeOfHivTest"));
+            resp.setHivEarlyDetect(textOrNullWithFallback(obs, "hivEarlyDetectResult", "hivEarlyDetect"));
             resp.setHivEarlyDetectViralLoad(textOrNull(obs, "hivEarlyDetectViralLoad"));
             resp.setConfirmatoryFromSpokes(textOrNull(obs, "confirmatoryFromSpokes"));
             resp.setInitiatedOnProphylaxis(textOrNull(obs, "initiatedOnProphylaxis"));
@@ -353,6 +355,14 @@ public class PmtctHtsService {
         JsonNode child = node.get(field);
         if (child == null || child.isNull()) return null;
         return child.asText();
+    }
+
+    // Reads a harmonized-with-HTS observation key, falling back to the old
+    // PMTCT-only key name for records saved before the HTS field harmonization
+    // migration (typeOfHivTest -> typeOfHivTestDone, hivEarlyDetect -> hivEarlyDetectResult).
+    private String textOrNullWithFallback(JsonNode node, String newKey, String oldKey) {
+        String value = textOrNull(node, newKey);
+        return (value != null && !value.isEmpty()) ? value : textOrNull(node, oldKey);
     }
 
     // ══════════════════ END HTS ENCOUNTER PROXY ══════════════════
@@ -610,6 +620,65 @@ public class PmtctHtsService {
 
 
 
+    public PatientHivSummaryDto getPatientHivSummary(String patientUuid, String pmtctCycleUuid) {
+        // 1. Get latest PMTCT HTS record for this cycle
+        String hivStatus = null;
+        boolean hasHtsRecord = false;
+        String syphilisResult = "";
+        String hepatitisBResult = "";
+        String hepatitisCResult = "";
+
+        Optional<HtsEncounterProxy> proxyOpt = htsEncounterProxyRepository
+                .findLatestByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
+
+        if (proxyOpt.isPresent()) {
+            hasHtsRecord = true;
+            HtsEncounterProxy proxy = proxyOpt.get();
+            JsonNode obs = proxy.getObservation();
+
+            if (obs != null) {
+                // HIV status: prefer finalHivTestResult, fallback to confirmatoryHivTest
+                String finalResult = textOrNull(obs, "finalHivTestResult");
+                if (finalResult == null || finalResult.isEmpty()) {
+                    finalResult = textOrNull(obs, "confirmatoryHivTest");
+                }
+                hivStatus = finalResult;
+
+                // Syphilis
+                JsonNode syphNode = obs.get("syphilisInfo");
+                if (syphNode != null && !syphNode.isNull()) {
+                    syphilisResult = textOrNull(syphNode, "testResult");
+                }
+
+                // Hepatitis B
+                JsonNode hbvNode = obs.get("hbvInfo");
+                if (hbvNode != null && !hbvNode.isNull()) {
+                    hepatitisBResult = textOrNull(hbvNode, "testResult");
+                }
+
+                // Hepatitis C
+                hepatitisCResult = textOrNull(obs, "hepatitisC");
+            }
+        }
+
+        // 2. Get retest status for this cycle
+        HivRetestStatusResponse retestStatus = getHivRetestStatus(patientUuid, pmtctCycleUuid);
+        boolean seroconverted = Boolean.TRUE.equals(retestStatus.getSeroconverted());
+        boolean remainedNegative = Boolean.TRUE.equals(retestStatus.getRemainedHivNegative());
+
+        // hivStatus stays as the raw HTS result — frontend uses seroconverted/remainedHivNegative separately
+
+        return PatientHivSummaryDto.builder()
+                .hivStatus(hivStatus)
+                .hasHtsRecord(hasHtsRecord)
+                .seroconverted(seroconverted)
+                .remainedHivNegative(remainedNegative)
+                .syphilisResult(syphilisResult != null ? syphilisResult : "")
+                .hepatitisBResult(hepatitisBResult != null ? hepatitisBResult : "")
+                .hepatitisCResult(hepatitisCResult != null ? hepatitisCResult : "")
+                .build();
+    }
+
     public boolean isClientCodeTaken(String code) {
         return htsEncounterProxyRepository.isClientCodeTaken(code);
     }
@@ -818,8 +887,8 @@ public class PmtctHtsService {
                     htsResponseDto.setPregnancyStatusAtEntry(textOrNull(obs, "pregnancyStatusAtEntry"));
                     htsResponseDto.setPreviouslyKnownHivPositive(textOrNull(obs, "previouslyKnownHivPositive"));
                     htsResponseDto.setEnrolledOnArt(textOrNull(obs, "enrolledOnArt"));
-                    htsResponseDto.setTypeOfHivTest(textOrNull(obs, "typeOfHivTest"));
-                    htsResponseDto.setHivEarlyDetect(textOrNull(obs, "hivEarlyDetect"));
+                    htsResponseDto.setTypeOfHivTest(textOrNullWithFallback(obs, "typeOfHivTestDone", "typeOfHivTest"));
+                    htsResponseDto.setHivEarlyDetect(textOrNullWithFallback(obs, "hivEarlyDetectResult", "hivEarlyDetect"));
                     htsResponseDto.setHivEarlyDetectViralLoad(textOrNull(obs, "hivEarlyDetectViralLoad"));
                     htsResponseDto.setConfirmatoryFromSpokes(textOrNull(obs, "confirmatoryFromSpokes"));
                     htsResponseDto.setInitiatedOnProphylaxis(textOrNull(obs, "initiatedOnProphylaxis"));

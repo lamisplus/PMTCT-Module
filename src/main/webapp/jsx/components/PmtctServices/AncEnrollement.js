@@ -341,15 +341,15 @@ const AncEnrollement = (props) => {
     }
     // Validate HB (g/dl) and PCV (%) ranges
     const lt = objValues.labTest || {};
-    if (lt.hbPcv && (parseInt(lt.hbPcv) < 0 || parseInt(lt.hbPcv) > 25 || !Number.isInteger(Number(lt.hbPcv)))) {
-      newErrors.hbPcv = "HBV must be between 0 and 25 g/dL";
+    if (lt.hbPcv && (parseFloat(lt.hbPcv) < 0 || parseFloat(lt.hbPcv) > 25)) {
+      newErrors.hbPcv = "HB must be between 0 and 25 g/dL";
       hasError = true;
     }
-    if (lt.pcv && (parseInt(lt.pcv) < 0 || parseInt(lt.pcv) > 70 || !Number.isInteger(Number(lt.pcv)))) {
+    if (lt.pcv && (parseFloat(lt.pcv) < 0 || parseFloat(lt.pcv) > 70)) {
       newErrors.pcv = "PCV must be between 0% and 70%";
       hasError = true;
     }
-    if (lt.bloodSugarGdm && (parseInt(lt.bloodSugarGdm) < 0 || parseInt(lt.bloodSugarGdm) > 500 || !Number.isInteger(Number(lt.bloodSugarGdm)))) {
+    if (lt.bloodSugarGdm && (parseFloat(lt.bloodSugarGdm) < 0 || parseFloat(lt.bloodSugarGdm) > 500)) {
       newErrors.bloodSugarGdm = "Blood Sugar must be between 0 and 500 mg/dL";
       hasError = true;
     }
