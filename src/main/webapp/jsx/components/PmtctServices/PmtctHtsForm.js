@@ -26,7 +26,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { url as baseUrl, token } from "../../../api";
 import { useHistory, useLocation } from "react-router-dom";
-import "react-summernote/dist/react-summernote.css"; // import styles
+import "react-summernote/dist/react-summernote.css";
 import { Spinner } from "reactstrap";
 import { Message, Label as LabelRibbon } from "semantic-ui-react";
 import { calculateGestationalAge } from "../../utils";
@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   form: {
-    width: "100%", // Fix IE 11 issue.
+    width: "100%",
     marginTop: theme.spacing(3),
   },
   submit: {
@@ -143,7 +143,6 @@ const PmtctHtsForm = (props) => {
   const isPmtctHts = props.PmtctHtsRetestingType === "pmtct-hts";
   const isRetesting = props.PmtctHtsRetestingType === "retesting";
 
-  // Map old reactive/non-reactive values to Positive/Negative for PMTCT-HTS
   const mapTestResult = (value) => {
     if (!value) return value;
     if (value === "reactive") return "Positive";
@@ -253,7 +252,7 @@ const PmtctHtsForm = (props) => {
     ancNo: props?.patientObj?.ancNo,
     finalResult: "",
     source: "WEB",
-    // PMTCT Register fields
+
     pregnancyStatusAtEntry: "",
     previouslyKnownHivPositive: "",
     enrolledOnArt: "",
@@ -325,8 +324,6 @@ const PmtctHtsForm = (props) => {
     }
   };
 
-  //get the person last record on PMTCT HTS if exist
-
   const getLastPmtctHtsRecord = (patientUuid) => {
     const pmtctCycleUuid = props.latestPmtctCycle?.uuid;
 
@@ -339,7 +336,7 @@ const PmtctHtsForm = (props) => {
          .then((response) => {
            if (response.data) {
              setLastPmtctHtsRecord(response.data);
-             // If any HTS record exists for this cycle, the initial has already been created
+
              if (response?.data?.id) {
                setInitialHtsExistsForCycle(true);
              }
@@ -421,7 +418,6 @@ const PmtctHtsForm = (props) => {
     testEntryPointValue
   ) => {
     setPayload((prevPayload) => {
-      // Calculate gestational age using the LATEST dateOfHivTest from state
       const gestationalAge = calculateGestationalAge2(prevPayload.dateOfHivTest);
 
       // Determine stage of pregnancy based on gestational age
@@ -1063,9 +1059,17 @@ const PmtctHtsForm = (props) => {
         hivEarlyDetectViralLoad: "",
       }));
       setConfirmatoryHivTest({ result: "", dateOfTest: "" });
-      setFinalResult("");
+
+      if (
+        e.target.value === "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE" ||
+        e.target.value === "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE"
+      ) {
+        setFinalResult("Suspected Acute Infection");
+      } else {
+        setFinalResult("");
+      }
     } else if (e.target.name === "knownHbvPositive") {
-      // Clear HBV sub-fields when Known HBV changes
+
       setPayload((prevPayload) => ({
         ...prevPayload,
         knownHbvPositive: e.target.value,
@@ -2787,8 +2791,8 @@ const PmtctHtsForm = (props) => {
                   <div style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    backgroundColor: finalResult === "Positive" ? "#fff5f5" : "#f0fff4",
-                    border: finalResult === "Positive" ? "1px solid #feb2b2" : "1px solid #9ae6b4",
+                    backgroundColor: finalResult === "Positive" ? "#fff5f5" : finalResult === "Negative" ? "#f0fff4" : "#fff8f0",
+                    border: finalResult === "Positive" ? "1px solid #feb2b2" : finalResult === "Negative" ? "1px solid #9ae6b4" : "1px solid #ffb366",
                     borderRadius: "0.35rem",
                     padding: "10px 18px",
                   }}>
@@ -2801,7 +2805,7 @@ const PmtctHtsForm = (props) => {
                       HIV Test Result:
                     </span>
                     <LabelRibbon
-                      color={finalResult === "Positive" ? "red" : "green"}
+                      color={finalResult === "Positive" ? "red" : finalResult === "Negative" ? "green" : "orange"}
                       style={{ margin: "0" }}
                     >
                       {finalResult}
