@@ -97,6 +97,16 @@ public class PMTCTController {
 //        return ResponseEntity.ok(ancService.isAtRisk(PatientUuid));
 //    }
 
+    @GetMapping(value = "/check/on-art/{patientUuid}")
+    public ResponseEntity<Boolean> checkOnArt(@PathVariable String patientUuid) {
+        return ResponseEntity.ok(ancService.isFemaleAndOnArt(patientUuid));
+    }
+
+    @GetMapping(value = "/check/hts-positive/{patientUuid}")
+    public ResponseEntity<Boolean> checkHtsPositive(@PathVariable String patientUuid) {
+        return ResponseEntity.ok(ancService.isFemaleAndHtsPositive(patientUuid));
+    }
+
 
 
     @GetMapping(value = "/pmtct-from-person")

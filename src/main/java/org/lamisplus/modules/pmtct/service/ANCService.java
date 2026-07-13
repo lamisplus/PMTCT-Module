@@ -1326,6 +1326,21 @@ public class ANCService {
         return addPartnerToAnc(id, partnerInformation);
     }
 
+    public boolean isFemaleAndOnArt(String patientUuid) {
+        try {
+            return ancRepository.isFemaleAndOnArt(patientUuid);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isFemaleAndHtsPositive(String patientUuid) {
+        try {
+            return ancRepository.isFemaleAndHtsPositive(patientUuid);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     String getDynamicHivStatus(String patientUuid) {
         List<String> allStatuses = new ArrayList<>();

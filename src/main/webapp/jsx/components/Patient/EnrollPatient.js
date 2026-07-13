@@ -167,6 +167,8 @@ const UserRegistration = (props) => {
     id: "",
   });
   const [latestPmtctCycle, setLatestPmtctCycle] = useState(null);
+  
+  const [skipHtsForm, setSkipHtsForm] = useState(false);
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
     patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
     maternalOutcome: "",
@@ -365,6 +367,26 @@ const UserRegistration = (props) => {
     }
   };
 
+ const checkSkipHtsForm = async (patientUuid) => {
+    if (!patientUuid) return;
+    try {
+      const [htsPositiveRes, onArtRes] = await Promise.all([
+        axios.get(`${baseUrl}pmtct/anc/check/hts-positive/${patientUuid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${baseUrl}pmtct/anc/check/on-art/${patientUuid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      setSkipHtsForm(htsPositiveRes.data === true || onArtRes.data === true);
+    } catch (error) {
+      console.log("Error checking HTS-positive / on-ART status:", error);
+      // On failure, fall back to the default flow (show the HTS form)
+      setSkipHtsForm(false);
+    }
+  };
+
   const getHistoricalHivStatus = async (patientUuid) => {
     // Prevent duplicate calls - ref updates synchronously across all renders
     if (hasCheckedHivStatusRef.current) return;
@@ -408,6 +430,7 @@ const UserRegistration = (props) => {
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
       getHistoricalHivStatus(patientObj?.uuid);
+      checkSkipHtsForm(patientObj?.uuid);
 
       // Only validate enrollment if patient is not already enrolled via ANC
       if (!patientObj?.ancNo) {
@@ -1070,7 +1093,8 @@ const UserRegistration = (props) => {
                       entrypointValue={locationState.entrypointValue}
                     />
                   ) : patientObj.dynamicHivStatus === "Positive" ||
-                  lastPmtctHtsRecord?.finalResult === "Positive" ? (
+                  lastPmtctHtsRecord?.finalResult === "Positive" ||
+                  skipHtsForm ? (
                     <PmtctEnrollment
                       newRegDate={""}
                       patientObj={patientObj}
