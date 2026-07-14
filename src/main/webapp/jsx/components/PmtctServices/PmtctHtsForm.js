@@ -2052,7 +2052,7 @@ const PmtctHtsForm = (props) => {
                     <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <HistoryIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV History
                     </h6>
-                    {skipHtsEncounter && (
+                    {/*skipHtsEncounter && (
                       <p style={{ color: "#57606a", fontSize: "12px", margin: "0 12px 12px" }}>
                         This client's HIV-positive result is already documented in HTS
                         {htsPositiveRecord?.dateOfVisit
@@ -2061,7 +2061,7 @@ const PmtctHtsForm = (props) => {
                         . The details above were taken from that result — no HTS testing data
                         is captured again.
                       </p>
-                    )}
+                    )*/}
                     <div className="row">
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
