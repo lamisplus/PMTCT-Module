@@ -265,21 +265,4 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
             nativeQuery = true)
     boolean isFemaleAndOnArt(String patientUuid);
 
-    @Query(value =
-            "SELECT EXISTS( " +
-                    "  SELECT 1 FROM patient_person pp " +
-                    "  WHERE pp.uuid = ?1 AND pp.archived = 0 AND pp.sex ILIKE 'FEMALE' " +
-                    "  AND ( " +
-                    "    EXISTS (SELECT 1 FROM hts_client hc " +
-                    "            WHERE hc.person_uuid = pp.uuid AND hc.archived = 0 " +
-                    "            AND LOWER(COALESCE(NULLIF(hc.hiv_test_result2, ''), hc.hiv_test_result, '')) LIKE '%positive%') " +
-                    "    OR EXISTS (SELECT 1 FROM hts_encounter he " +
-                    "            WHERE CAST(he.patient_uuid AS TEXT) = pp.uuid AND he.archived = false " +
-                    "            AND LOWER(COALESCE(NULLIF(he.observation->>'finalHivTestResult', ''), he.observation->>'confirmatoryHivTest', '')) LIKE '%positive%') " +
-                    "  ) " +
-                    ")",
-            nativeQuery = true)
-    boolean isFemaleAndHtsPositive(String patientUuid);
-
-
 }

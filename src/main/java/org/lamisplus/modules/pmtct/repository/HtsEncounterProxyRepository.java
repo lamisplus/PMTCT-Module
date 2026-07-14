@@ -31,6 +31,19 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + ") THEN true ELSE false END")
     boolean isClientCodeTaken(String code);
 
+    // Latest documented HIV-positive encounter for a female client — from HTS or a
+    // previous PMTCT cycle. Its absence means PMTCT still owes HTS a test result.
+    @Query(nativeQuery = true, value
+            = "SELECT he.* FROM hts_encounter he "
+            + "WHERE he.archived = false "
+            + "  AND CAST(he.patient_uuid AS TEXT) = :patientUuid "
+            + "  AND LOWER(COALESCE(NULLIF(he.observation->>'finalHivTestResult', ''), "
+            + "                     he.observation->>'confirmatoryHivTest', '')) LIKE '%positive%' "
+            + "  AND EXISTS (SELECT 1 FROM patient_person pp "
+            + "              WHERE pp.uuid = :patientUuid AND pp.archived = 0 AND pp.sex ILIKE 'FEMALE') "
+            + "ORDER BY he.date_of_visit DESC, he.id DESC LIMIT 1")
+    Optional<HtsEncounterProxy> findLatestHtsPositive(String patientUuid);
+
     // ══════════════════ Phase 2: Native queries for PMTCT HTS reads ══════════════════
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "

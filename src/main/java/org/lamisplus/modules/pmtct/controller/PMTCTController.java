@@ -102,9 +102,11 @@ public class PMTCTController {
         return ResponseEntity.ok(ancService.isFemaleAndOnArt(patientUuid));
     }
 
+    // Returns the client's HIV-positive HTS encounter, or an empty body when the client
+    // has no positive result documented in HTS.
     @GetMapping(value = "/check/hts-positive/{patientUuid}")
-    public ResponseEntity<Boolean> checkHtsPositive(@PathVariable String patientUuid) {
-        return ResponseEntity.ok(ancService.isFemaleAndHtsPositive(patientUuid));
+    public ResponseEntity<HtsEncounterProxy> checkHtsPositive(@PathVariable String patientUuid) {
+        return ResponseEntity.ok(ancService.getHtsPositiveResult(patientUuid));
     }
 
 

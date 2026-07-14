@@ -27,7 +27,6 @@ import { TiArrowBack } from "react-icons/ti";
 import { token, url as baseUrl } from "../../../api";
 import "react-phone-input-2/lib/style.css";
 import "./patient.css";
-import PmtctEnrollment from "../PmtctServices/PmtctEnrollment";
 // import Form from 'react-bootstrap/Form';
 import { Modal } from "react-bootstrap";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
@@ -167,8 +166,7 @@ const UserRegistration = (props) => {
     id: "",
   });
   const [latestPmtctCycle, setLatestPmtctCycle] = useState(null);
-  
-  const [skipHtsForm, setSkipHtsForm] = useState(false);
+
   const [pmtctCycleCreated, setPmtctCycleCreated] = useState({
     patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
     maternalOutcome: "",
@@ -367,26 +365,6 @@ const UserRegistration = (props) => {
     }
   };
 
- const checkSkipHtsForm = async (patientUuid) => {
-    if (!patientUuid) return;
-    try {
-      const [htsPositiveRes, onArtRes] = await Promise.all([
-        axios.get(`${baseUrl}pmtct/anc/check/hts-positive/${patientUuid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${baseUrl}pmtct/anc/check/on-art/${patientUuid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      setSkipHtsForm(htsPositiveRes.data === true || onArtRes.data === true);
-    } catch (error) {
-      console.log("Error checking HTS-positive / on-ART status:", error);
-      // On failure, fall back to the default flow (show the HTS form)
-      setSkipHtsForm(false);
-    }
-  };
-
   const getHistoricalHivStatus = async (patientUuid) => {
     // Prevent duplicate calls - ref updates synchronously across all renders
     if (hasCheckedHivStatusRef.current) return;
@@ -430,7 +408,6 @@ const UserRegistration = (props) => {
     if (patientObj) {
       getLastPmtctHtsRecord(patientObj?.uuid);
       getHistoricalHivStatus(patientObj?.uuid);
-      checkSkipHtsForm(patientObj?.uuid);
 
       // Only validate enrollment if patient is not already enrolled via ANC
       if (!patientObj?.ancNo) {
@@ -1092,33 +1069,9 @@ const UserRegistration = (props) => {
                       onEnrollPatient={true}
                       entrypointValue={locationState.entrypointValue}
                     />
-                  ) : patientObj.dynamicHivStatus === "Positive" ||
-                  lastPmtctHtsRecord?.finalResult === "Positive" ||
-                  skipHtsForm ? (
-                    <PmtctEnrollment
-                      newRegDate={""}
-                      patientObj={patientObj}
-                      setActiveContent={setActiveContent}
-                      activeContent={activeContent}
-                      hideUpdateButton={true}
-                      entrypointValue={locationState.entrypointValue}
-                      ancEntryType={patientObj.ancNo ? true : false}
-                      handleRoute={handleRoute}
-                      onEnrollPatient={true}
-                      htsHivStatus={lastPmtctHtsRecord?.finalResult}
-                      hasPmtctHtsRecord={
-                        lastPmtctHtsRecord?.finalResult ? true : false
-                      }
-                      showLastHivTestMessage={
-                        lastPmtctHtsRecord?.finalResult === "Positive"
-                          ? true
-                          : false
-                      }
-                      lastestConfirmatoryTest={lastPmtctHtsRecord?.finalResult}
-                      canProceedWithEnrollment={canProceedWithEnrollment}
-                      latestPmtctCycle={latestPmtctCycle}
-                    />
                   ) : (
+                    /* Known positives are no longer sent straight to enrolment — the HTS
+                       form is shown and pre-filled from their documented HIV result. */
                     <PmtctHtsForm
                       patientObj={patientObj}
                       setActiveContent={setActiveContent}

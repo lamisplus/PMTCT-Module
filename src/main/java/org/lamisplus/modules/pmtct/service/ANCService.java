@@ -1334,11 +1334,15 @@ public class ANCService {
         }
     }
 
-    public boolean isFemaleAndHtsPositive(String patientUuid) {
+    /**
+     * The client's documented HIV-positive encounter, or null when none exists.
+     * PMTCT uses it to pre-fill the HTS form instead of re-testing a known positive.
+     */
+    public HtsEncounterProxy getHtsPositiveResult(String patientUuid) {
         try {
-            return ancRepository.isFemaleAndHtsPositive(patientUuid);
+            return htsEncounterProxyRepository.findLatestHtsPositive(patientUuid).orElse(null);
         } catch (Exception e) {
-            return false;
+            return null;
         }
     }
 

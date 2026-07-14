@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Redirect } from "react-router-dom";
 import {
   Card,
@@ -221,6 +221,13 @@ const PmtctHtsForm = (props) => {
   const [finalResult, setFinalResult] = useState("");
   const [resultStatus, setResultStatus] = useState("");
   const [showRetesting, setShowRetesting] = useState(false);
+  // The client's HIV-positive result already documented in HTS (null when they have none).
+  // When present the form is pre-filled from it and nothing is written to hts_encounter.
+  const [htsPositiveRecord, setHtsPositiveRecord] = useState(null);
+  const htsPositiveRef = useRef(null);
+  // Nothing is submitted to hts_encounter for such a client, so every field that only
+  // feeds that record is hidden — only what we pre-fill from the HTS result is shown.
+  const skipHtsEncounter = isPmtctHts && !!htsPositiveRecord;
 
   const [initialHivTest, setInitialHivTest] = useState({
     result: "",
@@ -486,8 +493,14 @@ const PmtctHtsForm = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       ).catch(() => ({ data: {} }));
 
-      Promise.all([htsPromise, artPromise, serologyPromise])
-        .then(([htsRes, artRes, serologyRes]) => {
+      // The client's documented HIV-positive encounter, if HTS already has one
+      const htsPositivePromise = axios.get(
+        `${baseUrl}pmtct/anc/check/hts-positive/${patientUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => ({ data: null }));
+
+      Promise.all([htsPromise, artPromise, serologyPromise, htsPositivePromise])
+        .then(([htsRes, artRes, serologyRes, htsPositiveRes]) => {
           const htsData = htsRes?.data || {};
           const htsResult = typeof htsData.result === "string" ? htsData.result : "";
           const htsDateVisit = htsData.dateVisit || null;
@@ -526,6 +539,57 @@ const PmtctHtsForm = (props) => {
               };
             });
             setFinalResult((prev) => prev || "Positive");
+          }
+
+          // A positive result already documented in HTS: pre-fill the test details from it
+          // rather than testing the client again. Retesting only ever applies to negatives,
+          // so this is scoped to the PMTCT-HTS form.
+          const htsPositive = isPmtctHts ? htsPositiveRes?.data || null : null;
+          if (htsPositive && htsPositive.id) {
+            htsPositiveRef.current = htsPositive;
+            setHtsPositiveRecord(htsPositive);
+
+            const obs = htsPositive.observation || {};
+            const documentedEntryPoint = obs.testEntryPoint || "";
+            const documentedSetting =
+              obs.testSetting ||
+              obs.facilitySetting ||
+              obs.communityEntryPoint ||
+              htsPositive.setting ||
+              "";
+            const isCommunity = /COMMUNITY/i.test(
+              `${documentedEntryPoint} ${documentedSetting}`
+            );
+            const entryPoint = documentedEntryPoint.startsWith("ENROLLMENT_SETTING_")
+              ? documentedEntryPoint
+              : documentedEntryPoint || documentedSetting
+              ? isCommunity
+                ? "ENROLLMENT_SETTING_COMMUNITY"
+                : "ENROLLMENT_SETTING_FACILITY"
+              : "";
+
+            if (entryPoint) getSettingPoint(entryPoint);
+
+            setPayload((prev) => ({
+              ...prev,
+              dateOfHivTest: htsPositive.dateOfVisit || prev.dateOfHivTest,
+              clientCode: htsPositive.clientCode || prev.clientCode,
+              testEntryPoint: entryPoint || prev.testEntryPoint,
+              testSetting: documentedSetting || prev.testSetting,
+              previouslyKnownHivPositive: "Yes",
+              enrolledOnArt:
+                prev.enrolledOnArt || (isOnArt ? "On ART" : "Not on ART"),
+            }));
+            setFinalResult(
+              obs.finalHivTestResult || obs.confirmatoryHivTest || "Positive"
+            );
+          } else if (isPmtctHts && !isPositive && !isOnArt) {
+            // No documented positive anywhere — the client is not previously known positive
+            setPayload((prev) =>
+              prev.previouslyKnownHivPositive
+                ? prev
+                : { ...prev, previouslyKnownHivPositive: "No" }
+            );
           }
 
           // Pre-populate syphilis/hepatitis from previous cycles if positive
@@ -667,6 +731,8 @@ const PmtctHtsForm = (props) => {
     ) {
       return;
     }
+    // Known positives keep the client code from their existing HTS encounter
+    if (htsPositiveRef.current) return;
     if (!testEntryPoint || !testSetting || !dateOfHivTest) return;
 
     let cancelled = false;
@@ -1374,7 +1440,9 @@ const PmtctHtsForm = (props) => {
         hivStatus: payload.finalResult,
         pregnancyOutcome: "",
         numberOfInfants: 0,
-        pmtctStatus: "INACTIVE",
+        // Saving the HTS encounter is what normally activates the cycle; known positives
+        // never reach that save, so activate the cycle up front for them.
+        pmtctStatus: htsPositiveRef.current ? "ACTIVE" : "INACTIVE",
         source: "WEB",
       };
 
@@ -1421,8 +1489,9 @@ const PmtctHtsForm = (props) => {
 
     if (saving) return; // Prevent double submission
 
-    // Client code must not be empty
-    if (!payload.clientCode || !payload.clientCode.trim()) {
+    // Client code must not be empty — not required for a client whose result comes from
+    // HTS, since no record of ours is written for them.
+    if (!skipHtsEncounter && (!payload.clientCode || !payload.clientCode.trim())) {
       toast.error("Client Code is required. Please ensure Setting, Test Setting and Date of HIV Test are filled.", {
         position: toast.POSITION.TOP_RIGHT,
       });
@@ -1534,12 +1603,14 @@ const PmtctHtsForm = (props) => {
       return;
     }
 
-    // Validation checks
+    // Validation checks — the pre-filled HTS result is not re-submitted, so there is
+    // nothing of ours to validate for those clients.
     const isFormValid =
-      validate() &&
-      !checkingForTheDate &&
-      validateHIVRetest.isValid &&
-      validateAncEnrollment.isValid;
+      skipHtsEncounter ||
+      (validate() &&
+        !checkingForTheDate &&
+        validateHIVRetest.isValid &&
+        validateAncEnrollment.isValid);
 
     // Show validation errors if any
     if (!isFormValid) {
@@ -1591,7 +1662,14 @@ const PmtctHtsForm = (props) => {
       const isUpdate = props.activeContent?.actionType === "update";
       let response;
 
-      if (isUpdate) {
+      if (htsPositiveRecord) {
+        // The client's positive result is already documented in hts_encounter —
+        // PMTCT reuses it instead of writing a second testing record.
+        toast.success(
+          "Client is already HIV positive in HTS — the existing result was used.",
+          { position: toast.POSITION.TOP_RIGHT }
+        );
+      } else if (isUpdate) {
         // Update existing enrollment
         response = await axios.put(
           `${baseUrl}pmtct/anc/update-pmtct-hts-enrollment/${props.activeContent.id}`,
@@ -1753,7 +1831,7 @@ const PmtctHtsForm = (props) => {
                               patientObj.ancNo ? props?.patientObj?.dateOfEnrollment : ""
                             }
                             max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={disabledField}
+                            disabled={disabledField || skipHtsEncounter}
                           />
                         </InputGroup>
                         {errors.dateOfHivTest !== "" ? (
@@ -1855,7 +1933,7 @@ const PmtctHtsForm = (props) => {
                             id="testEntryPoint"
                             onChange={handleInputChange}
                             value={payload.testEntryPoint}
-                            disabled={disabledField}
+                            disabled={disabledField || skipHtsEncounter}
                           >
                             <option value="">Select</option>
                             {testEntryPoint.map((value) => (
@@ -1937,7 +2015,7 @@ const PmtctHtsForm = (props) => {
                         </div>
                       )}
                       {/* Status at Entry (PMTCT-HTS only) */}
-                      {isPmtctHts && (
+                      {isPmtctHts && !skipHtsEncounter && (
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
                             <Label>Status at Entry</Label>
@@ -1974,6 +2052,16 @@ const PmtctHtsForm = (props) => {
                     <h6 style={{ backgroundColor: "transparent", color: "#2d3748", padding: "8px 12px", borderRadius: "0.25rem", fontSize: "13px", fontWeight: "bold", marginBottom: "12px" }}>
                       <HistoryIcon style={{ fontSize: "16px", color: "#014d88", marginRight: "6px", verticalAlign: "text-bottom" }} />HIV History
                     </h6>
+                    {skipHtsEncounter && (
+                      <p style={{ color: "#57606a", fontSize: "12px", margin: "0 12px 12px" }}>
+                        This client's HIV-positive result is already documented in HTS
+                        {htsPositiveRecord?.dateOfVisit
+                          ? ` (${moment(htsPositiveRecord.dateOfVisit).format("DD-MMM-YYYY")})`
+                          : ""}
+                        . The details above were taken from that result — no HTS testing data
+                        is captured again.
+                      </p>
+                    )}
                     <div className="row">
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -1985,7 +2073,7 @@ const PmtctHtsForm = (props) => {
                               id="previouslyKnownHivPositive"
                               onChange={handleInputChange}
                               value={payload.previouslyKnownHivPositive}
-                              disabled={disabledField}
+                              disabled={disabledField || skipHtsEncounter}
                             >
                               <option value="">Select</option>
                               <option value="Yes">Yes</option>
@@ -2006,7 +2094,7 @@ const PmtctHtsForm = (props) => {
                                   id="enrolledOnArt"
                                   onChange={handleInputChange}
                                   value={payload.enrolledOnArt}
-                                  disabled={disabledField}
+                                  disabled={disabledField || skipHtsEncounter}
                                 >
                                   <option value="">Select</option>
                                   <option value="On ART">On ART</option>
@@ -2247,7 +2335,7 @@ const PmtctHtsForm = (props) => {
               {/* Old simple retesting section removed — retesting now uses the full Diagnostic Testing flow above */}
 
               {/* === OTHER SEROLOGY TESTS (shown on BOTH PMTCT-HTS and Retesting) === */}
-              {(isPmtctHts || isRetesting) && (
+              {(isPmtctHts || isRetesting) && !skipHtsEncounter && (
                 <>
                   <div className="col-md-12 mb-2 mt-3">
                     <h6 style={{ color: "#014d88", fontWeight: "bold", fontSize: "15px" }}>
@@ -2543,6 +2631,7 @@ const PmtctHtsForm = (props) => {
               )}
 
               {/* === TB (bordered container) — Shown on BOTH PMTCT-HTS and Retesting === */}
+              {!skipHtsEncounter && (
               <div className="col-md-12 mb-3">
                 <div style={{
                   border: "1px solid #e0e0e0",
@@ -2603,8 +2692,10 @@ const PmtctHtsForm = (props) => {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* === Partner Notification (bordered container) — Shown on BOTH PMTCT-HTS and Retesting === */}
+              {!skipHtsEncounter && (
                   <div className="col-md-12 mb-3">
                     <div style={{
                       border: "1px solid #e0e0e0",
@@ -2734,9 +2825,11 @@ const PmtctHtsForm = (props) => {
                       </div>
                     </div>
                   </div>
+              )}
 
               {/* Viral Load Monitoring — Display if Previously Known or HIV Positive */}
-              {(payload.previouslyKnownHivPositive === "Yes" ||
+              {!skipHtsEncounter &&
+                (payload.previouslyKnownHivPositive === "Yes" ||
                 finalResult === "Positive") && (
                 <div className="col-md-12 mb-3">
                   <div style={{
