@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @RequiredArgsConstructor
@@ -39,9 +40,14 @@ public class PmtctHtsReponseDTO {
     private String confirmatoryFromSpokes;
     private String initiatedOnProphylaxis;
     private String tbReferred;
+    // Most recent entry of each history — what the form's editable fields show
     private SyphilisDetailsDto syphilisInfo;
     private HbvInfoDto hbvInfo;
     private PartnerInfoDto partnerInfo;
+    // Every dated entry recorded against the encounter, oldest first
+    private List<SyphilisDetailsDto> syphilisInfoHistory;
+    private List<HbvInfoDto> hbvInfoHistory;
+    private List<PartnerInfoDto> partnerInfoHistory;
     private String tbScreeningStatus;
     private String pmtctTestEntryPoint;
     private String viralLoadMonitoring;

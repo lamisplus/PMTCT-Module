@@ -2,6 +2,7 @@ package org.lamisplus.modules.pmtct.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +86,15 @@ public class PmtctHtsService {
         }
         Person person = personOpt.get();
 
+        // A client already documented HIV positive is not tested again: no second encounter
+        // is created for them — this visit's serology/partner data is appended to the
+        // existing positive encounter instead.
+        Optional<HtsEncounterProxy> knownPositive =
+                this.htsEncounterProxyRepository.findLatestHtsPositive(dto.getPatientUuid());
+        if (knownPositive.isPresent()) {
+            return appendToHtsEncounter(knownPositive.get(), dto, person, user);
+        }
+
         // Build proxy entity targeting hts_encounter table
         HtsEncounterProxy encounter = new HtsEncounterProxy();
         encounter.setPersonId(person.getId());
@@ -97,7 +107,7 @@ public class PmtctHtsService {
         encounter.setPmtctHts(true);
         encounter.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
         encounter.setArchived(false);
-        encounter.setObservation(buildPmtctObservation(dto));
+        encounter.setObservation(buildPmtctObservation(dto, null));
 
         // Manually set audit fields (Spring JPA auditing not configured in PMTCT module)
         encounter.setCreatedBy(user.getUserName());
@@ -123,11 +133,18 @@ public class PmtctHtsService {
         User user = currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
 
-        // Update columns
-        existing.setDateOfVisit(dto.getDateOfHivTest());
-        existing.setSetting(dto.getTestSetting() != null ? dto.getTestSetting() : "");
+        // Update columns. The serology/partner histories are carried over from the stored
+        // observation, with the most recent entry of each rewritten from the form. Columns the
+        // form leaves blank keep their stored value — an encounter that came from HTS has a
+        // visit date and setting of its own that PMTCT must not blank out.
+        if (dto.getDateOfHivTest() != null) {
+            existing.setDateOfVisit(dto.getDateOfHivTest());
+        }
+        if (dto.getTestSetting() != null && !dto.getTestSetting().trim().isEmpty()) {
+            existing.setSetting(dto.getTestSetting());
+        }
         existing.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
-        existing.setObservation(buildPmtctObservation(dto));
+        existing.setObservation(buildPmtctObservation(dto, existing.getObservation()));
 
         // Update audit fields
         existing.setLastModifiedBy(user.getUserName());
@@ -146,8 +163,152 @@ public class PmtctHtsService {
         return convertProxyToResponseDto(saved, personOpt.orElse(null));
     }
 
-    private JsonNode buildPmtctObservation(PmtctHtsRequestDTO dto) {
-        ObjectNode obs = objectMapper.createObjectNode();
+    /**
+     * Appends this visit's serology/partner data to an encounter that already documents the
+     * client as HIV positive. The encounter's HIV result, client code, visit date and setting
+     * are left untouched — PMTCT adds no testing data for a client HTS has already tested.
+     */
+    private PmtctHtsReponseDTO appendToHtsEncounter(HtsEncounterProxy existing,
+                                                    PmtctHtsRequestDTO dto,
+                                                    Person person,
+                                                    User user) {
+        JsonNode stored = existing.getObservation();
+        ObjectNode obs = (stored != null && stored.isObject())
+                ? ((ObjectNode) stored).deepCopy()
+                : objectMapper.createObjectNode();
+
+        LocalDate today = LocalDate.now();
+        appendHistoryEntry(obs, "syphilisInfo", dto.getSyphilisInfo(), today);
+        appendHistoryEntry(obs, "hbvInfo", dto.getHbvInfo(), today);
+        appendHistoryEntry(obs, "partnerInfo", dto.getPartnerInfo(), today);
+
+        // Single-valued PMTCT fields carry the latest answer rather than a history
+        putIfPresent(obs, "tbScreeningStatus", dto.getTbScreeningStatus());
+        putIfPresent(obs, "tbReferred", dto.getTbReferred());
+        putIfPresent(obs, "viralLoadMonitoring", dto.getViralLoadMonitoring());
+        putIfPresent(obs, "previouslyKnownHivPositive", dto.getPreviouslyKnownHivPositive());
+        putIfPresent(obs, "enrolledOnArt", dto.getEnrolledOnArt());
+        putIfPresent(obs, "pmtctTestEntryPoint", dto.getPmtctTestEntryPoint());
+
+        // Point the encounter at the cycle it is now being used for, so it is the cycle's
+        // PMTCT HTS record — that is what the patient card lists and what view/update opens.
+        putIfPresent(obs, "pmtctCycleUuid", dto.getPmtctCycleUuid());
+        if (obs.path("testingType").asText("").isEmpty()) {
+            putIfPresent(obs, "testingType", dto.getTestingType());
+        }
+        existing.setPmtctHts(true);
+
+        existing.setObservation(obs);
+        existing.setLastModifiedBy(user.getUserName());
+        existing.setLastModifiedDate(java.time.LocalDateTime.now());
+
+        HtsEncounterProxy saved = this.htsEncounterProxyRepository.save(existing);
+
+        if (dto.getPmtctCycleUuid() != null) {
+            pmtctPregnancyCycleService.updatePmtctStatusToActive(dto.getPmtctCycleUuid());
+        }
+
+        return convertProxyToResponseDto(saved, person);
+    }
+
+    // Adds a dated entry to a history key, leaving earlier entries in place.
+    private void appendHistoryEntry(ObjectNode obs, String key, Object info, LocalDate date) {
+        ObjectNode entry = toDatedEntry(info, date);
+        if (entry == null) return;
+        ArrayNode history = readHistory(obs, key);
+        history.add(entry);
+        obs.set(key, history);
+    }
+
+    // Rewrites the most recent entry of a history key, keeping the date it was first recorded.
+    private void rewriteLatestHistoryEntry(ObjectNode obs, String key, Object info, JsonNode existingObs) {
+        ArrayNode history = readHistory(existingObs, key);
+        ObjectNode entry = toDatedEntry(info, LocalDate.now());
+
+        if (entry == null) {
+            // Nothing entered for this section — keep whatever history already exists
+            if (history.size() > 0) obs.set(key, history);
+            return;
+        }
+        if (history.size() > 0) {
+            JsonNode previous = history.get(history.size() - 1);
+            String recordedOn = previous.path("date").asText("");
+            if (!recordedOn.isEmpty()) entry.put("date", recordedOn);
+            history.set(history.size() - 1, entry);
+        } else {
+            history.add(entry);
+        }
+        obs.set(key, history);
+    }
+
+    /**
+     * Reads a history key as a list of entries. Records written before histories existed hold
+     * a single object under the key, so those are read as a one-entry history.
+     */
+    private ArrayNode readHistory(JsonNode obs, String key) {
+        ArrayNode history = objectMapper.createArrayNode();
+        JsonNode node = obs != null ? obs.get(key) : null;
+        if (node == null || node.isNull()) return history;
+        if (node.isArray()) {
+            node.forEach(history::add);
+        } else if (node.isObject()) {
+            history.add(node);
+        }
+        return history;
+    }
+
+    private JsonNode latestHistoryEntry(JsonNode obs, String key) {
+        ArrayNode history = readHistory(obs, key);
+        return history.size() == 0 ? null : history.get(history.size() - 1);
+    }
+
+    private <T> List<T> readHistoryAs(JsonNode obs, String key, Class<T> type) {
+        List<T> entries = new ArrayList<>();
+        for (JsonNode node : readHistory(obs, key)) {
+            try {
+                entries.add(objectMapper.treeToValue(node, type));
+            } catch (Exception ignored) { /* skip an entry we cannot read */ }
+        }
+        return entries;
+    }
+
+    // Null when the section was left blank, so empty visits add no entry
+    private ObjectNode toDatedEntry(Object info, LocalDate date) {
+        if (info == null) return null;
+        ObjectNode entry = objectMapper.valueToTree(info);
+        if (!hasAnyValue(entry)) return null;
+        entry.put("date", date.toString());
+        return entry;
+    }
+
+    private boolean hasAnyValue(ObjectNode entry) {
+        java.util.Iterator<String> fields = entry.fieldNames();
+        while (fields.hasNext()) {
+            String field = fields.next();
+            if ("date".equals(field)) continue;
+            JsonNode value = entry.get(field);
+            if (value != null && !value.isNull() && !value.asText("").trim().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void putIfPresent(ObjectNode node, String key, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            node.put(key, value);
+        }
+    }
+
+    /**
+     * Builds the observation for a create (existingObs null) or an update. On an update the
+     * stored observation is the starting point, so keys this form does not own — an encounter
+     * that started life in HTS carries its own — survive the write.
+     */
+    private JsonNode buildPmtctObservation(PmtctHtsRequestDTO dto, JsonNode existingObs) {
+        ObjectNode obs = (existingObs != null && existingObs.isObject())
+                ? ((ObjectNode) existingObs).deepCopy()
+                : objectMapper.createObjectNode();
 
         // HIV Test Results
         putIfNotEmpty(obs, "finalHivTestResult", dto.getFinalResult());
@@ -175,17 +336,12 @@ public class PmtctHtsService {
         putIfNotEmpty(obs, "hospitalNumber", dto.getHospitalNumber());
         putIfNotEmpty(obs, "pmtctTestEntryPoint", dto.getPmtctTestEntryPoint());
 
-        // Serology — syphilis and hepatitisB go inside their nested objects only
+        // Serology and partner data are kept as histories of dated entries. On a first save
+        // that is a single entry; on an update the most recent entry is rewritten in place.
         putIfNotEmpty(obs, "hepatitisC", dto.getHepatitisC());
-        if (dto.getSyphilisInfo() != null) {
-            obs.set("syphilisInfo", objectMapper.valueToTree(dto.getSyphilisInfo()));
-        }
-        if (dto.getHbvInfo() != null) {
-            obs.set("hbvInfo", objectMapper.valueToTree(dto.getHbvInfo()));
-        }
-        if (dto.getPartnerInfo() != null) {
-            obs.set("partnerInfo", objectMapper.valueToTree(dto.getPartnerInfo()));
-        }
+        rewriteLatestHistoryEntry(obs, "syphilisInfo", dto.getSyphilisInfo(), existingObs);
+        rewriteLatestHistoryEntry(obs, "hbvInfo", dto.getHbvInfo(), existingObs);
+        rewriteLatestHistoryEntry(obs, "partnerInfo", dto.getPartnerInfo(), existingObs);
 
         // PMTCT Register fields
         putIfNotEmpty(obs, "pregnancyStatusAtEntry", dto.getPregnancyStatusAtEntry());
@@ -276,39 +432,38 @@ public class PmtctHtsService {
                 resp.setConfirmatoryHivTest(confirmatory);
             }
 
-            // Nested JSONB objects — syphilis and hepatitisB live inside these
-            try {
-                JsonNode syphilisNode = obs.get("syphilisInfo");
-                if (syphilisNode != null && !syphilisNode.isNull()) {
-                    SyphilisDetailsDto syphDto = objectMapper.treeToValue(syphilisNode, SyphilisDetailsDto.class);
-                    resp.setSyphilisInfo(syphDto);
-                    resp.setSyphilis(syphDto.getTestResult());
-                }
-            } catch (Exception e) { /* skip deserialization error */ }
+            // Serology and partner data — a history of dated entries; the form edits the latest
+            List<SyphilisDetailsDto> syphilisHistory =
+                    readHistoryAs(obs, "syphilisInfo", SyphilisDetailsDto.class);
+            if (!syphilisHistory.isEmpty()) {
+                SyphilisDetailsDto latest = syphilisHistory.get(syphilisHistory.size() - 1);
+                resp.setSyphilisInfoHistory(syphilisHistory);
+                resp.setSyphilisInfo(latest);
+                resp.setSyphilis(latest.getTestResult());
+            }
             // Backward compat: old records may only have flat "syphilis" key
             if (resp.getSyphilis() == null) {
                 resp.setSyphilis(textOrNull(obs, "syphilis"));
             }
 
-            try {
-                JsonNode hbvNode = obs.get("hbvInfo");
-                if (hbvNode != null && !hbvNode.isNull()) {
-                    HbvInfoDto hbvDto = objectMapper.treeToValue(hbvNode, HbvInfoDto.class);
-                    resp.setHbvInfo(hbvDto);
-                    resp.setHepatitisB(hbvDto.getTestResult());
-                }
-            } catch (Exception e) { /* skip deserialization error */ }
+            List<HbvInfoDto> hbvHistory = readHistoryAs(obs, "hbvInfo", HbvInfoDto.class);
+            if (!hbvHistory.isEmpty()) {
+                HbvInfoDto latest = hbvHistory.get(hbvHistory.size() - 1);
+                resp.setHbvInfoHistory(hbvHistory);
+                resp.setHbvInfo(latest);
+                resp.setHepatitisB(latest.getTestResult());
+            }
             // Backward compat: old records may only have flat "hepatitisB" key
             if (resp.getHepatitisB() == null) {
                 resp.setHepatitisB(textOrNull(obs, "hepatitisB"));
             }
 
-            try {
-                JsonNode partnerNode = obs.get("partnerInfo");
-                if (partnerNode != null && !partnerNode.isNull()) {
-                    resp.setPartnerInfo(objectMapper.treeToValue(partnerNode, PartnerInfoDto.class));
-                }
-            } catch (Exception e) { /* skip deserialization error */ }
+            List<PartnerInfoDto> partnerHistory =
+                    readHistoryAs(obs, "partnerInfo", PartnerInfoDto.class);
+            if (!partnerHistory.isEmpty()) {
+                resp.setPartnerInfoHistory(partnerHistory);
+                resp.setPartnerInfo(partnerHistory.get(partnerHistory.size() - 1));
+            }
         }
 
         // Person info
@@ -644,15 +799,15 @@ public class PmtctHtsService {
                 }
                 hivStatus = finalResult;
 
-                // Syphilis
-                JsonNode syphNode = obs.get("syphilisInfo");
-                if (syphNode != null && !syphNode.isNull()) {
+                // Syphilis — most recent entry of the history
+                JsonNode syphNode = latestHistoryEntry(obs, "syphilisInfo");
+                if (syphNode != null) {
                     syphilisResult = textOrNull(syphNode, "testResult");
                 }
 
-                // Hepatitis B
-                JsonNode hbvNode = obs.get("hbvInfo");
-                if (hbvNode != null && !hbvNode.isNull()) {
+                // Hepatitis B — most recent entry of the history
+                JsonNode hbvNode = latestHistoryEntry(obs, "hbvInfo");
+                if (hbvNode != null) {
                     hepatitisBResult = textOrNull(hbvNode, "testResult");
                 }
 
@@ -915,39 +1070,38 @@ public class PmtctHtsService {
                         confirmatory.setResult(confirmatoryResult);
                         htsResponseDto.setConfirmatoryHivTest(confirmatory);
                     }
-                    // Nested objects — syphilis and hepatitisB live inside these
-                    try {
-                        JsonNode syphilisNode = obs.get("syphilisInfo");
-                        if (syphilisNode != null && !syphilisNode.isNull()) {
-                            SyphilisDetailsDto syphDto = objectMapper.treeToValue(syphilisNode, SyphilisDetailsDto.class);
-                            htsResponseDto.setSyphilisInfo(syphDto);
-                            htsResponseDto.setSyphilis(syphDto.getTestResult());
-                        }
-                    } catch (Exception ignored) {}
+                    // Serology and partner data — histories of dated entries; show the latest
+                    List<SyphilisDetailsDto> syphilisHistory =
+                            readHistoryAs(obs, "syphilisInfo", SyphilisDetailsDto.class);
+                    if (!syphilisHistory.isEmpty()) {
+                        SyphilisDetailsDto latest = syphilisHistory.get(syphilisHistory.size() - 1);
+                        htsResponseDto.setSyphilisInfoHistory(syphilisHistory);
+                        htsResponseDto.setSyphilisInfo(latest);
+                        htsResponseDto.setSyphilis(latest.getTestResult());
+                    }
                     // Backward compat: old records may only have flat "syphilis" key
                     if (htsResponseDto.getSyphilis() == null) {
                         htsResponseDto.setSyphilis(textOrNull(obs, "syphilis"));
                     }
 
-                    try {
-                        JsonNode hbvNode = obs.get("hbvInfo");
-                        if (hbvNode != null && !hbvNode.isNull()) {
-                            HbvInfoDto hbvDto = objectMapper.treeToValue(hbvNode, HbvInfoDto.class);
-                            htsResponseDto.setHbvInfo(hbvDto);
-                            htsResponseDto.setHepatitisB(hbvDto.getTestResult());
-                        }
-                    } catch (Exception ignored) {}
+                    List<HbvInfoDto> hbvHistory = readHistoryAs(obs, "hbvInfo", HbvInfoDto.class);
+                    if (!hbvHistory.isEmpty()) {
+                        HbvInfoDto latest = hbvHistory.get(hbvHistory.size() - 1);
+                        htsResponseDto.setHbvInfoHistory(hbvHistory);
+                        htsResponseDto.setHbvInfo(latest);
+                        htsResponseDto.setHepatitisB(latest.getTestResult());
+                    }
                     // Backward compat: old records may only have flat "hepatitisB" key
                     if (htsResponseDto.getHepatitisB() == null) {
                         htsResponseDto.setHepatitisB(textOrNull(obs, "hepatitisB"));
                     }
 
-                    try {
-                        JsonNode partnerNode = obs.get("partnerInfo");
-                        if (partnerNode != null && !partnerNode.isNull()) {
-                            htsResponseDto.setPartnerInfo(objectMapper.treeToValue(partnerNode, PartnerInfoDto.class));
-                        }
-                    } catch (Exception ignored) {}
+                    List<PartnerInfoDto> partnerHistory =
+                            readHistoryAs(obs, "partnerInfo", PartnerInfoDto.class);
+                    if (!partnerHistory.isEmpty()) {
+                        htsResponseDto.setPartnerInfoHistory(partnerHistory);
+                        htsResponseDto.setPartnerInfo(partnerHistory.get(partnerHistory.size() - 1));
+                    }
                 }
             }
 

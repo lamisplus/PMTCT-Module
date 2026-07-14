@@ -13,4 +13,6 @@ public class SyphilisDetailsDto {
     private String testResult;
     private String treatment;
     private String drugName;
+    // Date the entry was recorded — stamped by the backend, one per PMTCT HTS submission
+    private String date;
 }

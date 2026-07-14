@@ -139,12 +139,19 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY id DESC")
     List<HtsEncounterProxy> findByPatientUuidAndUnarchived(String patientUuid);
 
+    // syphilisInfo/hbvInfo hold a history of dated entries; records written before histories
+    // existed hold a single object, so both shapes are searched.
     @Query(nativeQuery = true, value
             = "SELECT EXISTS(SELECT 1 FROM hts_encounter "
             + "WHERE pmtct_hts = true AND archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
-            + "  AND ("
-            + "    LOWER(COALESCE(observation->'syphilisInfo'->>'testResult', '')) IN ('positive', 'reactive')"
+            + "  AND EXISTS ("
+            + "    SELECT 1 FROM jsonb_array_elements("
+            + "      CASE jsonb_typeof(observation->'syphilisInfo') "
+            + "        WHEN 'array' THEN observation->'syphilisInfo' "
+            + "        WHEN 'object' THEN jsonb_build_array(observation->'syphilisInfo') "
+            + "        ELSE '[]'::jsonb END) AS e(entry) "
+            + "    WHERE LOWER(COALESCE(entry->>'testResult', '')) IN ('positive', 'reactive')"
             + "  )"
             + ")")
     boolean hasEverPositiveSyphilis(String patientUuid);
@@ -154,7 +161,14 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "WHERE pmtct_hts = true AND archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND ("
-            + "    LOWER(COALESCE(observation->'hbvInfo'->>'testResult', '')) IN ('positive', 'reactive') OR "
+            + "    EXISTS ("
+            + "      SELECT 1 FROM jsonb_array_elements("
+            + "        CASE jsonb_typeof(observation->'hbvInfo') "
+            + "          WHEN 'array' THEN observation->'hbvInfo' "
+            + "          WHEN 'object' THEN jsonb_build_array(observation->'hbvInfo') "
+            + "          ELSE '[]'::jsonb END) AS e(entry) "
+            + "      WHERE LOWER(COALESCE(entry->>'testResult', '')) IN ('positive', 'reactive')"
+            + "    ) OR "
             + "    LOWER(COALESCE(observation->>'hepatitisB', '')) IN ('positive', 'reactive') OR "
             + "    LOWER(COALESCE(observation->>'hepatitisC', '')) IN ('positive', 'reactive')"
             + "  )"
