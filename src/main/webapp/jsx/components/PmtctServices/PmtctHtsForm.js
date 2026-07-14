@@ -211,11 +211,11 @@ const SerologyHistory = ({ entries, columns, isEditingLatest }) => {
           })}
         </tbody>
       </table>
-      {isEditingLatest && (
+      {/* {isEditingLatest && (
         <small style={{ color: "#57606a" }}>
           The highlighted entry is the one being edited.
         </small>
-      )}
+      )} */}
     </div>
   );
 };
