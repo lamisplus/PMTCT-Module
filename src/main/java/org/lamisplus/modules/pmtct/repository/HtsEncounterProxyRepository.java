@@ -147,4 +147,17 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "  )"
             + ")")
     boolean hasEverPositiveHepatitis(String patientUuid);
+
+    // Scans ALL hts_encounter rows for the patient, not just pmtct_hts = true ones — the
+    // Acute HIV Infection auto-update (LV3-1732) must catch suspected-acute clients regardless
+    // of whether the record was originally entered via the HTS module or the PMTCT HTS form,
+    // since they share this one physical table.
+    @Query(nativeQuery = true, value
+            = "SELECT * FROM hts_encounter "
+            + "WHERE archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND observation->>'suspectedAcuteInfection' = 'YES_NO_YES' "
+            + "  AND COALESCE((observation->>'acuteHivInfectionDetected')::boolean, false) = false "
+            + "ORDER BY date_of_visit DESC, id DESC")
+    List<HtsEncounterProxy> findUnflaggedSuspectedAcuteInfectionRecords(String patientUuid);
 }

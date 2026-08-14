@@ -260,7 +260,7 @@ const LabourinfantInfo = (props) => {
     // BATCH API
  const GET_CODESETS = () => {
 
-   GET_CODESETS_IN_BATCH("CHILD_TEST_AGE", "INFANT_PCR_RESULT", "SEX", "AGE_CTX_INITIATION", "INFANT_ARV_PROPHYLAXIS_TYPE", "INFANT_TESTING_PCR").then((response)=>{
+   GET_CODESETS_IN_BATCH("CHILD_TEST_AGE", "INFANT_PCR_RESULT", "SEX", "AGE_CTX_INITIATION", "TYPE_PROPHYLAXIS", "INFANT_TESTING_PCR").then((response)=>{
       // Store CHILD_TEST_AGE as fallback but don't overwrite age-specific list
       if (response.data.CHILD_TEST_AGE) {
         setAllChildTestAgeOptions(response.data.CHILD_TEST_AGE);
@@ -269,7 +269,7 @@ const LabourinfantInfo = (props) => {
       setGenders(response.data.SEX);
       setAgeCTX(response.data.AGE_CTX_INITIATION);
 
-      setInfantArv(response.data.INFANT_ARV_PROPHYLAXIS_TYPE)
+      setInfantArv(response.data.TYPE_PROPHYLAXIS)
       getSamplePCRType(response.data.INFANT_TESTING_PCR)
 
    })
@@ -713,7 +713,7 @@ const LabourinfantInfo = (props) => {
       if (infantArvDto.dateOfCtx && infantInfo.dateOfDelivery && infantArvDto.dateOfCtx < infantInfo.dateOfDelivery) {
         temp.dateOfCtx = "Date of CTX Initiation must be on or after Date of Birth";
       }
-      infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
+      infantArvDto.infantArvType !== "TYPE_PROPHYLAXIS_NONE"  && infantArvDto.infantArvType  && ( temp.dateOfArv = infantArvDto.dateOfArv? "" : "This field is required");
       if (infantArvDto.dateOfArv && infantInfo.dateOfDelivery && infantArvDto.dateOfArv < infantInfo.dateOfDelivery) {
         temp.dateOfArv = "Date of Initiation must be on or after Date of Birth";
       }
@@ -721,7 +721,7 @@ const LabourinfantInfo = (props) => {
         temp.dateOfArvCompletion = "Date of ARV Completion must be on or after Date of Birth";
       }
       infantArvDto.infantArvType !== ""  && infantArvDto.infantArvType  && ( temp.infantArvType = infantArvDto.infantArvType? "" : "This field is required");
-      infantArvDto.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)" && (temp.otherArvType = infantArvDto.otherArvType ? "" : "This field is required");
+      infantArvDto.infantArvType === "TYPE_PROPHYLAXIS_OTHER_(SPECIFY)" && (temp.otherArvType = infantArvDto.otherArvType ? "" : "This field is required");
 
       infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");
       infantPCRTestDto.testType !== "" && ( temp.dateSampleSent =infantPCRTestDto.dateSampleSent ? "" : "This field is required");
@@ -889,8 +889,20 @@ const LabourinfantInfo = (props) => {
                   boxShadow: "none",
                 }}
               >
-                <h5 style={{ color: "#0f172a", fontWeight: "700", marginBottom: "0", fontSize: "15px" }}>
-                  {props.activeContent?.actionType === "view" ? "View" : props.activeContent?.actionType === "update" ? "Edit" : "New"} Infant Registration
+                <h5
+                  style={{
+                    color: "#0f172a",
+                    fontWeight: "700",
+                    marginBottom: "0",
+                    fontSize: "15px",
+                  }}
+                >
+                  {props.activeContent?.actionType === "view"
+                    ? "View"
+                    : props.activeContent?.actionType === "update"
+                      ? "Edit"
+                      : "New"}{" "}
+                  Infant Registration
                 </h5>
               </div>
 
@@ -898,980 +910,1156 @@ const LabourinfantInfo = (props) => {
               <div className="col-md-12 mb-3 mt-3">
                 <div style={sectionContainerStyle}>
                   <h6 style={sectionHeaderStyle}>
-                    <ChildCareIcon style={sectionIconStyle} />Infant Demographics
+                    <ChildCareIcon style={sectionIconStyle} />
+                    Infant Demographics
                   </h6>
                   <div className="row">
-                {patientObj?.ancNo && (
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>ANC Number</FormLabelName>
-                      <InputGroup>
-                        <Input
-                          type="text"
-                          name="ancNo"
-                          id="ancNo"
-                          onChange={handleInputChangeinfantInfoDto}
-                          value={patientObj.ancNo}
-                          disabled
-                        />
-                      </InputGroup>
-                      {errors.ancNo !== "" ? (
-                        <span className={classes.error}>{errors.ancNo}</span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                )}
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Child's Hospital ID Number
-                      <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="text"
-                        name="infantHospitalNumber"
-                        id="infantHospitalNumber"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.infantHospitalNumber}
-                        disabled={disabledField}
-                      />
-                    </InputGroup>
-                    {errors.infantHospitalNumber !== "" ? (
-                      <span className={classes.error}>
-                        {errors.infantHospitalNumber}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                    {hospitalNumStatus === true ? (
-                      <span className={classes.error}>
-                        {"Hospital number already exist"}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Date of Delivery <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="date"
-                        onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateOfDelivery"
-                        id="dateOfDelivery"
-                        onChange={handleInputChangeinfantInfoDto}
-                        min={props.patientObj.dateOfEnrollment}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        value={
-                          infantInfo.dateOfDelivery
-                            ? infantInfo.dateOfDelivery
-                            : newDateOfDelivery
-                        }
-                        disabled={true}
-                      />
-                    </InputGroup>
-                    {errors.dateOfDelivery !== "" ? (
-                      <span className={classes.error}>
-                        {errors.dateOfDelivery}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Infant Given Name
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="text"
-                        name="firstName"
-                        id="firstName"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.firstName}
-                        disabled={disabledField}
-                      />
-                    </InputGroup>
-                  </FormGroup>
-                </div>
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>Infant Surname</FormLabelName>
-                    <span style={{ color: "red" }}> *</span>
-                    <InputGroup>
-                      <Input
-                        type="input"
-                        name="surname"
-                        id="surname"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.surname}
-                        disabled={disabledField}
-                      ></Input>
-                    </InputGroup>
-
-                    {errors.surname !== "" ? (
-                      <span className={classes.error}>{errors.surname}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Birth Weight <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="number"
-                        name="bodyWeight"
-                        id="bodyWeight"
-                        onChange={handleInputChangeinfantInfoDto}
-                        min="0.3"
-                        max="8"
-                        step="0.01"
-                        onKeyUp={handleInputValueCheckweight}
-                        value={infantInfo.bodyWeight}
-                        disabled={disabledField}
-                      />
-                      <InputGroupText
-                        addonType="append"
-                        style={{
-                          backgroundColor: "#014D88",
-                          color: "#fff",
-                          border: "1px solid #014D88",
-                          borderRadius: "0rem",
-                        }}
-                      >
-                        kg
-                      </InputGroupText>
-                    </InputGroup>
-                    {errors.bodyWeight !== "" ? (
-                      <span className={classes.error}>{errors.bodyWeight}</span>
-                    ) : (
-                      ""
-                    )}
-                    {vitalClinicalSupport.weight !== "" ? (
-                      <span className={classes.error}>
-                        {vitalClinicalSupport.weight}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                    {infantInfo.bodyWeight !== "" &&
-                    infantInfo.bodyWeight <= 0 ? (
-                      <span className={classes.error}>
-                        Invalid Body Weight{" "}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Length <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="number"
-                        name="length"
-                        id="length"
-                        onChange={handleInputChangeinfantInfoDto}
-                        min="30"
-                        max="70"
-                        step="0.1"
-                        onKeyUp={handleInputValueCheckweight}
-                        value={infantInfo.length}
-                        disabled={disabledField}
-                      />
-                      <InputGroupText
-                        addonType="append"
-                        style={{
-                          backgroundColor: "#014D88",
-                          color: "#fff",
-                          border: "1px solid #014D88",
-                          borderRadius: "0rem",
-                        }}
-                      >
-                        cm
-                      </InputGroupText>
-                    </InputGroup>
-                    {errors.length !== "" ? (
-                      <span className={classes.error}>{errors.length}</span>
-                    ) : (
-                      ""
-                    )}
-                    {vitalClinicalSupport.length !== "" ? (
-                      <span className={classes.error}>
-                        {vitalClinicalSupport.length}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Sex <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="select"
-                        name="sex"
-                        id="sex"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.sex}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-
-                        {genders.map((value) => (
-                          <option key={value.id} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                    </InputGroup>
-                    {errors.sex !== "" ? (
-                      <span className={classes.error}>{errors.sex}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Birth Outcome <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="select"
-                        name="birthOutcome"
-                        id="birthOutcome"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.birthOutcome}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        <option value="Alive">Alive</option>
-                        <option value="Dead">Dead</option>
-                      </Input>
-                    </InputGroup>
-                    {errors.birthOutcome !== "" ? (
-                      <span className={classes.error}>{errors.birthOutcome}</span>
-                    ) : (
-                      ""
-                    )}
-                    {infantInfo.birthOutcome === "Dead" && (
-                      <span className={classes.error}>
-                        Birth outcome is Dead — prophylaxis, PCR, and outcome fields are disabled.
-                      </span>
-                    )}
-                  </FormGroup>
-                </div>
-
-                <div className="form-group mb-3 col-md-4">
-                  <FormGroup>
-                    <FormLabelName>
-                      Child's Entry Point <span style={{ color: "red" }}> *</span>
-                    </FormLabelName>
-                    <InputGroup>
-                      <Input
-                        type="select"
-                        name="entryPoint"
-                        id="entryPoint"
-                        onChange={handleInputChangeinfantInfoDto}
-                        value={infantInfo.entryPoint}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        <option value="ANC">ANC</option>
-                        <option value="L&D">L&D</option>
-                        <option value="Postnatal">Postnatal</option>
-                        <option value="Immunization">Immunization</option>
-                        <option value="OPD">OPD</option>
-                        <option value="Inpatient Department">Inpatient Department</option>
-                        <option value="Nutrition">Nutrition</option>
-                        <option value="Family Planning">Family Planning</option>
-                        <option value="Transfer In">Transfer In</option>
-                        <option value="Other Entry Point">Other Entry Point</option>
-                      </Input>
-                    </InputGroup>
-                    {errors.entryPoint !== "" ? (
-                      <span className={classes.error}>{errors.entryPoint}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </div>
-
-                {infantInfo.entryPoint === "Other Entry Point" && (
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>
-                        Specify <span style={{ color: "red" }}> *</span>
-                      </FormLabelName>
-                      <InputGroup>
-                        <Input
-                          type="text"
-                          name="entryPointOther"
-                          id="entryPointOther"
-                          onChange={handleInputChangeinfantInfoDto}
-                          value={infantInfo.entryPointOther}
-                          disabled={disabledField}
-                        />
-                      </InputGroup>
-                      {errors.entryPointOther !== "" ? (
-                        <span className={classes.error}>{errors.entryPointOther}</span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                )}
-                  </div>
-                </div>
-              </div>
-              {infantInfo.birthOutcome !== "Dead" && (<>
-              {/* === Infant Prophylaxis === */}
-              <div className="col-md-12 mb-3 mt-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <LocalHospitalIcon style={sectionIconStyle} />Infant Prophylaxis
-                  </h6>
-                <div className="row">
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>CTX </FormLabelName>
-                      <Input
-                        type="select"
-                        name="ctxStatus"
-                        id="ctxStatus"
-                        value={infantInfo.ctxStatus}
-                        onChange={handleInputChangeinfantInfoDto}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        <option value="YES">YES </option>
-                        <option value="NO">NO </option>
-                      </Input>
-                      {errors.ctxStatus !== "" ? (
-                        <span className={classes.error}>
-                          {errors.ctxStatus}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-               { infantInfo.ctxStatus === "YES" &&<div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date of CTX initiation</FormLabelName>
-                      <Input
-                        type="date"                  
-                         onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateOfCtx"
-                        id="dateOfCtx"
-                        value={infantArvDto.dateOfCtx}
-                        onChange={handleInputChangeInfantArvDto}
-                        min={infantInfo.dateOfDelivery}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateOfCtx !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateOfCtx}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>}
-
-                  {infantInfo.ctxStatus === "YES" && (
-                  <div className=" mb-3 col-md-4 ">
-                    <FormGroup>
-                      <FormLabelName>
-                        Age at CTX Initiation (weeks)
-                      </FormLabelName>
-                      <Input
-                        type="text"
-                        name="ageAtCtx"
-                        id="ageAtCtx"
-                        value={infantArvDto.ageAtCtx}
-                        disabled={true}
-                        readOnly
-                      />
-                    </FormGroup>
-                  </div>)}
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>
-                        Infant ARV Prophylaxis Type{" "}
-                      </FormLabelName>
-                      <Input
-                        type="select"
-                        name="infantArvType"
-                        id="infantArvType"
-                        value={infantArvDto.infantArvType}
-                        onChange={handleInputChangeInfantArvDto}
-                        disabled={disabledField}
-                      >
-
-                        <option value="">Select </option>
-                        {infantArv.map((value) => (
-                          <option key={value.id} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.infantArvType !== "" ? (
-                        <span className={classes.error}>
-                          {errors.infantArvType}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-
-                  {infantArvDto.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)" && (
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>
-                        Specify <span style={{ color: "red" }}> *</span>
-                      </FormLabelName>
-                      <Input
-                        type="text"
-                        name="otherArvType"
-                        id="otherArvType"
-                        value={infantArvDto.otherArvType}
-                        onChange={handleInputChangeInfantArvDto}
-                        disabled={disabledField}
-                      />
-                      {errors.otherArvType !== "" ? (
-                        <span className={classes.error}>
-                          {errors.otherArvType}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>)}
-
-                  { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  &&<div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date of ARV Prophylaxis</FormLabelName>
-                      <Input
-                        type="date"                  
-                         onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateOfArv"
-                        id="dateOfArv"
-                        value={infantArvDto.dateOfArv}
-                        onChange={handleInputChangeInfantArvDto}
-                        min={infantInfo.dateOfDelivery}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateOfArv !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateOfArv}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>}
-
-                  { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" && (
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Age at ARV Initiation (weeks) </FormLabelName>
-                      <Input
-                        type="text"
-                        name="arvAgeAtInitiation"
-                        id="arvAgeAtInitiation"
-                        value={arvAgeAtInitiation !== "" ? arvAgeAtInitiation : ""}
-                        disabled={true}
-                        readOnly
-                      />
-                    </FormGroup>
-                  </div>)}
-
-                  { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" && (
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Date of ARV Completion </FormLabelName>
-                      <Input
-                        type="date"
-                        onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateOfArvCompletion"
-                        id="dateOfArvCompletion"
-                        value={infantArvDto.dateOfArvCompletion}
-                        onChange={handleInputChangeInfantArvDto}
-                        min={infantArvDto.dateOfArv}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateOfArvCompletion !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateOfArvCompletion}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>)}
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Place of Delivery </FormLabelName>
-                      <Input
-                        type="select"
-                        name="arvDeliveryPoint"
-                        id="arvDeliveryPoint"
-                        value={infantArvDto.arvDeliveryPoint}
-                        onChange={handleInputChangeInfantArvDto}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        <option value="Facility Delivery">
-                          Facility Delivery
-                        </option>
-                        <option value="Delivered outside facility">
-                          Delivered outside facility{" "}
-                        </option>
-                      </Input>
-                      {errors.arvDeliveryPoint !== "" ? (
-                        <span className={classes.error}>
-                          {errors.arvDeliveryPoint}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                </div>
-                </div>
-              </div>
-              {motherSyphilisPositive && (
-              <>
-              {/* === Syphilis Prophylaxis / Treatment === */}
-              <div className="col-md-12 mb-3 mt-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <HealingIcon style={sectionIconStyle} />Syphilis Prophylaxis / Treatment
-                  </h6>
-                <div className="row">
-                  {/* Pre-filled mother's syphilis info from HTS/ANC */}
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Syphilis Testing</FormLabelName>
-                      <Input
-                        type="text"
-                        value={motherSyphilisTestResult}
-                        disabled={true}
-                        readOnly
-                      />
-                    </FormGroup>
-                  </div>
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Syphilis Treatment</FormLabelName>
-                      <Input
-                        type="text"
-                        value={motherSyphilisTreatment}
-                        disabled={true}
-                        readOnly
-                      />
-                    </FormGroup>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date of Initiation</FormLabelName>
-                      <Input
-                        type="date"
-                        onKeyPress={(e) => { e.preventDefault() }}
-                        name="dateOfInitiation"
-                        id="syphilisDateOfInitiation"
-                        value={syphilisData.dateOfInitiation}
-                        onChange={handleInputChangeSyphilis}
-                        min={infantInfo.dateOfDelivery}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                    </FormGroup>
-                  </div>
-
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Age at Initiation (weeks)</FormLabelName>
-                      <Input
-                        type="text"
-                        name="ageAtInitiation"
-                        id="syphilisAgeAtInitiation"
-                        value={syphilisData.ageAtInitiation}
-                        disabled={true}
-                        readOnly
-                      />
-                    </FormGroup>
-                  </div>
-
-                  <div className=" mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Type of Prophylaxis / Treatment</FormLabelName>
-                      <Input
-                        type="select"
-                        name="typeOfProphylaxis"
-                        id="syphilisTypeOfProphylaxis"
-                        value={syphilisData.typeOfProphylaxis}
-                        onChange={handleInputChangeSyphilis}
-                        disabled={disabledField}
-                      >
-                        <option value="">Select </option>
-                        <option value="BPG (single dose)">BPG (single dose)</option>
-                        <option value="BPG (3 doses)">BPG (3 doses)</option>
-                        <option value="Procaine Penicillin G">Procaine Penicillin G</option>
-                        <option value="Aqueous Crystalline Penicillin G">Aqueous Crystalline Penicillin G</option>
-                      </Input>
-                    </FormGroup>
-                  </div>
-                </div>
-                </div>
-              </div>
-              </>
-              )}
-              {/* === HBV Vaccination Schedule === */}
-              <div className="col-md-12 mb-3 mt-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <EventIcon style={sectionIconStyle} />HBV Vaccination Schedule
-                  </h6>
-                <div className="row">
-                  {hbvVaccinations.map((vac, index) => (
-                    <React.Fragment key={index}>
-                      <div className=" mb-3 col-md-4">
+                    {patientObj?.ancNo && (
+                      <div className="form-group mb-3 col-md-4">
                         <FormGroup>
-                          <FormLabelName>{vac.dose}</FormLabelName>
-                          <Input
-                            type="text"
-                            value={vac.dose}
-                            disabled={true}
-                          />
-                        </FormGroup>
-                      </div>
-                      <div className=" mb-3 col-md-4">
-                        <FormGroup>
-                          <FormLabelName>Date of Vaccination</FormLabelName>
-                          <Input
-                            type="date"
-                            onKeyPress={(e) => { e.preventDefault() }}
-                            value={vac.dateOfVaccination}
-                            onChange={(e) => handleHbvChange(index, "dateOfVaccination", e.target.value)}
-                            min={
-                              index > 0 && hbvVaccinations[index - 1].dateOfVaccination
-                                ? moment(hbvVaccinations[index - 1].dateOfVaccination).add(28, "days").format("YYYY-MM-DD")
-                                : infantInfo.dateOfDelivery
-                            }
-                            max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={disabledField}
-                          />
-                          {hbvErrors[`hbv_${index}_dateOfVaccination`] ? (
+                          <FormLabelName>ANC Number</FormLabelName>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="ancNo"
+                              id="ancNo"
+                              onChange={handleInputChangeinfantInfoDto}
+                              value={patientObj.ancNo}
+                              disabled
+                            />
+                          </InputGroup>
+                          {errors.ancNo !== "" ? (
                             <span className={classes.error}>
-                              {hbvErrors[`hbv_${index}_dateOfVaccination`]}
+                              {errors.ancNo}
                             </span>
                           ) : (
                             ""
                           )}
                         </FormGroup>
                       </div>
-                      {vac.doseNumber === 1 ? (
-                        <div className=" mb-3 col-md-4">
+                    )}
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Child's Hospital ID Number
+                          <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="infantHospitalNumber"
+                            id="infantHospitalNumber"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.infantHospitalNumber}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.infantHospitalNumber !== "" ? (
+                          <span className={classes.error}>
+                            {errors.infantHospitalNumber}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                        {hospitalNumStatus === true ? (
+                          <span className={classes.error}>
+                            {"Hospital number already exist"}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Date of Delivery{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="date"
+                            onKeyPress={(e) => {
+                              e.preventDefault();
+                            }}
+                            name="dateOfDelivery"
+                            id="dateOfDelivery"
+                            onChange={handleInputChangeinfantInfoDto}
+                            min={props.patientObj.dateOfEnrollment}
+                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            value={
+                              infantInfo.dateOfDelivery
+                                ? infantInfo.dateOfDelivery
+                                : newDateOfDelivery
+                            }
+                            disabled={true}
+                          />
+                        </InputGroup>
+                        {errors.dateOfDelivery !== "" ? (
+                          <span className={classes.error}>
+                            {errors.dateOfDelivery}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>Infant Given Name</FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="firstName"
+                            id="firstName"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.firstName}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>Infant Surname</FormLabelName>
+                        <span style={{ color: "red" }}> *</span>
+                        <InputGroup>
+                          <Input
+                            type="input"
+                            name="surname"
+                            id="surname"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.surname}
+                            disabled={disabledField}
+                          ></Input>
+                        </InputGroup>
+
+                        {errors.surname !== "" ? (
+                          <span className={classes.error}>
+                            {errors.surname}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Birth Weight <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="bodyWeight"
+                            id="bodyWeight"
+                            onChange={handleInputChangeinfantInfoDto}
+                            min="0.3"
+                            max="8"
+                            step="0.01"
+                            onKeyUp={handleInputValueCheckweight}
+                            value={infantInfo.bodyWeight}
+                            disabled={disabledField}
+                          />
+                          <InputGroupText
+                            addonType="append"
+                            style={{
+                              backgroundColor: "#014D88",
+                              color: "#fff",
+                              border: "1px solid #014D88",
+                              borderRadius: "0rem",
+                            }}
+                          >
+                            kg
+                          </InputGroupText>
+                        </InputGroup>
+                        {errors.bodyWeight !== "" ? (
+                          <span className={classes.error}>
+                            {errors.bodyWeight}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                        {vitalClinicalSupport.weight !== "" ? (
+                          <span className={classes.error}>
+                            {vitalClinicalSupport.weight}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                        {infantInfo.bodyWeight !== "" &&
+                        infantInfo.bodyWeight <= 0 ? (
+                          <span className={classes.error}>
+                            Invalid Body Weight{" "}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Length <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="number"
+                            name="length"
+                            id="length"
+                            onChange={handleInputChangeinfantInfoDto}
+                            min="30"
+                            max="70"
+                            step="0.1"
+                            onKeyUp={handleInputValueCheckweight}
+                            value={infantInfo.length}
+                            disabled={disabledField}
+                          />
+                          <InputGroupText
+                            addonType="append"
+                            style={{
+                              backgroundColor: "#014D88",
+                              color: "#fff",
+                              border: "1px solid #014D88",
+                              borderRadius: "0rem",
+                            }}
+                          >
+                            cm
+                          </InputGroupText>
+                        </InputGroup>
+                        {errors.length !== "" ? (
+                          <span className={classes.error}>{errors.length}</span>
+                        ) : (
+                          ""
+                        )}
+                        {vitalClinicalSupport.length !== "" ? (
+                          <span className={classes.error}>
+                            {vitalClinicalSupport.length}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Sex <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="sex"
+                            id="sex"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.sex}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select </option>
+
+                            {genders.map((value) => (
+                              <option key={value.id} value={value.code}>
+                                {value.display}
+                              </option>
+                            ))}
+                          </Input>
+                        </InputGroup>
+                        {errors.sex !== "" ? (
+                          <span className={classes.error}>{errors.sex}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Birth Outcome <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="birthOutcome"
+                            id="birthOutcome"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.birthOutcome}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select </option>
+                            <option value="Alive">Alive</option>
+                            <option value="Dead">Dead</option>
+                          </Input>
+                        </InputGroup>
+                        {errors.birthOutcome !== "" ? (
+                          <span className={classes.error}>
+                            {errors.birthOutcome}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                        {infantInfo.birthOutcome === "Dead" && (
+                          <span className={classes.error}>
+                            Birth outcome is Dead — prophylaxis, PCR, and
+                            outcome fields are disabled.
+                          </span>
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <FormLabelName>
+                          Child's Entry Point{" "}
+                          <span style={{ color: "red" }}> *</span>
+                        </FormLabelName>
+                        <InputGroup>
+                          <Input
+                            type="select"
+                            name="entryPoint"
+                            id="entryPoint"
+                            onChange={handleInputChangeinfantInfoDto}
+                            value={infantInfo.entryPoint}
+                            disabled={disabledField}
+                          >
+                            <option value="">Select </option>
+                            <option value="ANC">ANC</option>
+                            <option value="L&D">L&D</option>
+                            <option value="Postnatal">Postnatal</option>
+                            <option value="Immunization">Immunization</option>
+                            <option value="OPD">OPD</option>
+                            <option value="Inpatient Department">
+                              Inpatient Department
+                            </option>
+                            <option value="Nutrition">Nutrition</option>
+                            <option value="Family Planning">
+                              Family Planning
+                            </option>
+                            <option value="Transfer In">Transfer In</option>
+                            <option value="Other Entry Point">
+                              Other Entry Point
+                            </option>
+                          </Input>
+                        </InputGroup>
+                        {errors.entryPoint !== "" ? (
+                          <span className={classes.error}>
+                            {errors.entryPoint}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+
+                    {infantInfo.entryPoint === "Other Entry Point" && (
+                      <div className="form-group mb-3 col-md-4">
+                        <FormGroup>
+                          <FormLabelName>
+                            Specify <span style={{ color: "red" }}> *</span>
+                          </FormLabelName>
+                          <InputGroup>
+                            <Input
+                              type="text"
+                              name="entryPointOther"
+                              id="entryPointOther"
+                              onChange={handleInputChangeinfantInfoDto}
+                              value={infantInfo.entryPointOther}
+                              disabled={disabledField}
+                            />
+                          </InputGroup>
+                          {errors.entryPointOther !== "" ? (
+                            <span className={classes.error}>
+                              {errors.entryPointOther}
+                            </span>
+                          ) : (
+                            ""
+                          )}
+                        </FormGroup>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {infantInfo.birthOutcome !== "Dead" && (
+                <>
+                  {/* === Infant Prophylaxis === */}
+                  <div className="col-md-12 mb-3 mt-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <LocalHospitalIcon style={sectionIconStyle} />
+                        Infant Prophylaxis
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
                           <FormGroup>
-                            <FormLabelName>Timing</FormLabelName>
+                            <FormLabelName>CTX </FormLabelName>
                             <Input
                               type="select"
-                              value={vac.timing}
-                              onChange={(e) => handleHbvChange(index, "timing", e.target.value)}
+                              name="ctxStatus"
+                              id="ctxStatus"
+                              value={infantInfo.ctxStatus}
+                              onChange={handleInputChangeinfantInfoDto}
                               disabled={disabledField}
                             >
                               <option value="">Select </option>
-                              <option value="Within 24 hours">Within 24 hours</option>
-                              <option value="After 24 hours">After 24 hours</option>
+                              <option value="YES">YES </option>
+                              <option value="NO">NO </option>
                             </Input>
+                            {errors.ctxStatus !== "" ? (
+                              <span className={classes.error}>
+                                {errors.ctxStatus}
+                              </span>
+                            ) : (
+                              ""
+                            )}
                           </FormGroup>
                         </div>
-                      ) : (
-                        <div className=" mb-3 col-md-4" style={{ display: "flex", alignItems: "flex-end", paddingBottom: "16px" }}>
-                          {index === hbvVaccinations.length - 1 && !disabledField && (
+                        {infantInfo.ctxStatus === "YES" && (
+                          <div className=" mb-3 col-md-4">
+                            <FormGroup>
+                              <FormLabelName>
+                                Date of CTX initiation
+                              </FormLabelName>
+                              <Input
+                                type="date"
+                                onKeyPress={(e) => {
+                                  e.preventDefault();
+                                }}
+                                name="dateOfCtx"
+                                id="dateOfCtx"
+                                value={infantArvDto.dateOfCtx}
+                                onChange={handleInputChangeInfantArvDto}
+                                min={infantInfo.dateOfDelivery}
+                                max={moment(new Date()).format("YYYY-MM-DD")}
+                                disabled={disabledField}
+                              />
+                              {errors.dateOfCtx !== "" ? (
+                                <span className={classes.error}>
+                                  {errors.dateOfCtx}
+                                </span>
+                              ) : (
+                                ""
+                              )}
+                            </FormGroup>
+                          </div>
+                        )}
+
+                        {infantInfo.ctxStatus === "YES" && (
+                          <div className=" mb-3 col-md-4 ">
+                            <FormGroup>
+                              <FormLabelName>
+                                Age at CTX Initiation (weeks)
+                              </FormLabelName>
+                              <Input
+                                type="text"
+                                name="ageAtCtx"
+                                id="ageAtCtx"
+                                value={infantArvDto.ageAtCtx}
+                                disabled={true}
+                                readOnly
+                              />
+                            </FormGroup>
+                          </div>
+                        )}
+                        <div className=" mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>
+                              Infant ARV Prophylaxis Type{" "}
+                            </FormLabelName>
+                            <Input
+                              type="select"
+                              name="infantArvType"
+                              id="infantArvType"
+                              value={infantArvDto.infantArvType}
+                              onChange={handleInputChangeInfantArvDto}
+                              disabled={disabledField}
+                            >
+                              <option value="">Select </option>
+                              {infantArv.map((value) => (
+                                <option key={value.id} value={value.code}>
+                                  {value.display}
+                                </option>
+                              ))}
+                            </Input>
+                            {errors.infantArvType !== "" ? (
+                              <span className={classes.error}>
+                                {errors.infantArvType}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+
+                        {infantArvDto.infantArvType ===
+                          "TYPE_PROPHYLAXIS_OTHER_(SPECIFY)" && (
+                          <div className=" mb-3 col-md-4">
+                            <FormGroup>
+                              <FormLabelName>
+                                Specify <span style={{ color: "red" }}> *</span>
+                              </FormLabelName>
+                              <Input
+                                type="text"
+                                name="otherArvType"
+                                id="otherArvType"
+                                value={infantArvDto.otherArvType}
+                                onChange={handleInputChangeInfantArvDto}
+                                disabled={disabledField}
+                              />
+                              {errors.otherArvType !== "" ? (
+                                <span className={classes.error}>
+                                  {errors.otherArvType}
+                                </span>
+                              ) : (
+                                ""
+                              )}
+                            </FormGroup>
+                          </div>
+                        )}
+
+                        {infantArvDto.infantArvType &&
+                          infantArvDto.infantArvType !==
+                            "TYPE_PROPHYLAXIS_NONE" && (
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Date of ARV Prophylaxis
+                                </FormLabelName>
+                                <Input
+                                  type="date"
+                                  onKeyPress={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  name="dateOfArv"
+                                  id="dateOfArv"
+                                  value={infantArvDto.dateOfArv}
+                                  onChange={handleInputChangeInfantArvDto}
+                                  min={infantInfo.dateOfDelivery}
+                                  max={moment(new Date()).format("YYYY-MM-DD")}
+                                  disabled={disabledField}
+                                />
+                                {errors.dateOfArv !== "" ? (
+                                  <span className={classes.error}>
+                                    {errors.dateOfArv}
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+                              </FormGroup>
+                            </div>
+                          )}
+
+                        {infantArvDto.infantArvType &&
+                          infantArvDto.infantArvType !==
+                            "TYPE_PROPHYLAXIS_NONE" && (
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  {" "}
+                                  Age at ARV Initiation (weeks){" "}
+                                </FormLabelName>
+                                <Input
+                                  type="text"
+                                  name="arvAgeAtInitiation"
+                                  id="arvAgeAtInitiation"
+                                  value={
+                                    arvAgeAtInitiation !== ""
+                                      ? arvAgeAtInitiation
+                                      : ""
+                                  }
+                                  disabled={true}
+                                  readOnly
+                                />
+                              </FormGroup>
+                            </div>
+                          )}
+
+                        {infantArvDto.infantArvType &&
+                          infantArvDto.infantArvType !==
+                            "TYPE_PROPHYLAXIS_NONE" && (
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  {" "}
+                                  Date of ARV Completion{" "}
+                                </FormLabelName>
+                                <Input
+                                  type="date"
+                                  onKeyPress={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  name="dateOfArvCompletion"
+                                  id="dateOfArvCompletion"
+                                  value={infantArvDto.dateOfArvCompletion}
+                                  onChange={handleInputChangeInfantArvDto}
+                                  min={infantArvDto.dateOfArv}
+                                  max={moment(new Date()).format("YYYY-MM-DD")}
+                                  disabled={disabledField}
+                                />
+                                {errors.dateOfArvCompletion !== "" ? (
+                                  <span className={classes.error}>
+                                    {errors.dateOfArvCompletion}
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+                              </FormGroup>
+                            </div>
+                          )}
+                        <div className=" mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName> Place of Delivery </FormLabelName>
+                            <Input
+                              type="select"
+                              name="arvDeliveryPoint"
+                              id="arvDeliveryPoint"
+                              value={infantArvDto.arvDeliveryPoint}
+                              onChange={handleInputChangeInfantArvDto}
+                              disabled={disabledField}
+                            >
+                              <option value="select">Select </option>
+                              <option value="Facility Delivery">
+                                Facility Delivery
+                              </option>
+                              <option value="Delivered outside facility">
+                                Delivered outside facility{" "}
+                              </option>
+                            </Input>
+                            {errors.arvDeliveryPoint !== "" ? (
+                              <span className={classes.error}>
+                                {errors.arvDeliveryPoint}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {motherSyphilisPositive && (
+                    <>
+                      {/* === Syphilis Prophylaxis / Treatment === */}
+                      <div className="col-md-12 mb-3 mt-3">
+                        <div style={sectionContainerStyle}>
+                          <h6 style={sectionHeaderStyle}>
+                            <HealingIcon style={sectionIconStyle} />
+                            Syphilis Prophylaxis / Treatment
+                          </h6>
+                          <div className="row">
+                            {/* Pre-filled mother's syphilis info from HTS/ANC */}
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>Syphilis Testing</FormLabelName>
+                                <Input
+                                  type="text"
+                                  value={motherSyphilisTestResult}
+                                  disabled={true}
+                                  readOnly
+                                />
+                              </FormGroup>
+                            </div>
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Syphilis Treatment
+                                </FormLabelName>
+                                <Input
+                                  type="text"
+                                  value={motherSyphilisTreatment}
+                                  disabled={true}
+                                  readOnly
+                                />
+                              </FormGroup>
+                            </div>
+                          </div>
+                          <div className="row">
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Date of Initiation
+                                </FormLabelName>
+                                <Input
+                                  type="date"
+                                  onKeyPress={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  name="dateOfInitiation"
+                                  id="syphilisDateOfInitiation"
+                                  value={syphilisData.dateOfInitiation}
+                                  onChange={handleInputChangeSyphilis}
+                                  min={infantInfo.dateOfDelivery}
+                                  max={moment(new Date()).format("YYYY-MM-DD")}
+                                  disabled={disabledField}
+                                />
+                              </FormGroup>
+                            </div>
+
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Age at Initiation (weeks)
+                                </FormLabelName>
+                                <Input
+                                  type="text"
+                                  name="ageAtInitiation"
+                                  id="syphilisAgeAtInitiation"
+                                  value={syphilisData.ageAtInitiation}
+                                  disabled={true}
+                                  readOnly
+                                />
+                              </FormGroup>
+                            </div>
+
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Type of Prophylaxis / Treatment
+                                </FormLabelName>
+                                <Input
+                                  type="select"
+                                  name="typeOfProphylaxis"
+                                  id="syphilisTypeOfProphylaxis"
+                                  value={syphilisData.typeOfProphylaxis}
+                                  onChange={handleInputChangeSyphilis}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select </option>
+                                  <option value="BPG (single dose)">
+                                    BPG (single dose)
+                                  </option>
+                                  <option value="BPG (3 doses)">
+                                    BPG (3 doses)
+                                  </option>
+                                  <option value="Procaine Penicillin G">
+                                    Procaine Penicillin G
+                                  </option>
+                                  <option value="Aqueous Crystalline Penicillin G">
+                                    Aqueous Crystalline Penicillin G
+                                  </option>
+                                </Input>
+                              </FormGroup>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {/* === HBV Vaccination Schedule === */}
+                  <div className="col-md-12 mb-3 mt-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <EventIcon style={sectionIconStyle} />
+                        HBV Vaccination Schedule
+                      </h6>
+                      <div className="row">
+                        {hbvVaccinations.map((vac, index) => (
+                          <React.Fragment key={index}>
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>{vac.dose}</FormLabelName>
+                                <Input
+                                  type="text"
+                                  value={vac.dose}
+                                  disabled={true}
+                                />
+                              </FormGroup>
+                            </div>
+                            <div className=" mb-3 col-md-4">
+                              <FormGroup>
+                                <FormLabelName>
+                                  Date of Vaccination
+                                </FormLabelName>
+                                <Input
+                                  type="date"
+                                  onKeyPress={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  value={vac.dateOfVaccination}
+                                  onChange={(e) =>
+                                    handleHbvChange(
+                                      index,
+                                      "dateOfVaccination",
+                                      e.target.value,
+                                    )
+                                  }
+                                  min={
+                                    index > 0 &&
+                                    hbvVaccinations[index - 1].dateOfVaccination
+                                      ? moment(
+                                          hbvVaccinations[index - 1]
+                                            .dateOfVaccination,
+                                        )
+                                          .add(28, "days")
+                                          .format("YYYY-MM-DD")
+                                      : infantInfo.dateOfDelivery
+                                  }
+                                  max={moment(new Date()).format("YYYY-MM-DD")}
+                                  disabled={disabledField}
+                                />
+                                {hbvErrors[`hbv_${index}_dateOfVaccination`] ? (
+                                  <span className={classes.error}>
+                                    {
+                                      hbvErrors[
+                                        `hbv_${index}_dateOfVaccination`
+                                      ]
+                                    }
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+                              </FormGroup>
+                            </div>
+                            {vac.doseNumber === 1 ? (
+                              <div className=" mb-3 col-md-4">
+                                <FormGroup>
+                                  <FormLabelName>Timing</FormLabelName>
+                                  <Input
+                                    type="select"
+                                    value={vac.timing}
+                                    onChange={(e) =>
+                                      handleHbvChange(
+                                        index,
+                                        "timing",
+                                        e.target.value,
+                                      )
+                                    }
+                                    disabled={disabledField}
+                                  >
+                                    <option value="">Select </option>
+                                    <option value="Within 24 hours">
+                                      Within 24 hours
+                                    </option>
+                                    <option value="After 24 hours">
+                                      After 24 hours
+                                    </option>
+                                  </Input>
+                                </FormGroup>
+                              </div>
+                            ) : (
+                              <div
+                                className=" mb-3 col-md-4"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "flex-end",
+                                  paddingBottom: "16px",
+                                }}
+                              >
+                                {index === hbvVaccinations.length - 1 &&
+                                  !disabledField && (
+                                    <MatButton
+                                      variant="contained"
+                                      style={{
+                                        backgroundColor: "#992E62",
+                                        color: "#fff",
+                                        marginRight: "5px",
+                                      }}
+                                      onClick={() => removeHbvDose(index)}
+                                      size="small"
+                                    >
+                                      Remove
+                                    </MatButton>
+                                  )}
+                              </div>
+                            )}
+                          </React.Fragment>
+                        ))}
+                        {hbvVaccinations.length < 3 && !disabledField && (
+                          <div className="col-md-12 mb-3">
                             <MatButton
                               variant="contained"
-                              style={{ backgroundColor: "#992E62", color: "#fff", marginRight: "5px" }}
-                              onClick={() => removeHbvDose(index)}
+                              style={{
+                                backgroundColor: "#014d88",
+                                color: "#fff",
+                              }}
+                              onClick={addHbvDose}
                               size="small"
                             >
-                              Remove
+                              + Add HBV Dose
                             </MatButton>
-                          )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* === Infant PCR / HIV Test === */}
+                  <div className="col-md-12 mb-3 mt-3">
+                    <div style={sectionContainerStyle}>
+                      <h6 style={sectionHeaderStyle}>
+                        <AssignmentIcon style={sectionIconStyle} />
+                        Infant PCR Testing
+                      </h6>
+                      <div className="row">
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName> Sample Type</FormLabelName>
+                            <Input
+                              type="select"
+                              name="testType"
+                              id="testType"
+                              value={infantPCRTestDto.testType}
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              disabled={disabledField}
+                              // disabled
+                            >
+                              <option value="">Select </option>
+
+                              {PCRList.length > 0 &&
+                                PCRList.map((each, index) => {
+                                  return (
+                                    <option value={each.code}>
+                                      {each.display}
+                                    </option>
+                                  );
+                                })}
+                            </Input>
+                            {errors.testType !== "" ? (
+                              <span className={classes.error}>
+                                {errors.testType}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>Date sample collected</FormLabelName>
+                            <Input
+                              type="date"
+                              onKeyPress={(e) => {
+                                e.preventDefault();
+                              }}
+                              name="dateSampleCollected"
+                              id="dateSampleCollected"
+                              value={infantPCRTestDto.dateSampleCollected}
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              min={infantInfo.dateOfDelivery}
+                              max={moment(new Date()).format("YYYY-MM-DD")}
+                              disabled={disabledField}
+                            />
+                            {errors.dateSampleCollected !== "" ? (
+                              <span className={classes.error}>
+                                {errors.dateSampleCollected}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>Date Sample Sent</FormLabelName>
+                            <Input
+                              type="date"
+                              onKeyPress={(e) => {
+                                e.preventDefault();
+                              }}
+                              name="dateSampleSent"
+                              id="dateSampleSent"
+                              value={infantPCRTestDto.dateSampleSent}
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              min={infantPCRTestDto.dateSampleCollected}
+                              // max={infantPCRTestDto.dateResultReceivedAtFacility}
+                              max={moment(new Date()).format("YYYY-MM-DD")}
+                              disabled={disabledField}
+                            />
+                            {errors.dateSampleSent !== "" ? (
+                              <span className={classes.error}>
+                                {errors.dateSampleSent}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>Date Result Received</FormLabelName>
+                            <Input
+                              type="date"
+                              onKeyPress={(e) => {
+                                e.preventDefault();
+                              }}
+                              name="dateResultReceivedAtFacility"
+                              id="dateResultReceivedAtFacility"
+                              value={
+                                infantPCRTestDto.dateResultReceivedAtFacility
+                              }
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              min={infantPCRTestDto.dateSampleSent}
+                              max={moment(new Date()).format("YYYY-MM-DD")}
+                              disabled={disabledField}
+                            />
+                            {errors.dateResultReceivedAtFacility !== "" ? (
+                              <span className={classes.error}>
+                                {errors.dateResultReceivedAtFacility}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>
+                              Date Result Received By Caregiver
+                            </FormLabelName>
+                            <Input
+                              type="date"
+                              onKeyPress={(e) => {
+                                e.preventDefault();
+                              }}
+                              name="dateResultReceivedByCaregiver"
+                              id="dateResultReceivedByCaregiver"
+                              value={
+                                infantPCRTestDto.dateResultReceivedByCaregiver
+                              }
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              min={
+                                infantPCRTestDto.dateResultReceivedAtFacility
+                              }
+                              max={moment(new Date()).format("YYYY-MM-DD")}
+                              disabled={disabledField}
+                            />
+                            {errors.dateResultReceivedByCaregiver !== "" ? (
+                              <span className={classes.error}>
+                                {errors.dateResultReceivedByCaregiver}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>Age at Test</FormLabelName>
+                            <Input
+                              type="select"
+                              name="ageAtTest"
+                              id="ageAtTest"
+                              value={infantPCRTestDto.ageAtTest}
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              disabled={true}
+                            >
+                              <option value="select">Select </option>
+                              <option value="CHILD_TEST_AGE_<_72_HRS">
+                                &lt;72 hrs
+                              </option>
+                              <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">
+                                &gt;72 hrs - &lt; 2 months
+                              </option>
+                              <option value="CHILD_TEST_AGE_2-12_MONTHS">
+                                2-12 months
+                              </option>
+                              <option value="CHILD_TEST_AGE_>12_MONTHS">
+                                &gt;12 months
+                              </option>
+                            </Input>
+                            <small
+                              style={{
+                                color: "#667",
+                                display: "block",
+                                marginTop: "4px",
+                              }}
+                            >
+                              Auto-calculated from the date of delivery and
+                              sample collection date
+                            </small>
+                            {errors.ageAtTest !== "" ? (
+                              <span className={classes.error}>
+                                {errors.ageAtTest}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <FormLabelName>Result *</FormLabelName>
+                            <Input
+                              type="select"
+                              name="results"
+                              id="results"
+                              value={infantPCRTestDto.results}
+                              onChange={handleInputChangeInfantPCRTestDto}
+                              disabled={disabledField}
+                            >
+                              <option value="select">Select </option>
+                              {pcrResult.map((value) => (
+                                <option key={value.id} value={value.code}>
+                                  {value.display}
+                                </option>
+                              ))}
+                            </Input>
+                            {errors.results !== "" ? (
+                              <span className={classes.error}>
+                                {errors.results}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                      </div>
+                      {/* Display notification based on PCR result */}
+                      {infantPCRTestDto.results ===
+                        "INFANT_PCR_RESULT_POSITIVE" && (
+                        <div
+                          style={{
+                            backgroundColor: "#fff3cd",
+                            border: "1px solid #ffc107",
+                            borderRadius: "4px",
+                            padding: "10px",
+                            margin: "10px 0",
+                          }}
+                        >
+                          <h4 style={{ color: "#856404", margin: 0 }}>
+                            {props.activeContent?.actionType === "create"
+                              ? "You have selected a Positive PCR result."
+                              : "A positive PCR result has been recorded for this infant."}
+                          </h4>
+                          <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
+                            {props.activeContent?.actionType === "create"
+                              ? "After saving this registration, a Confirmatory PCR will need to be documented on the Infant Follow-up Visit form. The infant will not be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."
+                              : "A Confirmatory PCR is required. Please document it on the Infant Follow-up Visit form. The infant cannot be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."}
+                          </p>
                         </div>
                       )}
-                    </React.Fragment>
-                  ))}
-                  {hbvVaccinations.length < 3 && !disabledField && (
-                    <div className="col-md-12 mb-3">
-                      <MatButton
-                        variant="contained"
-                        style={{ backgroundColor: "#014d88", color: "#fff" }}
-                        onClick={addHbvDose}
-                        size="small"
-                      >
-                        + Add HBV Dose
-                      </MatButton>
+                      {infantPCRTestDto.results ===
+                        "INFANT_PCR_RESULT_INDETERMINATE" && (
+                        <div
+                          style={{
+                            backgroundColor: "#fff3cd",
+                            border: "1px solid #ffc107",
+                            borderRadius: "4px",
+                            padding: "10px",
+                            margin: "10px 0",
+                          }}
+                        >
+                          <h4 style={{ color: "#856404", margin: 0 }}>
+                            {props.activeContent?.actionType === "create"
+                              ? "You have selected an Indeterminate PCR result."
+                              : "An Indeterminate PCR result has been recorded for this infant."}
+                          </h4>
+                          <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
+                            {props.activeContent?.actionType === "create"
+                              ? "After saving, a repeat PCR test will need to be scheduled. The infant record cannot be closed with an Indeterminate result as the final status."
+                              : "A repeat PCR test is required. The infant record cannot be closed with an Indeterminate result as the final status. Please schedule a repeat PCR test."}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                </div>
-              </div>
-              {/* === Infant PCR / HIV Test === */}
-              <div className="col-md-12 mb-3 mt-3">
-                <div style={sectionContainerStyle}>
-                  <h6 style={sectionHeaderStyle}>
-                    <AssignmentIcon style={sectionIconStyle} />Infant PCR Testing
-                  </h6>
-                <div className="row">
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName> Sample Type</FormLabelName>
-                      <Input
-                        type="select"
-                        name="testType"
-                        id="testType"
-                        value={infantPCRTestDto.testType}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        disabled={disabledField}
-                        // disabled
-                      >
-                        <option value="">Select </option>
-
-                        {PCRList.length > 0 && PCRList.map((each, index)=>{
-
-                          return <option value={each.code}>{each.display}</option>
-                        })}
-                       
-                      </Input>
-                      {errors.testType !== "" ? (
-                        <span className={classes.error}>{errors.testType}</span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
                   </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date sample collected</FormLabelName>
-                      <Input
-                        type="date"                    
-                        onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateSampleCollected"
-                        id="dateSampleCollected"
-                        value={infantPCRTestDto.dateSampleCollected}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        min={infantInfo.dateOfDelivery}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateSampleCollected !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateSampleCollected}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date Sample Sent</FormLabelName>
-                      <Input
-                        type="date"                     
-                        onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateSampleSent"
-                        id="dateSampleSent"
-                        value={infantPCRTestDto.dateSampleSent}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        min={infantPCRTestDto.dateSampleCollected}
-                        // max={infantPCRTestDto.dateResultReceivedAtFacility}
-                         max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateSampleSent !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateSampleSent}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Date Result Received</FormLabelName>
-                      <Input
-                        type="date"                     
-                          onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateResultReceivedAtFacility"
-                        id="dateResultReceivedAtFacility"
-                        value={infantPCRTestDto.dateResultReceivedAtFacility}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        min={infantPCRTestDto.dateSampleSent}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateResultReceivedAtFacility !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateResultReceivedAtFacility}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>
-                        Date Result Received By Caregiver
-                      </FormLabelName>
-                      <Input
-                        type="date"                  
-                         onKeyPress={(e)=>{e.preventDefault()}}
-                        name="dateResultReceivedByCaregiver"
-                        id="dateResultReceivedByCaregiver"
-                        value={infantPCRTestDto.dateResultReceivedByCaregiver}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        min={infantPCRTestDto.dateResultReceivedAtFacility}
-                        max={moment(new Date()).format("YYYY-MM-DD")}
-                        disabled={disabledField}
-                      />
-                      {errors.dateResultReceivedByCaregiver !== "" ? (
-                        <span className={classes.error}>
-                          {errors.dateResultReceivedByCaregiver}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-
-
-
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>and</FormLabelName>
-                      <Input
-                        type="select"
-                        name="ageAtTest"
-                        id="ageAtTest"
-                        value={infantPCRTestDto.ageAtTest}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        disabled={true}
-                      >
-                        <option value="select">Select </option>
-                        <option value="CHILD_TEST_AGE_<_72_HRS">&lt;72 hrs</option>
-                        <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">&gt;72 hrs - &lt; 2 months</option>
-                        <option value="CHILD_TEST_AGE_2-12_MONTHS">2-12 months</option>
-                        <option value="CHILD_TEST_AGE_>12_MONTHS">&gt;12 months</option>
-                      </Input>
-                      <small style={{ color: "#667", display: "block", marginTop: "4px" }}>
-                        Auto-calculated from the date of delivery and sample collection date
-                      </small>
-                      {errors.ageAtTest !== "" ? (
-                        <span className={classes.error}>
-                          {errors.ageAtTest}
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-                  <div className="form-group mb-3 col-md-4">
-                    <FormGroup>
-                      <FormLabelName>Result *</FormLabelName>
-                      <Input
-                        type="select"
-                        name="results"
-                        id="results"
-                        value={infantPCRTestDto.results}
-                        onChange={handleInputChangeInfantPCRTestDto}
-                        disabled={disabledField}
-                      >
-                        <option value="select">Select </option>
-                        {pcrResult.map((value) => (
-                          <option key={value.id} value={value.code}>
-                            {value.display}
-                          </option>
-                        ))}
-                      </Input>
-                      {errors.results !== "" ? (
-                        <span className={classes.error}>{errors.results}</span>
-                      ) : (
-                        ""
-                      )}
-                    </FormGroup>
-                  </div>
-         
-                </div>
-              {/* Display notification based on PCR result */}
-              {infantPCRTestDto.results === "INFANT_PCR_RESULT_POSITIVE" && (
-                <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "4px", padding: "10px", margin: "10px 0" }}>
-                  <h4 style={{ color: "#856404", margin: 0 }}>
-                    {props.activeContent?.actionType === "create"
-                      ? "You have selected a Positive PCR result."
-                      : "A positive PCR result has been recorded for this infant."}
-                  </h4>
-                  <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
-                    {props.activeContent?.actionType === "create"
-                      ? "After saving this registration, a Confirmatory PCR will need to be documented on the Infant Follow-up Visit form. The infant will not be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."
-                      : "A Confirmatory PCR is required. Please document it on the Infant Follow-up Visit form. The infant cannot be classified as confirmed HIV-positive until the Confirmatory PCR result is entered."}
-                  </p>
-                </div>
+                </>
               )}
-              {infantPCRTestDto.results === "INFANT_PCR_RESULT_INDETERMINATE" && (
-                <div style={{ backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "4px", padding: "10px", margin: "10px 0" }}>
-                  <h4 style={{ color: "#856404", margin: 0 }}>
-                    {props.activeContent?.actionType === "create"
-                      ? "You have selected an Indeterminate PCR result."
-                      : "An Indeterminate PCR result has been recorded for this infant."}
-                  </h4>
-                  <p style={{ color: "#856404", margin: "5px 0 0 0" }}>
-                    {props.activeContent?.actionType === "create"
-                      ? "After saving, a repeat PCR test will need to be scheduled. The infant record cannot be closed with an Indeterminate result as the final status."
-                      : "A repeat PCR test is required. The infant record cannot be closed with an Indeterminate result as the final status. Please schedule a repeat PCR test."}
-                  </p>
-                </div>
-              )}
-                </div>
-              </div>
-              </>)}
               {/* <div className="form-group mb-3 col-md-6">
                             <FormGroup>
                             <Label >National Identity  Number(NIN)</Label>
@@ -1896,15 +2084,17 @@ const LabourinfantInfo = (props) => {
             {saving ? <Spinner /> : ""}
             <br />
 
-            <div style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "12px",
-            }}>
-            {props.activeContent &&
-            props.activeContent.actionType === "update" ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              {props.activeContent &&
+              props.activeContent.actionType === "update" ? (
                 <MatButton
                   type="submit"
                   variant="contained"
@@ -1918,10 +2108,12 @@ const LabourinfantInfo = (props) => {
                   {!saving ? (
                     <span style={{ textTransform: "capitalize" }}>Update</span>
                   ) : (
-                    <span style={{ textTransform: "capitalize" }}>Updating...</span>
+                    <span style={{ textTransform: "capitalize" }}>
+                      Updating...
+                    </span>
                   )}
                 </MatButton>
-            ) : props.activeContent?.actionType !== "view" ? (
+              ) : props.activeContent?.actionType !== "view" ? (
                 <MatButton
                   type="submit"
                   variant="contained"
@@ -1936,20 +2128,22 @@ const LabourinfantInfo = (props) => {
                   {!saving ? (
                     <span style={{ textTransform: "capitalize" }}>Save</span>
                   ) : (
-                    <span style={{ textTransform: "capitalize" }}>Saving...</span>
+                    <span style={{ textTransform: "capitalize" }}>
+                      Saving...
+                    </span>
                   )}
                 </MatButton>
-            ) : null}
-            <MatButton
-              type="button"
-              variant="contained"
-              className={classes.button}
-              startIcon={<CancelIcon />}
-              style={{ backgroundColor: "#992E62", color: "#fff" }}
-              onClick={() => LoadPage()}
-            >
-              <span style={{ textTransform: "capitalize" }}>Back</span>
-            </MatButton>
+              ) : null}
+              <MatButton
+                type="button"
+                variant="contained"
+                className={classes.button}
+                startIcon={<CancelIcon />}
+                style={{ backgroundColor: "#992E62", color: "#fff" }}
+                onClick={() => LoadPage()}
+              >
+                <span style={{ textTransform: "capitalize" }}>Back</span>
+              </MatButton>
             </div>
           </form>
         </CardBody>

@@ -332,10 +332,18 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Long fac
 
 
 
-  @Query(value = "SELECT hec.date_art_started AS artStartDate, hac.regimen_type_id AS regimenTypeId, CAST(hac.regimen_id AS BIGINT) AS regimenId, bac.display AS regimenName, he.unique_id AS uniqueArtNumber " +
+  // hiv_enrollment_commencement now carries regimen_id/regimen_line_id/unique_id directly
+  // (single merged table on the HIV module's newer enrollment flow, which no longer dual-writes
+  // to hiv_art_clinical/hiv_enrollment). Prefer those columns, falling back to the old join
+  // for records that predate that change, so this works regardless of migration status.
+  @Query(value = "SELECT hec.date_art_started AS artStartDate, " +
+          "COALESCE(CAST(hec.regimen_line_id AS BIGINT), CAST(hac.regimen_type_id AS BIGINT)) AS regimenTypeId, " +
+          "COALESCE(CAST(hec.regimen_id AS BIGINT), CAST(hac.regimen_id AS BIGINT)) AS regimenId, " +
+          "bac.display AS regimenName, " +
+          "COALESCE(hec.unique_id, he.unique_id) AS uniqueArtNumber " +
           "FROM hiv_enrollment_commencement hec " +
           "LEFT JOIN hiv_art_clinical hac ON hac.person_uuid = hec.person_uuid AND hac.is_commencement = true AND hac.archived = 0 " +
-          "LEFT JOIN base_application_codeset bac ON bac.id = CAST(hac.regimen_id AS INTEGER) " +
+          "LEFT JOIN base_application_codeset bac ON bac.id = CAST(COALESCE(CAST(hec.regimen_id AS BIGINT), CAST(hac.regimen_id AS BIGINT)) AS INTEGER) " +
           "LEFT JOIN hiv_enrollment he ON he.person_uuid = hec.person_uuid AND he.archived = 0 " +
           "WHERE hec.person_uuid = ?1 AND hec.facility_id = ?2 AND hec.archived = 0 ORDER BY hec.id DESC LIMIT 1", nativeQuery = true)
   List<PatientArtData> getArtDate (String patientUuid, Long facilityId);

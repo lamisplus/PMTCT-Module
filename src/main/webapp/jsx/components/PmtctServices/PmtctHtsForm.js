@@ -100,9 +100,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// Matches HTS-Module's SETTING_PREFIX_MAP abbreviations (FC/CM), just keyed by
+// PMTCT's own ENROLLMENT_SETTING_* codeset values instead of HTS_ENTRY_POINT_*.
 const SETTING_ABBR_MAP = {
   ENROLLMENT_SETTING_FACILITY: "FC",
-  ENROLLMENT_SETTING_COMMUNITY: "CS",
+  ENROLLMENT_SETTING_COMMUNITY: "CM",
 };
 
 const toSettingAbbr = (setting) => {
@@ -116,26 +118,73 @@ const toSettingAbbr = (setting) => {
 };
 
 /**
- * Generates a unique Client Code in the format:
- *   {SettingAbbr}01/{YY}/{MM}/{4-digit-random}{2-random-letters}
- *
- * Example: FC01/25/08/0047XR
+ * Testing point abbreviation — copied 1:1 from HTS-Module's getSubtypeCode()
+ * (htsEncounterPayload.js) so PMTCT client codes use the identical abbreviations,
+ * since both write into the shared hts_encounter table.
  */
-const generateClientCode = (setting, dateOfVisit) => {
-  const abbr = toSettingAbbr(setting);
-  const FACILITY_CODE = "01";
+const toTestingPointAbbr = (testSetting) => {
+  if (!testSetting) return null;
+  if (testSetting.includes("SETTING_STI")) return "STI";
+  if (testSetting.includes("EMERGENCY")) return "EME";
+  if (testSetting.includes("SETTING_INDEX")) return "IND";
+  if (testSetting.includes("INPATIENT") || testSetting.includes("NPATIENT")) return "INP";
+  if (testSetting.includes("PMTCT")) return "PMTCT";
+  if (testSetting.includes("TB")) return "TB";
+  if (testSetting.includes("VCT")) return "VCT";
+  if (testSetting.includes("MOBILE")) return "MOB";
+  if (testSetting.includes("SETTING_SNS")) return "SNS";
+  if (testSetting.includes("SETTING_ANC")) return "ANC";
+  if (testSetting.includes("RETESTING")) return "RET";
+  if (testSetting.includes("SETTING_L&D")) return "L&D";
+  if (testSetting.includes("POST_NATAL_WARD_BREASTFEEDING")) return "PNWB";
+  if (testSetting.includes("SETTING_CT")) return "CT";
+  if (testSetting.includes("SETTING_FP")) return "FP";
+  if (testSetting.includes("BLOOD_BANK")) return "BB";
+  if (testSetting.includes("PEDIATRIC")) return "PED";
+  if (testSetting.includes("MALNUTRITION")) return "MAL";
+  if (testSetting.includes("PREP_TESTING")) return "PrEPT";
+  if (testSetting.includes("SPOKE_HEALTH_FACILITY")) return "SPHF";
+  if (testSetting.includes("STANDALONE")) return "STAN";
+  if (testSetting.includes("CONGREGATIONAL")) return "CON";
+  if (testSetting.includes("DELIVERY_HOMES")) return "DEL";
+  if (testSetting.includes("TBA_ORTHODOX")) return "TBAO";
+  if (testSetting.includes("TBA_RT-HCW")) return "TBAH";
+  if (testSetting.includes("SETTING_OVC")) return "OVC";
+  if (testSetting.includes("OUTREACH")) return "OUT";
+  if (testSetting.includes("OTHER")) return "OTH";
+  return null;
+};
 
-  const date = dateOfVisit ? new Date(dateOfVisit) : new Date();
-  const yy = String(date.getFullYear()).slice(-2);
+/**
+ * Generates a Client Code in the format:
+ *   {SettingAbbr}/{TestingPointAbbr}/{yyyy}/{mm}/{SerialNumber}
+ *
+ * Example: FC/ANC/2026/07/1714RA
+ *
+ * SerialNumber is user-entered (see Serial Number field) and checked for
+ * uniqueness against the shared HTS client-code-uniqueness API.
+ */
+const generateClientCode = (setting, testSetting, dateOfVisit, serialNumber) => {
+  if (!setting || !serialNumber || !dateOfVisit) return "";
+
+  const abbr = toSettingAbbr(setting);
+  const testingPointAbbr = toTestingPointAbbr(testSetting);
+
+  const date = new Date(dateOfVisit);
+  if (isNaN(date.getTime())) return "";
+  const yyyy = String(date.getFullYear());
   const mm = String(date.getMonth() + 1).padStart(2, "0");
 
-  const serial = String(Math.floor(Math.random() * 9000) + 1000);
-  const letters = Array.from({ length: 2 }, () =>
-    String.fromCharCode(65 + Math.floor(Math.random() * 26))
-  ).join("");
+  const segments = testingPointAbbr
+    ? [abbr, testingPointAbbr, yyyy, mm, serialNumber]
+    : [abbr, yyyy, mm, serialNumber];
 
-  return `${abbr}${FACILITY_CODE}/${yy}/${mm}/${serial}${letters}`;
+  return segments.join("/");
 };
+
+// Not in the HIV_EARLY_DETECT_RESULT codeset (base_application_codeset) — added
+// as a frontend-only option below instead of writing a new row to that table.
+const HIV_EARLY_DETECT_NON_REACTIVE = "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_NON-REACTIVE";
 
 const PmtctHtsForm = (props) => {
   const patientObj = props.patientObj;
@@ -151,24 +200,38 @@ const PmtctHtsForm = (props) => {
     return value;
   };
 
+  // Confirmatory HIV Test now uses the HIV_CONFIRMATORY_TEST_RESULT codeset (matching
+  // the HTS module) instead of plain Positive/Negative — map every prior generation of
+  // saved values (reactive/non-reactive, plain Positive/Negative) onto the codeset codes
+  // so existing records still show correctly selected in the dropdown.
+  const mapConfirmatoryResult = (value) => {
+    if (!value) return value;
+    const v = value.toLowerCase();
+    if (v === "reactive" || v === "positive") return "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE";
+    if (v === "non-reactive" || v === "negative") return "HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE";
+    return value;
+  };
+
   const location = useLocation();
   const locationState = location && location.state ? location.state : null;
   const [regimenType, setRegimenType] = useState([]);
   const classes = useStyles();
   const [disabledField, setDisabledField] = useState(false);
-  const [hbvFromAnc, setHbvFromAnc] = useState(false);
+  const [serologyFromAnc, setSerologyFromAnc] = useState({ syphilis: false, hepatitisB: false });
   const [entrySetting, setEntrySetting] = useState([]);
   const [testEntryPoint, setTestEntryPoint] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
   const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
   const [disableEntryPoint, setDisableEntryPoint] = useState(false);
+  const [clientCodeTaken, setClientCodeTaken] = useState(false);
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
   const [hbvTreatmentOptions, setHbvTreatmentOptions] = useState([]);
   const [typeOfHivTestOptions, setTypeOfHivTestOptions] = useState([]);
   const [hivEarlyDetectOptions, setHivEarlyDetectOptions] = useState([]);
+  const [confirmatoryResultOptions, setConfirmatoryResultOptions] = useState([]);
   const [tbReferralOptions, setTbReferralOptions] = useState([]);
   const [partnerReferredOptions, setPartnerReferredOptions] = useState([]);
   const [viralLoadTimingOptions, setViralLoadTimingOptions] = useState([]);
@@ -235,6 +298,7 @@ const PmtctHtsForm = (props) => {
     dateOfHivTest: "",
     testEntryPoint: "",
     testSetting: "",
+    serialNumber: "",
     initialHivTest: "",
     confirmatoryHivTest: "",
     stageOfPregnancy: "",
@@ -315,9 +379,9 @@ const PmtctHtsForm = (props) => {
     }));
 
     if (e.target.name === "result") {
-      if (e.target.value === "Positive") {
+      if (e.target.value === "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE") {
         setFinalResult("Positive");
-      } else if (e.target.value === "Negative") {
+      } else if (e.target.value === "HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE") {
         setFinalResult("Negative");
       } else {
         setFinalResult("");
@@ -408,9 +472,9 @@ const PmtctHtsForm = (props) => {
   const getFinalResult = () => {
     if (initialHivTest.result === "Negative") {
       setFinalResult("Negative");
-    } else if (confirmatoryHivTest.result === "Positive") {
+    } else if (confirmatoryHivTest.result === "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE") {
       setFinalResult("Positive");
-    } else if (confirmatoryHivTest.result === "Negative") {
+    } else if (confirmatoryHivTest.result === "HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE") {
       setFinalResult("Negative");
     }
   };
@@ -593,8 +657,12 @@ const PmtctHtsForm = (props) => {
     POINT_ENTRY_PMTCT();
     GET_CODESETS();
     getLastPmtctHtsRecord();
+    // Loads the existing record for edit/view. Previously also required patientObj.id to be
+    // truthy, but that field is unreliable depending on how the patient was navigated to (e.g.
+    // via the history page) and viewPmtctHtsRecord doesn't even use it — it always reads
+    // activeContent.id internally — so that extra condition silently skipped loading the
+    // record, leaving the form blank ("documented records not persistent" from history page).
     if (
-      props?.patientObj?.id &&
       props?.activeContent?.id &&
       (props?.activeContent?.actionType === "update" || props?.activeContent?.actionType === "view")
     ) {
@@ -624,7 +692,9 @@ const PmtctHtsForm = (props) => {
         }));
       }
 
-      // Pre-populate HBV fields from ANC enrollment data (only for ANC entry point)
+      // Pre-populate Syphilis/HBV fields from ANC enrollment data (only for ANC entry point).
+      // Hepatitis C is intentionally excluded — this form archives it (see submit handler,
+      // "Archive Hepatitis C — always null for PMTCT-HTS") and has no input field for it.
       const patientUuid = props?.patientObj?.patientUuid || props?.patientObj?.uuid || props?.patientUuid;
       const pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
       const isAncEntry = props?.entrypointValue === "PMTCT_ENTRY_POINT_ANC";
@@ -644,70 +714,72 @@ const PmtctHtsForm = (props) => {
                   knownHbvPositive: prev.knownHbvPositive || "Yes",
                   hepatitisB: prev.hepatitisB || "Positive",
                 }));
-                setHbvFromAnc(true);
+                setSerologyFromAnc((prev) => ({ ...prev, hepatitisB: true }));
               } else if (result.toLowerCase() === "negative") {
                 setPayload((prev) => ({
                   ...prev,
                   knownHbvPositive: prev.knownHbvPositive || "No",
                 }));
-                setHbvFromAnc(true);
+                setSerologyFromAnc((prev) => ({ ...prev, hepatitisB: true }));
+              }
+            }
+
+            // ANC records Syphilis as Positive/Negative — the HTS form's own
+            // Syphilis field uses Reactive/Non-reactive, so map between the two.
+            const syph = response?.data?.syphilisInfo;
+            if (syph && syph.testedSyphilis === "Yes") {
+              const result = (syph.testResultSyphilis || "").trim().toLowerCase();
+              if (result === "positive" || result === "negative") {
+                setPayload((prev) => ({
+                  ...prev,
+                  syphilis: prev.syphilis || (result === "positive" ? "Reactive" : "Non-reactive"),
+                }));
+                setSerologyFromAnc((prev) => ({ ...prev, syphilis: true }));
               }
             }
           })
           .catch(() => {
-            // ANC data not available — user fills HBV fields manually
+            // ANC data not available — user fills Syphilis/HBV fields manually
           });
       }
     }
   }, [props?.activeContent]);
 
-  // Auto-generate client code and verify uniqueness via API
+  // Recompute the Client Code preview whenever its inputs change (serial number is user-entered)
   useEffect(() => {
-    const { testEntryPoint, testSetting, dateOfHivTest } = payload;
-    // Don't overwrite an existing client code loaded from the server (view/update)
     if (
       props?.activeContent?.actionType === "update" ||
       props?.activeContent?.actionType === "view"
     ) {
       return;
     }
-    if (!testEntryPoint || !testSetting || !dateOfHivTest) return;
+    const { testEntryPoint, testSetting, dateOfHivTest, serialNumber } = payload;
+    const code = generateClientCode(testEntryPoint, testSetting, dateOfHivTest, serialNumber);
+    setPayload((prev) => (prev.clientCode === code ? prev : { ...prev, clientCode: code }));
+  }, [payload.testEntryPoint, payload.testSetting, payload.dateOfHivTest, payload.serialNumber]);
 
-    let cancelled = false;
+  // Verify Client Code uniqueness via the shared HTS uniqueness API (same table the code lands in)
+  const checkClientCodeUniqueness = (code) => {
+    if (!code) {
+      setClientCodeTaken(false);
+      return;
+    }
+    axios
+      .get(`${baseUrl}hts-client-code/exists?clientCode=${encodeURIComponent(code)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setClientCodeTaken(res.data?.exists === true))
+      .catch((err) => console.error("Client code uniqueness check failed:", err));
+  };
 
-    const generateUniqueClientCode = async () => {
-      const maxRetries = 10;
-      for (let i = 0; i < maxRetries; i++) {
-        const code = generateClientCode(testEntryPoint, dateOfHivTest);
-        try {
-          const res = await axios.get(
-            `${baseUrl}pmtct/anc/check-client-code?code=${encodeURIComponent(code)}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (cancelled) return;
-          const isTaken = res.data === true;
-          if (!isTaken) {
-            setPayload((prev) => ({ ...prev, clientCode: code }));
-            return;
-          }
-        } catch (err) {
-          if (cancelled) return;
-          // On API error, use the generated code anyway
-          setPayload((prev) => ({ ...prev, clientCode: code }));
-          return;
-        }
-      }
-      // Fallback after max retries — use the last generated code
-      if (!cancelled) {
-        const fallback = generateClientCode(testEntryPoint, dateOfHivTest);
-        setPayload((prev) => ({ ...prev, clientCode: fallback }));
-      }
-    };
+  useEffect(() => {
+    checkClientCodeUniqueness(payload.clientCode);
+  }, [payload.clientCode]);
 
-    generateUniqueClientCode();
-
-    return () => { cancelled = true; };
-  }, [payload.testEntryPoint, payload.testSetting, payload.dateOfHivTest]);
+  const handleSerialNumberChange = (e) => {
+    setErrors((prevErrors) => ({ ...prevErrors, serialNumber: "" }));
+    setPayload((prev) => ({ ...prev, serialNumber: e.target.value }));
+  };
 
   const viewPmtctHtsRecord = (id) => {
     axios
@@ -772,9 +844,7 @@ const PmtctHtsForm = (props) => {
         }
         if (response.data.confirmatoryHivTest) {
           const confirmData = { ...response.data.confirmatoryHivTest };
-          if (isPmtctHts) {
-            confirmData.result = mapTestResult(confirmData.result);
-          }
+          confirmData.result = mapConfirmatoryResult(confirmData.result);
           setConfirmatoryHivTest(confirmData);
         }
         // Use DB value if available, otherwise recalculate from test results
@@ -783,12 +853,12 @@ const PmtctHtsForm = (props) => {
         } else if (isPmtctHts) {
           // Simplified PMTCT-HTS logic for old records
           const initResult = mapTestResult(response.data.initialHivTest?.result);
-          const confResult = mapTestResult(response.data.confirmatoryHivTest?.result);
+          const confResult = mapConfirmatoryResult(response.data.confirmatoryHivTest?.result);
           if (initResult === "Negative") {
             setFinalResult("Negative");
-          } else if (confResult === "Positive") {
+          } else if (confResult === "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE") {
             setFinalResult("Positive");
-          } else if (confResult === "Negative") {
+          } else if (confResult === "HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE") {
             setFinalResult("Negative");
           }
         } else {
@@ -799,7 +869,11 @@ const PmtctHtsForm = (props) => {
             return val;
           };
           const initR = mapResult(response.data.initialHivTest?.result);
-          const confR = mapResult(response.data.confirmatoryHivTest?.result);
+          const confMapped = mapConfirmatoryResult(response.data.confirmatoryHivTest?.result);
+          const confR =
+            confMapped === "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE" ? "Positive" :
+            confMapped === "HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE" ? "Negative" :
+            response.data.confirmatoryHivTest?.result;
 
           if (initR === "Negative") setFinalResult("Negative");
           else if (confR === "Positive") setFinalResult("Positive");
@@ -952,6 +1026,7 @@ const PmtctHtsForm = (props) => {
       "HBV_TREATMENT_REGIMEN",
       "TYPE_OF_HIV_TEST",
       "HIV_EARLY_DETECT_RESULT",
+      "HIV_CONFIRMATORY_TEST_RESULT",
       "TYPE_OF_PMTCT_REFERRAL",
       "PARTNER_REFERRED_PMTCT",
       "VIRAL_LOAD_TIMING_PMTCT"
@@ -961,6 +1036,7 @@ const PmtctHtsForm = (props) => {
       setHbvTreatmentOptions(response.data.HBV_TREATMENT_REGIMEN);
       setTypeOfHivTestOptions(response.data.TYPE_OF_HIV_TEST || []);
       setHivEarlyDetectOptions(response.data.HIV_EARLY_DETECT_RESULT || []);
+      setConfirmatoryResultOptions(response.data.HIV_CONFIRMATORY_TEST_RESULT || []);
       setTbReferralOptions(response.data.TYPE_OF_PMTCT_REFERRAL || []);
       setPartnerReferredOptions(response.data.PARTNER_REFERRED_PMTCT || []);
       setViralLoadTimingOptions(response.data.VIRAL_LOAD_TIMING_PMTCT || []);
@@ -1063,7 +1139,9 @@ const PmtctHtsForm = (props) => {
         hivEarlyDetectViralLoad: "",
       }));
       setConfirmatoryHivTest({ result: "", dateOfTest: "" });
-      setFinalResult("");
+      // Antigen + Antibody Non-Reactive is a negative HTS result — final result
+      // is fixed to Negative rather than waiting on a confirmatory test.
+      setFinalResult(e.target.value === HIV_EARLY_DETECT_NON_REACTIVE ? "Negative" : "");
     } else if (e.target.name === "knownHbvPositive") {
       // Clear HBV sub-fields when Known HBV changes
       setPayload((prevPayload) => ({
@@ -1419,7 +1497,14 @@ const PmtctHtsForm = (props) => {
 
     // Client code must not be empty
     if (!payload.clientCode || !payload.clientCode.trim()) {
-      toast.error("Client Code is required. Please ensure Setting, Test Setting and Date of HIV Test are filled.", {
+      toast.error("Client Code is required. Please ensure Setting, Test Setting, Date of HIV Test, and Serial Number are filled.", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return;
+    }
+
+    if (clientCodeTaken) {
+      toast.error("This Client Code already exists. Please change the Serial Number.", {
         position: toast.POSITION.TOP_RIGHT,
       });
       return;
@@ -1780,6 +1865,29 @@ const PmtctHtsForm = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
+                          Serial Number <span style={{ color: "red" }}> *</span>
+                        </Label>
+                        <InputGroup>
+                          <Input
+                            type="text"
+                            name="serialNumber"
+                            id="serialNumber"
+                            placeholder="e.g. 1714RA"
+                            value={payload.serialNumber || ""}
+                            onChange={handleSerialNumberChange}
+                            disabled={disabledField}
+                          />
+                        </InputGroup>
+                        {errors.serialNumber !== "" ? (
+                          <span className={classes.error}>{errors.serialNumber}</span>
+                        ) : (
+                          ""
+                        )}
+                      </FormGroup>
+                    </div>
+                    <div className="form-group mb-3 col-md-4">
+                      <FormGroup>
+                        <Label>
                           Client Code <span style={{ color: "red" }}> *</span>
                         </Label>
                         <div style={{ position: "relative" }}>
@@ -1795,7 +1903,7 @@ const PmtctHtsForm = (props) => {
                               letterSpacing: "0.04em",
                               paddingRight: "110px",
                               backgroundColor: "#e9ecef",
-                              borderColor: "#d2d6dc",
+                              borderColor: clientCodeTaken ? "#f85032" : "#d2d6dc",
                               height: "41px",
                             }}
                           />
@@ -1808,19 +1916,24 @@ const PmtctHtsForm = (props) => {
                               fontSize: "10px",
                               fontWeight: 700,
                               textTransform: "uppercase",
-                              color: payload.clientCode ? "#2e7d32" : "#8c959f",
-                              background: payload.clientCode ? "#e8f5e9" : "#f0f0f0",
+                              color: clientCodeTaken ? "#c62828" : payload.clientCode ? "#2e7d32" : "#8c959f",
+                              background: clientCodeTaken ? "#fdecea" : payload.clientCode ? "#e8f5e9" : "#f0f0f0",
                               padding: "2px 7px",
                               borderRadius: "8px",
                               pointerEvents: "none",
                             }}
                           >
-                            {payload.clientCode ? "Auto-generated" : "Pending..."}
+                            {clientCodeTaken ? "Already used" : payload.clientCode ? "Auto-generated" : "Pending..."}
                           </span>
                         </div>
                         {!payload.clientCode && (
                           <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
-                            Fill in Setting, Test Setting, and Date of HIV Test to generate
+                            Fill in Setting, Test Setting, Date of HIV Test, and Serial Number to generate
+                          </small>
+                        )}
+                        {clientCodeTaken && (
+                          <small style={{ color: "#c62828", marginTop: 4, display: "block" }}>
+                            This client code already exists. Change the Serial Number.
                           </small>
                         )}
                       </FormGroup>
@@ -2150,8 +2263,11 @@ const PmtctHtsForm = (props) => {
                                 disabled={disabledField}
                               >
                                 <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
+                                {confirmatoryResultOptions.map((value) => (
+                                  <option key={value.id} value={value.code}>
+                                    {value.display}
+                                  </option>
+                                ))}
                               </Input>
                             </InputGroup>
                             {errors.confirmatoryresult !== "" ? (
@@ -2219,8 +2335,11 @@ const PmtctHtsForm = (props) => {
                                 disabled={disabledField}
                               >
                                 <option value="">Select</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Negative">Negative</option>
+                                {confirmatoryResultOptions.map((value) => (
+                                  <option key={value.id} value={value.code}>
+                                    {value.display}
+                                  </option>
+                                ))}
                               </Input>
                             </InputGroup>
                             {errors.confirmatoryresult !== "" ? (
@@ -2281,6 +2400,11 @@ const PmtctHtsForm = (props) => {
                           <option value="Non-reactive">Non-reactive</option>
                         </Input>
                       </InputGroup>
+                      {serologyFromAnc.syphilis && (
+                        <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                          Pre-filled from ANC — editable
+                        </small>
+                      )}
                     </FormGroup>
                   </div>
 
@@ -2353,13 +2477,18 @@ const PmtctHtsForm = (props) => {
                           id="knownHbvPositive"
                           onChange={handleInputChange}
                           value={payload.knownHbvPositive}
-                          disabled={disabledField || hbvFromAnc}
+                          disabled={disabledField}
                         >
                           <option value="">Select</option>
                           <option value="Yes">Yes</option>
                           <option value="No">No</option>
                         </Input>
                       </InputGroup>
+                      {serologyFromAnc.hepatitisB && (
+                        <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                          Pre-filled from ANC — editable
+                        </small>
+                      )}
                     </FormGroup>
                   </div>
 
@@ -2376,7 +2505,7 @@ const PmtctHtsForm = (props) => {
                               id="hepatitisB"
                               onChange={handleInputChange}
                               value={payload.hepatitisB}
-                              disabled={disabledField || hbvFromAnc}
+                              disabled={disabledField}
                             >
                               <option value="">Select</option>
                               <option value="Positive">Positive</option>

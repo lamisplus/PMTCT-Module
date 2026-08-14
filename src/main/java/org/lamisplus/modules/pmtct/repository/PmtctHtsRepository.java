@@ -45,7 +45,7 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
     @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND date_of_hiv_test =?2 AND archived = false ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
     boolean findIfDateExist(String patientUuid, LocalDate dateOfHivTest);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_hts p WHERE p.archived = 0 AND p.facility_id = ?1 AND EXISTS (SELECT 1 FROM patient_person pp WHERE CAST(pp.uuid AS TEXT) = p.patient_uuid)", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_hts p WHERE p.archived = false AND p.facility_id = ?1 AND EXISTS (SELECT 1 FROM patient_person pp WHERE CAST(pp.uuid AS TEXT) = p.patient_uuid)", nativeQuery = true)
     long countActiveMigratableRecords(Long facilityId);
 
     @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND UPPER(COALESCE(testing_type,'')) != 'RETESTING' AND archived = false)", nativeQuery = true)

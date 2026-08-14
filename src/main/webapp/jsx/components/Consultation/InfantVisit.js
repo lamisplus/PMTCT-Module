@@ -327,6 +327,7 @@ const ClinicVisit = (props) => {
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
     rapidTestType: "",
     ageAtTest: "",
+    dateSampleCollected: "",
     dateOfTest: "",
     result: "",
     ancNumber: props.patientObj.ancNo,
@@ -418,13 +419,13 @@ const ClinicVisit = (props) => {
    // BATCH API
   const GET_CODESETS = () => {
  
-    GET_CODESETS_IN_BATCH("SEX", "TIME_ART_INITIATION_PMTCT", "CHILD_FOLLOW_UP_VISIT_STATUS", "TIMING_MOTHERS_ART_INITIATION", "AGE_CTX_INITIATION",  "INFANT_ARV_PROPHYLAXIS_TYPE", "INFANT_PCR_RESULT", "INFANT_OUTCOME_AT_18_MONTHS", "PLACE_OF_DELIVERY", "INFANT_TESTING_PCR", "TIMING_PROPHYLAXIS_WITHIN_72HRS").then((response)=>{
+    GET_CODESETS_IN_BATCH("SEX", "TIME_ART_INITIATION_PMTCT", "CHILD_FOLLOW_UP_VISIT_STATUS", "TIMING_MOTHERS_ART_INITIATION", "AGE_CTX_INITIATION",  "TYPE_PROPHYLAXIS", "INFANT_PCR_RESULT", "INFANT_OUTCOME_AT_18_MONTHS", "PLACE_OF_DELIVERY", "INFANT_TESTING_PCR", "TIMING_PROPHYLAXIS_WITHIN_72HRS").then((response)=>{
         setGenders(response.data.SEX);
         setTimingOfArtInitiation(response.data.TIME_ART_INITIATION_PMTCT);
         setChildStatus(response.data.CHILD_FOLLOW_UP_VISIT_STATUS);
         setTimeMotherArt(response.data.TIMING_MOTHERS_ART_INITIATION);
         setAgeCTX(response.data.AGE_CTX_INITIATION);
-        setInfantArv(response.data.INFANT_ARV_PROPHYLAXIS_TYPE);
+        setInfantArv(response.data.TYPE_PROPHYLAXIS);
         setPcrResult(response.data.INFANT_PCR_RESULT);
         setInfantOutcome(response.data.INFANT_OUTCOME_AT_18_MONTHS);
         setPlaceOfDelivery(response.data.PLACE_OF_DELIVERY);
@@ -653,7 +654,10 @@ const ClinicVisit = (props) => {
 
     let childAge = vistDate.diff(deliveryDate, 'months')
 
-    let hasDonePCRTest = choosenInfant?.infantPCRTestDto?.id ? true : false
+    // Use latestPCR (covers both visit-recorded and registration-recorded PCR tests)
+    // rather than choosenInfant.infantPCRTestDto, which only reflects a PCR entered
+    // at registration and stays empty when the PCR was instead done at a later visit.
+    let hasDonePCRTest = latestPCR?.testType ? true : false
 
         if(childAge  >= 9 && hasDonePCRTest){
           setshowRapidTest(true)
@@ -1242,7 +1246,34 @@ const ClinicVisit = (props) => {
   };
 
   const handleInputChangeRapidTestDto = (e) => {
-    setErrors({ ...temp, [e.target.name]: "" });
+    const errorKey = e.target.name === "dateSampleCollected" ? "rapidDateSampleCollected" : e.target.name;
+    setErrors({ ...temp, [errorKey]: "" });
+
+    // Age at Test is auto-calculated from Date of Sample Collection, same thresholds
+    // as the PCR section's dateSampleCollected handler.
+    if (e.target.name === "dateSampleCollected" && e.target.value !== "") {
+      const deliveryDate = moment(choosenInfant.dateOfDelivery);
+      const sampleDate = moment(e.target.value);
+      const timeDiffinHrs = sampleDate.diff(deliveryDate, 'hours');
+      const timeDiffinMonth = sampleDate.diff(deliveryDate, 'months');
+      let ageAtTestVal = "";
+      if (timeDiffinHrs < 72) {
+        ageAtTestVal = "CHILD_TEST_AGE_<_72_HRS";
+      } else if (timeDiffinMonth > 12) {
+        ageAtTestVal = "CHILD_TEST_AGE_>12_MONTHS";
+      } else if (timeDiffinHrs >= 72 && timeDiffinMonth < 2) {
+        ageAtTestVal = "CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS";
+      } else if (timeDiffinMonth >= 2 && timeDiffinMonth <= 12) {
+        ageAtTestVal = "CHILD_TEST_AGE_2-12_MONTHS";
+      }
+      setInfantRapidTestDTO({
+        ...infantRapidTestDTO,
+        [e.target.name]: e.target.value,
+        ageAtTest: ageAtTestVal,
+      });
+      return;
+    }
+
     setInfantRapidTestDTO({
       ...infantRapidTestDTO,
       [e.target.name]: e.target.value,
@@ -1317,7 +1348,7 @@ const ClinicVisit = (props) => {
       : "This field is required";
       if (!arvFilledAtRegistration) {
         infantVisitRequestDto.ctxStatus === "YES" &&   (temp.dateOfCtx =  infantArvDto.dateOfCtx? "" : "This field is required");
-        infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" &&
+        infantArvDto.infantArvType !== "TYPE_PROPHYLAXIS_NONE" &&
           infantArvDto.infantArvType &&
           infantArvDto.infantArvType !==
             "" && (
@@ -1333,6 +1364,11 @@ const ClinicVisit = (props) => {
 
    infantPCRTestDto.testType !== "" && ( temp.dateSampleCollected =infantPCRTestDto.dateSampleCollected ? "" : "This field is required");
     infantPCRTestDto.testType !== "" && ( temp.dateSampleSent =infantPCRTestDto.dateSampleSent ? "" : "This field is required");
+
+    // Rapid Antibody Test's own Date of Sample Collection — uses a distinct error
+    // key (not "dateSampleCollected") since that key is already owned by the PCR
+    // section above and both sections render at the same time.
+    infantRapidTestDTO.rapidTestType !== "" && ( temp.rapidDateSampleCollected = infantRapidTestDTO.dateSampleCollected ? "" : "This field is required");
 
     // Validate ART fields when outcome is HIV-Positive (Linked to ART)
     if (formFilter.outCome === true && infantVisitRequestDto.infantOutcomeAt18Months && infantVisitRequestDto.infantOutcomeAt18Months.includes("HIV-POSITIVE_LINKED")) {
@@ -1840,7 +1876,8 @@ const ClinicVisit = (props) => {
                   )}
                 </FormGroup>
               </div> */}
-              <div className="form-group mb-3 col-md-6">
+              {/* uncomment after when you are done  */}
+              {/* <div className="form-group mb-3 col-md-6">
                 <FormGroup>
                   <FormLabelName>Visit Status</FormLabelName>
                   <InputGroup>
@@ -1867,7 +1904,7 @@ const ClinicVisit = (props) => {
                     ""
                   )}
                 </FormGroup>
-              </div>
+              </div> */}
               {formFilter && formFilter.outCome === true && (
                 <div className="form-group mb-3 col-md-6">
                   <FormGroup>
@@ -2293,13 +2330,13 @@ const ClinicVisit = (props) => {
                       {(infantArv.find(a => a.code === registrationArvData.infantArvType) || {}).display || registrationArvData.infantArvType || "---"}
                     </div>
                   </div>
-                  {registrationArvData.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)" && (
+                  {registrationArvData.infantArvType === "TYPE_PROPHYLAXIS_OTHER_(SPECIFY)" && (
                     <div className="col-md-3 mb-2">
                       <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Other Prophylaxis Type</span>
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{registrationArvData.otherProphylaxisType || "---"}</div>
                     </div>
                   )}
-                  {registrationArvData.infantArvType && registrationArvData.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE" && (
+                  {registrationArvData.infantArvType && registrationArvData.infantArvType !== "TYPE_PROPHYLAXIS_NONE" && (
                     <div className="col-md-3 mb-2">
                       <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Date of ARV Prophylaxis</span>
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
@@ -2460,7 +2497,7 @@ const ClinicVisit = (props) => {
                   </FormGroup>
                 </div>
 
-                {infantArvDto.infantArvType === "INFANT_ARV_PROPHYLAXIS_TYPE_OTHER_(SPECIFY)"&& ( <div className="form-group mb-3 col-md-4">
+                {infantArvDto.infantArvType === "TYPE_PROPHYLAXIS_OTHER_(SPECIFY)"&& ( <div className="form-group mb-3 col-md-4">
                 <FormGroup>
                   <FormLabelName>
                     Other Infant ARV Prophylaxis Type
@@ -2478,7 +2515,7 @@ const ClinicVisit = (props) => {
                   </InputGroup>
                 </FormGroup>
               </div>)}
-                { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "INFANT_ARV_PROPHYLAXIS_TYPE_NONE"  &&<div className=" mb-3 col-md-4">
+                { infantArvDto.infantArvType &&  infantArvDto.infantArvType !== "TYPE_PROPHYLAXIS_NONE"  &&<div className=" mb-3 col-md-4">
                     <FormGroup>
                       <FormLabelName>Date of ARV Prophylaxis</FormLabelName>
                       <InputGroup>
@@ -2832,35 +2869,6 @@ const ClinicVisit = (props) => {
 
               <div className=" mb-3 col-md-6">
                 <FormGroup>
-                  <FormLabelName>Age at Test</FormLabelName>
-                  <InputGroup>
-                  <Input
-                    type="select"
-                    name="ageAtTest"
-                    id="ageAtTest"
-                    value={infantPCRTestDto.ageAtTest}
-                    onChange={handleInputChangeInfantPCRTestDto}
-                    disabled={true}
-                  >
-                    <option value="select">Select </option>
-                    <option value="CHILD_TEST_AGE_<_72_HRS">&lt;72 hrs</option>
-                    <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">&gt;72 hrs - &lt; 2 months</option>
-                    <option value="CHILD_TEST_AGE_2-12_MONTHS">2-12 months</option>
-                    <option value="CHILD_TEST_AGE_>12_MONTHS">&gt;12 months</option>
-                  </Input>
-                  </InputGroup>
-                  <small style={{ color: "#667", display: "block", marginTop: "4px" }}>
-                    Auto-calculated from the date of delivery and sample collection date
-                  </small>
-                  {errors.ageAtTest !== "" ? (
-                    <span className={classes.error}>{errors.ageAtTest}</span>
-                  ) : (
-                    ""
-                  )}
-                </FormGroup>
-              </div>
-              <div className=" mb-3 col-md-6">
-                <FormGroup>
                   <FormLabelName>Date sample collected</FormLabelName>
                   <InputGroup>
                   <Input
@@ -2883,6 +2891,35 @@ const ClinicVisit = (props) => {
                     <span className={classes.error}>
                       {errors.dateSampleCollected}
                     </span>
+                  ) : (
+                    ""
+                  )}
+                </FormGroup>
+              </div>
+              <div className=" mb-3 col-md-6">
+                <FormGroup>
+                  <FormLabelName>Age at Test</FormLabelName>
+                  <InputGroup>
+                  <Input
+                    type="select"
+                    name="ageAtTest"
+                    id="ageAtTest"
+                    value={infantPCRTestDto.ageAtTest}
+                    onChange={handleInputChangeInfantPCRTestDto}
+                    disabled={true}
+                  >
+                    <option value="select">Select </option>
+                    <option value="CHILD_TEST_AGE_<_72_HRS">&lt;72 hrs</option>
+                    <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">&gt;72 hrs - &lt; 2 months</option>
+                    <option value="CHILD_TEST_AGE_2-12_MONTHS">2-12 months</option>
+                    <option value="CHILD_TEST_AGE_>12_MONTHS">&gt;12 months</option>
+                  </Input>
+                  </InputGroup>
+                  <small style={{ color: "#667", display: "block", marginTop: "4px" }}>
+                    Auto-calculated from the date of delivery and sample collection date
+                  </small>
+                  {errors.ageAtTest !== "" ? (
+                    <span className={classes.error}>{errors.ageAtTest}</span>
                   ) : (
                     ""
                   )}
@@ -3056,6 +3093,31 @@ const ClinicVisit = (props) => {
 
                   <div className=" mb-3 col-md-6">
                     <FormGroup>
+                      <FormLabelName>Date of Sample Collection</FormLabelName>
+                      <InputGroup>
+                      <Input
+                        type="date"                       onKeyPress={(e)=>{e.preventDefault()}}
+                        name="dateSampleCollected"
+                        id="dateSampleCollected"
+                        value={infantRapidTestDTO.dateSampleCollected}
+                        onChange={handleInputChangeRapidTestDto}
+
+                        min={choosenInfant.dateOfDelivery}
+                        max={moment(new Date()).format("YYYY-MM-DD")}
+                        disabled={disabledField? disabledField: disableRapidField}
+                      />
+                      </InputGroup>
+                      {errors.rapidDateSampleCollected !== "" ? (
+                        <span className={classes.error}>
+                          {errors.rapidDateSampleCollected}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </div>
+                  <div className=" mb-3 col-md-6">
+                    <FormGroup>
                       <FormLabelName>Age at Test(months)</FormLabelName>
                       <InputGroup>
                       <Input
@@ -3064,16 +3126,13 @@ const ClinicVisit = (props) => {
                         id="ageAtTest"
                         value={infantRapidTestDTO.ageAtTest}
                         onChange={handleInputChangeRapidTestDto}
-
-                        disabled={disabledField? disabledField: disableRapidField}
+                        disabled={true}
                       >
                         <option value="select">Select </option>
-                        {ageAtTestList.length > 0 &&
-                          ageAtTestList.map((value) => (
-                            <option key={value.id} value={value.code}>
-                              {value.display}
-                            </option>
-                          ))}
+                        <option value="CHILD_TEST_AGE_<_72_HRS">&lt;72 hrs</option>
+                        <option value="CHILD_TEST_AGE_>72_HRS_-_<_2_MONTHS">&gt;72 hrs - &lt; 2 months</option>
+                        <option value="CHILD_TEST_AGE_2-12_MONTHS">2-12 months</option>
+                        <option value="CHILD_TEST_AGE_>12_MONTHS">&gt;12 months</option>
                       </Input>
                       </InputGroup>
                       <small style={{ color: "#667", display: "block", marginTop: "4px" }}>
@@ -3099,14 +3158,14 @@ const ClinicVisit = (props) => {
                         value={infantRapidTestDTO.dateOfTest}
                         onChange={handleInputChangeRapidTestDto}
 
-                        min={choosenInfant.dateOfDelivery}
+                        min={infantRapidTestDTO.dateSampleCollected || choosenInfant.dateOfDelivery}
                         max={moment(new Date()).format("YYYY-MM-DD")}
                         disabled={disabledField? disabledField: disableRapidField}
                       />
                       </InputGroup>
-                      {errors.dateSampleCollected !== "" ? (
+                      {errors.dateOfTest !== "" ? (
                         <span className={classes.error}>
-                          {errors.dateSampleCollected}
+                          {errors.dateOfTest}
                         </span>
                       ) : (
                         ""

@@ -861,56 +861,54 @@ public class ANCService {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(ancEnrollementRequestDto.getPatient_uuid(), user.getCurrentOrganisationUnitId(), 0);
-        Person person = new Person();
+        if (!persons.isPresent()) {
+            throw new EntityNotFoundException(Person.class, "uuid", ancEnrollementRequestDto.getPatient_uuid());
+        }
+        Person person = persons.get();
         ANC anc;
-        if (persons.isPresent()) {
-            person = persons.get();
 
-            // Check for existing ANC to prevent duplicates
-            Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
-                    person.getUuid(), ancEnrollementRequestDto.getPmtctCycleUuid(),false);
+        // Check for existing ANC to prevent duplicates
+        Optional<ANC> existingAnc = this.ancRepository.findANCByPatientUuidAndCycleIdAndArchived(
+                person.getUuid(), ancEnrollementRequestDto.getPmtctCycleUuid(),false);
 
-            if (existingAnc.isPresent()) {
-                anc = existingAnc.get();
-                anc.setLastModifiedBy(user.getUserName());
-                anc.setLastModifiedDate(LocalDateTime.now());
-            } else {
-                anc = new ANC();
-                anc.setCreatedBy(user.getUserName());
-                anc.setLastModifiedBy(user.getUserName());
-                anc.setCreatedDate(LocalDateTime.now());
-                anc.setLastModifiedDate(LocalDateTime.now());
-                anc.setUuid(UUID.randomUUID().toString());
-                anc.setPatientUuid(person.getUuid());
-                anc.setArchived(false);
-                anc.setFacilityId(person.getFacilityId());
-                anc.setStatus("NV");
-                anc.setSource(ancEnrollementRequestDto.getSource());
-            }
-
-            anc.setAncNo(ancEnrollementRequestDto.getAncNo());
-            anc.setDateOfEnrollment(ancEnrollementRequestDto.getDateOfEnrollment());
-            anc.setGravida(ancEnrollementRequestDto.getGravida());
-            anc.setParity(ancEnrollementRequestDto.getParity());
-            anc.setLMP(ancEnrollementRequestDto.getLMP());
-            anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
-            anc.setAncAttendance(ancEnrollementRequestDto.getAncAttendance());
-            anc.setReferredFromSpokesSite(ancEnrollementRequestDto.getReferredFromSpokesSite());
-            anc.setPmtctCycleUuid(ancEnrollementRequestDto.getPmtctCycleUuid());
-            anc.setVitalSigns(ancEnrollementRequestDto.getVitalSigns());
-            anc.setCounselling(ancEnrollementRequestDto.getCounselling());
-            anc.setSyphilisInfo(ancEnrollementRequestDto.getSyphilisInfo());
-            anc.setHepatitisBInfo(ancEnrollementRequestDto.getHepatitisBInfo());
-            anc.setHepatitisCInfo(ancEnrollementRequestDto.getHepatitisCInfo());
-            anc.setUrinalysis(ancEnrollementRequestDto.getUrinalysis());
-            anc.setLabTest(ancEnrollementRequestDto.getLabTest());
-            anc.setInterventions(ancEnrollementRequestDto.getInterventions());
-            anc.setOutcomeOfVisit(ancEnrollementRequestDto.getOutcomeOfVisit());
-            anc.setReferralReason(ancEnrollementRequestDto.getReferralReason());
-            anc.setTransportationOut(ancEnrollementRequestDto.getTransportationOut());
+        if (existingAnc.isPresent()) {
+            anc = existingAnc.get();
+            anc.setLastModifiedBy(user.getUserName());
+            anc.setLastModifiedDate(LocalDateTime.now());
         } else {
             anc = new ANC();
+            anc.setCreatedBy(user.getUserName());
+            anc.setLastModifiedBy(user.getUserName());
+            anc.setCreatedDate(LocalDateTime.now());
+            anc.setLastModifiedDate(LocalDateTime.now());
+            anc.setUuid(UUID.randomUUID().toString());
+            anc.setPatientUuid(person.getUuid());
+            anc.setArchived(false);
+            anc.setFacilityId(person.getFacilityId());
+            anc.setStatus("NV");
+            anc.setSource(ancEnrollementRequestDto.getSource());
         }
+
+        anc.setAncNo(ancEnrollementRequestDto.getAncNo());
+        anc.setDateOfEnrollment(ancEnrollementRequestDto.getDateOfEnrollment());
+        anc.setGravida(ancEnrollementRequestDto.getGravida());
+        anc.setParity(ancEnrollementRequestDto.getParity());
+        anc.setLMP(ancEnrollementRequestDto.getLMP());
+        anc.setGAWeeks(ancEnrollementRequestDto.getGAWeeks());
+        anc.setAncAttendance(ancEnrollementRequestDto.getAncAttendance());
+        anc.setReferredFromSpokesSite(ancEnrollementRequestDto.getReferredFromSpokesSite());
+        anc.setPmtctCycleUuid(ancEnrollementRequestDto.getPmtctCycleUuid());
+        anc.setVitalSigns(ancEnrollementRequestDto.getVitalSigns());
+        anc.setCounselling(ancEnrollementRequestDto.getCounselling());
+        anc.setSyphilisInfo(ancEnrollementRequestDto.getSyphilisInfo());
+        anc.setHepatitisBInfo(ancEnrollementRequestDto.getHepatitisBInfo());
+        anc.setHepatitisCInfo(ancEnrollementRequestDto.getHepatitisCInfo());
+        anc.setUrinalysis(ancEnrollementRequestDto.getUrinalysis());
+        anc.setLabTest(ancEnrollementRequestDto.getLabTest());
+        anc.setInterventions(ancEnrollementRequestDto.getInterventions());
+        anc.setOutcomeOfVisit(ancEnrollementRequestDto.getOutcomeOfVisit());
+        anc.setReferralReason(ancEnrollementRequestDto.getReferralReason());
+        anc.setTransportationOut(ancEnrollementRequestDto.getTransportationOut());
 
         ANC savedAnc = ancRepository.save(anc);
 
@@ -1618,9 +1616,15 @@ public class ANCService {
             highRiskReasons.add("Rupture of Membrane < 4 hours before delivery");
         }
 
-        // NVP + AZT selected as ARV prophylaxis for infant
+        // NVP + AZT selected as ARV prophylaxis for infant.
+        // Infant ARV Prophylaxis moved from codeset INFANT_ARV_PROPHYLAXIS_TYPE to
+        // TYPE_PROPHYLAXIS — check both codes so this still matches records saved
+        // under either codeset.
         String nvpAndAZT = pmtctEnrollmentRepository.getNVPandAZT(patientUuid, pmtctCycleUuid);
-        if (nvpAndAZT != null && "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)) {
+        if (nvpAndAZT != null && (
+                "INFANT_ARV_PROPHYLAXIS_TYPE_NVP_+_AZT_".equals(nvpAndAZT)
+                        || "TYPE_PROPHYLAXIS_NVP_+_AZT_(DUAL)".equals(nvpAndAZT)
+        )) {
             highRiskReasons.add("NVP+AZT selected as ARV prophylaxis");
         }
 

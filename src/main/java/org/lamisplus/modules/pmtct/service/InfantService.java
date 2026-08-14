@@ -411,6 +411,17 @@ public class InfantService {
                 personRepository.save(infantPerson);
             }
         }
+
+        // Also archive this infant's follow-up visits. Hospital numbers can be reused
+        // for a newly-registered infant after this delete, and getLatestPCR/getLatestRapidTest
+        // look visits up by hospital number string — leaving these live would attribute this
+        // (now-deleted) infant's PCR/rapid-test history to whichever infant reuses the number.
+        if (exist.getInfantHospitalNumber() != null && !exist.getInfantHospitalNumber().isEmpty()) {
+            List<InfantVisit> visits = infantVisitRepository
+                    .getInfantVisitsByInfantHospitalNumberOrdered(exist.getInfantHospitalNumber());
+            visits.forEach(visit -> visit.setArchived(true));
+            infantVisitRepository.saveAll(visits);
+        }
     }
 
 
@@ -445,8 +456,9 @@ public class InfantService {
                 return visit.getInfantPcrData();
             }
         }
-        // 2. Fallback: Infant registration JSONB
-        Optional<Infant> infant = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+        // 2. Fallback: Infant registration JSONB — archived-aware so a deleted infant's
+        // data can't leak into a new infant that reuses the same hospital number.
+        Optional<Infant> infant = infantRepository.getInfantByInfantHospitalNumberAndArchived(infantHospitalNumber, false);
         if (infant.isPresent()
                 && infant.get().getInfantPcrData() != null
                 && infant.get().getInfantPcrData().getTestType() != null

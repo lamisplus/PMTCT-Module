@@ -513,10 +513,10 @@ const AncPnc = (props) => {
       if (response.data && response.data.parity != null) {
         setParityFromAnc(response.data.parity);
       }
-      // Auto-populate LMP from ANC record only for ANC entry and when LMP is empty
-      const entryPoint = locationState?.entrypointValue || props.entrypointValue || enroll.entryPoint;
-      const isAncEntry = entryPoint === "PMTCT_ENTRY_POINT_ANC";
-      if (isAncEntry && response.data && response.data.lmp) {
+      // Auto-populate LMP from the patient's ANC record whenever one exists and LMP is
+      // still empty — regardless of which grid (ANC or PMTCT HTS) the MIP card was opened
+      // from, since the ANC record itself is what carries the LMP, not the entry point.
+      if (response.data && response.data.lmp) {
         setEnrollDto((prev) => prev.lmp ? prev : { ...prev, lmp: response.data.lmp });
       }
     } catch (error) {
@@ -618,7 +618,14 @@ const AncPnc = (props) => {
     GET_CODESETS();
     checkTimingOfART(0);
     AdultRegimenLine();
-    if (props?.patientObj.id) {
+    // Auto-populate ART Start Date / Regimen only when creating a new record — must not
+    // overwrite what was actually saved when viewing or editing an existing enrollment.
+    // (Previously also required patientObj.id to be truthy, but that field means different
+    // things depending on which grid the patient was opened from — person.personId for the
+    // ANC grid, but the HTS test record's own id for the PMTCT HTS grid, set only when an
+    // hts_encounter proxy happens to be found — so this silently skipped autopopulation for
+    // patients entering via the PMTCT HTS grid. patientUuid is checked instead, below.)
+    if (!props.activeContent?.id || props.activeContent?.actionType === "create") {
       getARTStartDate();
       // getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
     }
@@ -674,13 +681,18 @@ const AncPnc = (props) => {
       });
     }
     // Fetch parity for gravida validation (both create and edit modes)
-    if (patientUuid && props?.latestPmtctCycle?.uuid) {
-      fetchParityFromAnc(patientUuid, props.latestPmtctCycle.uuid);
+    // Falls back through selectedCycleId / patientObj.pmtctCycleUuid, same as elsewhere in
+    // this file — props.latestPmtctCycle alone isn't reliably populated when the MIP card is
+    // opened from the PMTCT HTS grid, which silently skipped this fetch (and LMP autopopulation).
+    const displayCycleUuid =
+      props.latestPmtctCycle?.uuid || props.selectedCycleId || props.patientObj?.pmtctCycleUuid;
+    if (patientUuid && displayCycleUuid) {
+      fetchParityFromAnc(patientUuid, displayCycleUuid);
     }
     // Fetch HIV result and ANC number for display (all modes)
-    if (patientUuid && props?.latestPmtctCycle?.uuid) {
+    if (patientUuid && displayCycleUuid) {
       axios.get(
-        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${props.latestPmtctCycle.uuid}`,
+        `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${displayCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       ).then((res) => {
         if (res.data?.finalResult) setHtsHivResult(res.data.finalResult);

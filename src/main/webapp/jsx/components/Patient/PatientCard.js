@@ -254,7 +254,33 @@ function PatientCard(props) {
     getEntryPointDisplay();
     getCycleAncNo();
     fetchEnrollmentSerologyResults();
+    checkAcuteInfectionStatus();
   }, [props.activeContent, props.latestPmtctCycle?.uuid, props.htsSavedTick]);
+
+  // LV3-1732: on each page load, ask the backend whether this client has a suspected-acute
+  // HTS/PMTCT record that just crossed the VL >= 1000 threshold. The backend is idempotent —
+  // updated only comes back true the one time it actually flips the status — so this only
+  // toasts once, even though it's checked on every visit to this card. fromHtsModule tells the
+  // PMTCT user the suspected-acute record wasn't entered here, so they're not left wondering
+  // why they don't remember documenting it.
+  const checkAcuteInfectionStatus = () => {
+    if (!patientUuid) return;
+    axios
+      .get(`${baseUrl}pmtct/anc/check-acute-infection-status/${patientUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const result = response.data;
+        if (result && result.updated) {
+          const origin = result.fromHtsModule ? " (originally documented on the HTS module)" : "";
+          toast.warning(
+            `Client's status was automatically updated to Acute HIV Infection based on a Viral Load result of ${Number(result.triggerVl).toLocaleString()} copies/mL${origin}.`,
+            { position: toast.POSITION.TOP_CENTER, autoClose: 8000 }
+          );
+        }
+      })
+      .catch(() => {});
+  };
 
   // Fetch syphilis & hepatitis results from PMTCT enrollment (MIP card) as fallback
   const fetchEnrollmentSerologyResults = async () => {

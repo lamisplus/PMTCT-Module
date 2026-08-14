@@ -25,6 +25,12 @@ public interface InfantRepository extends CommonJpaRepository<Infant, String> {
 
     Optional<Infant> getInfantByInfantHospitalNumber(String infantHospitalNumber);
 
+    // Archived-aware variant — hospital numbers can be reused for a new infant after a
+    // soft delete, so unscoped lookups risk matching the deleted infant (or throwing on
+    // more than one match once the number is reused). Used where a stale/deleted infant's
+    // data must not leak into the currently-active infant with the same hospital number.
+    Optional<Infant> getInfantByInfantHospitalNumberAndArchived(String infantHospitalNumber, Boolean archived);
+
     @Query(
             value = "SELECT * FROM pmtct_infant_information pi WHERE pi.facility_id=?1 AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pi.date_of_delivery) < 10 ) ORDER BY pi.id desc",
             nativeQuery = true

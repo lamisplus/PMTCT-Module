@@ -453,8 +453,110 @@
 
     </changeSet>
 
+    <changeSet failOnError="false" author="pmtct-sprint-2026-07-29" id="20260729-002">
+        <comment>
+            The Labour &amp; Delivery form's Maternal Outcome field now only offers Alive/Dead
+            going forward (other options removed from the dropdown, historical data untouched
+            until now). Existing records saved with any of the other outcome codes
+            (Transferred out, Lost to follow-up, Transferred to another PMTCT cohort,
+            Transitioned to ART clinic, Active in PMTCT) are normalized to Alive here so they
+            render correctly in the now-restricted dropdown. Records already Alive or Dead, and
+            records with no outcome recorded, are left untouched.
+        </comment>
+        <sql>
+            UPDATE pmtct_delivery
+            SET maternal_outcome = 'MATERNAL_OUTCOME_ALIVE'
+            WHERE maternal_outcome IS NOT NULL
+              AND maternal_outcome != ''
+              AND maternal_outcome != 'MATERNAL_OUTCOME_ALIVE'
+              AND maternal_outcome != 'MATERNAL_OUTCOME_DEAD';
+        </sql>
+    </changeSet>
 
+    <changeSet failOnError="false" author="pmtct-sprint-2026-08-04" id="20260804-001">
+        <comment>
+            The PMTCT HTS form's Confirmatory HIV Test Result field moved from plain
+            Positive/Negative to the HIV_CONFIRMATORY_TEST_RESULT codeset (matching the HTS
+            module: HIV_CONFIRMATORY_TEST_RESULT_POSITIVE / _NEGATIVE). Application code was
+            updated to tolerate both formats on read, but several raw SQL fallback queries in
+            HtsEncounterProxyRepository (COALESCE straight to observation-&gt;&gt;'confirmatoryHivTest')
+            run entirely in the database and cannot apply that normalization — this backfills
+            existing hts_encounter.observation JSON so 'confirmatoryHivTest' is consistently a
+            codeset code going forward. Scoped to pmtct_hts = true rows only (PMTCT-authored
+            records) — HTS-module-authored rows already use the codeset and are untouched.
+        </comment>
+        <sql>
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{confirmatoryHivTest}', to_jsonb('HIV_CONFIRMATORY_TEST_RESULT_POSITIVE'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'confirmatoryHivTest') IN ('positive', 'reactive');
 
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{confirmatoryHivTest}', to_jsonb('HIV_CONFIRMATORY_TEST_RESULT_NEGATIVE'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'confirmatoryHivTest') IN ('negative', 'non-reactive');
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="pmtct-sprint-2026-08-11" id="20260811-001">
+        <comment>
+            pmtct_hts.archived was created as bigint (0/1) instead of boolean, unlike every
+            other "archived" column in this module (pmtct_pregnancy_cycle, pmtct_anc,
+            hts_encounter — all boolean). Every native query against this column compares
+            it to a boolean literal (e.g. "archived = false"), which throws
+            "operator does not exist: integer = boolean" in Postgres — silently breaking
+            things like the "has this patient ever tested positive" checks used by the
+            Mother Infant Pair card. Converts existing 0/1 values to false/true and changes
+            the column type to boolean, matching every other table (same USING-cast pattern
+            already used for hts_encounter.pmtct_hts's jsonb-to-boolean conversion).
+        </comment>
+        <sql>
+            ALTER TABLE pmtct_hts ALTER COLUMN archived DROP DEFAULT;
+            ALTER TABLE pmtct_hts ALTER COLUMN archived TYPE boolean USING COALESCE((archived::text)::boolean, false);
+            ALTER TABLE pmtct_hts ALTER COLUMN archived SET DEFAULT false;
+            ALTER TABLE pmtct_hts ALTER COLUMN archived SET NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="pmtct-sprint-2026-08-14" id="20260814-001">
+        <comment>
+            HIV Prevention's dashboard/form auto-population reads the standard HTS module
+            "pregnancyStatus" PREGNANCY_STATUS-codeset key off the shared hts_encounter table.
+            PMTCT-HTS only ever wrote its own "pregnancyStatusAtEntry" free-text key (e.g.
+            "Breastfeeding") and never the codeset-coded "pregnancyStatus" key HIV Prevention
+            actually reads, so Pregnant/Breastfeeding HIV-negative clients from PMTCT showed
+            Pregnancy Status = Unknown there. Application code (PmtctHtsService.
+            mapPregnancyStatusToHtsCode) now writes both keys going forward; this backfills
+            existing pmtct_hts = true rows so already-saved records are fixed immediately too.
+            Codes match the live base_application_codeset PREGNANCY_STATUS rows exactly
+            (including the "PREGANACY_STATUS_..." spelling — not a typo).
+        </comment>
+        <sql>
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{pregnancyStatus}', to_jsonb('PREGANACY_STATUS_PREGNANT'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'pregnancyStatusAtEntry') = 'pregnant'
+              AND COALESCE(observation->>'pregnancyStatus', '') = '';
+
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{pregnancyStatus}', to_jsonb('PREGANACY_STATUS_BREASTFEEDING'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'pregnancyStatusAtEntry') = 'breastfeeding'
+              AND COALESCE(observation->>'pregnancyStatus', '') = '';
+
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{pregnancyStatus}', to_jsonb('PREGANACY_STATUS_POST_PARTUM'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'pregnancyStatusAtEntry') = 'post partum'
+              AND COALESCE(observation->>'pregnancyStatus', '') = '';
+
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{pregnancyStatus}', to_jsonb('PREGANACY_STATUS_NOT_PREGNANT'::text))
+            WHERE pmtct_hts = true
+              AND lower(observation->>'pregnancyStatusAtEntry') = 'not pregnant'
+              AND COALESCE(observation->>'pregnancyStatus', '') = '';
+        </sql>
+    </changeSet>
 
 
 </databaseChangeLog>

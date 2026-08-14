@@ -23,6 +23,7 @@ import org.lamisplus.modules.pmtct.repository.PmtctHtsRepository;
 import org.lamisplus.modules.pmtct.repository.PMTCTEnrollmentReporsitory;
 import org.lamisplus.modules.pmtct.repository.HtsEncounterProxyRepository;
 import org.lamisplus.modules.pmtct.repository.PmtctPregnancyCycleRepository;
+import org.lamisplus.modules.pmtct.repository.PmtctVisitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,12 @@ public class PmtctHtsService {
     private final PmtctPregnancyCycleRepository pmtctPregnancyCycleRepository;
     private final ANCRepository ancRepository;
     private final HtsEncounterProxyRepository htsEncounterProxyRepository;
+    private final PmtctVisitRepository pmtctVisitRepository;
     private final ObjectMapper objectMapper;
+
+    // LV3-1732: any documented VL result at or above this threshold, on a client with a
+    // suspected-acute-infection HTS/PMTCT record, confirms Acute HIV Infection.
+    private static final long ACUTE_INFECTION_VL_THRESHOLD = 1000L;
 
 
     public PmtctHtsReponseDTO save(PmtctHtsRequestDTO pmtctHtsRequestDTO) {
@@ -67,6 +73,44 @@ public class PmtctHtsService {
         }
         Long facilityId = currentUser.get().getCurrentOrganisationUnitId();
         return pmtctHtsRepository.countActiveMigratableRecords(facilityId);
+    }
+
+    /**
+     * LV3-1732: if this patient has a suspected-acute-infection HTS/PMTCT record (from either
+     * module — hts_encounter is shared) that hasn't been resolved yet, and their latest viral
+     * load is >= 1000 copies/mL, promote that record to a confirmed Acute HIV Infection /
+     * HIV-Positive result. Idempotent (the "already flagged" check in the repository query
+     * means re-running this for the same patient after it has fired is a no-op), so it's safe
+     * to call on every page load as well as from a dedicated endpoint.
+     */
+    public AcuteInfectionStatusDto checkAndApplyAcuteInfectionStatus(String patientUuid) {
+        List<HtsEncounterProxy> candidates = htsEncounterProxyRepository
+                .findUnflaggedSuspectedAcuteInfectionRecords(patientUuid);
+        if (candidates.isEmpty()) {
+            return AcuteInfectionStatusDto.noUpdate();
+        }
+
+        Optional<Long> latestVl = pmtctVisitRepository.findLatestViralLoadResult(patientUuid);
+        if (!latestVl.isPresent() || latestVl.get() < ACUTE_INFECTION_VL_THRESHOLD) {
+            return AcuteInfectionStatusDto.noUpdate();
+        }
+
+        // Most recent unresolved suspected-acute record is the one that gets promoted.
+        HtsEncounterProxy record = candidates.get(0);
+        ObjectNode obs = record.getObservation() instanceof ObjectNode
+                ? (ObjectNode) record.getObservation()
+                : objectMapper.createObjectNode();
+        LocalDate detectedDate = LocalDate.now();
+        obs.put("finalHivTestResult", "Positive");
+        obs.put("confirmatoryHivTest", "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE");
+        obs.put("acuteHivInfectionDetected", true);
+        obs.put("acuteHivInfectionDetectedDate", detectedDate.toString());
+        obs.put("acuteHivInfectionTriggerVl", latestVl.get());
+        record.setObservation(obs);
+        htsEncounterProxyRepository.save(record);
+
+        boolean fromHtsModule = record.getPmtctHts() == null || !record.getPmtctHts();
+        return new AcuteInfectionStatusDto(true, latestVl.get(), detectedDate, fromHtsModule);
     }
 
 
@@ -93,7 +137,10 @@ public class PmtctHtsService {
         encounter.setClientCode(dto.getClientCode() != null ? dto.getClientCode().trim() : "");
         encounter.setDateOfVisit(dto.getDateOfHivTest());
         encounter.setFacilityId(facilityId);
-        encounter.setSetting(dto.getTestSetting() != null ? dto.getTestSetting() : "");
+        // hts_encounter.setting is shared with the HTS module, which stores the broad
+        // Facility/Community/Other category here (not the testing-point subtype) —
+        // use testEntryPoint to match that; testSetting (subtype) is kept in observation.
+        encounter.setSetting(dto.getTestEntryPoint() != null ? dto.getTestEntryPoint() : "");
         encounter.setPmtctHts(true);
         encounter.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
         encounter.setArchived(false);
@@ -125,7 +172,7 @@ public class PmtctHtsService {
 
         // Update columns
         existing.setDateOfVisit(dto.getDateOfHivTest());
-        existing.setSetting(dto.getTestSetting() != null ? dto.getTestSetting() : "");
+        existing.setSetting(dto.getTestEntryPoint() != null ? dto.getTestEntryPoint() : "");
         existing.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
         existing.setObservation(buildPmtctObservation(dto));
 
@@ -189,6 +236,11 @@ public class PmtctHtsService {
 
         // PMTCT Register fields
         putIfNotEmpty(obs, "pregnancyStatusAtEntry", dto.getPregnancyStatusAtEntry());
+        // HIV Prevention reads the standard HTS "pregnancyStatus" codeset key off the shared
+        // hts_encounter table for dashboard display and form auto-population — it doesn't know
+        // about PMTCT's own pregnancyStatusAtEntry key. Without this, PMTCT-originated HTS
+        // records show Pregnancy Status = Unknown there even when it was actually captured.
+        putIfNotEmpty(obs, "pregnancyStatus", mapPregnancyStatusToHtsCode(dto.getPregnancyStatusAtEntry()));
         putIfNotEmpty(obs, "previouslyKnownHivPositive", dto.getPreviouslyKnownHivPositive());
         putIfNotEmpty(obs, "enrolledOnArt", dto.getEnrolledOnArt());
         // Keys conform to the HTS module's naming (typeOfHivTestDone, hivEarlyDetectResult)
@@ -196,6 +248,12 @@ public class PmtctHtsService {
         putIfNotEmpty(obs, "typeOfHivTestDone", dto.getTypeOfHivTest());
         putIfNotEmpty(obs, "hivEarlyDetectResult", dto.getHivEarlyDetect());
         putIfNotEmpty(obs, "hivEarlyDetectViralLoad", dto.getHivEarlyDetectViralLoad());
+        // Mirrors the "Suspected Acute HIV Infection" banner the PMTCT HTS form already shows
+        // for these two Early Detect results (PmtctHtsForm.js). The HIV module's cross-module
+        // eligibility queries read this key off the shared hts_encounter table for both HTS-
+        // and PMTCT-authored rows, so it must be written here using the HTS module's own
+        // YES_NO codeset values or PMTCT clients are invisible to that logic.
+        putIfNotEmpty(obs, "suspectedAcuteInfection", isSuspectedAcuteInfection(dto.getHivEarlyDetect()) ? "YES_NO_YES" : "YES_NO_NO");
         putIfNotEmpty(obs, "confirmatoryFromSpokes", dto.getConfirmatoryFromSpokes());
         putIfNotEmpty(obs, "initiatedOnProphylaxis", dto.getInitiatedOnProphylaxis());
         putIfNotEmpty(obs, "tbReferred", dto.getTbReferred());
@@ -207,6 +265,22 @@ public class PmtctHtsService {
 
     private void putIfNotEmpty(ObjectNode node, String key, String value) {
         node.put(key, value != null ? value : "");
+    }
+
+    // Maps PMTCT's free-text pregnancyStatusAtEntry ("Pregnant", "Breastfeeding", etc.) onto
+    // the standard PREGNANCY_STATUS codeset codes the HTS module writes, so HIV Prevention's
+    // hts_encounter queries resolve the same way for PMTCT-originated records. Codes below
+    // (including the "PREGANACY_STATUS_..." spelling) come directly from the live
+    // base_application_codeset rows — not a typo, matches what's actually in the DB.
+    private String mapPregnancyStatusToHtsCode(String pregnancyStatusAtEntry) {
+        if (pregnancyStatusAtEntry == null) return null;
+        switch (pregnancyStatusAtEntry.trim().toLowerCase()) {
+            case "pregnant": return "PREGANACY_STATUS_PREGNANT";
+            case "breastfeeding": return "PREGANACY_STATUS_BREASTFEEDING";
+            case "post partum": return "PREGANACY_STATUS_POST_PARTUM";
+            case "not pregnant": return "PREGANACY_STATUS_NOT_PREGNANT";
+            default: return null;
+        }
     }
 
     private String mapToHtsSetting(String testEntryPoint) {
@@ -221,6 +295,13 @@ public class PmtctHtsService {
 
     private boolean isCommunityEntry(String testEntryPoint) {
         return testEntryPoint != null && testEntryPoint.toUpperCase().contains("COMMUNITY");
+    }
+
+    // Same condition PmtctHtsForm.js uses to show the "Suspected Acute HIV Infection" banner:
+    // Antigen-only or Antigen+Antibody Early Detect result, both Reactive.
+    private boolean isSuspectedAcuteInfection(String hivEarlyDetect) {
+        return "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE".equals(hivEarlyDetect)
+                || "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE".equals(hivEarlyDetect);
     }
 
     private PmtctHtsReponseDTO convertProxyToResponseDto(HtsEncounterProxy saved, Person person) {
@@ -365,6 +446,18 @@ public class PmtctHtsService {
         return (value != null && !value.isEmpty()) ? value : textOrNull(node, oldKey);
     }
 
+    // confirmatoryHivTest moved from plain Positive/Negative to the HIV_CONFIRMATORY_TEST_RESULT
+    // codeset. Callers that use it as a hivStatus fallback (e.g. getPatientHivSummary) expect
+    // the plain Positive/Negative contract, so normalize every prior generation of stored value
+    // (reactive/non-reactive, plain Positive/Negative, and the new codeset codes) onto that.
+    private String normalizeConfirmatoryResult(String value) {
+        if (value == null || value.isEmpty()) return value;
+        String v = value.toLowerCase();
+        if (v.equals("reactive") || v.equals("positive") || v.equals("hiv_confirmatory_test_result_positive")) return "Positive";
+        if (v.equals("non-reactive") || v.equals("negative") || v.equals("hiv_confirmatory_test_result_negative")) return "Negative";
+        return value;
+    }
+
     // ══════════════════ END HTS ENCOUNTER PROXY ══════════════════
 
     public PmtctHtsReponseDTO convertEntitytoRespondDto(PmtctHts pmtctHts) {
@@ -450,7 +543,7 @@ public class PmtctHtsService {
         pmtctHts.setHepatitisB(pmtctHtsRequestDTO.getHepatitisB());
         pmtctHts.setTestingType(pmtctHtsRequestDTO.getTestingType());
         pmtctHts.setHepatitisC(pmtctHtsRequestDTO.getHepatitisC());
-        pmtctHts.setArchived(0);
+        pmtctHts.setArchived(false);
         pmtctHts.setPatientUuid(pmtctHtsRequestDTO.getPatientUuid());
         pmtctHts.setRetesting(pmtctHtsRequestDTO.getRetesting());
         pmtctHts.setTieBreaker(pmtctHtsRequestDTO.getTieBreaker());
@@ -568,7 +661,7 @@ public class PmtctHtsService {
             // UUID ID → legacy pmtct_hts table (pre-migration records)
             PmtctHts legacyRecord = this.pmtctHtsRepository.findById(id)
                     .orElseThrow(() -> new Exception("RECORD NOT FOUND"));
-            legacyRecord.setArchived(1);
+            legacyRecord.setArchived(true);
             pmtctHtsRepository.save(legacyRecord);
         }
     }
@@ -640,7 +733,7 @@ public class PmtctHtsService {
                 // HIV status: prefer finalHivTestResult, fallback to confirmatoryHivTest
                 String finalResult = textOrNull(obs, "finalHivTestResult");
                 if (finalResult == null || finalResult.isEmpty()) {
-                    finalResult = textOrNull(obs, "confirmatoryHivTest");
+                    finalResult = normalizeConfirmatoryResult(textOrNull(obs, "confirmatoryHivTest"));
                 }
                 hivStatus = finalResult;
 

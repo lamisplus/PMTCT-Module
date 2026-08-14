@@ -1191,11 +1191,16 @@ const LabourDelivery = (props) => {
                             disabled={disabledField}
                           >
                             <option value="">Select</option>
-                            {maternalOutCome.map((value) => (
-                              <option key={value.id} value={value.code}>
-                                {value.display}
-                              </option>
-                            ))}
+                            {maternalOutCome
+                              .filter((value) =>
+                                value.code === "MATERNAL_OUTCOME_ALIVE" ||
+                                value.code === "MATERNAL_OUTCOME_DEAD"
+                              )
+                              .map((value) => (
+                                <option key={value.id} value={value.code}>
+                                  {value.display}
+                                </option>
+                              ))}
                           </Input>
                         </InputGroup>
                         {errors.maternalOutcome !== "" ? (

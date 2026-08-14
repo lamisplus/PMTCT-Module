@@ -15,6 +15,7 @@ public class InfantRapidAntiBodyTestDto implements Serializable  {
     private String rapidTestType;
     private String ancNumber;
     private String ageAtTest;
+    private LocalDate dateSampleCollected;
     private LocalDate dateOfTest;
     private String result;
     private String  uniqueUuid;

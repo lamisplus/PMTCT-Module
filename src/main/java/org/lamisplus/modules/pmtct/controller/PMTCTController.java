@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -54,7 +55,7 @@ public class PMTCTController {
     public ResponseEntity<?> ANCEnrollement(@RequestBody ANCEnrollementRequestDto ancEnrollementRequestDto) {
         if (ancEnrollementRequestDto.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
+                    .body(Collections.singletonMap("message", "pmtct cycle uuid is required"));
         }
         return ResponseEntity.ok(ancService.ANCEnrollement(ancEnrollementRequestDto));
     }
@@ -153,7 +154,7 @@ public class PMTCTController {
             return ResponseEntity.ok(this.pmtctEnrollmentService.save(pmtctEnrollmentRequestDto));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"" + e.getMessage() + "\"}");
+                    .body(Collections.singletonMap("message", e.getMessage()));
         }
     }
 
@@ -286,7 +287,7 @@ public class PMTCTController {
             return ResponseEntity.ok(pmtctEnrollmentService.updatePMTCTEnrollment(id, pmtctEnrollmentRequestDto));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"" + e.getMessage() + "\"}");
+                    .body(Collections.singletonMap("message", e.getMessage()));
         }
     }
 
@@ -565,7 +566,7 @@ public class PMTCTController {
     public ResponseEntity<?> pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
         if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
+                    .body(Collections.singletonMap("message", "pmtct cycle uuid is required"));
         }
         // Prevent saving a second initial PMTCT HTS record for the same cycle
         if (pmtctHtsRequestDTO.getTestingType() != null
@@ -574,7 +575,7 @@ public class PMTCTController {
                         pmtctHtsRequestDTO.getPatientUuid(),
                         pmtctHtsRequestDTO.getPmtctCycleUuid())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"An initial PMTCT HTS record already exists for this cycle\"}");
+                    .body(Collections.singletonMap("message", "An initial PMTCT HTS record already exists for this cycle"));
         }
         return ResponseEntity.ok(this.pmtctHtsService.saveToHtsEncounter(pmtctHtsRequestDTO));
     }
@@ -618,7 +619,7 @@ public class PMTCTController {
     public ResponseEntity<?> updatePmtctHtsRecord(@PathVariable("id") String id, @RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
         if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"pmtct cycle uuid is required\"}");
+                    .body(Collections.singletonMap("message", "pmtct cycle uuid is required"));
         }
         // Route: numeric id = hts_encounter (post-migration)
         try {
@@ -628,8 +629,8 @@ public class PMTCTController {
             // UUID-based IDs indicate un-migrated legacy records in pmtct_hts.
             // After migration (pmtct-2.5.0), all records should have numeric IDs.
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"This record has a legacy UUID identifier and cannot be updated. "
-                            + "Please run the PMTCT HTS data migration (pmtct-2.5.0) to migrate records to the new format.\"}");
+                    .body(Collections.singletonMap("message", "This record has a legacy UUID identifier and cannot be updated. "
+                            + "Please run the PMTCT HTS data migration (pmtct-2.5.0) to migrate records to the new format."));
         }
     }
 
@@ -679,6 +680,15 @@ public class PMTCTController {
         return pmtctEnrollmentService.checkHEIPrompt(patientUuid, pmtctCycleUuid);
     }
 
+    // LV3-1732: checked on patient page load (and callable on demand) so a client documented
+    // elsewhere as Suspected Acute HIV Infection with a later VL >= 1000 gets their HTS status
+    // auto-promoted to Acute HIV Infection / HIV-Positive, whether the original suspected-acute
+    // record was entered via the HTS module or the PMTCT HTS form.
+    @GetMapping(value = "check-acute-infection-status/{patientUuid}")
+    public ResponseEntity<AcuteInfectionStatusDto> checkAcuteInfectionStatus(@PathVariable String patientUuid) {
+        return ResponseEntity.ok(pmtctHtsService.checkAndApplyAcuteInfectionStatus(patientUuid));
+    }
+
 
 
     @GetMapping(value = "check-if-date-exist")
@@ -703,7 +713,7 @@ public class PMTCTController {
     public ResponseEntity<?> createPregnancyCycle(@RequestBody PmtctPregnancyCycleRequestDto requestDto) {
         if (requestDto.getPatientUuid() == null || requestDto.getPatientUuid().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"patient_uuid is not provided\"}");
+                    .body(Collections.singletonMap("message", "patient_uuid is not provided"));
         }
 
         PmtctPregnancyCycleResponseDto response = pmtctPregnancyCycleService.save(requestDto);
@@ -714,14 +724,14 @@ public class PMTCTController {
     public ResponseEntity<?> getLatestPregnancyCycle(@RequestParam String patientUuid) {
         if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"patient_uuid is required\"}");
+                    .body(Collections.singletonMap("message", "patient_uuid is required"));
         }
 
         PmtctPregnancyCycleResponseDto cycle = pmtctPregnancyCycleService.getLatestCycleByPatientUuid(patientUuid);
 
         if (cycle == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"message\": \"No pregnancy cycle found for this patient\"}");
+                    .body(Collections.singletonMap("message", "No pregnancy cycle found for this patient"));
         }
 
         return ResponseEntity.ok(cycle);
@@ -731,7 +741,7 @@ public class PMTCTController {
     public ResponseEntity<?> getAllPregnancyCycles(@RequestParam String patientUuid) {
         if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"patient_uuid is required\"}");
+                    .body(Collections.singletonMap("message", "patient_uuid is required"));
         }
 
         List<PmtctPregnancyCycleResponseDto> cycles = pmtctPregnancyCycleService.getAllCyclesByPatientUuid(patientUuid);
@@ -763,13 +773,13 @@ public class PMTCTController {
     public ResponseEntity<?> getLatestEnrollmentByPatientUuid(@RequestParam String patientUuid) {
         if (patientUuid == null || patientUuid.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"message\": \"patient_uuid is required\"}");
+                    .body(Collections.singletonMap("message", "patient_uuid is required"));
         }
 
         PMTCTEnrollmentRespondDto enrollment = pmtctEnrollmentService.getSinglePmtctEnrollmentByPatientUuid(patientUuid);
         if (enrollment == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"message\": \"No previous enrollment found\"}");
+                    .body(Collections.singletonMap("message", "No previous enrollment found"));
         }
         return ResponseEntity.ok(enrollment);
     }
