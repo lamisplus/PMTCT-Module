@@ -17,4 +17,8 @@ public class PatientHivSummaryDto {
     private String syphilisResult;
     private String hepatitisBResult;
     private String hepatitisCResult;
+    // True when hivStatus was sourced from a record documented directly via the standalone
+    // HTS module rather than this PMTCT cycle — lets the UI tell the user where it came from
+    // so they aren't left wondering where/when they entered it.
+    private boolean sourcedFromHtsModule;
 }

@@ -102,6 +102,35 @@ export const addWeeksToDate = (dateStr, weeks) => {
   return moment(dateStr).add(weeks, "weeks").format("YYYY-MM-DD");
 };
 
+// Scrolls to and focuses the topmost (first, in visual/reading order) field with a
+// validation error, so the user isn't left hunting a long form for a red error message
+// they can't see. Call with the field name/id keys that currently have an error message —
+// e.g. Object.keys(newErrors).filter((k) => newErrors[k]) — after a failed validate() on
+// submit. Re-running this on each submit attempt naturally advances to the next remaining
+// error once earlier ones are fixed, since it always picks whichever error field is
+// currently topmost on screen.
+export const scrollToFirstError = (errorFieldKeys) => {
+  if (!errorFieldKeys || errorFieldKeys.length === 0) return;
+  let target = null;
+  let minTop = Infinity;
+  errorFieldKeys.forEach((key) => {
+    const el = document.getElementById(key) || document.getElementsByName(key)[0];
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top < minTop) {
+      minTop = top;
+      target = el;
+    }
+  });
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Focus after the scroll settles rather than immediately — focusing mid-scroll can jump
+  // the viewport straight to the field (skipping the smooth animation) in some browsers.
+  setTimeout(() => {
+    if (typeof target.focus === "function") target.focus({ preventScroll: true });
+  }, 400);
+};
+
 export  const convertMaternalCodeToValue = (code) => {
   const stored = JSON.parse(localStorage.getItem("maternalOutcome"));
 

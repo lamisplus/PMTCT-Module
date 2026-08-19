@@ -77,6 +77,10 @@ function PatientCard(props) {
   const [biometricModal, setBiometricModal] = useState(false);
   const BiometricModalToggle = () => setBiometricModal(!biometricModal);
   const [hivStatus, setHivStatus] = useState('');
+  // True when the HIV status shown was documented directly via the standalone HTS module
+  // rather than through this PMTCT cycle — surfaced as a small badge so the user isn't left
+  // wondering where/when they entered it.
+  const [hivStatusFromHtsModule, setHivStatusFromHtsModule] = useState(false);
   const [infantHeiPcr, setInfantHeiPcr] = useState([]);
   const [infantHeiPcrAlert, setInfantHeiPcrAlert] = useState([]);
   const [retestStatus, setRetestStatus] = useState({
@@ -118,6 +122,7 @@ function PatientCard(props) {
       setConfirmStatus(data.hivStatus || null);
       setHasPmtctHtsRecord(data.hasHtsRecord);
       setPmtctHtsFinalStatus(data.hivStatus || null);
+      setHivStatusFromHtsModule(Boolean(data.sourcedFromHtsModule));
       if (props.setLatestHivStatus) {
         props.setLatestHivStatus(data.hivStatus || null);
       }
@@ -565,7 +570,9 @@ function PatientCard(props) {
           borderTop: "1px solid #f0f0f0",
           display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center",
         }}>
-          {/* HIV Status — always visible */}
+          {/* HIV Status — always visible. The "via HTS module" tag lives inside this same
+              chip (not a separate one) so it can never visually drift away from the status
+              it's explaining, even when the status strip wraps on narrow screens. */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "7px",
             padding: "7px 14px", borderRadius: "6px",
@@ -575,6 +582,22 @@ function PatientCard(props) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hivStatusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "500" }}>HIV</span>
             <span style={{ fontSize: "11.5px", color: hivStatusColor, fontWeight: "700" }}>{hivStatusLabel}</span>
+            {hivStatusFromHtsModule && (
+              <span
+                title="This HIV status was documented on the HTS module, not through this PMTCT cycle."
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "3px",
+                  marginLeft: "2px", padding: "2px 7px", borderRadius: "10px",
+                  background: "#dbeafe", color: "#1d4ed8",
+                  fontSize: "9.5px", fontWeight: "700",
+                  textTransform: "uppercase", letterSpacing: "0.3px",
+                  cursor: "default",
+                }}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                via HTS
+              </span>
+            )}
           </div>
 
           {/* Retesting Status — only visible when retesting record exists */}

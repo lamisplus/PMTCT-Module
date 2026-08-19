@@ -31,6 +31,7 @@ import PmtctEnrollment from "../PmtctServices/PmtctEnrollment";
 // import Form from 'react-bootstrap/Form';
 import { Modal } from "react-bootstrap";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import { scrollToFirstError } from "../../utils";
 import AncFormFields from "../PmtctServices/AncFormFields";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 import LabourDelivery from "../PmtctServices/LabourDelivery";
@@ -612,7 +613,21 @@ const UserRegistration = (props) => {
   /*****  Validation  */
   const validate = () => {
     let temp = { ...errors };
-    temp.ancNo = objValues.ancNo ? "" : "This field is required";
+    // isEmpty (not a plain falsy check) so a legitimate 0 for Parity isn't rejected.
+    const isEmpty = (v) => v === "" || v === null || v === undefined;
+    temp.ancNo = isEmpty(objValues.ancNo) ? "This field is required" : "";
+    temp.dateOfEnrollment = isEmpty(objValues.dateOfEnrollment) ? "Date of Enrollment is required" : "";
+    temp.gravida = isEmpty(objValues.gravida) ? "Gravida is required" : "";
+    temp.parity = isEmpty(objValues.parity) ? "Parity is required" : "";
+    temp.lmp = isEmpty(objValues.lmp) ? "Date of Last Menstrual Period is required" : "";
+    temp.gaweeks = isEmpty(objValues.gaweeks) ? "Gestational Age is required" : "";
+    temp.testedSyphilis = isEmpty(objValues.testedSyphilis) ? "Tested for Syphilis is required" : "";
+    temp.testedHepatitisB = isEmpty(objValues.testedHepatitisB) ? "Tested for Hepatitis B is required" : "";
+    // Conditionally-required — only shown (and only required) once their parent answer is Yes/Positive
+    temp.testResultSyphilis = objValues.testedSyphilis === "Yes" && isEmpty(objValues.testResultSyphilis)
+      ? "Syphilis Test Result is required" : "";
+    temp.treatedSyphilis = objValues.testResultSyphilis === "Positive" && isEmpty(objValues.treatedSyphilis)
+      ? "Treated for Syphilis is required" : "";
 
     // Counselling mandatory validation
     if (!objValues.counsellingHts) temp.counsellingHts = "HIV Testing Services is required";
@@ -640,7 +655,14 @@ const UserRegistration = (props) => {
     }
 
     setErrors({ ...temp });
-    return Object.values(temp).every((x) => x === "" || x === undefined);
+    const isValid = Object.values(temp).every((x) => x === "" || x === undefined);
+    if (!isValid) {
+      toast.error("Please fill all required fields and correct validation errors");
+      // Take the user straight to the topmost field with an error instead of leaving them
+      // to hunt a long form for it.
+      scrollToFirstError(Object.keys(temp).filter((key) => temp[key]));
+    }
+    return isValid;
   };
   //Handle Input Change for Basic Infor
   const handleInputChangeBasic = (e) => {

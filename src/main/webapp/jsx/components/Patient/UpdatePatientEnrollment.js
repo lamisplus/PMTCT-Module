@@ -27,6 +27,7 @@ import "react-phone-input-2/lib/style.css";
 import "./patient.css";
 import { Modal } from "react-bootstrap";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import { scrollToFirstError } from "../../utils";
 import AncFormFields from "../PmtctServices/AncFormFields";
 
 
@@ -393,12 +394,15 @@ const UserRegistration = (props) => {
   const validate = () => {
     let temp = { ...errors };
 
-    //temp.dateOfEnrollment = objValues.dateOfEnrollment ? "" : "This field is required"
+    temp.dateOfEnrollment = objValues.dateOfEnrollment ? "" : "This field is required"
     temp.gaweeks = objValues.gaweeks ? "" : "This field is required";
     temp.gravida = objValues.gravida ? "" : "This field is required";
     temp.lmp = objValues.lmp ? "" : "This field is required";
     temp.parity = objValues.parity !== "" ? "" : "This field is required";
     temp.testedSyphilis = objValues.testedSyphilis
+      ? ""
+      : "This field is required";
+    temp.testedHepatitisB = objValues.testedHepatitisB
       ? ""
       : "This field is required";
     objValues.testResultSyphilis === "Positive" &&
@@ -436,7 +440,14 @@ const UserRegistration = (props) => {
     }
 
     setErrors({ ...temp });
-    return Object.values(temp).every((x) => x == "");
+    const isValid = Object.values(temp).every((x) => x === "" || x === undefined);
+    if (!isValid) {
+      toast.error("Please fill all required fields and correct validation errors");
+      // Take the user straight to the topmost field with an error instead of leaving them
+      // to hunt a long form for it.
+      scrollToFirstError(Object.keys(temp).filter((key) => temp[key]));
+    }
+    return isValid;
   };
   //Handle Input Change for Basic Infor
   const handleInputChangeBasic = (e) => {

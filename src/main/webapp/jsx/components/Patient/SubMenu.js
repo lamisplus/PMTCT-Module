@@ -184,23 +184,45 @@ function SubMenu(props) {
 
       const htsUrl = `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${thePmtctCycleUuid}`;
 
+      // hts_encounter is the shared source of truth for HIV status across both the HTS module
+      // and PMTCT — a result documented directly via the standalone HTS module (no PMTCT
+      // cycle, no pmtct_hts flag) must still be used the same way a PMTCT-cycle-specific
+      // result would, whether Positive or Negative. Uses get-confirmatory-latest-result with
+      // no cycle param, i.e. the patient-wide (not cycle-scoped) latest result. The
+      // cycle-specific lookup below is only for this cycle's own record details (syphilis/hep
+      // results, hasExistingHts for the retesting-vs-initial menu state).
+      const fetchPatientWideHivStatus = async () => {
+        try {
+          const res = await axios.get(
+            `${baseUrl}pmtct/anc/get-confirmatory-latest-result?patientUuid=${patientUuid}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          return res.data || null;
+        } catch (e) {
+          return null;
+        }
+      };
+
       try {
         const htsRes = await axios.get(htsUrl, { headers: { Authorization: `Bearer ${token}` } });
 
         const hasExistingHts = !!(htsRes.data?.id);
 
-        // If no HTS record exists (e.g. deleted), reset to "no record" state
+        // If no HTS record exists for THIS cycle (e.g. deleted, or the patient's only record
+        // was documented on the HTS module), use the patient-wide result — Positive or
+        // Negative — instead of resetting to "no record" as if nothing was ever tested.
         if (!hasExistingHts) {
           setIsSyphilisPositive(false);
           setIsHepatitisPositive(false);
-          setPatientStatus(null);
-          showRetestingMenu(null, false);
+          const status = await fetchPatientWideHivStatus();
+          setPatientStatus(status);
+          showRetestingMenu(status, false);
           setMenuReady(true);
           return;
         }
 
         // Derive HIV status from the HTS record only — do NOT fall back to patient-level props
-        const hivStatus = htsRes.data?.finalResult
+        let hivStatus = htsRes.data?.finalResult
           || htsRes.data?.confirmatoryHivTest?.result
           || null;
 
@@ -233,6 +255,18 @@ function SubMenu(props) {
           } catch (histErr) {
             // Silent fail — historical check is best-effort
           }
+        }
+
+        // Same principle as syphilis/hepatitis above: if this cycle's own record isn't
+        // already Positive, check the patient-wide hts_encounter status before settling —
+        // a Positive documented via the standalone HTS module (or a prior cycle) must still
+        // win over this cycle's Negative/empty result. (This cycle's own Negative/empty
+        // result is already in hivStatus, so only a patient-wide Positive needs to override
+        // it here — unlike the no-record branch above, there's no "utilize the Negative"
+        // case to add since this cycle already has its own value.)
+        if (!checkPositive(hivStatus)) {
+          const patientWideStatus = await fetchPatientWideHivStatus();
+          if (checkPositive(patientWideStatus)) hivStatus = "Positive";
         }
 
         setIsSyphilisPositive(syphPositive);

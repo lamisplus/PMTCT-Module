@@ -225,6 +225,11 @@ const PmtctHtsForm = (props) => {
   const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
   const [disableEntryPoint, setDisableEntryPoint] = useState(false);
   const [clientCodeTaken, setClientCodeTaken] = useState(false);
+  // The client code as loaded when editing an existing record — the uniqueness check below
+  // otherwise flags a record's own already-saved code as "taken" (it correctly finds a match:
+  // itself), which wrongly blocked saving any edit to an existing record. Only a code that
+  // differs from this original (i.e. the user changed the Serial Number) is a real conflict.
+  const [originalClientCode, setOriginalClientCode] = useState("");
 
   const [tbStatus, setTbStatus] = useState([]);
   const [artStartTime, setartStartTime] = useState([]);
@@ -764,6 +769,12 @@ const PmtctHtsForm = (props) => {
       setClientCodeTaken(false);
       return;
     }
+    // Editing an existing record: its own saved code will always "exist" — that's not a
+    // conflict unless the user has actually changed the Serial Number away from it.
+    if (originalClientCode && code === originalClientCode) {
+      setClientCodeTaken(false);
+      return;
+    }
     axios
       .get(`${baseUrl}hts-client-code/exists?clientCode=${encodeURIComponent(code)}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -788,12 +799,21 @@ const PmtctHtsForm = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
+        setOriginalClientCode(response.data.clientCode || "");
+        // Serial Number isn't stored as its own field — it's the last "/"-separated segment
+        // of the generated Client Code (see generateClientCode above). Never derived on load,
+        // so the Serial Number input showed blank when editing an existing record.
+        const loadedClientCode = response.data.clientCode || "";
+        const derivedSerialNumber = loadedClientCode.includes("/")
+          ? loadedClientCode.substring(loadedClientCode.lastIndexOf("/") + 1)
+          : "";
         setPayload({
           dateOfHivTest: response.data.dateOfHivTest,
           testEntryPoint: response.data.testEntryPoint,
           testSetting: response.data.testSetting || "",
           stageOfPregnancy: response.data.stageOfPregnancy || "",
           clientCode: response.data.clientCode || "",
+          serialNumber: derivedSerialNumber,
           hospitalNumber: response.data.hospitalNumber || "",
           syphilis: response.data.syphilisInfo?.testResult || response.data.syphilis || "",
           hepatitisB: response.data.hbvInfo?.testResult || response.data.hepatitisB || "",

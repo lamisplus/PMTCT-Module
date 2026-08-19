@@ -25,6 +25,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import { calculateGestationalAge } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -139,6 +140,10 @@ const LabourDelivery = (props) => {
   const [maternalOutCome, setmaternalOutCome] = useState([]);
   const [newGa, setNewGa] = useState("");
   const [gaAutoCalculated, setGaAutoCalculated] = useState(false);
+  // LMP is never persisted on the delivery record — GA (derived from it) is the field of
+  // record, so storing LMP too would be redundant. For L&D entry it's user-typed here; for
+  // ANC/Post-partum entry it's fetched read-only from the source record each time.
+  const [lmp, setLmp] = useState("");
   const [saving, setSaving] = useState(false);
   const [disabledField, setSisabledField] = useState(false);
   const [errors, setErrors] = useState({});
@@ -249,7 +254,34 @@ const LabourDelivery = (props) => {
       console.log("LabourDelivery => CREATE mode, calling getDateOfDelivery");
       getDateOfDelivery();
     }
+
+    // ANC/Post-partum entry: LMP already exists on the source record — fetch it read-only
+    // rather than asking the user to re-enter it. L&D entry has no such source, so it stays
+    // a manual input (see the LMP field below).
+    const entryPoint = props.entrypointValue || props.patientObj?.entryPoint;
+    if (entryPoint && entryPoint !== "PMTCT_ENTRY_POINT_L&D") {
+      fetchLmpFromSource();
+    }
   }, [props.patientObj.id, props.activeContent]);
+
+  const fetchLmpFromSource = () => {
+    const patientUuid =
+      props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
+    const pmtctCycleUuid =
+      props.selectedCycleId || props.latestPmtctCycle?.uuid || props.patientObj?.pmtctCycleUuid;
+    if (!patientUuid || !pmtctCycleUuid) return;
+    axios
+      .get(
+        `${baseUrl}pmtct/anc/lmp-from-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        if (response.data) setLmp(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching LMP from source record:", error);
+      });
+  };
 
   const GetPatientLabourDTO = (id) => {
     axios
@@ -318,6 +350,12 @@ const LabourDelivery = (props) => {
         } else if (data.dateOfDelivery) {
           // Only recalculate GA if not stored in the record (silent=true to avoid toast on load)
           getGestationalAge(data.dateOfDelivery, "dateOfDelivery", data.pmtctCycleUuid, true);
+        }
+
+        // Legacy records from before LMP stopped being persisted may still carry it under
+        // labourDetails — reuse it so editing an old L&D record doesn't show a blank LMP.
+        if (data.labourDetails?.lmp) {
+          setLmp(data.labourDetails.lmp);
         }
       })
       .catch((error) => {
@@ -457,8 +495,7 @@ const LabourDelivery = (props) => {
         toast.error("Date of Delivery cannot be a future date");
         return;
       }
-      const lmpDate = props.patientObj.lmp || "";
-      if (lmpDate && e.target.value < lmpDate) {
+      if (lmp && e.target.value < lmp) {
         toast.error("Date of Delivery cannot be earlier than the Date of LMP");
         return;
       }
@@ -468,6 +505,17 @@ const LabourDelivery = (props) => {
         return;
       }
       getGestationalAge(e.target.value, e.target.name);
+      // For L&D entry there's no source record for the backend GA lookup to find, so
+      // recompute client-side from the already-typed LMP (if any) as well.
+      const isLdEntry = (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D";
+      if (isLdEntry && lmp) {
+        const ga = calculateGestationalAge(e.target.value, lmp);
+        if (ga > 0) {
+          setNewGa(ga);
+          setDelivery({ ...delivery, [e.target.name]: e.target.value, gaweeks: ga });
+          return;
+        }
+      }
       setDelivery({ ...delivery, [e.target.name]: e.target.value });
     } else if (e.target.name === "gaweeks") {
       // Only restrict to digits (max 2, since the valid range 5-45 never exceeds 2 digits) —
@@ -525,6 +573,20 @@ const LabourDelivery = (props) => {
       updated.transportationInOther = "";
     }
     setDelivery({ ...delivery, labourDetails: updated });
+  };
+
+  // LMP lives in its own state (not delivery.labourDetails) since it's never persisted —
+  // only used here to auto-calculate GA. Only editable for L&D entry (see field rendering).
+  const handleLmpChange = (e) => {
+    const value = e.target.value;
+    setLmp(value);
+    if (value && delivery.dateOfDelivery) {
+      const ga = calculateGestationalAge(delivery.dateOfDelivery, value);
+      if (ga > 0) {
+        setNewGa(ga);
+        setDelivery({ ...delivery, gaweeks: ga });
+      }
+    }
   };
 
   const handleMaternalInterventionsChange = (e) => {
@@ -587,9 +649,10 @@ const LabourDelivery = (props) => {
       : "This field is required";
     const isLdEntry = (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D";
     if (isLdEntry) {
-      if (!newGa) {
-        temp.gaweeks = "This field is required";
-      } else if (parseInt(newGa) < 5 || parseInt(newGa) > 45) {
+      // Optional, not required — L&D-entry clients (often unbooked/emergency deliveries)
+      // frequently don't have a known LMP/GA. Still enforce the 5-45 week range if a value
+      // is provided, whether typed manually or auto-calculated from the new LMP field.
+      if (newGa && (parseInt(newGa) < 5 || parseInt(newGa) > 45)) {
         temp.gaweeks = "Gestational age must be between 5 and 45 weeks";
       } else {
         temp.gaweeks = "";
@@ -921,7 +984,6 @@ const LabourDelivery = (props) => {
                             value={delivery.dateOfDelivery}
                             min={(() => {
                               const enrollment = props.patientObj.dateOfEnrollment || "";
-                              const lmp = props.patientObj.lmp || "";
                               if (enrollment && lmp) return enrollment > lmp ? enrollment : lmp;
                               return enrollment || lmp;
                             })()}
@@ -936,29 +998,64 @@ const LabourDelivery = (props) => {
                         )}
                       </FormGroup>
                     </div>
+                    {/* LMP shows for every entry point — L&D entry has no prior source record,
+                        so it's typed here directly. ANC/Post-partum entry already has an LMP
+                        on the source record, so it's auto-filled read-only from there instead
+                        of asking the user to re-enter it. Never persisted on the delivery
+                        record itself — GA (derived from it) is the field of record. */}
+                    {(() => {
+                      const entryPoint = props.entrypointValue || props.patientObj?.entryPoint;
+                      const isLdEntry = entryPoint === "PMTCT_ENTRY_POINT_L&D";
+                      const isPostpartumEntry = entryPoint === "PMTCT_ENTRY_POINT_POST-PARTUM";
+                      const sourceLabel = isPostpartumEntry ? "MIP card" : "ANC enrollment";
+                      return (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Date of Last Menstrual Period (LMP)</Label>
+                            <InputGroup>
+                              <Input
+                                type="date"
+                                onKeyPress={(e) => { e.preventDefault(); }}
+                                name="lmp"
+                                id="lmp"
+                                onChange={handleLmpChange}
+                                value={lmp}
+                                max={delivery.dateOfDelivery || moment(new Date()).format("YYYY-MM-DD")}
+                                disabled={disabledField || !isLdEntry}
+                              />
+                            </InputGroup>
+                            <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                              {isLdEntry
+                                ? "Auto-calculates Gestational Age below if provided"
+                                : `Auto-filled from ${sourceLabel}`}
+                            </small>
+                          </FormGroup>
+                        </div>
+                      );
+                    })()}
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
                           Gestational Age (weeks)
-                          {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D" && (
-                            <span style={{ color: "red" }}> *</span>
-                          )}
                           {" "}
-                          {(props.entrypointValue || props.patientObj?.entryPoint) !== "PMTCT_ENTRY_POINT_L&D" && (
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                color: newGa ? "#2e7d32" : "#8c959f",
-                                background: newGa ? "#e8f5e9" : "#f0f0f0",
-                                padding: "2px 7px",
-                                borderRadius: "8px",
-                              }}
-                            >
-                              {newGa ? "Auto-calculated" : "Pending..."}
-                            </span>
-                          )}
+                          {(() => {
+                            const isLdEntry = (props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D";
+                            return !isLdEntry && (
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  color: newGa ? "#2e7d32" : "#8c959f",
+                                  background: newGa ? "#e8f5e9" : "#f0f0f0",
+                                  padding: "2px 7px",
+                                  borderRadius: "8px",
+                                }}
+                              >
+                                {newGa ? "Auto-calculated" : "Pending..."}
+                              </span>
+                            );
+                          })()}
                         </Label>
                         <InputGroup>
                           <Input
@@ -982,18 +1079,23 @@ const LabourDelivery = (props) => {
                         ) : (
                           ""
                         )}
-                        {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_L&D" && (
-                          <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
-                            Enter gestational age between 5 and 45 weeks
-                          </small>
-                        )}
-                        {!newGa && (props.entrypointValue || props.patientObj?.entryPoint) !== "PMTCT_ENTRY_POINT_L&D" && (
-                          <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
-                            {(props.entrypointValue || props.patientObj?.entryPoint) === "PMTCT_ENTRY_POINT_ANC"
-                              ? "Auto-calculated from LMP (ANC record) and Date of Delivery"
-                              : "Auto-calculated from LMP (MIP card) and Date of Delivery"}
-                          </small>
-                        )}
+                        {(() => {
+                          const entryPoint = props.entrypointValue || props.patientObj?.entryPoint;
+                          const isLdEntry = entryPoint === "PMTCT_ENTRY_POINT_L&D";
+                          return isLdEntry ? (
+                            <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                              Auto-fills from LMP , or enter manually (5-45 weeks) if known
+                            </small>
+                          ) : (
+                            !newGa && (
+                              <small style={{ color: "#57606a", marginTop: 4, display: "block" }}>
+                                {entryPoint === "PMTCT_ENTRY_POINT_ANC"
+                                  ? "Auto-calculated from LMP (ANC record) and Date of Delivery"
+                                  : "Auto-calculated from LMP (MIP card) and Date of Delivery"}
+                              </small>
+                            )
+                          );
+                        })()}
                       </FormGroup>
                     </div>
                     {/* ROM Delivery Interval hidden per feedback F2 */}

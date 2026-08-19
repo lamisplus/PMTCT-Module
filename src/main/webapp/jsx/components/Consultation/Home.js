@@ -25,6 +25,7 @@ import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import { validateGestationalAge, addWeeksToDate } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -542,13 +543,17 @@ const ClinicVisit = (props) => {
     }
   }, [props.latestPmtctCycle?.uuid]);
 
-  // Auto-calculate Gestational Age from LMP and visit date (ANC Revisit)
+  // Auto-calculate Gestational Age from LMP and visit date (ANC Revisit & Mother Visit)
   useEffect(() => {
     if (lmpDate && objValues.dateOfVisit) {
       const lmp = new Date(lmpDate);
       const visitDate = new Date(objValues.dateOfVisit);
       if (visitDate >= lmp) {
         const gaWeeks = Math.floor((visitDate - lmp) / (1000 * 60 * 60 * 24 * 7));
+        const gaCheck = validateGestationalAge(gaWeeks, 0, 45);
+        if (gaCheck.reason === "too_high") {
+          toast.error(`Gestational age (${gaWeeks} weeks) exceeds 45 weeks based on LMP (${moment(lmpDate).format("DD-MM-YYYY")}). Please review the date of visit.`);
+        }
         setObjValues((prev) => ({ ...prev, gaWeeks: gaWeeks }));
       }
     }
@@ -834,6 +839,9 @@ const ClinicVisit = (props) => {
   //Validations of the forms
   const validate = () => {
     temp.dateOfVisit = objValues.dateOfVisit ? "" : "This field is required";
+    if (objValues.dateOfVisit && objValues.gaWeeks && parseInt(objValues.gaWeeks) > 45) {
+      temp.dateOfVisit = `Gestational age (${objValues.gaWeeks} weeks) exceeds 45 weeks based on LMP. Please review the date of visit.`;
+    }
     temp.weight = objValues.weight ? "" : "This field is required";
     if (objValues.weight && (parseFloat(objValues.weight) < 30 || parseFloat(objValues.weight) > 150)) {
       temp.weight = "Weight must be between 30 and 150 kg";
@@ -1245,7 +1253,12 @@ const ClinicVisit = (props) => {
                             min={ancRegistrationDate && ancRegistrationDate > (props.patientObj.dateOfEnrollment || "")
                               ? ancRegistrationDate
                               : props.patientObj.dateOfEnrollment}
-                            max={moment(new Date()).format("YYYY-MM-DD")}
+                            max={(() => {
+                              const today = moment(new Date()).format("YYYY-MM-DD");
+                              if (!lmpDate) return today;
+                              const gaLimit = addWeeksToDate(lmpDate, 45);
+                              return gaLimit < today ? gaLimit : today;
+                            })()}
                             disabled={disabledField}
                           />
                         </InputGroup>

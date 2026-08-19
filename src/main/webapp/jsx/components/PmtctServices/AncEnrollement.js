@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import AncFormFields from "./AncFormFields";
+import { scrollToFirstError } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -309,12 +310,43 @@ const AncEnrollement = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newErrors = { ...errors };
+    let hasError = false;
+
+    // Required fields marked with a red asterisk on the form but previously never actually
+    // enforced here — e.g. Date of Enrollment could be left blank and the record would still
+    // save. isEmpty (not a plain falsy check) so a legitimate 0 for Parity isn't rejected.
+    const isEmpty = (v) => v === "" || v === null || v === undefined;
+    const requiredFields = [
+      { value: objValues.ancNo, flatKey: "ancNo", label: "ANC No" },
+      { value: objValues.dateOfEnrollment, flatKey: "dateOfEnrollment", label: "Date of Enrollment" },
+      { value: objValues.gravida, flatKey: "gravida", label: "Gravida" },
+      { value: objValues.parity, flatKey: "parity", label: "Parity" },
+      { value: objValues.lmp, flatKey: "lmp", label: "Date of Last Menstrual Period" },
+      { value: objValues.gaweeks, flatKey: "gaweeks", label: "Gestational Age" },
+      { value: objValues.syphilisInfo.testedSyphilis, flatKey: "testedSyphilis", label: "Tested for Syphilis" },
+      { value: objValues.hepatitisBInfo.testedHepatitisB, flatKey: "testedHepatitisB", label: "Tested for Hepatitis B" },
+    ];
+    // Conditionally-required — only shown (and only required) once their parent answer is Yes/Positive
+    if (objValues.syphilisInfo.testedSyphilis === "Yes") {
+      requiredFields.push({ value: objValues.syphilisInfo.testResultSyphilis, flatKey: "testResultSyphilis", label: "Syphilis Test Result" });
+    }
+    if (objValues.syphilisInfo.testResultSyphilis === "Positive") {
+      requiredFields.push({ value: objValues.syphilisInfo.treatedSyphilis, flatKey: "treatedSyphilis", label: "Treated for Syphilis" });
+    }
+    requiredFields.forEach(({ value, flatKey, label }) => {
+      if (isEmpty(value)) {
+        newErrors[flatKey] = `${label} is required`;
+        hasError = true;
+      } else {
+        newErrors[flatKey] = "";
+      }
+    });
+
     // Validate counselling fields (using flat field names that AncFormFields expects)
     const counsellingFields = [
       { key: "hts", flatKey: "counsellingHts", label: "HIV Testing Services" },
     ];
-    const newErrors = { ...errors };
-    let hasError = false;
     counsellingFields.forEach(({ key, flatKey, label }) => {
       if (!objValues.counselling[key]) {
         newErrors[flatKey] = `${label} is required`;
@@ -356,6 +388,10 @@ const AncEnrollement = (props) => {
     if (hasError) {
       setErrors(newErrors);
       toast.error("Please fill all required fields and correct validation errors");
+      // Take the user straight to the topmost field with an error instead of leaving them
+      // to hunt a long form for it — re-running this on the next submit attempt naturally
+      // advances to whichever error is now topmost once earlier ones are fixed.
+      scrollToFirstError(Object.keys(newErrors).filter((key) => newErrors[key]));
       return;
     }
     setSaving(true);

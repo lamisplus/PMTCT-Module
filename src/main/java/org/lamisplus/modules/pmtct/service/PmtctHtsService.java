@@ -754,6 +754,30 @@ public class PmtctHtsService {
             }
         }
 
+        // Fallback: a result documented directly via the standalone HTS module (not through
+        // PMTCT) carries no pmtctCycleUuid, so it can never match the cycle-specific lookup
+        // above — the dashboard would show no status even though the patient has a confirmed
+        // result. HIV status doesn't reset per pregnancy cycle, so surface it here regardless.
+        boolean sourcedFromHtsModule = false;
+        if (!"Positive".equalsIgnoreCase(hivStatus)) {
+            Optional<HtsEncounterProxy> latestAnyModule = htsEncounterProxyRepository.findLatestRecordAnyModule(patientUuid);
+            if (latestAnyModule.isPresent()) {
+                HtsEncounterProxy proxy = latestAnyModule.get();
+                JsonNode obs = proxy.getObservation();
+                String rawResult = obs != null
+                        ? (textOrNull(obs, "finalHivTestResult") != null && !textOrNull(obs, "finalHivTestResult").isEmpty()
+                            ? textOrNull(obs, "finalHivTestResult")
+                            : textOrNull(obs, "confirmatoryHivTest"))
+                        : null;
+                String patientWideResult = normalizeConfirmatoryResult(rawResult);
+                if ("Positive".equalsIgnoreCase(patientWideResult)) {
+                    hivStatus = "Positive";
+                    hasHtsRecord = true;
+                    sourcedFromHtsModule = proxy.getPmtctHts() == null || !proxy.getPmtctHts();
+                }
+            }
+        }
+
         // 2. Get retest status for this cycle
         HivRetestStatusResponse retestStatus = getHivRetestStatus(patientUuid, pmtctCycleUuid);
         boolean seroconverted = Boolean.TRUE.equals(retestStatus.getSeroconverted());
@@ -769,6 +793,7 @@ public class PmtctHtsService {
                 .syphilisResult(syphilisResult != null ? syphilisResult : "")
                 .hepatitisBResult(hepatitisBResult != null ? hepatitisBResult : "")
                 .hepatitisCResult(hepatitisCResult != null ? hepatitisCResult : "")
+                .sourcedFromHtsModule(sourcedFromHtsModule)
                 .build();
     }
 

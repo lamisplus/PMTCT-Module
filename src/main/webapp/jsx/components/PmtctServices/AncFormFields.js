@@ -661,6 +661,7 @@ const AncFormFields = ({
                     <option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option>
                   </Input>
                 </InputGroup>
+                {err("testedHepatitisB")}
               </FormGroup>
             </div>
             {values.testedHepatitisB === "Yes" && (

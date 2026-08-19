@@ -63,13 +63,28 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
     Optional<String> findLatestFinalResultByCycle(String patientUuid, String cycleUuid);
 
+    // Patient-wide (no cycle, no pmtct_hts filter) — every caller wants "has this patient ever
+    // tested positive," regardless of whether the record was authored via the PMTCT HTS form
+    // or the standalone HTS module. Previously filtered pmtct_hts = true, which meant a result
+    // recorded directly in the HTS module (not through PMTCT) was invisible here — e.g. the
+    // Patient Dashboard/HIV summary never reflected a Positive result entered that way.
     @Query(nativeQuery = true, value
             = "SELECT COALESCE(NULLIF(observation->>'finalHivTestResult', ''), observation->>'confirmatoryHivTest') "
             + "FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
     Optional<String> findLatestFinalResult(String patientUuid);
+
+    // Same as findLatestFinalResult but returns the full record — used when the caller needs
+    // to know which module (pmtct_hts flag) authored the result, e.g. to tell the PMTCT user
+    // it was documented on the HTS module rather than something they forgot entering here.
+    @Query(nativeQuery = true, value
+            = "SELECT * FROM hts_encounter "
+            + "WHERE archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
+    Optional<HtsEncounterProxy> findLatestRecordAnyModule(String patientUuid);
 
     @Query(nativeQuery = true, value
             = "SELECT EXISTS("

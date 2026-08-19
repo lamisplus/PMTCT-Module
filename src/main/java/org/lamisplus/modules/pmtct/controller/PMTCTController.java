@@ -455,6 +455,13 @@ public class PMTCTController {
         return ancService.calculateGaFromPmtct(patientUuid, visitDate, pmtctCycleUuid);
     }
 
+    @GetMapping(value = "/lmp-from-person")
+    public ResponseEntity<LocalDate> getLmpFromPerson(
+            @RequestParam("patientUuid") String patientUuid,
+            @RequestParam("pmtctCycleUuid") String pmtctCycleUuid) {
+        return ResponseEntity.ok(ancService.getLMPFromPMTCT(patientUuid, pmtctCycleUuid));
+    }
+
     @GetMapping(value = "/calculate-ga3")
     public int calculateGa2(@RequestParam("hospitalNumber") String hospitalNumber, @RequestParam("visitDate") LocalDate visitDate) {
         return ancService.calculateGA2(hospitalNumber, visitDate);

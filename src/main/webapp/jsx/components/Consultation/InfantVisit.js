@@ -27,6 +27,28 @@ import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
+// Current age from date of birth, for the Infant Information profile card. Days once under a
+// month old (birth-to-6-weeks visits are the most time-sensitive in PMTCT), months/years after.
+const getInfantAgeDisplay = (dateOfBirth) => {
+  if (!dateOfBirth) return "---";
+  const dob = moment(dateOfBirth);
+  if (!dob.isValid()) return "---";
+  const months = moment().diff(dob, "months");
+  if (months < 1) {
+    const days = moment().diff(dob, "days");
+    return `${days} day${days === 1 ? "" : "s"}`;
+  }
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  if (years > 0) {
+    const yearPart = `${years} year${years === 1 ? "" : "s"}`;
+    return remMonths > 0
+      ? `${yearPart} ${remMonths} month${remMonths === 1 ? "" : "s"}`
+      : yearPart;
+  }
+  return `${months} month${months === 1 ? "" : "s"}`;
+};
+
 
 
 
@@ -1701,6 +1723,12 @@ const ClinicVisit = (props) => {
                   <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Date of Birth</span>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
                     {choosenInfant.dateOfDelivery ? moment(choosenInfant.dateOfDelivery).format("DD-MM-YYYY") : "---"}
+                  </div>
+                </div>
+                <div className="col-md-3 mb-2">
+                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Age</span>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+                    {getInfantAgeDisplay(choosenInfant.dateOfDelivery)}
                   </div>
                 </div>
                 <div className="col-md-3 mb-2">
