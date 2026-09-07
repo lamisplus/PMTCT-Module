@@ -396,7 +396,17 @@ function PatientCard(props) {
               PmtctHtsRetestingType={PmtctHtsRetestingType}
               handleRoute={""}
               onEnrollPatient={false}
-              entrypointValue={patientObj.entryPoint}
+              // patientObj here is often the raw ANC-enrollment response (e.g. right after
+              // Patient Grid -> Enroll -> ANC -> auto-routed here), which has no entryPoint
+              // field at all — only ancNo. Without this fallback, entrypointValue comes
+              // through as undefined, isAncEntry in PmtctHtsForm evaluates false, and the
+              // whole ANC serology-autopopulation fetch silently never fires. Same pattern
+              // already used for RecentHistory above.
+              entrypointValue={
+                patientObj.ancNo
+                  ? "PMTCT_ENTRY_POINT_ANC"
+                  : patientObj.entryPoint
+              }
               patientAge={patientObj?.age}
               patientUuid={patientUuid}
               latestPmtctCycle={latestPmtctCycle}
@@ -410,7 +420,13 @@ function PatientCard(props) {
             <PmtctEnrollment
               newRegDate={""}
               allEntryPoint={allEntryPoint}
-              entrypointValue={patientObj.entryPoint}
+              // Same ancNo fallback as PmtctHtsForm above — patientObj is often the raw
+              // ANC-enrollment response here too, which has no entryPoint field.
+              entrypointValue={
+                patientObj.ancNo
+                  ? "PMTCT_ENTRY_POINT_ANC"
+                  : patientObj.entryPoint
+              }
               ancEntryType={patientObj.ancNo ? true : false}
               patientObj={patientObj}
               setActiveContent={setActiveContent}

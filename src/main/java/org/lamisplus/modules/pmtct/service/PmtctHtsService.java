@@ -32,7 +32,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,11 +79,14 @@ public class PmtctHtsService {
 
     /**
      * LV3-1732: if this patient has a suspected-acute-infection HTS/PMTCT record (from either
-     * module — hts_encounter is shared) that hasn't been resolved yet, and their latest viral
-     * load is >= 1000 copies/mL, promote that record to a confirmed Acute HIV Infection /
-     * HIV-Positive result. Idempotent (the "already flagged" check in the repository query
-     * means re-running this for the same patient after it has fired is a no-op), so it's safe
-     * to call on every page load as well as from a dedicated endpoint.
+     * module — hts_encounter is shared) that hasn't been resolved yet, and they have a
+     * documented viral load, resolve that record per the Acute HIV Infection spec: VL >= 1000
+     * copies/mL confirms Acute HIV Infection (finalHivTestResult=Positive); VL < 1000 resolves
+     * the suspicion as a negative result instead (finalHivTestResult=Negative). Either way
+     * dateoffinalHivTestResult is set to the VL result date. Idempotent (the "already flagged"
+     * check in the repository query means re-running this for the same patient after it has
+     * fired is a no-op), so it's safe to call on every page load as well as from a dedicated
+     * endpoint.
      */
     public AcuteInfectionStatusDto checkAndApplyAcuteInfectionStatus(String patientUuid) {
         List<HtsEncounterProxy> candidates = htsEncounterProxyRepository
@@ -90,31 +95,100 @@ public class PmtctHtsService {
             return AcuteInfectionStatusDto.noUpdate();
         }
 
-        Optional<Long> latestVl = pmtctVisitRepository.findLatestViralLoadResult(patientUuid);
-        if (!latestVl.isPresent() || latestVl.get() < ACUTE_INFECTION_VL_THRESHOLD) {
+        List<Object[]> latestVlRows = pmtctVisitRepository.findLatestViralLoadResultWithDate(patientUuid);
+        if (latestVlRows.isEmpty() || latestVlRows.get(0) == null) {
             return AcuteInfectionStatusDto.noUpdate();
         }
+        Object[] latestVlRow = latestVlRows.get(0);
+        if (latestVlRow[0] == null || latestVlRow[1] == null) {
+            return AcuteInfectionStatusDto.noUpdate();
+        }
+        Long vlResult = ((Number) latestVlRow[0]).longValue();
+        Object rawResultDate = latestVlRow[1];
+        LocalDate vlResultDate = rawResultDate instanceof java.sql.Timestamp
+                ? ((java.sql.Timestamp) rawResultDate).toLocalDateTime().toLocalDate()
+                : rawResultDate instanceof java.time.LocalDateTime
+                        ? ((java.time.LocalDateTime) rawResultDate).toLocalDate()
+                        : rawResultDate instanceof java.sql.Date
+                                ? ((java.sql.Date) rawResultDate).toLocalDate()
+                                : (LocalDate) rawResultDate;
+        boolean isAcute = vlResult >= ACUTE_INFECTION_VL_THRESHOLD;
 
-        // Most recent unresolved suspected-acute record is the one that gets promoted.
+        // Most recent unresolved suspected-acute record is the one that gets resolved.
         HtsEncounterProxy record = candidates.get(0);
         ObjectNode obs = record.getObservation() instanceof ObjectNode
                 ? (ObjectNode) record.getObservation()
                 : objectMapper.createObjectNode();
-        LocalDate detectedDate = LocalDate.now();
-        obs.put("finalHivTestResult", "Positive");
-        obs.put("confirmatoryHivTest", "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE");
-        obs.put("acuteHivInfectionDetected", true);
-        obs.put("acuteHivInfectionDetectedDate", detectedDate.toString());
-        obs.put("acuteHivInfectionTriggerVl", latestVl.get());
+        obs.put("dateoffinalHivTestResult", vlResultDate.toString());
+        if (isAcute) {
+            obs.put("finalHivTestResult", "Positive");
+            obs.put("confirmatoryHivTest", "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE");
+            obs.put("acuteHivInfectionDetected", true);
+            obs.put("acuteHivInfectionDetectedDate", LocalDate.now().toString());
+            obs.put("acuteHivInfectionTriggerVl", vlResult);
+        } else {
+            obs.put("finalHivTestResult", "Negative");
+            // Not an Acute HIV Infection — flip suspectedAcuteInfection off so the record no
+            // longer matches findUnflaggedSuspectedAcuteInfectionRecords' WHERE clause (which
+            // keys off suspectedAcuteInfection = 'YES_NO_YES', not acuteHivInfectionDetected,
+            // so leaving that key at YES_NO_YES here would keep re-matching this record forever).
+            obs.put("suspectedAcuteInfection", "YES_NO_NO");
+            obs.put("acuteHivInfectionResolvedNegativeDate", LocalDate.now().toString());
+            obs.put("acuteHivInfectionTriggerVl", vlResult);
+        }
         record.setObservation(obs);
         htsEncounterProxyRepository.save(record);
 
         boolean fromHtsModule = record.getPmtctHts() == null || !record.getPmtctHts();
-        return new AcuteInfectionStatusDto(true, latestVl.get(), detectedDate, fromHtsModule);
+        return new AcuteInfectionStatusDto(true, vlResult, vlResultDate, fromHtsModule,
+                isAcute ? "Positive" : "Negative");
     }
 
 
     // ══════════════════ HTS ENCOUNTER PROXY (saves to hts_encounter table) ══════════════════
+
+    // Resolves HTS's numeric personId (patient_person.id) from patientUuid, scoped to the
+    // current user's facility — the exact same lookup saveToHtsEncounter already does below.
+    // Exists as its own call because HTS-Module's own POST /api/v1/hts-encounter requires this
+    // numeric patientId, and the frontend has no reliable source for it: the PMTCT HTS grid's
+    // own backing query (PmtctHtsRepository.getActiveOnPmtctHts) aliases a DIFFERENT value —
+    // the previous hts_encounter record's own id, not the patient's — under the field name
+    // "personId", so trusting whatever's already in patientObj would silently resolve to the
+    // wrong id. Re-deriving from patientUuid here avoids that trap entirely.
+    // Scenario: a client already has a positive HIV result documented via the standalone HTS
+    // module (pmtct_hts = false), before ever coming through PMTCT. When she opens a NEW PMTCT
+    // HTS form, the form should detect this, prepopulate PMTCT-relevant fields from that record,
+    // and — on save — UPDATE that same existing hts_encounter row instead of creating a new
+    // one (avoiding a duplicate record for the same client across HTS and PMTCT reporting).
+    // Returns null (204/empty body via the controller) if no such record exists, so the
+    // frontend can tell "found nothing" apart from "found an actual record."
+    public PmtctHtsReponseDTO checkPriorHtsModulePositiveRecord(String patientUuid) {
+        Optional<HtsEncounterProxy> proxyOpt = htsEncounterProxyRepository
+                .findEarliestHtsModulePositiveRecord(patientUuid);
+        if (!proxyOpt.isPresent()) {
+            return null;
+        }
+        HtsEncounterProxy proxy = proxyOpt.get();
+
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+        Optional<Person> personOpt = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(
+                patientUuid, facilityId, 0);
+
+        return convertProxyToResponseDto(proxy, personOpt.orElse(null));
+    }
+
+    public Map<String, Long> getPersonId(String patientUuid) {
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        User user = currentUser.get();
+        Long facilityId = user.getCurrentOrganisationUnitId();
+
+        Person person = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(patientUuid, facilityId, 0)
+                .orElseThrow(() -> new EntityNotFoundException(Person.class, "uuid", patientUuid));
+
+        return Collections.singletonMap("personId", person.getId());
+    }
 
     public PmtctHtsReponseDTO saveToHtsEncounter(PmtctHtsRequestDTO dto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -140,7 +214,11 @@ public class PmtctHtsService {
         // hts_encounter.setting is shared with the HTS module, which stores the broad
         // Facility/Community/Other category here (not the testing-point subtype) —
         // use testEntryPoint to match that; testSetting (subtype) is kept in observation.
-        encounter.setSetting(dto.getTestEntryPoint() != null ? dto.getTestEntryPoint() : "");
+        // Normalized via mapToHtsSetting so this column always lands on HTS's own
+        // HTS_ENTRY_POINT_* values, regardless of which codeset the frontend happened to
+        // source testEntryPoint from (PMTCT's Setting dropdown now uses HTS_ENTRY_POINT
+        // directly, but this keeps the column correct even if that ever drifts again).
+        encounter.setSetting(mapToHtsSetting(dto.getTestEntryPoint()));
         encounter.setPmtctHts(true);
         encounter.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
         encounter.setArchived(false);
@@ -172,7 +250,7 @@ public class PmtctHtsService {
 
         // Update columns
         existing.setDateOfVisit(dto.getDateOfHivTest());
-        existing.setSetting(dto.getTestEntryPoint() != null ? dto.getTestEntryPoint() : "");
+        existing.setSetting(mapToHtsSetting(dto.getTestEntryPoint()));
         existing.setSource(dto.getSource() != null ? dto.getSource() : "WEB");
         existing.setObservation(buildPmtctObservation(dto));
 
@@ -206,6 +284,16 @@ public class PmtctHtsService {
             putIfNotEmpty(obs, "confirmatoryHivTest", dto.getConfirmatoryHivTest().getResult());
         }
         // tieBreaker, tieBreaker2, retesting, confirmatoryTest2: EXCLUDED (obsolete)
+
+        // LV3-1732: dateoffinalHivTestResult takes the HTS visit date when a genuine
+        // confirmatory/final result (Positive or Negative) is documented on this form. Left
+        // unset while the client is in the unresolved Suspected Acute HIV Infection state
+        // (Antigen-Reactive Early Detect with no final result yet) — that date is only ever
+        // set later, from the viral load result, by checkAndApplyAcuteInfectionStatus.
+        if (dto.getFinalResult() != null && !dto.getFinalResult().isEmpty()
+                && !isSuspectedAcuteInfection(dto.getHivEarlyDetect()) && dto.getDateOfHivTest() != null) {
+            obs.put("dateoffinalHivTestResult", dto.getDateOfHivTest().toString());
+        }
 
         // PMTCT Metadata
         putIfNotEmpty(obs, "pmtctCycleUuid", dto.getPmtctCycleUuid());
@@ -259,6 +347,37 @@ public class PmtctHtsService {
         putIfNotEmpty(obs, "tbReferred", dto.getTbReferred());
         putIfNotEmpty(obs, "tbScreeningStatus", dto.getTbScreeningStatus());
         putIfNotEmpty(obs, "viralLoadMonitoring", dto.getViralLoadMonitoring());
+
+        // LV3-1732 / Item-14: the PMTCT HTS form's own Viral Load dropdown
+        // (hivEarlyDetectViralLoad, shown only for the two suspected-acute Early Detect
+        // results) lets a tester document "Target Detected"/"Target Not Detected" directly on
+        // this form, without waiting for a separate Laboratory VL order. This value used to be
+        // captured into observation but never acted on, so a record documented this way stayed
+        // permanently "Suspected Acute HIV Infection" on the dashboard. Resolve it immediately
+        // here — same outcome as checkAndApplyAcuteInfectionStatus's later lab-sourced
+        // resolution, but keyed off this qualitative field and dated to the HTS visit date
+        // (dateOfHivTest), since there is no separate VL order date in this direct-entry path.
+        if (isSuspectedAcuteInfection(dto.getHivEarlyDetect())) {
+            if ("Target Detected".equals(dto.getHivEarlyDetectViralLoad())) {
+                obs.put("finalHivTestResult", "Positive");
+                obs.put("confirmatoryHivTest", "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE");
+                obs.put("suspectedAcuteInfection", "YES_NO_YES");
+                obs.put("acuteHivInfectionDetected", true);
+                obs.put("acuteHivInfectionDetectedDate", LocalDate.now().toString());
+                obs.put("acuteHivInfectionTriggerVl", "Target Detected");
+                if (dto.getDateOfHivTest() != null) {
+                    obs.put("dateoffinalHivTestResult", dto.getDateOfHivTest().toString());
+                }
+            } else if ("Target Not Detected".equals(dto.getHivEarlyDetectViralLoad())) {
+                obs.put("finalHivTestResult", "Negative");
+                obs.put("suspectedAcuteInfection", "YES_NO_NO");
+                obs.put("acuteHivInfectionResolvedNegativeDate", LocalDate.now().toString());
+                obs.put("acuteHivInfectionTriggerVl", "Target Not Detected");
+                if (dto.getDateOfHivTest() != null) {
+                    obs.put("dateoffinalHivTestResult", dto.getDateOfHivTest().toString());
+                }
+            }
+        }
 
         return obs;
     }
@@ -316,8 +435,30 @@ public class PmtctHtsService {
         JsonNode obs = saved.getObservation();
         if (obs != null) {
             resp.setFinalResult(textOrNull(obs, "finalHivTestResult"));
-            resp.setTestEntryPoint(textOrNull(obs, "testEntryPoint"));
-            resp.setTestSetting(textOrNull(obs, "testSetting"));
+            // hts_encounter.setting is the canonical HTS_ENTRY_POINT_FACILITY/COMMUNITY column —
+            // both modules write it on every save. observation.testEntryPoint is a PMTCT-only key
+            // HTS's own create/update never populates, so for a genuine HTS-module-authored record
+            // (e.g. checkPriorHtsModulePositiveRecord adopting a positive result) it's always null;
+            // falling back to it first silently defaulted every such record to Facility, including
+            // the ~34% that were actually tested in a Community setting. Prefer the column.
+            String settingColumn = saved.getSetting();
+            resp.setTestEntryPoint(settingColumn != null && !settingColumn.isEmpty()
+                    ? settingColumn : textOrNull(obs, "testEntryPoint"));
+            // Same gap as testEntryPoint above: HTS stores the subtype under facilitySetting/
+            // communityEntryPoint, never under a "testSetting" key — so on a genuine HTS-authored
+            // record this was always null. That's silently harmless for viewing (PMTCT's Test
+            // Setting field is hidden once Previously Known HIV+ = Yes), but priorHtsPositiveRecordId's
+            // update path still round-trips this value back out as modality/facilitySetting/
+            // communityEntryPoint on save — so an empty read here was blanking out the record's
+            // real test-setting subtype (e.g. "COMMUNITY_HTS_TEST_SETTING_OUTREACH") on every update.
+            String testSettingValue = textOrNull(obs, "testSetting");
+            if (testSettingValue == null || testSettingValue.isEmpty()) {
+                testSettingValue = textOrNull(obs, "facilitySetting");
+            }
+            if (testSettingValue == null || testSettingValue.isEmpty()) {
+                testSettingValue = textOrNull(obs, "communityEntryPoint");
+            }
+            resp.setTestSetting(testSettingValue);
             resp.setStageOfPregnancy(textOrNull(obs, "stageOfPregnancy"));
             resp.setTestingType(textOrNull(obs, "testingType"));
             resp.setPmtctCycleUuid(textOrNull(obs, "pmtctCycleUuid"));
@@ -669,9 +810,12 @@ public class PmtctHtsService {
 
     public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(String id) {
         try {
-            // Numeric ID → hts_encounter table (post-migration records)
+            // Numeric ID → hts_encounter table (post-migration records). pmtct_hts = true
+            // required — enforces the same boundary PMTCT's own listing/history queries
+            // already apply, so this single-record fetch can't be used to open a record
+            // PMTCT never authored.
             Long htsId = Long.parseLong(id);
-            HtsEncounterProxy proxy = htsEncounterProxyRepository.findByIdAndArchived(htsId, false)
+            HtsEncounterProxy proxy = htsEncounterProxyRepository.findByIdAndPmtctHtsAndArchived(htsId, true, false)
                     .orElseThrow(() -> new EntityNotFoundException(HtsEncounterProxy.class, "Id", id));
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = currentUser.get();
@@ -720,6 +864,12 @@ public class PmtctHtsService {
         String syphilisResult = "";
         String hepatitisBResult = "";
         String hepatitisCResult = "";
+        boolean acuteHivInfectionDetected = false;
+        boolean suspectedAcuteInfection = false;
+        // "via HTS" must always reflect the actual matched record's own pmtct_hts column —
+        // that column is the sole source of truth for which module a record was entered
+        // through — never inferred from the record's content or which lookup found it.
+        boolean sourcedFromHtsModule = false;
 
         Optional<HtsEncounterProxy> proxyOpt = htsEncounterProxyRepository
                 .findLatestByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
@@ -727,6 +877,7 @@ public class PmtctHtsService {
         if (proxyOpt.isPresent()) {
             hasHtsRecord = true;
             HtsEncounterProxy proxy = proxyOpt.get();
+            sourcedFromHtsModule = proxy.getPmtctHts() == null || !proxy.getPmtctHts();
             JsonNode obs = proxy.getObservation();
 
             if (obs != null) {
@@ -736,6 +887,38 @@ public class PmtctHtsService {
                     finalResult = normalizeConfirmatoryResult(textOrNull(obs, "confirmatoryHivTest"));
                 }
                 hivStatus = finalResult;
+
+                // LV3-1732: acuteHivInfectionDetected=true is a confirmed Acute HIV Infection
+                // (finalHivTestResult is already "Positive" above, this just distinguishes it
+                // from an ordinary confirmatory-test Positive for dashboard display).
+                // suspectedAcuteInfection is the still-unresolved state — reactive Early Detect
+                // with no acute-infection resolution (positive or negative) recorded yet.
+                boolean rawSuspectedAcute = "YES_NO_YES".equals(textOrNull(obs, "suspectedAcuteInfection"));
+                // Spec ("HTS & PMTCT HTS Workflow"): finalHivTestResult stays Null only while
+                // genuinely unresolved-suspected; once a VL result resolves it (either
+                // direction), finalHivTestResult holds a real value. Reading the raw field here
+                // (not the confirmatoryHivTest-fallback-enriched hivStatus above) so a record
+                // resolved to Negative isn't mistaken for still-open — suspectedAcuteInfection is
+                // a snapshot of the moment the Early Detect result was documented and is never
+                // reset back to YES_NO_NO on its own once finalHivTestResult is written; the
+                // presence of a real finalHivTestResult is what actually means "resolved", not
+                // this flag by itself. Previously this record could show "Suspected Acute HIV
+                // Infection" on the dashboard even after having already resolved to Negative.
+                boolean rawFinalResultIsBlank = textOrNull(obs, "finalHivTestResult") == null
+                        || textOrNull(obs, "finalHivTestResult").isEmpty();
+                boolean stillUnresolvedSuspectedAcute = rawSuspectedAcute && rawFinalResultIsBlank;
+                acuteHivInfectionDetected = "true".equalsIgnoreCase(textOrNull(obs, "acuteHivInfectionDetected"))
+                        // Fallback for records saved via HTS-Module's own POST/PUT
+                        // /api/v1/hts-encounter (raised with their team as a gap, not yet
+                        // fixed): that endpoint's request DTO has no field for
+                        // acuteHivInfectionDetected at all, and silently drops unknown JSON
+                        // properties, so the explicit flag can never be persisted through that
+                        // path. A record that was ever flagged suspected-acute and has since
+                        // resolved to a confirmed Positive result is, by definition, a confirmed
+                        // Acute HIV Infection — detect that combination directly instead of
+                        // depending on a flag this write path structurally cannot carry.
+                        || (rawSuspectedAcute && "Positive".equalsIgnoreCase(hivStatus));
+                suspectedAcuteInfection = stillUnresolvedSuspectedAcute && !acuteHivInfectionDetected;
 
                 // Syphilis
                 JsonNode syphNode = obs.get("syphilisInfo");
@@ -758,8 +941,12 @@ public class PmtctHtsService {
         // PMTCT) carries no pmtctCycleUuid, so it can never match the cycle-specific lookup
         // above — the dashboard would show no status even though the patient has a confirmed
         // result. HIV status doesn't reset per pregnancy cycle, so surface it here regardless.
-        boolean sourcedFromHtsModule = false;
-        if (!"Positive".equalsIgnoreCase(hivStatus)) {
+        // Gate on hasHtsRecord, NOT on hivStatus's value — this must only fill in a status when
+        // THIS cycle has no record of its own. Gating on "hivStatus != Positive" (the old bug)
+        // let it fire even when this cycle already has a genuine PMTCT-documented Negative/blank
+        // result, silently overwriting it with an unrelated, often-later, record from a
+        // different cycle/module and wrongly tagging a PMTCT-documented result as "via HTS".
+        if (!hasHtsRecord) {
             Optional<HtsEncounterProxy> latestAnyModule = htsEncounterProxyRepository.findLatestRecordAnyModule(patientUuid);
             if (latestAnyModule.isPresent()) {
                 HtsEncounterProxy proxy = latestAnyModule.get();
@@ -778,6 +965,27 @@ public class PmtctHtsService {
             }
         }
 
+        // LV3-1732: a confirmed Acute HIV Infection must be reflected here even when the current
+        // cycle's own record (found above) isn't the one checkAndApplyAcuteInfectionStatus
+        // actually resolved — its resolution target is deliberately patient-wide (see
+        // findUnflaggedSuspectedAcuteInfectionRecords' comment), so it can land on a different
+        // hts_encounter row than this cycle's own pmtct_hts = true record. Runs unconditionally
+        // (not gated on hasHtsRecord/!acuteHivInfectionDetected) and takes priority over whatever
+        // the record-scoped checks above found — spec: "treat the client as HIV-positive from
+        // that point forward" once confirmed, not just within the record/cycle it landed on.
+        if (!acuteHivInfectionDetected) {
+            Optional<HtsEncounterProxy> confirmedAcute = htsEncounterProxyRepository
+                    .findConfirmedAcuteHivInfection(patientUuid);
+            if (confirmedAcute.isPresent()) {
+                HtsEncounterProxy proxy = confirmedAcute.get();
+                acuteHivInfectionDetected = true;
+                suspectedAcuteInfection = false;
+                hivStatus = "Positive";
+                hasHtsRecord = true;
+                sourcedFromHtsModule = proxy.getPmtctHts() == null || !proxy.getPmtctHts();
+            }
+        }
+
         // 2. Get retest status for this cycle
         HivRetestStatusResponse retestStatus = getHivRetestStatus(patientUuid, pmtctCycleUuid);
         boolean seroconverted = Boolean.TRUE.equals(retestStatus.getSeroconverted());
@@ -788,6 +996,8 @@ public class PmtctHtsService {
         return PatientHivSummaryDto.builder()
                 .hivStatus(hivStatus)
                 .hasHtsRecord(hasHtsRecord)
+                .acuteHivInfectionDetected(acuteHivInfectionDetected)
+                .suspectedAcuteInfection(suspectedAcuteInfection)
                 .seroconverted(seroconverted)
                 .remainedHivNegative(remainedNegative)
                 .syphilisResult(syphilisResult != null ? syphilisResult : "")
@@ -984,8 +1194,14 @@ public class PmtctHtsService {
                 htsResponseDto.setAncNo(ancOpt.get().getAncNo());
             }
 
-            // Get HTS record for the latest cycle from hts_encounter
-            Optional<HtsEncounterProxy> proxyOptional = htsEncounterProxyRepository.findByCycleUuidAndArchived(cycleUuid);
+            // Get HTS record for the latest cycle from hts_encounter — same patient+cycle scoped,
+            // visit-date-ordered selection getPatientHivSummary uses (findByCycleUuidAndArchived
+            // was cycle-only, id-DESC/insertion-order, so on a cycle with more than one
+            // hts_encounter row it could pick a different, stale row than the Patient Dashboard —
+            // e.g. showing a leftover "Negative" here while the dashboard correctly still shows
+            // Suspected Acute HIV Infection for the true current record).
+            Optional<HtsEncounterProxy> proxyOptional = htsEncounterProxyRepository
+                    .findLatestByPatientUuidAndCycleUuid(person.getPatientUuid(), cycleUuid);
 
             if (proxyOptional.isPresent()) {
                 HtsEncounterProxy proxy = proxyOptional.get();
@@ -1000,7 +1216,29 @@ public class PmtctHtsService {
                     htsResponseDto.setTestSetting(textOrNull(obs, "testSetting"));
                     htsResponseDto.setStageOfPregnancy(textOrNull(obs, "stageOfPregnancy"));
                     htsResponseDto.setTestingType(textOrNull(obs, "testingType"));
-                    htsResponseDto.setFinalResult(textOrNull(obs, "finalHivTestResult"));
+                    // LV3-1732 — same acuteHivInfectionDetected/suspectedAcuteInfection-aware
+                    // label getPatientHivSummary computes for the Patient Dashboard badge, so
+                    // this grid column always matches it instead of raw-passing-through
+                    // finalHivTestResult (which is correctly null while still suspected-acute,
+                    // per spec — a raw passthrough would show "N/A" there today, but reusing the
+                    // same derivation keeps both displays identical if that logic ever changes).
+                    String rawFinalResult = textOrNull(obs, "finalHivTestResult");
+                    String normalizedFinalResult = (rawFinalResult == null || rawFinalResult.isEmpty())
+                            ? normalizeConfirmatoryResult(textOrNull(obs, "confirmatoryHivTest"))
+                            : rawFinalResult;
+                    boolean rawSuspectedAcute = "YES_NO_YES".equals(textOrNull(obs, "suspectedAcuteInfection"));
+                    // Same staleness fix as getPatientHivSummary — a definitive finalHivTestResult
+                    // (Positive/Negative) always means resolved, regardless of whether the
+                    // suspectedAcuteInfection flag itself was ever reset back to YES_NO_NO.
+                    boolean stillUnresolvedSuspectedAcute = rawSuspectedAcute
+                            && (rawFinalResult == null || rawFinalResult.isEmpty());
+                    boolean acuteHivInfectionDetected = "true".equalsIgnoreCase(textOrNull(obs, "acuteHivInfectionDetected"))
+                            || (rawSuspectedAcute && "Positive".equalsIgnoreCase(normalizedFinalResult));
+                    boolean suspectedAcuteInfection = stillUnresolvedSuspectedAcute && !acuteHivInfectionDetected;
+                    String displayResult = acuteHivInfectionDetected ? "Acute HIV Infection"
+                            : suspectedAcuteInfection ? "Suspected Acute HIV Infection"
+                            : normalizedFinalResult;
+                    htsResponseDto.setFinalResult(displayResult);
                     htsResponseDto.setHepatitisC(textOrNull(obs, "hepatitisC"));
                     htsResponseDto.setPregnancyStatusAtEntry(textOrNull(obs, "pregnancyStatusAtEntry"));
                     htsResponseDto.setPreviouslyKnownHivPositive(textOrNull(obs, "previouslyKnownHivPositive"));

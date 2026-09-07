@@ -334,18 +334,31 @@ Page<PatientInfo> findFemalePersonBySearchParameters(String queryParam, Long fac
 
   // hiv_enrollment_commencement now carries regimen_id/regimen_line_id/unique_id directly
   // (single merged table on the HIV module's newer enrollment flow, which no longer dual-writes
-  // to hiv_art_clinical/hiv_enrollment). Prefer those columns, falling back to the old join
-  // for records that predate that change, so this works regardless of migration status.
-  @Query(value = "SELECT hec.date_art_started AS artStartDate, " +
+  // to hiv_art_clinical/hiv_enrollment). Prefer those columns, falling back per-field to the old
+  // hiv_art_clinical/hiv_enrollment tables for records that predate that change. Uses a 3-way
+  // FULL OUTER JOIN across hac/hec/he (not hec as the sole driving table, and not he bolted on
+  // afterward via LEFT JOIN) so a row survives whenever ANY ONE of the three has data — this
+  // matters for a Transfer In client (hiv_enrollment.status_at_registration_id = ART/Pre-ART
+  // Transfer In, see base_application_codeset) whose ART commencement hasn't been re-documented
+  // at the receiving facility yet: hac and hec are both genuinely empty for them, and a plain
+  // FULL OUTER JOIN of two empty sets returns zero rows outright, leaving nothing for a trailing
+  // LEFT JOIN hiv_enrollment to attach to — their bare hiv_enrollment record (date_started,
+  // unique_id) was silently dropped even though that alone is enough to know they're on ART.
+  // hac/hec stay facility-scoped as before (regimen detail is genuinely facility-local); he is
+  // intentionally NOT facility-scoped — ART/HIV-enrollment status must be visible regardless of
+  // which facility originally documented it. regimenName is resolved from hiv_regimen, not
+  // base_application_codeset — that table's ids are shared across unrelated codeset_groups, so
+  // joining on it by id alone can match a completely different codeset (e.g. TIME_HIV_DIAGNOSIS).
+  @Query(value = "SELECT COALESCE(hec.date_art_started, he.date_started) AS artStartDate, " +
           "COALESCE(CAST(hec.regimen_line_id AS BIGINT), CAST(hac.regimen_type_id AS BIGINT)) AS regimenTypeId, " +
           "COALESCE(CAST(hec.regimen_id AS BIGINT), CAST(hac.regimen_id AS BIGINT)) AS regimenId, " +
-          "bac.display AS regimenName, " +
+          "hr.description AS regimenName, " +
           "COALESCE(hec.unique_id, he.unique_id) AS uniqueArtNumber " +
-          "FROM hiv_enrollment_commencement hec " +
-          "LEFT JOIN hiv_art_clinical hac ON hac.person_uuid = hec.person_uuid AND hac.is_commencement = true AND hac.archived = 0 " +
-          "LEFT JOIN base_application_codeset bac ON bac.id = CAST(COALESCE(CAST(hec.regimen_id AS BIGINT), CAST(hac.regimen_id AS BIGINT)) AS INTEGER) " +
-          "LEFT JOIN hiv_enrollment he ON he.person_uuid = hec.person_uuid AND he.archived = 0 " +
-          "WHERE hec.person_uuid = ?1 AND hec.facility_id = ?2 AND hec.archived = 0 ORDER BY hec.id DESC LIMIT 1", nativeQuery = true)
+          "FROM (SELECT * FROM hiv_art_clinical WHERE person_uuid = ?1 AND facility_id = ?2 AND is_commencement = true AND archived = 0 ORDER BY id DESC LIMIT 1) hac " +
+          "FULL OUTER JOIN (SELECT * FROM hiv_enrollment_commencement WHERE person_uuid = ?1 AND facility_id = ?2 AND archived = 0 ORDER BY id DESC LIMIT 1) hec ON true " +
+          "FULL OUTER JOIN (SELECT * FROM hiv_enrollment WHERE person_uuid = ?1 AND archived = 0 ORDER BY id DESC LIMIT 1) he ON true " +
+          "LEFT JOIN hiv_regimen hr ON hr.id = COALESCE(CAST(hec.regimen_id AS BIGINT), CAST(hac.regimen_id AS BIGINT)) " +
+          "LIMIT 1", nativeQuery = true)
   List<PatientArtData> getArtDate (String patientUuid, Long facilityId);
 
 

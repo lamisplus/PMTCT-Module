@@ -429,8 +429,16 @@ const RecentHistory = (props) => {
     } else if (row.path === "pmtct-hts") {
          setSaving(true);
       //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
+      // Numeric recordId → post-migration hts_encounter record — delete goes straight to
+      // HTS-Module's own DELETE /api/v1/hts-encounter/{id} instead of PMTCT's retired
+      // delete/pmtct-hts/{id}. Non-numeric (legacy UUID) ids still use PMTCT's own endpoint,
+      // which HTS's endpoints have no way to reference at all.
+      const isLegacyRecordId = row.recordId != null && !/^\d+$/.test(String(row.recordId));
+      const deleteUrl = isLegacyRecordId
+        ? `${baseUrl}pmtct/anc/delete/pmtct-hts/${row.recordId}`
+        : `${baseUrl}hts-encounter/${row.recordId}`;
       axios
-        .delete(`${baseUrl}pmtct/anc/delete/pmtct-hts/${row.recordId}`, {
+        .delete(deleteUrl, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -445,16 +453,13 @@ const RecentHistory = (props) => {
         })
         .catch((error) => {
           setSaving(false);
-          if (error.response && error.response.data) {
-            let errorMessage =
-              error.response.data.apierror &&
-              error.response.data.apierror.message !== ""
-                ? error.response.data.apierror.message
-                : "Something went wrong, please try again";
-            toast.error(errorMessage);
-          } else {
-            toast.error("Something went wrong. Please try again...");
-          }
+          const errorMessage =
+            error.response?.data?.message ||
+            (error.response?.data?.apierror && error.response.data.apierror.message !== ""
+              ? error.response.data.apierror.message
+              : null) ||
+            "Something went wrong, please try again";
+          toast.error(errorMessage);
         });
     }
   };

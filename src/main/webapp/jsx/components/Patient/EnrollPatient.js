@@ -791,7 +791,13 @@ const UserRegistration = (props) => {
             // ANC ENTRY POINT
             url = `${baseUrl}pmtct/anc/anc-enrollement`;
           } else {
-            // LD OR POSTPARTUM ENTRY POINT
+            // LD OR POSTPARTUM ENTRY POINT — PMTCTEnrollmentRequestDto.urinalysis is a plain
+            // String, not the {sugar, proteins} object ANCEnrollementRequestDto expects. This
+            // form never renders Urinalysis inputs for this entry point (urinalysisSugar/
+            // urinalysisProteins are always ""), so the object was always sent empty and Jackson
+            // rejected the whole request trying to deserialize it into a String — every LD/
+            // Postpartum save failed. Drop it; there's nothing real to send here.
+            delete payload.urinalysis;
             url = `${baseUrl}pmtct/anc/pmtct-enrollment`;
           }
 

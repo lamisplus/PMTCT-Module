@@ -52,6 +52,28 @@ public interface PmtctVisitRepository extends CommonJpaRepository<PmtctVisit, St
                 "ORDER BY lr.date_result_reported DESC, lr.id DESC LIMIT 1", nativeQuery = true)
         Optional<Long> findLatestViralLoadResult(String patientUuid);
 
+        // LV3-1732: same source/filter as findLatestViralLoadResult, but also returns the
+        // result date — needed to populate hts_encounter.observation.dateoffinalHivTestResult
+        // with "the date of test from the viral load order form" per the Acute HIV Infection spec.
+        @Query(value = "SELECT CAST(REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') AS NUMERIC) AS vlResult, " +
+                "lr.date_result_reported AS resultDate " +
+                "FROM laboratory_result lr " +
+                "INNER JOIN laboratory_test lt ON lr.test_id = lt.id " +
+                "WHERE lt.lab_test_id = 16 " +
+                "AND lr.patient_uuid = ?1 " +
+                "AND lr.archived = 0 " +
+                "AND lr.result_reported IS NOT NULL " +
+                "AND lr.date_result_reported IS NOT NULL " +
+                "AND REGEXP_REPLACE(TRIM(lr.result_reported), '[^0-9.]', '', 'g') ~ '^[0-9]*\\.?[0-9]+$' " +
+                "ORDER BY lr.date_result_reported DESC, lr.id DESC LIMIT 1", nativeQuery = true)
+        // Object[] (index 0 = vlResult Number, index 1 = resultDate), not an interface projection
+        // — Optional<LatestViralLoadResult> (both nested and top-level forms) threw
+        // "Projection type must be an interface!" from Spring Data's ProxyProjectionFactory at
+        // runtime in this Across-module-per-classloader setup, even though it plainly is one.
+        // List<Object[]> is the same pattern findLatestRetestingResultByCycle already uses
+        // successfully elsewhere in this file for multi-column native query results.
+        List<Object[]> findLatestViralLoadResultWithDate(String patientUuid);
+
         @Query(value = "SELECT pharmacy_object->>'regimenName' AS regimen_name " +
                 "FROM hiv_art_pharmacy h, " +
                 "jsonb_array_elements(h.extra->'regimens') AS pharmacy_object " +

@@ -122,7 +122,6 @@ const PmtctHtsPatients = (props) => {
                       state: {
                         patientObj: rowData,
                         postValue: "HTS",
-                        entrypointValue: "PMTCT_ENTRY_POINT_HTS",
                       },
                     }}
                   >

@@ -184,39 +184,17 @@ function SubMenu(props) {
 
       const htsUrl = `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${thePmtctCycleUuid}`;
 
-      // hts_encounter is the shared source of truth for HIV status across both the HTS module
-      // and PMTCT — a result documented directly via the standalone HTS module (no PMTCT
-      // cycle, no pmtct_hts flag) must still be used the same way a PMTCT-cycle-specific
-      // result would, whether Positive or Negative. Uses get-confirmatory-latest-result with
-      // no cycle param, i.e. the patient-wide (not cycle-scoped) latest result. The
-      // cycle-specific lookup below is only for this cycle's own record details (syphilis/hep
-      // results, hasExistingHts for the retesting-vs-initial menu state).
-      const fetchPatientWideHivStatus = async () => {
-        try {
-          const res = await axios.get(
-            `${baseUrl}pmtct/anc/get-confirmatory-latest-result?patientUuid=${patientUuid}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          return res.data || null;
-        } catch (e) {
-          return null;
-        }
-      };
-
       try {
         const htsRes = await axios.get(htsUrl, { headers: { Authorization: `Bearer ${token}` } });
 
         const hasExistingHts = !!(htsRes.data?.id);
 
-        // If no HTS record exists for THIS cycle (e.g. deleted, or the patient's only record
-        // was documented on the HTS module), use the patient-wide result — Positive or
-        // Negative — instead of resetting to "no record" as if nothing was ever tested.
+        // If no HTS record exists (e.g. deleted), reset to "no record" state
         if (!hasExistingHts) {
           setIsSyphilisPositive(false);
           setIsHepatitisPositive(false);
-          const status = await fetchPatientWideHivStatus();
-          setPatientStatus(status);
-          showRetestingMenu(status, false);
+          setPatientStatus(null);
+          showRetestingMenu(null, false);
           setMenuReady(true);
           return;
         }
@@ -225,6 +203,31 @@ function SubMenu(props) {
         let hivStatus = htsRes.data?.finalResult
           || htsRes.data?.confirmatoryHivTest?.result
           || null;
+
+        // LV3-1732: a client whose Suspected Acute HIV Infection resolved to Acute (VL
+        // >=1000c/ml) must get Mother Clinical Information access as a HIV Positive Client —
+        // but checkAndApplyAcuteInfectionStatus's resolution target is deliberately patient-wide
+        // (see its own comment), so the confirmed-Acute record can be a different hts_encounter
+        // row than this cycle's own pmtct_hts=true record findLatestByPatientUuidAndCycleUuid
+        // (above, via get-latest-pmtct-hts-enrollment) reads finalResult from — same gap already
+        // fixed for the Patient Dashboard badge (getPatientHivSummary), checked here too so this
+        // access gate doesn't miss it. Best-effort: a failure here must never block menu load.
+        // isSuspectedAcuteUnresolved also captured here — a client still awaiting VL resolution
+        // (or genuinely resolved-but-Acute) must never be offered Retesting either; see
+        // showRetestingMenu's new isSuspectedAcute param below.
+        let isSuspectedAcuteUnresolved = false;
+        try {
+          const summaryRes = await axios.get(
+            `${baseUrl}pmtct/anc/patient-hiv-summary?patientUuid=${patientUuid}&pmtctCycleUuid=${thePmtctCycleUuid}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (summaryRes.data?.acuteHivInfectionDetected) {
+            hivStatus = "Positive";
+          }
+          isSuspectedAcuteUnresolved = Boolean(summaryRes.data?.suspectedAcuteInfection);
+        } catch (summaryErr) {
+          // Best-effort — see comment above.
+        }
 
         // Helper to check if a test value indicates positive
         const checkPositive = (val) => {
@@ -257,22 +260,10 @@ function SubMenu(props) {
           }
         }
 
-        // Same principle as syphilis/hepatitis above: if this cycle's own record isn't
-        // already Positive, check the patient-wide hts_encounter status before settling —
-        // a Positive documented via the standalone HTS module (or a prior cycle) must still
-        // win over this cycle's Negative/empty result. (This cycle's own Negative/empty
-        // result is already in hivStatus, so only a patient-wide Positive needs to override
-        // it here — unlike the no-record branch above, there's no "utilize the Negative"
-        // case to add since this cycle already has its own value.)
-        if (!checkPositive(hivStatus)) {
-          const patientWideStatus = await fetchPatientWideHivStatus();
-          if (checkPositive(patientWideStatus)) hivStatus = "Positive";
-        }
-
         setIsSyphilisPositive(syphPositive);
         setIsHepatitisPositive(hepPositive);
         setPatientStatus(hivStatus);
-        showRetestingMenu(hivStatus, hasExistingHts);
+        showRetestingMenu(hivStatus, hasExistingHts, isSuspectedAcuteUnresolved);
         setMenuReady(true);
       } catch (error) {
         console.error("Error fetching confirmatory result:", error);
@@ -289,11 +280,23 @@ function SubMenu(props) {
     }
 
   };
-const showRetestingMenu = (patientHivStatus, hasExistingHts = false) => {
+const showRetestingMenu = (patientHivStatus, hasExistingHts = false, isSuspectedAcute = false) => {
 
   if (props?.patientObj?.pmtctRegStatus) {
     setShowRetesting(false);
     return; // Exit early if pmtct registered
+  }
+
+  // LV3-1732: a client flagged suspectedAcuteInfection (Early Detect Reactive, awaiting or
+  // already resolved by VL) is never eligible for Retesting — she already has a reactive
+  // result on file, resolved or not, so offering a repeat test doesn't apply. Checked ahead of
+  // everything else below since a still-unresolved record's own finalResult is blank, which
+  // would otherwise fall through to the "no documented result yet" branch further down and
+  // incorrectly show Retesting anyway.
+  if (isSuspectedAcute) {
+    setShowRetesting(false);
+    setRetestingStatus('retesting');
+    return;
   }
 
   // Retesting should only display when there is a documented HIV Negative Result on the PMTCT HTS

@@ -15,6 +15,30 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
 
     Optional<HtsEncounterProxy> findByIdAndArchived(Long id, Boolean archived);
 
+    // Scenario: a patient already has a positive result documented via the standalone HTS
+    // module (pmtct_hts = false) before ever touching PMTCT. Per business rule, a patient can
+    // only ever have one active positive HTS result system-wide (HTS's own create/update
+    // enforces this), so this should normally return at most one row — ORDER BY ... ASC LIMIT 1
+    // is a defensive tie-breaker (earliest) for the case where more than one somehow exists.
+    // Excludes pmtct_hts = true rows deliberately: if PMTCT already created its own positive
+    // record for this patient, that's a different, already-handled path (edit via history),
+    // not this "adopt HTS's existing record" scenario.
+    @Query(nativeQuery = true, value
+            = "SELECT * FROM hts_encounter "
+            + "WHERE pmtct_hts = false AND archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND ("
+            + "    UPPER(COALESCE(observation->>'finalHivTestResult', '')) LIKE '%POSITIVE%' "
+            + "    OR UPPER(COALESCE(observation->>'confirmatoryHivTest', '')) LIKE '%POSITIVE%'"
+            + "  ) "
+            + "ORDER BY date_of_visit ASC, id ASC LIMIT 1")
+    Optional<HtsEncounterProxy> findEarliestHtsModulePositiveRecord(String patientUuid);
+
+    // Used by viewPMTCTHTSEnrollmentById so opening a record for view/edit enforces the same
+    // pmtct_hts = true boundary PMTCT's own listing/history queries already apply — otherwise
+    // this single-record fetch (by numeric id alone) could load a record PMTCT never authored.
+    Optional<HtsEncounterProxy> findByIdAndPmtctHtsAndArchived(Long id, Boolean pmtctHts, Boolean archived);
+
     List<HtsEncounterProxy> findByPatientUuidAndPmtctHtsAndArchivedOrderByDateOfVisitDesc(
             UUID patientUuid, Boolean pmtctHts, Boolean archived);
 
@@ -85,6 +109,24 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
     Optional<HtsEncounterProxy> findLatestRecordAnyModule(String patientUuid);
+
+    // LV3-1732 / Acute HIV Infection spec: "Once an Early Detect Result is now confirmed as
+    // Acute HIV Infection, the system should treat the client as HIV-positive from that point
+    // forward" — patient-wide, not scoped to the current pregnancy cycle or to pmtct_hts = true.
+    // checkAndApplyAcuteInfectionStatus's own resolution target
+    // (findUnflaggedSuspectedAcuteInfectionRecords) is deliberately patient-wide with no cycle/
+    // pmtct_hts filter, so the record it resolves onto can be a different row than the current
+    // cycle's own pmtct_hts = true record that getPatientHivSummary would otherwise display —
+    // without this query, the dashboard badge silently misses the resolution and falls back to
+    // showing plain "Positive" (or whatever the cycle's own record happens to hold) instead of
+    // "Acute HIV Infection".
+    @Query(nativeQuery = true, value
+            = "SELECT * FROM hts_encounter "
+            + "WHERE archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND COALESCE(CAST(observation->>'acuteHivInfectionDetected' AS boolean), false) = true "
+            + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
+    Optional<HtsEncounterProxy> findConfirmedAcuteHivInfection(String patientUuid);
 
     @Query(nativeQuery = true, value
             = "SELECT EXISTS("
@@ -172,7 +214,11 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'suspectedAcuteInfection' = 'YES_NO_YES' "
-            + "  AND COALESCE((observation->>'acuteHivInfectionDetected')::boolean, false) = false "
+            // CAST(... AS boolean), not the `::boolean` shorthand — Hibernate's native-query
+            // parameter parser misreads the `::` cast operator as a second `:name` bind marker,
+            // which corrupts parsing of the real :patientUuid parameter and sends it to Postgres
+            // unresolved ("syntax error at or near \":\"" at runtime).
+            + "  AND COALESCE(CAST(observation->>'acuteHivInfectionDetected' AS boolean), false) = false "
             + "ORDER BY date_of_visit DESC, id DESC")
     List<HtsEncounterProxy> findUnflaggedSuspectedAcuteInfectionRecords(String patientUuid);
 }

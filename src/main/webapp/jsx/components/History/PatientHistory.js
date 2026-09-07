@@ -275,7 +275,7 @@ const PatientnHistory = (props) => {
           }
         });
     } else if (row.path === "anc-delivery") {
-      setSaving(false);
+      setSaving(true);
       //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
       axios
         .delete(`${baseUrl}pmtct/anc/delete/delivery/${row.recordId}`, {
@@ -377,6 +377,40 @@ const PatientnHistory = (props) => {
           } else {
             toast.error("Something went wrong. Please try again...");
           }
+        });
+    } else if (row.path === "pmtct-hts") {
+      setSaving(true);
+      // Numeric recordId → post-migration hts_encounter record — delete goes straight to
+      // HTS-Module's own DELETE /api/v1/hts-encounter/{id} instead of PMTCT's retired
+      // delete/pmtct-hts/{id}. Non-numeric (legacy UUID) ids still use PMTCT's own endpoint,
+      // which HTS's endpoints have no way to reference at all.
+      const isLegacyRecordId = row.recordId != null && !/^\d+$/.test(String(row.recordId));
+      const deleteUrl = isLegacyRecordId
+        ? `${baseUrl}pmtct/anc/delete/pmtct-hts/${row.recordId}`
+        : `${baseUrl}hts-encounter/${row.recordId}`;
+      axios
+        .delete(deleteUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          toast.success("Record Deleted Successfully");
+          PatientHistory();
+          toggle();
+          setSaving(false);
+          // Notify parent so PatientCard re-fetches HIV status after HTS deletion
+          if (props.setActiveContent) {
+            props.setActiveContent((prev) => ({ ...prev, actionType: "hts-deleted" }));
+          }
+        })
+        .catch((error) => {
+          setSaving(false);
+          const errorMessage =
+            error.response?.data?.message ||
+            (error.response?.data?.apierror && error.response.data.apierror.message !== ""
+              ? error.response.data.apierror.message
+              : null) ||
+            "Something went wrong, please try again";
+          toast.error(errorMessage);
         });
     } else {
     }

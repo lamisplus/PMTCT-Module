@@ -19,48 +19,56 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
     List<PmtctHts> findByPatientUuid(String patientUuid);
 
 
-    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND archived = false ORDER BY ID DESC", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
     List<PmtctHts> findByPatientUuidAndUnarchived(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = false ORDER BY ID DESC", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY ID DESC", nativeQuery = true)
     List<PmtctHts> findByPatientUuidAndPmtctCycleIdAndUnarchived(String patientUuid, String pmtctCycleUuid);
 
 
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND archived = false ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
     Optional<String> findLatestFinalResult(String patientUuid);
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = false ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') FROM pmtct_hts where patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC, id DESC  LIMIT 1 ", nativeQuery = true)
     Optional<String> findLatestFinalResultByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND archived = false ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
     PmtctHts findLatestPMTCTHTSEnrollmentById(String patientUuid);
 
-    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = false ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
+    @Query(value = "SELECT * FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND archived = 0 ORDER BY date_of_hiv_test DESC LIMIT 1 ", nativeQuery = true)
     PmtctHts findLatestPMTCTHTSEnrollmentByIdAndCycleId(String patientUuid, String pmtctCycleUuid);
 
+    // archived is Integer (0/1) here, not Boolean — pmtct_hts.archived is an integer column
+    // (see comment on countActiveMigratableRecords below for why).
     @Query(value = "SELECT * FROM pmtct_hts WHERE pmtct_cycle_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
-    Optional<PmtctHts> findByPmtctCycleIdAndArchived(String pmtctCycleUuid, Boolean archived);
+    Optional<PmtctHts> findByPmtctCycleIdAndArchived(String pmtctCycleUuid, Integer archived);
 
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND date_of_hiv_test =?2 AND archived = false ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND date_of_hiv_test =?2 AND archived = 0 ORDER BY id DESC LIMIT 1)\n", nativeQuery = true)
     boolean findIfDateExist(String patientUuid, LocalDate dateOfHivTest);
 
-    @Query(value = "SELECT COUNT(*) FROM pmtct_hts p WHERE p.archived = false AND p.facility_id = ?1 AND EXISTS (SELECT 1 FROM patient_person pp WHERE CAST(pp.uuid AS TEXT) = p.patient_uuid)", nativeQuery = true)
+    // pmtct_hts.archived is INTEGER (0/1), not boolean — a Liquibase changeset once converted
+    // it to boolean, but a later changeset (20250530-revert-pmtct-hts-archived-to-integer, in
+    // installers/pmtct/schema/add-new-columns.xml) deliberately reverted that. Every native
+    // query against this table must compare archived to 0/1, never true/false, or Postgres
+    // throws "operator does not exist: integer = boolean". (hts_encounter.archived, by
+    // contrast, genuinely is boolean — don't confuse the two tables.)
+    @Query(value = "SELECT COUNT(*) FROM pmtct_hts p WHERE p.archived = 0 AND p.facility_id = ?1 AND EXISTS (SELECT 1 FROM patient_person pp WHERE CAST(pp.uuid AS TEXT) = p.patient_uuid)", nativeQuery = true)
     long countActiveMigratableRecords(Long facilityId);
 
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND UPPER(COALESCE(testing_type,'')) != 'RETESTING' AND archived = false)", nativeQuery = true)
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND pmtct_cycle_uuid=?2 AND UPPER(COALESCE(testing_type,'')) != 'RETESTING' AND archived = 0)", nativeQuery = true)
     boolean existsInitialHtsForCycle(String patientUuid, String pmtctCycleUuid);
 
-    @Query(value = "SELECT MIN(date_of_hiv_test) FROM pmtct_hts WHERE patient_uuid = ?1 AND archived = false AND (COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') IN ('Positive', 'reactive'))", nativeQuery = true)
+    @Query(value = "SELECT MIN(date_of_hiv_test) FROM pmtct_hts WHERE patient_uuid = ?1 AND archived = 0 AND (COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') IN ('Positive', 'reactive'))", nativeQuery = true)
     LocalDate findEarliestPositiveHivTestDate(String patientUuid);
 
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = false AND ("
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = 0 AND ("
             + "LOWER(COALESCE(syphilis, '')) IN ('positive', 'reactive') OR "
             + "LOWER(COALESCE(syphilis_info->>'testResult', '')) IN ('positive', 'reactive')"
             + "))", nativeQuery = true)
     boolean hasEverPositiveSyphilis(String patientUuid);
 
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = false AND ("
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM pmtct_hts WHERE patient_uuid=?1 AND archived = 0 AND ("
             + "LOWER(COALESCE(hepatitis_b, '')) IN ('positive', 'reactive') OR "
             + "LOWER(COALESCE(hbv_info->>'testResult', '')) IN ('positive', 'reactive') OR "
             + "LOWER(COALESCE(hepatitis_c, '')) IN ('positive', 'reactive')"
@@ -68,10 +76,10 @@ public interface PmtctHtsRepository extends CommonJpaRepository<PmtctHts, String
     boolean hasEverPositiveHepatitis(String patientUuid);
 
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND archived = false AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
     List<Object[]> findLatestHivTestResultList(String patientUuid);
 
-    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND pmtct_cycle_uuid =?2 AND archived = false AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(NULLIF(final_result, ''), confirmatory_hiv_test->>'result') as result, date_of_hiv_test FROM pmtct_hts WHERE patient_uuid =?1 AND pmtct_cycle_uuid =?2 AND archived = 0 AND testing_type = 'RETESTING' ORDER BY id DESC LIMIT 1", nativeQuery = true)
     List<Object[]> findLatestHivTestResultListByPatientUuidAndCycleId(String patientUuid, String pmtctCycleUuid);
 
 

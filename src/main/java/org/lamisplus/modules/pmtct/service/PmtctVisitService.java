@@ -46,6 +46,30 @@ public class PmtctVisitService {
         return date;
     }
 
+    // LV3-1725: ANC Revisit is the only place besides the ANC enrollment form itself where
+    // Syphilis/Hepatitis B testing is (re)documented, but this visit's syphilisInfo/
+    // hepatitisBInfo were only ever being saved onto the PmtctVisit row (pmtct_mother_visitation)
+    // — never synced back onto the ANC record (pmtct_anc), which is the only table
+    // PmtctHtsForm.js's autopopulation reads (via get-anc-by-person). So a syphilis/HepB result
+    // captured at a Revisit could never autopopulate onto the PMTCT HTS form. Only applies to
+    // ANC_REVISIT visits (never Mother Visit, whose syphilisInfo/hepatitisBInfo are always blank
+    // placeholders — merging those in would silently wipe out real ANC-enrollment data), and
+    // only overwrites fields the revisit actually provided, so an untested field on the revisit
+    // form doesn't erase a result already on file from enrollment.
+    private void mergeSerologyIntoAnc(ANC anc, PmtctVisitRequestDto dto) {
+        if (!"ANC_REVISIT".equals(dto.getVisitType())) {
+            return;
+        }
+        SyphilisInfoDto revisitSyphilis = dto.getSyphilisInfo();
+        if (revisitSyphilis != null && revisitSyphilis.getTestedSyphilis() != null && !revisitSyphilis.getTestedSyphilis().isEmpty()) {
+            anc.setSyphilisInfo(revisitSyphilis);
+        }
+        HepatitisBDto revisitHepB = dto.getHepatitisBInfo();
+        if (revisitHepB != null && revisitHepB.getTestedHepatitisB() != null) {
+            anc.setHepatitisBInfo(revisitHepB);
+        }
+    }
+
     public PmtctVisit converRequestDtotoEntity(PmtctVisitRequestDto pmtctVisitRequestDto) {
         // Block new visit creation if MIP Card cycle is closed
         if (pmtctVisitRequestDto.getPmtctCycleUuid() != null &&
@@ -132,6 +156,7 @@ public class PmtctVisitService {
                             : ancRepository.findANCByPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                     if(ancs.isPresent()) {
                         ANC anc = ancs.get();
+                        mergeSerologyIntoAnc(anc, pmtctVisitRequestDto);
                         if (visitStatus.contains("_IN")) {
                             ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
                         } else {
@@ -238,6 +263,7 @@ public class PmtctVisitService {
                             : ancRepository.findANCByPatientUuid(pmtctVisitRequestDto.getPatientUuid());
                     if(ancs.isPresent()) {
                         ANC anc = ancs.get();
+                        mergeSerologyIntoAnc(anc, pmtctVisitRequestDto);
                         if (visitStatus.contains("_IN")) {
                             ancService.updateANC(anc, visitStatus, pmtctVisitRequestDto.getDateOfVisit());
                         } else {

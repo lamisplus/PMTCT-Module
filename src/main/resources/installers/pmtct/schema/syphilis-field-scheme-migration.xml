@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- LV3-1725: the ANC Revisit form's Syphilis section used to conflate "tested" and
+         "result" into a single testedSyphilis dropdown with values "Not Done"/"Positive"/
+         "Negative", instead of the Yes/No testedSyphilis + separate testResultSyphilis scheme
+         used everywhere else (ANC enrollment form, Hepatitis B on the same Revisit form, and
+         the PMTCT HTS form's autopopulation reader). This meant syphilis results captured via
+         ANC Revisit could never match PmtctHtsForm.js's `testedSyphilis === "Yes"` check, and
+         were also never synced from pmtct_mother_visitation onto pmtct_anc at all (unlike
+         Hepatitis B). Both gaps are now fixed going forward in code
+         (Consultation/Home.js + PmtctVisitService.mergeSerologyIntoAnc); these changesets
+         repair already-saved historical data.
+         Note: the jsonb "key exists" operator is escaped as ?? because Liquibase runs <sql>
+         through a JDBC PreparedStatement, which otherwise treats a bare ? as a bind parameter. -->
+
+    <changeSet failOnError="false" author="system" id="2026-08-21-normalize-legacy-testedSyphilis-values">
+        <comment>Split conflated Not Done/Positive/Negative testedSyphilis values on pmtct_mother_visitation into the Yes/No + testResultSyphilis scheme</comment>
+        <sql>
+            UPDATE pmtct_mother_visitation
+            SET syphilis_info = syphilis_info
+                || jsonb_build_object(
+                    'testedSyphilis',
+                    CASE WHEN syphilis_info->>'testedSyphilis' = 'Not Done' THEN 'No' ELSE 'Yes' END,
+                    'testResultSyphilis',
+                    CASE
+                        WHEN syphilis_info->>'testedSyphilis' = 'Not Done'
+                            THEN COALESCE(NULLIF(syphilis_info->>'testResultSyphilis', ''), '')
+                        ELSE COALESCE(NULLIF(syphilis_info->>'testResultSyphilis', ''), syphilis_info->>'testedSyphilis')
+                    END
+                )
+            WHERE syphilis_info ?? 'testedSyphilis'
+              AND syphilis_info->>'testedSyphilis' IN ('Not Done', 'Positive', 'Negative');
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-08-21-backfill-anc-syphilis-from-revisit">
+        <comment>Backfill pmtct_anc.syphilis_info from the latest ANC Revisit that documented a real tested value, only where the ANC record itself has none</comment>
+        <sql>
+            UPDATE pmtct_anc anc
+            SET syphilis_info = mv.syphilis_info
+            FROM (
+                SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid)
+                    patient_uuid, pmtct_cycle_uuid, syphilis_info
+                FROM pmtct_mother_visitation
+                WHERE visit_type = 'ANC_REVISIT'
+                  AND archived = false
+                  AND syphilis_info->>'testedSyphilis' = 'Yes'
+                ORDER BY patient_uuid, pmtct_cycle_uuid, date_of_visit DESC, id DESC
+            ) mv
+            WHERE anc.patient_uuid = mv.patient_uuid
+              AND anc.pmtct_cycle_uuid = mv.pmtct_cycle_uuid
+              AND COALESCE(anc.syphilis_info->>'testedSyphilis', '') = '';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="system" id="2026-08-21-backfill-anc-hepatitisb-from-revisit">
+        <comment>Backfill pmtct_anc.hepatitis_b_info from the latest ANC Revisit that documented a real tested value, only where the ANC record itself has none</comment>
+        <sql>
+            UPDATE pmtct_anc anc
+            SET hepatitis_b_info = mv.hepatitis_b_info
+            FROM (
+                SELECT DISTINCT ON (patient_uuid, pmtct_cycle_uuid)
+                    patient_uuid, pmtct_cycle_uuid, hepatitis_b_info
+                FROM pmtct_mother_visitation
+                WHERE visit_type = 'ANC_REVISIT'
+                  AND archived = false
+                  AND COALESCE(hepatitis_b_info->>'testedHepatitisB', '') != ''
+                ORDER BY patient_uuid, pmtct_cycle_uuid, date_of_visit DESC, id DESC
+            ) mv
+            WHERE anc.patient_uuid = mv.patient_uuid
+              AND anc.pmtct_cycle_uuid = mv.pmtct_cycle_uuid
+              AND COALESCE(anc.hepatitis_b_info->>'testedHepatitisB', '') = '';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

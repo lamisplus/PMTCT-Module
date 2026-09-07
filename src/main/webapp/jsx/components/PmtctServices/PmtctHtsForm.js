@@ -100,9 +100,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-// Matches HTS-Module's SETTING_PREFIX_MAP abbreviations (FC/CM), just keyed by
-// PMTCT's own ENROLLMENT_SETTING_* codeset values instead of HTS_ENTRY_POINT_*.
+// Matches HTS-Module's SETTING_PREFIX_MAP abbreviations (FC/CM). PMTCT now sources the
+// Setting dropdown from the same HTS_ENTRY_POINT codeset HTS itself uses (previously its own,
+// different ENROLLMENT_SETTING codeset), so both modules' hts_encounter.setting values line
+// up. Old ENROLLMENT_SETTING_* values are kept mapped here too — not because new records ever
+// produce them, but because the client code now regenerates on update as well as create (see
+// the Recompute Client Code effect below): a pre-existing record saved with the old codeset
+// value would otherwise abbreviate differently ("ESF" instead of "FC") the moment it's opened
+// for edit, silently changing its client code even if nothing else was touched.
 const SETTING_ABBR_MAP = {
+  HTS_ENTRY_POINT_FACILITY: "FC",
+  HTS_ENTRY_POINT_COMMUNITY: "CM",
   ENROLLMENT_SETTING_FACILITY: "FC",
   ENROLLMENT_SETTING_COMMUNITY: "CM",
 };
@@ -185,6 +193,167 @@ const generateClientCode = (setting, testSetting, dateOfVisit, serialNumber) => 
 // Not in the HIV_EARLY_DETECT_RESULT codeset (base_application_codeset) — added
 // as a frontend-only option below instead of writing a new row to that table.
 const HIV_EARLY_DETECT_NON_REACTIVE = "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_NON-REACTIVE";
+
+const isSuspectedAcuteInfectionResult = (hivEarlyDetect) =>
+  hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE" ||
+  hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE";
+
+// Mirrors PmtctHtsService.mapPregnancyStatusToHtsCode (Java) exactly — codes match the live
+// base_application_codeset PREGNANCY_STATUS rows ("PREGANACY_STATUS_..." spelling included,
+// not a typo). Used to live server-side inside buildPmtctObservation(); now that create POSTs
+// straight to HTS's /api/v1/hts-encounter, it has to be derived here before the request is
+// sent, or HIV Prevention's dashboard silently stops picking up Pregnant/Breastfeeding status
+// for PMTCT-authored records again.
+const mapPregnancyStatusToHtsCode = (pregnancyStatusAtEntry) => {
+  if (!pregnancyStatusAtEntry) return "";
+  switch (pregnancyStatusAtEntry.trim().toLowerCase()) {
+    case "pregnant": return "PREGANACY_STATUS_PREGNANT";
+    case "breastfeeding": return "PREGANACY_STATUS_BREASTFEEDING";
+    case "post partum": return "PREGANACY_STATUS_POST_PARTUM";
+    case "not pregnant": return "PREGANACY_STATUS_NOT_PREGNANT";
+    default: return "";
+  }
+};
+
+// Mirrors PmtctHtsService.mapToHtsSetting (Java). The Setting dropdown already sources the
+// HTS_ENTRY_POINT codeset directly, so payload.testEntryPoint normally already holds a valid
+// HTS_ENTRY_POINT_* value for a fresh create — this is a defensive fallback, not the primary
+// path, in case that value is ever missing/legacy-shaped.
+const mapToHtsEntryPointSetting = (testEntryPoint) => {
+  if (!testEntryPoint) return "HTS_ENTRY_POINT_FACILITY";
+  return testEntryPoint.toUpperCase().includes("COMMUNITY")
+    ? "HTS_ENTRY_POINT_COMMUNITY"
+    : "HTS_ENTRY_POINT_FACILITY";
+};
+
+// Builds the request body for HTS-Module's POST /api/v1/hts-encounter directly from PMTCT's
+// own form payload. Replaces PmtctHtsService.saveToHtsEncounter()/buildPmtctObservation() for
+// the create path — every derivation those methods used to do server-side (setting
+// normalization, facilitySetting/communityEntryPoint routing, pregnancyStatus mapping,
+// suspectedAcuteInfection flag, the dateoffinalHivTestResult date rule, and the "Target
+// Detected"/"Target Not Detected" direct-entry resolution added for LV3-1732/item-14) happens
+// here now, or it silently stops happening the moment PMTCT create no longer routes through
+// that Java code. patientId and facilityId are NOT set here — patientId is resolved on mount
+// via GET pmtct/anc/get-person-id (see fetchPersonId), and facilityId is stated to be derived
+// on HTS-Module's own backend.
+//
+// options.dateOfPreviouslyKnown: only meaningful for the checkPriorHtsPositiveRecord scenario.
+// HTS's DTO has no field for this yet (raised with their team) — included anyway so it starts
+// flowing through automatically the moment they add support, with no further change needed here.
+// options.rawObservation: only meaningful for the checkPriorHtsPositiveRecord scenario — the
+// adopted record's raw observation JSON, fetched directly from HTS-Module's own GET
+// hts-encounter/{id}. Spread in as the base of the request so HTS-only fields PMTCT has no UI
+// for (facilityName, completedBy, designation, typeOfSession, syphilisTestResult,
+// acceptedIndexTesting, etc.) survive the update unchanged instead of being silently wiped by
+// HTS-Module's update(), which rebuilds its observation column from the request body rather than
+// merging onto the existing one. Every explicit field below is spread after it, so PMTCT's own
+// values always win on overlap.
+const buildHtsEncounterRequestPayload = (payload, options = {}) => {
+  const { dateOfPreviouslyKnown, rawObservation } = options;
+  const isCommunity = (payload.testEntryPoint || "").toUpperCase().includes("COMMUNITY");
+  const suspectedAcute = isSuspectedAcuteInfectionResult(payload.hivEarlyDetect);
+
+  let finalHivTestResult = payload.finalResult || "";
+  let confirmatoryHivTest = payload.confirmatoryHivTest?.result || "";
+  let suspectedAcuteInfectionFlag = suspectedAcute ? "YES_NO_YES" : "YES_NO_NO";
+  let dateoffinalHivTestResult = "";
+
+  if (suspectedAcute) {
+    // Unresolved by default while suspected-and-not-yet-confirmed — matches the rule that
+    // finalHivTestResult/dateoffinalHivTestResult must stay blank in this state.
+    finalHivTestResult = "";
+    dateoffinalHivTestResult = "";
+
+    if (payload.hivEarlyDetectViralLoad === "Target Detected") {
+      finalHivTestResult = "Positive";
+      confirmatoryHivTest = "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE";
+      suspectedAcuteInfectionFlag = "YES_NO_YES";
+      dateoffinalHivTestResult = payload.dateOfHivTest || "";
+    } else if (payload.hivEarlyDetectViralLoad === "Target Not Detected") {
+      finalHivTestResult = "Negative";
+      suspectedAcuteInfectionFlag = "YES_NO_NO";
+      dateoffinalHivTestResult = payload.dateOfHivTest || "";
+    }
+  } else if (finalHivTestResult && payload.dateOfHivTest) {
+    dateoffinalHivTestResult = payload.dateOfHivTest;
+  } else if (!finalHivTestResult && payload.previouslyKnownHivPositive === "Yes") {
+    // Transfer-In (checkTransferInStatus) and On-ART (checkHistoricalHivAndArt) both lock
+    // previouslyKnownHivPositive to "Yes" and the form always shows a hardcoded "Positive"
+    // Final HIV Result box whenever that's the case, but neither function ever actually sets
+    // payload.finalResult — so without this fallback the saved record's finalHivTestResult/
+    // confirmatoryHivTest end up blank despite what's displayed on screen. Scenario 1
+    // (checkPriorHtsPositiveRecord) already sets a real finalResult from the adopted record,
+    // so this branch only ever fires for the two scenarios that don't.
+    finalHivTestResult = "Positive";
+    confirmatoryHivTest = "HIV_CONFIRMATORY_TEST_RESULT_POSITIVE";
+    dateoffinalHivTestResult = payload.dateOfHivTest || "";
+  }
+
+  const request = {
+    ...(rawObservation || {}),
+    dateOfVisit: payload.dateOfHivTest,
+    clientCode: payload.clientCode,
+    setting: mapToHtsEntryPointSetting(payload.testEntryPoint),
+    // Always sent per spec — required for PMTCT-origin attribution and the positive-duplicate
+    // exception. True on every save path, including checkPriorHtsPositiveRecord's update of an
+    // adopted HTS-module record — see priorHtsPositiveRecordId's comment for why.
+    pmtctHts: true,
+    source: payload.source || "WEB",
+    // HTS's own "modality" field holds the same FACILITY_HTS_TEST_SETTING_*/
+    // COMMUNITY_HTS_TEST_SETTING_* codeset PMTCT already captures as testSetting (confirmed
+    // against RiskStratification.js's checkPMTCTModality, which checks modality against exactly
+    // these values) — without this, PMTCT-authored records have no modality value at all,
+    // which is why reports built on observation.modality never showed anything for them.
+    modality: payload.testSetting || "",
+
+    pregnancyStatus: mapPregnancyStatusToHtsCode(payload.pregnancyStatusAtEntry),
+
+    typeOfHivTestDone: payload.typeOfHivTest || "",
+    hivEarlyDetectResult: payload.hivEarlyDetect || "",
+    hivEarlyDetectViralLoad: payload.hivEarlyDetectViralLoad || "",
+    initialHivTest: payload.initialHivTest?.result || "",
+    confirmatoryHivTest,
+    finalHivTestResult,
+    suspectedAcuteInfection: suspectedAcuteInfectionFlag,
+    syphilisTestResult: payload.syphilis || "",
+    dateoffinalHivTestResult,
+
+    // previouslyKnownHivPositive is the other half of the positive-duplicate exception (must
+    // contain "yes", case-insensitive, alongside pmtctHts:true) — sourced straight from the
+    // form field of the same name, already a plain "Yes"/"No" string.
+    previouslyKnownHivPositive: payload.previouslyKnownHivPositive || "",
+    // Silently dropped by HTS's DTO until they add support — see this function's top comment.
+    ...(dateOfPreviouslyKnown ? { dateOfPreviouslyKnown } : {}),
+
+    pmtctCycleUuid: payload.pmtctCycleUuid || "",
+    testingType: payload.testingType || "",
+    pmtctTestEntryPoint: payload.pmtctTestEntryPoint || "",
+    testEntryPoint: payload.testEntryPoint || "",
+    testSetting: payload.testSetting || "",
+    stageOfPregnancy: payload.stageOfPregnancy || "",
+    pregnancyStatusAtEntry: payload.pregnancyStatusAtEntry || "",
+    hospitalNumber: payload.hospitalNumber || "",
+    enrolledOnArt: payload.enrolledOnArt || "",
+    initiatedOnProphylaxis: payload.initiatedOnProphylaxis || "",
+    viralLoadMonitoring: payload.viralLoadMonitoring || "",
+    confirmatoryFromSpokes: payload.confirmatoryFromSpokes || "",
+    tbScreeningStatus: payload.tbScreeningStatus || "",
+    tbReferred: payload.tbReferred || "",
+    hepatitisC: payload.hepatitisC || "",
+
+    syphilisInfo: payload.syphilisInfo,
+    hbvInfo: payload.hbvInfo,
+    partnerInfo: payload.partnerInfo,
+  };
+
+  if (isCommunity) {
+    request.communityEntryPoint = payload.testSetting || "";
+  } else {
+    request.facilitySetting = payload.testSetting || "";
+  }
+
+  return request;
+};
 
 const PmtctHtsForm = (props) => {
   const patientObj = props.patientObj;
@@ -271,6 +440,27 @@ const PmtctHtsForm = (props) => {
     pmtctStatus: "INACTIVE",
   });
   const [dateOfHivTestExist, setDateOfHivTestExist] = useState(false);
+  // Resolved once on mount (see fetchPersonId/useEffect below) instead of at submit time, so
+  // it's already available by the time handleSubmit builds the HTS-encounter create payload.
+  const [resolvedPersonId, setResolvedPersonId] = useState(null);
+  // Locks the Previously Known HIV Positive input once checkTransferInStatus confirms an
+  // active HIV Transfer-In record — this is verified fact from another system, not the user's
+  // own claim, so it shouldn't be editable back to "No" on this form.
+  const [isTransferInPatient, setIsTransferInPatient] = useState(false);
+  // Set when checkPriorHtsPositiveRecord finds a pre-existing positive HTS-module record for
+  // this patient — holds that record's numeric hts_encounter id. When set, handleSubmit routes
+  // to PUT against THIS id, flipping pmtctHts to true so the updated record shows up in PMTCT's
+  // own pmtct_hts=true views (Recent Activity in particular) — instead of POSTing a brand-new
+  // record and creating a second one for the same client.
+  const [priorHtsPositiveRecordId, setPriorHtsPositiveRecordId] = useState(null);
+  // Raw observation JSON fetched straight from HTS-Module's own GET hts-encounter/{id} (its own
+  // shape, its own field names) for the adopted record — spread into the save payload as-is so
+  // HTS-only fields PMTCT has no UI for (facilityName, completedBy, designation, typeOfSession,
+  // syphilisTestResult, acceptedIndexTesting, etc.) survive the update instead of being wiped by
+  // HTS-Module's update(), which rebuilds its observation column from the request body rather
+  // than merging onto the existing one.
+  const [priorHtsRawObservation, setPriorHtsRawObservation] = useState(null);
+  const [dateOfPreviouslyKnown, setDateOfPreviouslyKnown] = useState("");
   const [initialHtsExistsForCycle, setInitialHtsExistsForCycle] = useState(false);
 
   const [checkingForTheDate, setCheckingForTheDate] = useState(false);
@@ -431,6 +621,154 @@ const PmtctHtsForm = (props) => {
 
   };
 
+  // Resolves HTS's numeric personId on mount, ahead of submit, instead of during handleSubmit —
+  // so it's already sitting in state by the time the create payload is built. See
+  // PmtctHtsService.getPersonId's comment for why this can't just be read off patientObj.
+  const fetchPersonId = (patientUuid) => {
+    if (!patientUuid) return;
+    axios
+      .get(`${baseUrl}pmtct/anc/get-person-id?patientUuid=${patientUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response?.data?.personId) {
+          setResolvedPersonId(response.data.personId);
+        }
+      })
+      .catch((error) => {
+        // Best-effort — handleSubmit still guards against a missing resolvedPersonId.
+      });
+  };
+
+  // Scenario: this client already has a positive result documented via the standalone HTS
+  // module (not through PMTCT). When opening a brand-new PMTCT HTS form for her, that existing
+  // record should be adopted — prepopulated here in full, and on save, UPDATED in place
+  // (handleSubmit routes to PUT using priorHtsPositiveRecordId) instead of creating a second,
+  // duplicate record for the same client. Deliberately a full overwrite of every field it
+  // controls (not a "fill only if empty" guard like the other create-mode checks) — this is the
+  // single richest, most authoritative source for this exact scenario, so it should win over
+  // whatever the other, more speculative auto-population checks may have guessed first.
+  const checkPriorHtsPositiveRecord = (patientUuid) => {
+    if (!patientUuid) return;
+    axios
+      .get(`${baseUrl}pmtct/anc/check-prior-hts-positive-record?patientUuid=${patientUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (!response?.data?.id) return;
+        const data = response.data;
+        setPriorHtsPositiveRecordId(data.id);
+        setOriginalClientCode(data.clientCode || "");
+
+        // Fetch the record directly from HTS-Module's own GET (its own shape, its own field
+        // names) purely to capture the raw observation for save-time passthrough — see
+        // priorHtsRawObservation's comment. Best-effort: if this fails, saving still proceeds,
+        // just without the HTS-only-field preservation.
+        axios
+          .get(`${baseUrl}hts-encounter/${data.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((htsResponse) => {
+            if (htsResponse?.data?.observation) {
+              setPriorHtsRawObservation(htsResponse.data.observation);
+            }
+          })
+          .catch(() => {
+            // Best-effort — see comment above.
+          });
+        // Scenario 1 only — the adopted testSetting can be any code from HTS's full codeset
+        // (e.g. "Standalone HTS"), not just PMTCT's own curated allow-list, so fetch the
+        // unfiltered options here instead of the default narrow list.
+        getSettingPoint(data.testEntryPoint, true);
+        const loadedClientCode = data.clientCode || "";
+        const derivedSerialNumber = loadedClientCode.includes("/")
+          ? loadedClientCode.substring(loadedClientCode.lastIndexOf("/") + 1)
+          : "";
+        setPayload((prev) => ({
+          ...prev,
+          dateOfHivTest: data.dateOfHivTest,
+          testEntryPoint: mapToHtsEntryPointSetting(data.testEntryPoint),
+          testSetting: data.testSetting || "",
+          stageOfPregnancy: data.stageOfPregnancy || "",
+          clientCode: data.clientCode || "",
+          serialNumber: derivedSerialNumber,
+          hospitalNumber: data.hospitalNumber || prev.hospitalNumber,
+          syphilis: data.syphilisInfo?.testResult || data.syphilis || "",
+          hepatitisB: data.hbvInfo?.testResult || data.hepatitisB || "",
+          hepatitisC: data.hepatitisC || "",
+          testingType: data.testingType || prev.testingType,
+          finalResult: data.finalResult || "",
+          previouslyKnownHivPositive: "Yes",
+          enrolledOnArt: data.enrolledOnArt || prev.enrolledOnArt,
+          typeOfHivTest: data.typeOfHivTest || "",
+          hivEarlyDetect: data.hivEarlyDetect || "",
+          hivEarlyDetectViralLoad: data.hivEarlyDetectViralLoad || "",
+          confirmatoryFromSpokes: data.confirmatoryFromSpokes || "",
+          initiatedOnProphylaxis: data.initiatedOnProphylaxis || "",
+          syphilisTreatment: data.syphilisInfo?.treatment || "",
+          syphilisDrugName: data.syphilisInfo?.drugName || "",
+          knownHbvPositive: data.hbvInfo?.knownPositive || "",
+          hbvTest: data.hbvInfo?.hbvTest || "",
+          hepatitisBTreatment: data.hbvInfo?.treatment || "",
+          hbvVlResultDate: data.hbvInfo?.vlResultDate || "",
+          hbvVlResult: data.hbvInfo?.vlResult || "",
+          hbvDrugName: data.hbvInfo?.drugName || "",
+          tbScreeningStatus: data.tbScreeningStatus || "",
+          tbReferred: data.tbReferred || "",
+          partnerNotificationAgreed: data.partnerInfo?.notificationAgreed || "",
+          partnerTestedHiv: data.partnerInfo?.testedHiv || "",
+          partnerTestedSyphilis: data.partnerInfo?.testedSyphilis || "",
+          partnerTestedHbv: data.partnerInfo?.testedHbv || "",
+          partnerReferredTo: data.partnerInfo?.referral || "",
+          viralLoadMonitoring: data.viralLoadMonitoring || "",
+          pmtctTestEntryPoint: data.pmtctTestEntryPoint || prev.pmtctTestEntryPoint,
+        }));
+
+        if (data.initialHivTest) setInitialHivTest({ ...data.initialHivTest });
+        if (data.confirmatoryHivTest) setConfirmatoryHivTest({ ...data.confirmatoryHivTest });
+        if (data.finalResult) setFinalResult(data.finalResult);
+
+        toast.info(
+          "This client already has a positive result documented on the HTS module — the form has been prepopulated from that record. Saving will update it, not create a new one.",
+          { position: toast.POSITION.TOP_RIGHT }
+        );
+      })
+      .catch((error) => {
+        // 204/no record found, or best-effort failure — stay in normal create mode.
+      });
+  };
+
+  // A documented HIV Transfer-In record means this client was already enrolled in HIV care at
+  // another facility before this encounter — i.e. their HIV-positive status was already known,
+  // the same concept previouslyKnownHivPositive captures. Checking this on mount (via HTS's own
+  // transfer-in-check, the same query their create endpoint uses to 409-block a fresh HTS
+  // record for such clients) and auto-setting the field accordingly makes PMTCT's own data more
+  // clinically accurate regardless of whether HTS's team ends up exempting pmtctHts:true+
+  // previouslyKnownHivPositive from that 409 block — see the "why" thread on this exact case.
+  // Unconditionally overrides (and then locks, via isTransferInPatient below) rather than only
+  // filling an empty value — this is verified fact from another system, not the user's own
+  // claim, so an existing "No" shouldn't be allowed to stand once this comes back true.
+  const checkTransferInStatus = (patientUuid) => {
+    if (!patientUuid) return;
+    axios
+      .get(`${baseUrl}hts-encounter/transfer-in-check?personUuid=${patientUuid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response?.data === true) {
+          setIsTransferInPatient(true);
+          setPayload((prev) => ({ ...prev, previouslyKnownHivPositive: "Yes" }));
+          toast.info(
+            "This client has a documented HIV Transfer-In record — Previously Known HIV Positive has been set to Yes and locked.",
+            { position: toast.POSITION.TOP_RIGHT }
+          );
+        }
+      })
+      .catch((error) => {
+        // Best-effort — absence of this check must never block filling out the form.
+      });
+  };
+
 
 
   const getLastPmtctHtsByPersonUuid= () => {
@@ -528,11 +866,15 @@ const PmtctHtsForm = (props) => {
         props?.patientObj?.patient_uuid ||
         props?.patientObj?.patientUuid ||
         props?.patientObj?.uuid;
-      const personUuid =
-        props?.patientObj?.person_Uuud ||
-        props?.patientObj?.personUuud ||
-        props?.patientObj?.patient_uuid ||
-        props?.patientObj?.uuid;
+      // Was previously derived separately via a fallback chain with two typo'd field names
+      // (person_Uuud, personUuud) that never matched anything real — on the PMTCT HTS grid,
+      // where patientObj only ever has patientUuid (camelCase), that chain fell straight
+      // through to bare .uuid, which on that grid is the HTS-encounter record's own uuid, not
+      // the patient's. That silently sent the wrong id into the ART lookup below, which then
+      // correctly found nothing — the reported "on ART, previously known not auto-populating"
+      // bug. personUuid and patientUuid mean the exact same thing here; no reason for them to
+      // be derived independently and risk drifting apart again.
+      const personUuid = patientUuid;
 
       if (!patientUuid) return;
 
@@ -662,6 +1004,7 @@ const PmtctHtsForm = (props) => {
     POINT_ENTRY_PMTCT();
     GET_CODESETS();
     getLastPmtctHtsRecord();
+    fetchPersonId(props.patientUuid);
     // Loads the existing record for edit/view. Previously also required patientObj.id to be
     // truthy, but that field is unreliable depending on how the patient was navigated to (e.g.
     // via the history page) and viewPmtctHtsRecord doesn't even use it — it always reads
@@ -684,6 +1027,19 @@ const PmtctHtsForm = (props) => {
     ) {
       // New create — check historical HIV/ART status for auto-population
       checkHistoricalHivAndArt();
+      // Create-only: viewPmtctHtsRecord's full-object setPayload on the update/view branch
+      // above would otherwise race this (and could silently revert the auto-set back to
+      // whatever's on the saved record, or blank, depending on which response lands last).
+      checkTransferInStatus(props.patientUuid);
+      // PMTCT-HTS only — "adopt a prior positive HTS-module record" doesn't apply to Retesting
+      // (isPmtctHts false there): a patient already confirmed positive elsewhere shouldn't be
+      // going through an HIV retest. Without this guard, isKnownPositive's isPmtctHts && guard
+      // left Test Setting visible + required in Retesting even after previouslyKnownHivPositive
+      // was force-set to "Yes", so an adopted testSetting value outside PMTCT's filtered
+      // dropdown options rendered as an apparently-blank required field.
+      if (isPmtctHts) {
+        checkPriorHtsPositiveRecord(props.patientUuid);
+      }
       // Auto-populate Status at Entry based on entry point
       if (isPmtctHts) {
         const entryPoint = props?.entrypointValue || "";
@@ -697,13 +1053,16 @@ const PmtctHtsForm = (props) => {
         }));
       }
 
-      // Pre-populate Syphilis/HBV fields from ANC enrollment data (only for ANC entry point).
+      // Pre-populate Syphilis/HBV fields from ANC enrollment data — for the ANC entry point,
+      // or for any other entry point (e.g. Post-Partum) where the client already has an ANC
+      // record/ANC number for this same pregnancy cycle. get-anc-by-person is itself the
+      // authoritative "does this client have an ANC record for this cycle" check (404 when
+      // none exists), so it's queried unconditionally rather than gated on entry point.
       // Hepatitis C is intentionally excluded — this form archives it (see submit handler,
       // "Archive Hepatitis C — always null for PMTCT-HTS") and has no input field for it.
       const patientUuid = props?.patientObj?.patientUuid || props?.patientObj?.uuid || props?.patientUuid;
       const pmtctCycleUuid = props?.latestPmtctCycle?.uuid;
-      const isAncEntry = props?.entrypointValue === "PMTCT_ENTRY_POINT_ANC";
-      if (isAncEntry && patientUuid && pmtctCycleUuid) {
+      if (patientUuid && pmtctCycleUuid) {
         axios
           .get(
             `${baseUrl}pmtct/anc/get-anc-by-person?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
@@ -750,12 +1109,18 @@ const PmtctHtsForm = (props) => {
     }
   }, [props?.activeContent]);
 
-  // Recompute the Client Code preview whenever its inputs change (serial number is user-entered)
+  // Recompute the Client Code preview whenever its inputs change (serial number is user-entered).
+  // Also regenerates during update — if Setting/Test Setting/Date change on an existing record,
+  // the client code must reflect that (e.g. its Community/Facility abbreviation), or the saved
+  // code silently goes stale relative to what the record now actually says. Skipped for view
+  // (read-only, shouldn't mutate payload at all) and for the prior-HTS-positive-record scenario
+  // (checkPriorHtsPositiveRecord) — that record's client code is being kept exactly as HTS
+  // originally generated it, not regenerated under PMTCT's own scheme, since it stays HTS's
+  // record. When nothing relevant has changed from the loaded record, this recomputes to the
+  // same value as originalClientCode, so checkClientCodeUniqueness's existing-code check below
+  // still treats it as unchanged.
   useEffect(() => {
-    if (
-      props?.activeContent?.actionType === "update" ||
-      props?.activeContent?.actionType === "view"
-    ) {
+    if (props?.activeContent?.actionType === "view" || priorHtsPositiveRecordId) {
       return;
     }
     const { testEntryPoint, testSetting, dateOfHivTest, serialNumber } = payload;
@@ -809,7 +1174,14 @@ const PmtctHtsForm = (props) => {
           : "";
         setPayload({
           dateOfHivTest: response.data.dateOfHivTest,
-          testEntryPoint: response.data.testEntryPoint,
+          // Normalized to the current HTS_ENTRY_POINT codeset on load — records saved before
+          // today's Setting codeset migration hold the old ENROLLMENT_SETTING_*/PMTCT_ANC-style
+          // values here, which don't match any option in the Setting dropdown (now sourced
+          // exclusively from HTS_ENTRY_POINT), so the field rendered blank even though this
+          // data loaded correctly. Normalizing here fixes the display immediately and also
+          // self-heals the saved value going forward, since this same field is what gets sent
+          // back on the next save (buildHtsEncounterRequestPayload).
+          testEntryPoint: mapToHtsEntryPointSetting(response.data.testEntryPoint),
           testSetting: response.data.testSetting || "",
           stageOfPregnancy: response.data.stageOfPregnancy || "",
           clientCode: response.data.clientCode || "",
@@ -947,7 +1319,7 @@ const PmtctHtsForm = (props) => {
 
   const POINT_ENTRY_PMTCT = () => {
     axios
-      .get(`${baseUrl}application-codesets/v2/ENROLLMENT_SETTING`, {
+      .get(`${baseUrl}application-codesets/v2/HTS_ENTRY_POINT`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -959,13 +1331,24 @@ const PmtctHtsForm = (props) => {
       });
   };
 
-  const HTS_ENTRY_POINT_FACILITY = () => {
+  // fullList: false (default) keeps the small PMTCT-curated allow-list for regular record
+  // creation — a fresh PMTCT test entry should only offer settings relevant to PMTCT's own
+  // context (ANC/L&D/Post Natal Ward Breastfeeding). fullList: true is passed only from
+  // checkPriorHtsPositiveRecord (Scenario 1 — adopting an existing positive HTS-module record):
+  // that value can legitimately be any code from HTS's full codeset (e.g. "Standalone HTS",
+  // "Outreach", "Index"), so only in that scenario does the dropdown need every option available
+  // to have a matching option instead of rendering as an apparently-blank, unselected dropdown.
+  const HTS_ENTRY_POINT_FACILITY = (fullList = false) => {
     axios
       .get(`${baseUrl}application-codesets/v2/FACILITY_HTS_TEST_SETTING`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
         if (response.data) {
+          if (fullList) {
+            setCommunitySetting(response.data);
+            return;
+          }
           const requiredCodes = [
             "FACILITY_HTS_TEST_SETTING_POST_NATAL_WARD_BREASTFEEDING",
             "FACILITY_HTS_TEST_SETTING_L&D",
@@ -984,18 +1367,17 @@ const PmtctHtsForm = (props) => {
       });
   };
 
-  const HTS_ENTRY_POINT_COMMUNITY = () => {
+  const HTS_ENTRY_POINT_COMMUNITY = (fullList = false) => {
     axios
       .get(
-        `${baseUrl}application-codesets/v2/COMMUNITY_HTS_TEST_SETTING
- `,
+        `${baseUrl}application-codesets/v2/COMMUNITY_HTS_TEST_SETTING`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       )
       .then((response) => {
 
-        if (response.data) {       
+        if (response.data) {
            let spokeHealthFacility = {
           id: 1877,
           codesetGroup: "FACILITY_HTS_TEST_SETTING",
@@ -1008,7 +1390,10 @@ const PmtctHtsForm = (props) => {
           altCode: "PEPFAR_HTS_SETTINGS_PMTCT_(ANC1_ONLY)",
         };
 
-
+          if (fullList) {
+            setCommunitySetting([...response.data, spokeHealthFacility]);
+            return;
+          }
 
           const requiredCodes = [
             "COMMUNITY_HTS_TEST_SETTING_CONGREGATIONAL_SETTING",
@@ -1030,11 +1415,15 @@ const PmtctHtsForm = (props) => {
       });
   };
 
-  const getSettingPoint = (testEntryPoint) => {
-    if (testEntryPoint.includes("ENROLLMENT_SETTING_COMMUNITY")) {
-      HTS_ENTRY_POINT_COMMUNITY();
+  // Substring match (not exact-equal) so this still works for records saved before the
+  // Setting dropdown moved from PMTCT's own ENROLLMENT_SETTING_COMMUNITY codeset value to
+  // HTS's HTS_ENTRY_POINT_COMMUNITY - both, and any other legacy variant containing
+  // "COMMUNITY", resolve correctly without needing to enumerate every historical value.
+  const getSettingPoint = (testEntryPoint, fullList = false) => {
+    if ((testEntryPoint || "").toUpperCase().includes("COMMUNITY")) {
+      HTS_ENTRY_POINT_COMMUNITY(fullList);
     } else {
-      HTS_ENTRY_POINT_FACILITY();
+      HTS_ENTRY_POINT_FACILITY(fullList);
     }
   };
 
@@ -1070,7 +1459,7 @@ const PmtctHtsForm = (props) => {
     if (e.target.name === "testEntryPoint" && e.target.value !== "") {
       getSettingPoint(e.target.value);
       if (
-        e.target.value === "ENROLLMENT_SETTING_FACILITY" &&
+        e.target.value === "HTS_ENTRY_POINT_FACILITY" &&
         props?.patientObj?.ancNo
       ) {
         // setPayload({ ...payload, [e.target.name]: e.target.value,testSetting: "FACILITY_HTS_TEST_SETTING_ANC"  });
@@ -1082,7 +1471,7 @@ const PmtctHtsForm = (props) => {
         );
         setDisableEntryPoint(true);
       } else if (
-        e.target.value === "ENROLLMENT_SETTING_FACILITY" &&
+        e.target.value === "HTS_ENTRY_POINT_FACILITY" &&
         props?.entrypointValue === "PMTCT_ENTRY_POINT_L&D"
       ) {
         setPayload((prevPayload) => ({
@@ -1092,7 +1481,7 @@ const PmtctHtsForm = (props) => {
         }));
         setDisableEntryPoint(true);
       } else if (
-        e.target.value === "ENROLLMENT_SETTING_FACILITY" &&
+        e.target.value === "HTS_ENTRY_POINT_FACILITY" &&
         props?.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"
       ) {
         setPayload((prevPayload) => ({
@@ -1163,12 +1552,14 @@ const PmtctHtsForm = (props) => {
       // is fixed to Negative rather than waiting on a confirmatory test.
       setFinalResult(e.target.value === HIV_EARLY_DETECT_NON_REACTIVE ? "Negative" : "");
     } else if (e.target.name === "knownHbvPositive") {
-      // Clear HBV sub-fields when Known HBV changes
+      // Clear HBV sub-fields when Known HBV changes. "Yes" already means the result is
+      // Positive — the form no longer re-asks for it (see the hidden HBV Test Result block
+      // below), so set it here instead of leaving it blank.
       setPayload((prevPayload) => ({
         ...prevPayload,
         knownHbvPositive: e.target.value,
         hbvTest: "",
-        hepatitisB: "",
+        hepatitisB: e.target.value === "Yes" ? "Positive" : "",
         hepatitisBTreatment: "",
         hbvDrugName: "",
         hbvVlResultDate: "",
@@ -1278,6 +1669,24 @@ const PmtctHtsForm = (props) => {
   const validate = () => {
     let temp = { ...errors };
     const isKnownPositive = isPmtctHts && payload.previouslyKnownHivPositive === "Yes";
+
+    // Only required in the prior-HTS-positive-record scenario (checkPriorHtsPositiveRecord) —
+    // the user must supply this date themselves, it's never auto-filled. Bounds enforced here
+    // too (not just the input's min/max) since those are browser-level only and can be bypassed.
+    if (priorHtsPositiveRecordId) {
+      if (!dateOfPreviouslyKnown) {
+        temp.dateOfPreviouslyKnown = "This field is required";
+      } else if (moment(dateOfPreviouslyKnown).isAfter(moment(), "day")) {
+        temp.dateOfPreviouslyKnown = "This date cannot be in the future";
+      } else if (
+        payload.dateOfHivTest &&
+        moment(dateOfPreviouslyKnown).isBefore(moment(payload.dateOfHivTest), "day")
+      ) {
+        temp.dateOfPreviouslyKnown = `This date cannot be before ${moment(payload.dateOfHivTest).format("DD-MM-YYYY")} (the record's visit date)`;
+      } else {
+        temp.dateOfPreviouslyKnown = "";
+      }
+    }
 
     temp.dateOfHivTest = payload.dateOfHivTest ? "" : "This field is required";
 
@@ -1690,10 +2099,50 @@ const PmtctHtsForm = (props) => {
 
     try {
       const isUpdate = props.activeContent?.actionType === "update";
+      // Numeric id → post-migration hts_encounter record (HTS's own endpoints apply).
+      // Non-numeric id → legacy pre-migration pmtct_hts-table record, which HTS's endpoints
+      // have no way to reference at all — keeps using PMTCT's own legacy update path.
+      const isLegacyRecordId =
+        isUpdate && props.activeContent?.id != null && !/^\d+$/.test(String(props.activeContent.id));
       let response;
 
-      if (isUpdate) {
-        // Update existing enrollment
+      if (priorHtsPositiveRecordId) {
+        // Scenario: adopting an existing positive HTS-module record (checkPriorHtsPositiveRecord)
+        // — updates that record in place rather than creating a second, duplicate one for the
+        // same client. pmtctHts is flipped to true (deliberately, not the default true every
+        // other save path already sends unconditionally) so this record starts showing up in
+        // PMTCT's own pmtct_hts=true-filtered views — specifically Recent Activity
+        // (ANCAcivityTracker.getAllActivities / findByPatientUuidAndCycleUuid) — once it's been
+        // updated here. HTS and PMTCT report this client's numbers together, so this does not
+        // create a double-count; pmtctCycleUuid is still attached correctly below (unconditional,
+        // runs before this branch) so existsInitialHtsForCycle correctly treats this as the
+        // patient's initial PMTCT HTS record for her current cycle going forward.
+        if (!resolvedPersonId) {
+          toast.error(
+            "Could not resolve this patient's HTS record id. Please reload the form and try again.",
+            { position: toast.POSITION.TOP_RIGHT }
+          );
+          setSaving(false);
+          return;
+        }
+
+        const htsEncounterPayload = buildHtsEncounterRequestPayload(payload, {
+          dateOfPreviouslyKnown,
+          rawObservation: priorHtsRawObservation,
+        });
+        htsEncounterPayload.patientId = resolvedPersonId;
+
+        response = await axios.put(
+          `${baseUrl}hts-encounter/${priorHtsPositiveRecordId}`,
+          htsEncounterPayload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        toast.success("Record updated successfully", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } else if (isUpdate && isLegacyRecordId) {
+        // Update existing enrollment — legacy pre-migration record only.
         response = await axios.put(
           `${baseUrl}pmtct/anc/update-pmtct-hts-enrollment/${props.activeContent.id}`,
           payload,
@@ -1704,16 +2153,51 @@ const PmtctHtsForm = (props) => {
           position: toast.POSITION.TOP_RIGHT,
         });
       } else {
-        // Create new enrollment
-        response = await axios.post(
-          `${baseUrl}pmtct/anc/pmtct-hts-enrollment`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // Create OR update of a post-migration record — both now go straight to HTS-Module's
+        // own hts-encounter endpoints instead of PMTCT's retired pmtct-hts-enrollment /
+        // update-pmtct-hts-enrollment. patientId (HTS's numeric personId, not patientUuid) is
+        // resolved on mount into resolvedPersonId (see fetchPersonId), not looked up here.
+        // Sent on every request (create AND update) per the "identical body shape to create"
+        // instruction — never assumed to already be set on the existing record.
+        if (!resolvedPersonId) {
+          toast.error(
+            "Could not resolve this patient's HTS record id. Please reload the form and try again.",
+            { position: toast.POSITION.TOP_RIGHT }
+          );
+          setSaving(false);
+          return;
+        }
 
-        toast.success("Enrollment saved successfully", {
-          position: toast.POSITION.TOP_RIGHT,
-        });
+        // Built fresh from the form's current payload state every time — payload was fully
+        // prepopulated from the existing record on load (viewPmtctHtsRecord) for updates, so
+        // this always sends the complete current field set rather than only what changed.
+        // HTS's own update() replaces the whole observation object rather than merging it, so
+        // omitting unchanged fields would silently wipe them from the saved record.
+        const htsEncounterPayload = buildHtsEncounterRequestPayload(payload);
+        htsEncounterPayload.patientId = resolvedPersonId;
+        // facilityId intentionally not set — stated to be derived on HTS-Module's own backend.
+
+        if (isUpdate) {
+          response = await axios.put(
+            `${baseUrl}hts-encounter/${props.activeContent.id}`,
+            htsEncounterPayload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          toast.success("Record updated successfully", {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        } else {
+          response = await axios.post(
+            `${baseUrl}hts-encounter`,
+            htsEncounterPayload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          toast.success("Enrollment saved successfully", {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        }
       }
 
       // Notify the patient card to refetch the HIV/serology summary right away —
@@ -1767,6 +2251,9 @@ const PmtctHtsForm = (props) => {
       }
     } catch (error) {
       console.error("Enrollment error:", error);
+      // Always shown verbatim, not rewritten/hardcoded on this side — so if the backend's
+      // wording for any rejection (transfer-in, duplicate-positive, 90-day spacing, etc.)
+      // changes later, it reflects here automatically with no frontend change needed.
       toast.error(
         error.response?.data?.message ||
           "Something went wrong. Please try again.",
@@ -1776,6 +2263,13 @@ const PmtctHtsForm = (props) => {
       setSaving(false);
     }
   };
+
+  // LV3-1732: Early Detect Antigen-Reactive / Antigen+Antibody-Reactive with no final result
+  // yet resolved — the "still Suspected Acute HIV Infection" state.
+  const isUnresolvedSuspectedAcuteInfection =
+    (payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_REACTIVE" ||
+      payload.hivEarlyDetect === "HIV_EARLY_DETECT_RESULT_ANTIGEN_+_ANTIBODY_REACTIVE") &&
+    !finalResult;
 
   return (
     <div>
@@ -2114,15 +2608,60 @@ const PmtctHtsForm = (props) => {
                               id="previouslyKnownHivPositive"
                               onChange={handleInputChange}
                               value={payload.previouslyKnownHivPositive}
-                              disabled={disabledField}
+                              disabled={disabledField || isTransferInPatient || !!priorHtsPositiveRecordId}
                             >
                               <option value="">Select</option>
                               <option value="Yes">Yes</option>
                               <option value="No">No</option>
                             </Input>
                           </InputGroup>
+                          {isTransferInPatient && (
+                            <span style={{ fontSize: "11px", color: "#6b7280" }}>
+                              Locked — documented HIV Transfer-In record on file.
+                            </span>
+                          )}
+                          {!isTransferInPatient && !!priorHtsPositiveRecordId && (
+                            <span style={{ fontSize: "11px", color: "#6b7280" }}>
+                              Locked — positive result already documented on the HTS module.
+                            </span>
+                          )}
                         </FormGroup>
                       </div>
+                      {/* Only shown when adopting an existing positive HTS-module record — the
+                          user must manually enter the date they're documenting this on PMTCT,
+                          which is a different date from when the HTS-module record was itself
+                          created (see priorHtsPositiveRecordId). Saved into observation once
+                          HTS-Module's team adds support for it on their end (see
+                          dateOfPreviouslyKnown in buildHtsEncounterRequestPayload). */}
+                      {!!priorHtsPositiveRecordId && (
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>
+                              Date of Previously Known <span style={{ color: "red" }}> *</span>
+                            </Label>
+                            <InputGroup>
+                              <Input
+                                type="date"
+                                name="dateOfPreviouslyKnown"
+                                id="dateOfPreviouslyKnown"
+                                onChange={(e) => setDateOfPreviouslyKnown(e.target.value)}
+                                value={dateOfPreviouslyKnown}
+                                disabled={disabledField}
+                                // Can't be documented before the adopted record's own visit date
+                                // (payload.dateOfHivTest is that record's date_of_visit, loaded
+                                // by checkPriorHtsPositiveRecord), and can't be in the future.
+                                min={payload.dateOfHivTest || undefined}
+                                max={moment().format("YYYY-MM-DD")}
+                              />
+                            </InputGroup>
+                            {errors.dateOfPreviouslyKnown ? (
+                              <span className={classes.error}>{errors.dateOfPreviouslyKnown}</span>
+                            ) : (
+                              ""
+                            )}
+                          </FormGroup>
+                        </div>
+                      )}
                       {payload.previouslyKnownHivPositive === "Yes" && (
                         <>
                           <div className="form-group mb-3 col-md-4">
@@ -2512,29 +3051,11 @@ const PmtctHtsForm = (props) => {
                     </FormGroup>
                   </div>
 
-                  {/* Known HBV = Yes → show HBV Result (Pos/Neg) + Treatment (3 options: Not treated, New on Prophylaxis, Referred) */}
+                  {/* Known HBV = Yes → result is already implied Positive (set on selection
+                      above, not re-asked here) — go straight to Treatment (3 options: Not
+                      treated, New on Prophylaxis, Referred) */}
                   {payload.knownHbvPositive === "Yes" && (
                     <>
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>HBV Test Result</Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="hepatitisB"
-                              id="hepatitisB"
-                              onChange={handleInputChange}
-                              value={payload.hepatitisB}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
-                            </Input>
-                          </InputGroup>
-                        </FormGroup>
-                      </div>
-
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
                           <Label>HBV Treatment/Referral</Label>
@@ -2932,12 +3453,19 @@ const PmtctHtsForm = (props) => {
               gap: "12px",
             }}>
               <div>
-                {finalResult && (
+                {/* LV3-1732: while the client is in the unresolved Suspected Acute HIV
+                    Infection state (Early Detect Antigen-Reactive, no final result yet), the
+                    label reads "Early Detect Test Result" with the Suspected Acute indication
+                    shown instead of a Positive/Negative value — the ribbon only becomes the
+                    normal "HIV Test Result" once a genuine confirmatory/final result exists. */}
+                {(finalResult || isUnresolvedSuspectedAcuteInfection) && (
                   <div style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    backgroundColor: finalResult === "Positive" ? "#fff5f5" : "#f0fff4",
-                    border: finalResult === "Positive" ? "1px solid #feb2b2" : "1px solid #9ae6b4",
+                    backgroundColor: isUnresolvedSuspectedAcuteInfection ? "#fffbeb"
+                      : finalResult === "Positive" ? "#fff5f5" : "#f0fff4",
+                    border: isUnresolvedSuspectedAcuteInfection ? "1px solid #fbd38d"
+                      : finalResult === "Positive" ? "1px solid #feb2b2" : "1px solid #9ae6b4",
                     borderRadius: "0.35rem",
                     padding: "10px 18px",
                   }}>
@@ -2947,13 +3475,13 @@ const PmtctHtsForm = (props) => {
                       color: "#4a5568",
                       marginRight: "10px",
                     }}>
-                      HIV Test Result:
+                      {isUnresolvedSuspectedAcuteInfection ? "Early Detect Test Result:" : "HIV Test Result:"}
                     </span>
                     <LabelRibbon
-                      color={finalResult === "Positive" ? "red" : "green"}
+                      color={isUnresolvedSuspectedAcuteInfection ? "yellow" : finalResult === "Positive" ? "red" : "green"}
                       style={{ margin: "0" }}
                     >
-                      {finalResult}
+                      {isUnresolvedSuspectedAcuteInfection ? "Suspected Acute HIV Infection" : finalResult}
                     </LabelRibbon>
                   </div>
                 )}

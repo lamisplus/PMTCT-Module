@@ -569,23 +569,13 @@ public class PMTCTController {
     }
 
 
-    @PostMapping(value = "/pmtct-hts-enrollment")
-    public ResponseEntity<?> pmtctHtsEnrollment(@RequestBody PmtctHtsRequestDTO pmtctHtsRequestDTO) {
-        if (pmtctHtsRequestDTO.getPmtctCycleUuid() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("message", "pmtct cycle uuid is required"));
-        }
-        // Prevent saving a second initial PMTCT HTS record for the same cycle
-        if (pmtctHtsRequestDTO.getTestingType() != null
-                && !pmtctHtsRequestDTO.getTestingType().equalsIgnoreCase("RETESTING")
-                && pmtctHtsService.existsInitialHtsForCycle(
-                        pmtctHtsRequestDTO.getPatientUuid(),
-                        pmtctHtsRequestDTO.getPmtctCycleUuid())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("message", "An initial PMTCT HTS record already exists for this cycle"));
-        }
-        return ResponseEntity.ok(this.pmtctHtsService.saveToHtsEncounter(pmtctHtsRequestDTO));
-    }
+    // Archived 2026-09-02: PMTCT HTS create now goes straight from the frontend to
+    // HTS-Module's own POST /api/v1/hts-encounter (see PmtctHtsForm.js handleSubmit).
+    // Confirmed orphaned before removal — no remaining caller anywhere in the frontend, and
+    // pmtctHtsService.save()/saveToHtsEncounter() had no other caller either. The
+    // initial-per-cycle duplicate guard this endpoint used to run
+    // (existsInitialHtsForCycle) is still enforced client-side in PmtctHtsForm.js before
+    // submit, independent of which endpoint the actual save hits.
 
 
 
@@ -609,6 +599,14 @@ public class PMTCTController {
         return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(patientUuid, pmtctCycleUuid));
     }
 
+    // Consumed directly by the frontend, on PmtctHtsForm mount, before it POSTs to HTS-Module's
+    // own /api/v1/hts-encounter, which requires a numeric patientId (HTS's personId) that has
+    // no reliable source in patientObj across entry points — see getPersonId's comment.
+    @GetMapping(value = "get-person-id")
+    public ResponseEntity<?> getPersonId(@RequestParam String patientUuid) {
+        return ResponseEntity.ok(pmtctHtsService.getPersonId(patientUuid));
+    }
+
     @GetMapping(value = "patient-hiv-summary")
     public ResponseEntity<PatientHivSummaryDto> getPatientHivSummary(
             @RequestParam String patientUuid,
@@ -620,6 +618,15 @@ public class PMTCTController {
     public ResponseEntity<PmtctHtsReponseDTO> getLastPMTCTHTSByPatientUuid(
             @PathVariable("patientUuid") String patientUuid) {
         return ResponseEntity.ok(pmtctHtsService.getLastPMTCTHTSEnrollmentById(patientUuid));
+    }
+
+    // Consumed on PmtctHtsForm mount (create mode only) to detect a pre-existing positive
+    // HTS-module record for this patient — see checkPriorHtsModulePositiveRecord's comment.
+    @GetMapping(value = "check-prior-hts-positive-record")
+    public ResponseEntity<PmtctHtsReponseDTO> checkPriorHtsModulePositiveRecord(
+            @RequestParam String patientUuid) {
+        PmtctHtsReponseDTO result = pmtctHtsService.checkPriorHtsModulePositiveRecord(patientUuid);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.noContent().build();
     }
 
     @PutMapping(value = "update-pmtct-hts-enrollment/{id}")

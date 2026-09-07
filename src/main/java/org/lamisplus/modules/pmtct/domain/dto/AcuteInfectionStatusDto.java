@@ -17,8 +17,11 @@ public class AcuteInfectionStatusDto {
     // HTS module rather than the PMTCT HTS form — lets the PMTCT UI tell the user this wasn't
     // something they missed entering on this side.
     private boolean fromHtsModule;
+    // "Positive" (VL >= threshold, confirmed Acute HIV Infection) or "Negative" (VL below
+    // threshold — the Suspected Acute indication is resolved as a negative result instead).
+    private String resolvedResult;
 
     public static AcuteInfectionStatusDto noUpdate() {
-        return new AcuteInfectionStatusDto(false, null, null, false);
+        return new AcuteInfectionStatusDto(false, null, null, false, null);
     }
 }

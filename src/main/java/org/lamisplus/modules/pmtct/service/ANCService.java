@@ -929,6 +929,7 @@ public class ANCService {
         ancRespondDto.setAge(this.calculateAge(persons.getDateOfBirth()));
         ancRespondDto.setAddress(persons.getAddress());
         ancRespondDto.setPersonId(persons.getId());
+        ancRespondDto.setHospitalNumber(persons.getHospitalNumber());
         ancRespondDto.setSex(persons.getSex());
         ancRespondDto.setContactPoint(persons.getContactPoint());
         ancRespondDto.setDateOfEnrollment(anc.getDateOfEnrollment());
@@ -1222,6 +1223,11 @@ public class ANCService {
         existingAnc.setAncNo(anc.getAncNo());
         existingAnc.setCreatedBy(anc.getCreatedBy());
         existingAnc.setCreatedBy(anc.getCreatedBy());
+        // LV3-1725: carries forward whatever PmtctVisitService.mergeSerologyIntoAnc() merged
+        // onto `anc` from an ANC Revisit's syphilis/Hepatitis B fields (a no-op copy for plain
+        // Mother Visit calls, where `anc` is untouched and already equals existingAnc's value).
+        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setHepatitisBInfo(anc.getHepatitisBInfo());
         existingAnc.setLastModifiedDate(LocalDateTime.now());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
@@ -1248,6 +1254,11 @@ public class ANCService {
         existingAnc.setAncNo(anc.getAncNo());
         existingAnc.setCreatedBy(anc.getCreatedBy());
         existingAnc.setCreatedBy(anc.getCreatedBy());
+        // LV3-1725: carries forward whatever PmtctVisitService.mergeSerologyIntoAnc() merged
+        // onto `anc` from an ANC Revisit's syphilis/Hepatitis B fields (a no-op copy for plain
+        // Mother Visit calls, where `anc` is untouched and already equals existingAnc's value).
+        existingAnc.setSyphilisInfo(anc.getSyphilisInfo());
+        existingAnc.setHepatitisBInfo(anc.getHepatitisBInfo());
         existingAnc.setLastModifiedDate(LocalDateTime.now());
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();

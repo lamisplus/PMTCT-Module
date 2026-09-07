@@ -500,22 +500,21 @@
 
     <changeSet failOnError="false" author="pmtct-sprint-2026-08-11" id="20260811-001">
         <comment>
-            pmtct_hts.archived was created as bigint (0/1) instead of boolean, unlike every
-            other "archived" column in this module (pmtct_pregnancy_cycle, pmtct_anc,
-            hts_encounter — all boolean). Every native query against this column compares
-            it to a boolean literal (e.g. "archived = false"), which throws
-            "operator does not exist: integer = boolean" in Postgres — silently breaking
-            things like the "has this patient ever tested positive" checks used by the
-            Mother Infant Pair card. Converts existing 0/1 values to false/true and changes
-            the column type to boolean, matching every other table (same USING-cast pattern
-            already used for hts_encounter.pmtct_hts's jsonb-to-boolean conversion).
+            SUPERSEDED / INTENTIONALLY NEUTERED (2026-08-20) — do not restore the ALTER TABLE
+            below. This changeset originally converted pmtct_hts.archived from integer (0/1)
+            to boolean. It never actually executed against the shared dev/UBTH2 database
+            (confirmed via databasechangelog — zero pmtct-sprint-2026-08-11 rows), because a
+            separate, later, deliberate changeset from another developer —
+            20250530-revert-pmtct-hts-archived-to-integer, in
+            installers/pmtct/schema/add-new-columns.xml — reverted this same column back to
+            integer for reasons not documented here. The real column type today is integer.
+            Every native query against pmtct_hts.archived in PmtctHtsRepository now compares
+            it to 0/1, not true/false, to match. If this changeset is ever un-neutered and
+            allowed to run, it will silently break all of those queries again with
+            "operator does not exist: integer = boolean" — the exact bug this changeset was
+            originally written to fix, just inverted. Left in place (rather than deleted) only
+            so this changelog id isn't reused for something unrelated.
         </comment>
-        <sql>
-            ALTER TABLE pmtct_hts ALTER COLUMN archived DROP DEFAULT;
-            ALTER TABLE pmtct_hts ALTER COLUMN archived TYPE boolean USING COALESCE((archived::text)::boolean, false);
-            ALTER TABLE pmtct_hts ALTER COLUMN archived SET DEFAULT false;
-            ALTER TABLE pmtct_hts ALTER COLUMN archived SET NOT NULL;
-        </sql>
     </changeSet>
 
     <changeSet failOnError="false" author="pmtct-sprint-2026-08-14" id="20260814-001">
@@ -555,6 +554,71 @@
             WHERE pmtct_hts = true
               AND lower(observation->>'pregnancyStatusAtEntry') = 'not pregnant'
               AND COALESCE(observation->>'pregnancyStatus', '') = '';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="pmtct-sprint-2026-09-01" id="20260901-001">
+        <comment>
+            hts_encounter.setting is a top-level column shared with the standalone HTS module,
+            which writes it from the HTS_ENTRY_POINT codeset (HTS_ENTRY_POINT_FACILITY /
+            HTS_ENTRY_POINT_COMMUNITY). PMTCT-HTS previously wrote it from its own, different
+            ENROLLMENT_SETTING codeset (ENROLLMENT_SETTING_FACILITY / ENROLLMENT_SETTING_COMMUNITY)
+            - and older, pre-hts_encounter-migration rows may carry legacy pmtct_hts-table values
+            (e.g. PMTCT_ANC, PMTCT_L&amp;D, PMTCT_POSTPARTUM). Any cross-module consumer expecting
+            the HTS_ENTRY_POINT_* values (reports, HIV Prevention, etc.) saw PMTCT-authored rows
+            as unrecognized/inconsistent. Application code (PmtctHtsService.mapToHtsSetting, now
+            wired into saveToHtsEncounter/updateHtsEncounter) normalizes this going forward; this
+            backfills existing pmtct_hts = true rows using the same "contains COMMUNITY" rule so
+            at-rest data matches what new saves produce.
+        </comment>
+        <sql>
+            UPDATE hts_encounter
+            SET setting = 'HTS_ENTRY_POINT_COMMUNITY'
+            WHERE pmtct_hts = true
+              AND setting != 'HTS_ENTRY_POINT_COMMUNITY'
+              AND UPPER(setting) LIKE '%COMMUNITY%';
+
+            UPDATE hts_encounter
+            SET setting = 'HTS_ENTRY_POINT_FACILITY'
+            WHERE pmtct_hts = true
+              AND (setting IS NULL OR setting NOT LIKE '%COMMUNITY%')
+              AND COALESCE(setting, '') != 'HTS_ENTRY_POINT_FACILITY';
+        </sql>
+    </changeSet>
+
+    <changeSet failOnError="false" author="pmtct-sprint-2026-09-02" id="20260902-001">
+        <comment>
+            Same root cause as 20260901-001, but for observation-&gt;&gt;'testEntryPoint' instead
+            of the top-level setting column. PmtctHtsForm.js's Setting dropdown now sources the
+            HTS_ENTRY_POINT codeset exclusively, but records saved before that change still hold
+            the old ENROLLMENT_SETTING_FACILITY/ENROLLMENT_SETTING_COMMUNITY value in this
+            observation key specifically - it has no matching &lt;option&gt;, so the field
+            renders blank on load even though the value loaded correctly. The frontend now
+            normalizes this value on load and self-heals it on next save (see
+            viewPmtctHtsRecord/mapToHtsEntryPointSetting in PmtctHtsForm.js), but that only fixes
+            a record once someone actually re-saves it - this backfills every existing
+            pmtct_hts = true record immediately, using the same "contains COMMUNITY" rule.
+            Records with no testEntryPoint value at all are left untouched rather than assigned
+            a fabricated default.
+        </comment>
+        <sql>
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{testEntryPoint}', to_jsonb('HTS_ENTRY_POINT_COMMUNITY'::text))
+            WHERE pmtct_hts = true
+              AND archived = false
+              AND observation->>'testEntryPoint' IS NOT NULL
+              AND observation->>'testEntryPoint' != ''
+              AND UPPER(observation->>'testEntryPoint') LIKE '%COMMUNITY%'
+              AND observation->>'testEntryPoint' != 'HTS_ENTRY_POINT_COMMUNITY';
+
+            UPDATE hts_encounter
+            SET observation = jsonb_set(observation, '{testEntryPoint}', to_jsonb('HTS_ENTRY_POINT_FACILITY'::text))
+            WHERE pmtct_hts = true
+              AND archived = false
+              AND observation->>'testEntryPoint' IS NOT NULL
+              AND observation->>'testEntryPoint' != ''
+              AND UPPER(observation->>'testEntryPoint') NOT LIKE '%COMMUNITY%'
+              AND observation->>'testEntryPoint' != 'HTS_ENTRY_POINT_FACILITY';
         </sql>
     </changeSet>
 

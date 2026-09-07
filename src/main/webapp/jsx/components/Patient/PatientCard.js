@@ -81,6 +81,10 @@ function PatientCard(props) {
   // rather than through this PMTCT cycle — surfaced as a small badge so the user isn't left
   // wondering where/when they entered it.
   const [hivStatusFromHtsModule, setHivStatusFromHtsModule] = useState(false);
+  // LV3-1732: distinct dashboard indications, layered on top of the plain Positive/Negative
+  // hivStatus badge below — confirmed Acute HIV Infection vs. still-unresolved Suspected.
+  const [acuteHivInfectionDetected, setAcuteHivInfectionDetected] = useState(false);
+  const [suspectedAcuteInfection, setSuspectedAcuteInfection] = useState(false);
   const [infantHeiPcr, setInfantHeiPcr] = useState([]);
   const [infantHeiPcrAlert, setInfantHeiPcrAlert] = useState([]);
   const [retestStatus, setRetestStatus] = useState({
@@ -123,6 +127,8 @@ function PatientCard(props) {
       setHasPmtctHtsRecord(data.hasHtsRecord);
       setPmtctHtsFinalStatus(data.hivStatus || null);
       setHivStatusFromHtsModule(Boolean(data.sourcedFromHtsModule));
+      setAcuteHivInfectionDetected(Boolean(data.acuteHivInfectionDetected));
+      setSuspectedAcuteInfection(Boolean(data.suspectedAcuteInfection));
       if (props.setLatestHivStatus) {
         props.setLatestHivStatus(data.hivStatus || null);
       }
@@ -164,6 +170,8 @@ function PatientCard(props) {
       setRetestStatus(null);
       setSyphilisResult("");
       setHepatitisResult("");
+      setAcuteHivInfectionDetected(false);
+      setSuspectedAcuteInfection(false);
     }
   };
 
@@ -263,11 +271,14 @@ function PatientCard(props) {
   }, [props.activeContent, props.latestPmtctCycle?.uuid, props.htsSavedTick]);
 
   // LV3-1732: on each page load, ask the backend whether this client has a suspected-acute
-  // HTS/PMTCT record that just crossed the VL >= 1000 threshold. The backend is idempotent —
-  // updated only comes back true the one time it actually flips the status — so this only
-  // toasts once, even though it's checked on every visit to this card. fromHtsModule tells the
-  // PMTCT user the suspected-acute record wasn't entered here, so they're not left wondering
-  // why they don't remember documenting it.
+  // HTS/PMTCT record that just got resolved by a documented viral load result (Positive if
+  // >= 1000 copies/mL, Negative otherwise). The backend is idempotent — updated only comes
+  // back true the one time it actually resolves the status — so this only toasts once, even
+  // though it's checked on every visit to this card. fromHtsModule tells the PMTCT user the
+  // suspected-acute record wasn't entered here, so they're not left wondering why they don't
+  // remember documenting it. Re-fetches the HIV summary afterward so the persistent
+  // Acute/Suspected Acute badge in the status strip reflects the resolution immediately,
+  // without needing a page reload.
   const checkAcuteInfectionStatus = () => {
     if (!patientUuid) return;
     axios
@@ -278,10 +289,19 @@ function PatientCard(props) {
         const result = response.data;
         if (result && result.updated) {
           const origin = result.fromHtsModule ? " (originally documented on the HTS module)" : "";
-          toast.warning(
-            `Client's status was automatically updated to Acute HIV Infection based on a Viral Load result of ${Number(result.triggerVl).toLocaleString()} copies/mL${origin}.`,
-            { position: toast.POSITION.TOP_CENTER, autoClose: 8000 }
-          );
+          const vlText = `${Number(result.triggerVl).toLocaleString()} copies/mL${origin}`;
+          if (result.resolvedResult === "Positive") {
+            toast.warning(
+              `Client's status was automatically updated to Acute HIV Infection based on a Viral Load result of ${vlText}.`,
+              { position: toast.POSITION.TOP_CENTER, autoClose: 8000 }
+            );
+          } else {
+            toast.info(
+              `Client's Suspected Acute HIV Infection was resolved as HIV Negative based on a Viral Load result of ${vlText}.`,
+              { position: toast.POSITION.TOP_CENTER, autoClose: 8000 }
+            );
+          }
+          fetchPatientHivSummary();
         }
       })
       .catch(() => {});
@@ -455,12 +475,19 @@ function PatientCard(props) {
     try { addressData = JSON.parse(addressData); } catch (e) { addressData = null; }
   }
   const patientAddress = (addressData && typeof addressData === 'object') ? getAddress(addressData) : "";
-  // HIV status badge — always shows raw HTS result
-  const hivStatusLabel = confirmStatus === 'Unknown' ? 'HIV Test Not Done'
+  // HIV status badge — always shows raw HTS result. LV3-1732: Acute HIV Infection and
+  // Suspected Acute HIV Infection are distinct indications layered on top of the plain
+  // Positive/Negative/Unknown result — acuteHivInfectionDetected takes priority since it means
+  // the suspicion has already been confirmed as HIV-positive.
+  const hivStatusLabel = acuteHivInfectionDetected ? 'Acute HIV Infection'
+    : suspectedAcuteInfection ? 'Suspected Acute HIV Infection'
+    : confirmStatus === 'Unknown' ? 'HIV Test Not Done'
     : confirmStatus === 'reactive' ? 'Positive'
     : confirmStatus === 'non-reactive' ? 'Negative'
     : confirmStatus || 'HIV Test Not Done';
-  const hivStatusColor = (confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626"
+  const hivStatusColor = acuteHivInfectionDetected ? "#dc2626"
+    : suspectedAcuteInfection ? "#d97706"
+    : (confirmStatus === "Positive" || confirmStatus === 'reactive') ? "#dc2626"
     : (confirmStatus === "Negative" || confirmStatus === 'non-reactive') ? "#16a34a"
     : "#6b7280";
 
@@ -576,7 +603,9 @@ function PatientCard(props) {
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "7px",
             padding: "7px 14px", borderRadius: "6px",
-            background: (confirmStatus === "Positive" || confirmStatus === "reactive") ? "#fef2f2" : (confirmStatus === "Negative" || confirmStatus === "non-reactive") ? "#f0fdf4" : "#f8fafc",
+            background: acuteHivInfectionDetected ? "#fef2f2"
+              : suspectedAcuteInfection ? "#fffbeb"
+              : (confirmStatus === "Positive" || confirmStatus === "reactive") ? "#fef2f2" : (confirmStatus === "Negative" || confirmStatus === "non-reactive") ? "#f0fdf4" : "#f8fafc",
             boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hivStatusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>

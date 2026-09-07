@@ -169,7 +169,12 @@ const AncPnc = (props) => {
 
   const [enroll, setEnrollDto] = useState({
     hepatitisB: patientObj.hepatitisB || patientObj.hbvDetails?.testResult || "",
-    urinalysis: patientObj.urinalysis || "",
+    // MIP card's urinalysis is a plain-String field (PMTCTEnrollmentRequestDto.urinalysis), but
+    // patientObj can carry ANC's own urinalysis, which since the May 2026 NHMIS revamp
+    // (AncEnrollement.js) is a nested {sugar, proteins} object — a different field entirely, same
+    // name by coincidence. Sending that object through unchanged 400s with "Cannot deserialize
+    // instance of String out of START_OBJECT" on save. Only inherit it if it's actually a string.
+    urinalysis: typeof patientObj.urinalysis === "string" ? patientObj.urinalysis : "",
     pmtctEnrollmentDate: "",
     dateOfDelivery: "",
     expectedDeliveryDate: "",
@@ -262,13 +267,10 @@ const AncPnc = (props) => {
   };
 
   const getPatientEntryType = () => {
-    const rawCode = locationState?.entrypointValue
-      || props.entrypointValue
-      || enroll.entryPoint;
-    if (!rawCode) return;
+    const code = resolveEntryPointCode();
+    if (!code) return;
 
-    const normalizedCode = mapEntryPointToCode(rawCode);
-    const matched = allNewEntryPoint.find((each) => each.code === normalizedCode);
+    const matched = allNewEntryPoint.find((each) => each.code === code);
     if (matched) {
       setEntryValueDisplay(matched);
     }
@@ -279,7 +281,7 @@ const AncPnc = (props) => {
       let payload2 = {
         patientUuid: patientObj.patientUuid ? patientObj.patientUuid : patientObj?.uuid,
         maternalOutcome: "",
-        entryPoint: (locationState && locationState.entrypointValue) || props.entrypointValue,
+        entryPoint: resolveEntryPointCode(),
         hivStatus: patientObj?.dynamicHivStatus,
         pregnancyOutcome: "",
         numberOfInfants: 0,
@@ -566,10 +568,15 @@ const AncPnc = (props) => {
   // Auto-populate Previously Known HIV+ and Unique ID from HTS/ART tables
   const checkHistoricalHivAndArt = async (patientUuid) => {
     try {
+      // patient_uuid/patientUuid (checked first) are the real person identifier on every
+      // grid's response DTO; bare `.uuid` is only safe as a last resort — on the PMTCT HTS
+      // grid it holds the hts_encounter record's own uuid, not the patient's, which silently
+      // pointed ART lookups at the wrong record (see getARTStartDate below for the same fix).
       const personUuid =
+        patientObj?.patient_uuid ||
+        patientObj?.patientUuid ||
         patientObj?.person_Uuud ||
         patientObj?.personUuud ||
-        patientObj?.patient_uuid ||
         patientObj?.uuid;
 
       if (!patientUuid) return;
@@ -614,6 +621,11 @@ const AncPnc = (props) => {
     }
   };
 
+  // Tracks whether the cycle-dependent auto-population fetches (parity/LMP, serology, L&D)
+  // have already run, so the retry effect below doesn't re-fire them once the mount effect
+  // already succeeded.
+  const cycleDependentFetchDoneRef = useRef(false);
+
   useEffect(() => {
     GET_CODESETS();
     checkTimingOfART(0);
@@ -630,12 +642,18 @@ const AncPnc = (props) => {
       // getHIVStatus(props?.patientObj?.identifier?.identifier[0]?.value,  props?.patientObj.uuid);
     }
 
-    // Check validation dates for PMTCT enrollment and delivery
+    // Check validation dates for PMTCT enrollment and delivery.
+    // patient_uuid/patientUuid checked before bare uuid — on the PMTCT HTS grid, patientObj.uuid
+    // is the hts_encounter record's own uuid, not the patient's (see PmtctHtsReponseDTO), which
+    // silently fed the wrong id into checkHistoricalHivAndArt/fetchPreviousCycleArtData below and
+    // broke ART Start Date / Original Regimen autopopulation specifically for that entry point.
     const patientUuid =
-      props?.patientObj?.uuid ||
       props?.patientObj?.patient_uuid ||
-      locationState?.patientObj?.uuid ||
-      locationState?.patientObj?.patient_uuid;
+      props?.patientObj?.patientUuid ||
+      locationState?.patientObj?.patient_uuid ||
+      locationState?.patientObj?.patientUuid ||
+      props?.patientObj?.uuid ||
+      locationState?.patientObj?.uuid;
     if (patientUuid) {
       checkPMTCTValidationDates(patientUuid);
       getArtUniqueNumber();
@@ -704,13 +722,60 @@ const AncPnc = (props) => {
       autoPopulateSerologyFromHts(patientUuid, props.latestPmtctCycle.uuid);
       autoPopulateDeliveryFromLD(patientUuid, props.latestPmtctCycle.uuid);
     }
+    if (patientUuid && displayCycleUuid) {
+      cycleDependentFetchDoneRef.current = true;
+    }
   }, []);
+
+  // Retry the cycle-dependent auto-population once the pregnancy cycle resolves. On the
+  // PMTCT HTS grid entry point, patientObj carries no pmtctCycleUuid (unlike the ANC grid),
+  // so displayCycleUuid above is often still undefined at mount time — it only becomes
+  // available once SubMenu's own async pregnancy-cycles fetch completes and lifts
+  // latestPmtctCycle/selectedCycleId up to this component. The mount effect has an empty
+  // dependency array and never re-runs, so without this, LMP/parity/serology/L&D
+  // auto-population silently never fires for that entry point.
+  useEffect(() => {
+    if (cycleDependentFetchDoneRef.current) return;
+    const displayCycleUuid =
+      props.latestPmtctCycle?.uuid || props.selectedCycleId || props.patientObj?.pmtctCycleUuid;
+    const patientUuid =
+      props?.patientObj?.patient_uuid ||
+      props?.patientObj?.patientUuid ||
+      locationState?.patientObj?.patient_uuid ||
+      locationState?.patientObj?.patientUuid ||
+      props?.patientObj?.uuid ||
+      locationState?.patientObj?.uuid;
+    if (!patientUuid || !displayCycleUuid) return;
+    cycleDependentFetchDoneRef.current = true;
+    fetchParityFromAnc(patientUuid, displayCycleUuid);
+    if (!props.activeContent?.id) {
+      autoPopulateSerologyFromHts(patientUuid, displayCycleUuid);
+      autoPopulateDeliveryFromLD(patientUuid, displayCycleUuid);
+    }
+  }, [props.latestPmtctCycle?.uuid, props.selectedCycleId, props.patientObj?.pmtctCycleUuid]);
+
+  // Recompute GA once both LMP and enrollment date are known but GA hasn't been set yet.
+  // fetchParityFromAnc only sets lmp — it never derives gaweeks — and gaweeks is otherwise
+  // only computed inside the lmp/pmtctEnrollmentDate onChange handlers, so an
+  // auto-populated LMP left GA blank (and the form failing required-field validation on
+  // submit) unless the user happened to re-touch one of those date fields by hand.
+  useEffect(() => {
+    if (enroll.gaweeks || !enroll.lmp || !enroll.pmtctEnrollmentDate) return;
+    const computedGa = calculateGestationalAge(enroll.pmtctEnrollmentDate, enroll.lmp);
+    if (computedGa >= 4 && computedGa <= 45) {
+      setEnrollDto((prev) => ({
+        ...prev,
+        gaweeks: computedGa,
+        expectedDeliveryDate: prev.expectedDeliveryDate || calculateExpectedDate(prev.lmp),
+      }));
+    }
+  }, [enroll.lmp, enroll.pmtctEnrollmentDate]);
 
   useEffect(() => {
     // if (props?.allEntryPoint) {
     getPatientEntryType();
     // }
-  }, [allNewEntryPoint, enroll.entryPoint]);
+  }, [allNewEntryPoint, enroll.entryPoint, props.latestPmtctCycle?.entryPoint]);
 
   useEffect(() => {
     if (props.getPMTCTInfo && canProceedWithEnrollment) {
@@ -824,6 +889,28 @@ const AncPnc = (props) => {
     return mapping[ep] || ep;
   };
 
+  // Resolve the patient's real entry point, preferring whichever candidate
+  // actually matches a real PMTCT_ENTRY_POINT codeset entry over an unmatched
+  // route-state value (e.g. a stale/placeholder value passed by a calling grid).
+  const resolveEntryPointCode = () => {
+    const candidates = [
+      locationState?.entrypointValue,
+      props.entrypointValue,
+      enroll.entryPoint,
+      props.latestPmtctCycle?.entryPoint,
+      entryValueDisplay?.code,
+      props.patientObj?.entryPoint,
+    ];
+    for (const rawCode of candidates) {
+      if (!rawCode) continue;
+      const normalizedCode = mapEntryPointToCode(rawCode);
+      if (allNewEntryPoint.find((each) => each.code === normalizedCode)) {
+        return normalizedCode;
+      }
+    }
+    return candidates.find(Boolean) || "";
+  };
+
   const GetPatientPMTCT = (id) => {
     console.log("GetPatientPMTCT => calling view-pmtct-enrollment with id:", id);
     axios
@@ -896,18 +983,13 @@ const AncPnc = (props) => {
   const checkTimingOfART = (ga) => {
     setAutoPostPartumTiming(true);
     let GA = parseInt(ga);
+    const resolvedCode = resolveEntryPointCode();
 
-    if (
-      (locationState && locationState.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM") ||
-      props.entrypointValue === "PMTCT_ENTRY_POINT_POST-PARTUM"
-    ) {
+    if (resolvedCode === "PMTCT_ENTRY_POINT_POST-PARTUM") {
       enroll.artStartTime =
         "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AFTER_DELIVERY_(POST-PARTUM)";
       updateMaxARTDate("pp");
-    } else if (
-      (locationState && locationState.entrypointValue === "PMTCT_ENTRY_POINT_L&D") ||
-      props.entrypointValue === "PMTCT_ENTRY_POINT_L&D"
-    ) {
+    } else if (resolvedCode === "PMTCT_ENTRY_POINT_L&D") {
       enroll.artStartTime =
         "TIMING_MOTHERS_ART_INITIATION_INITIATED_ART_AT_L&D";
       updateMaxARTDate("pp");
@@ -946,17 +1028,17 @@ const AncPnc = (props) => {
     }
   };
   const getARTStartDate = (id) => {
+    // patient_uuid/patientUuid checked first — see checkHistoricalHivAndArt above for why
+    // bare .uuid (last resort here) resolves to the wrong record on the PMTCT HTS grid.
+    const artPatientUuid =
+      props?.patientObj?.patient_uuid ||
+      props?.patientObj?.patientUuid ||
+      props?.patientObj?.person_Uuud ||
+      props?.patientObj?.personUuud ||
+      props?.patientObj?.uuid;
     axios
       .get(
-        `${baseUrl}pmtct/anc/art/?PatientUuid=${
-          props?.patientObj.person_Uuud
-            ? props?.patientObj.person_Uuud
-            : props?.patientObj?.personUuud
-            ? props?.patientObj?.personUuud
-            : props?.patientObj?.patient_uuid
-            ? props?.patientObj?.patient_uuid
-            : props?.patientObj?.uuid
-        }`,
+        `${baseUrl}pmtct/anc/art/?PatientUuid=${artPatientUuid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -1225,6 +1307,11 @@ const AncPnc = (props) => {
       if (sanitized[field] === "" || sanitized[field] === undefined) sanitized[field] = null;
     });
     frontendOnlyKeys.forEach((key) => delete sanitized[key]);
+    // Backstop for the urinalysis object/string collision (see enroll's initial state comment) —
+    // PMTCTEnrollmentRequestDto.urinalysis is a plain String, never an object.
+    if (sanitized.urinalysis !== null && typeof sanitized.urinalysis !== "string") {
+      sanitized.urinalysis = "";
+    }
     return sanitized;
   };
 
@@ -1300,12 +1387,7 @@ const AncPnc = (props) => {
           || locationState?.patientObj?.patient_uuid;
 
         // Resolve entryPoint from all possible sources
-        const resolvedEntryPoint =
-          locationState?.entrypointValue
-          || props.entrypointValue
-          || enroll.entryPoint
-          || entryValueDisplay?.code
-          || props.patientObj?.entryPoint;
+        const resolvedEntryPoint = resolveEntryPointCode();
 
         // Resolve pmtctCycleUuid from all possible sources
         const resolvedCycleUuid =
@@ -1818,7 +1900,7 @@ const AncPnc = (props) => {
                         >
                           <option value=""> Select</option>
                           {regimenType.map((value) => (
-                            <option key={value.id} value={value.code}>
+                            <option key={value.id} value={value.id}>
                               {value.description}
                             </option>
                           ))}

@@ -579,6 +579,16 @@ const ClinicVisit = (props) => {
         const safeSyphilis = sanitized.syphilisInfo && typeof sanitized.syphilisInfo === "object"
           ? { testedSyphilis: "", testResultSyphilis: "", treatedSyphilis: "", currentSyphilisStatus: "", nameOfSyphilisDrug: "", ...sanitized.syphilisInfo }
           : { testedSyphilis: "", testResultSyphilis: "", treatedSyphilis: "", currentSyphilisStatus: "", nameOfSyphilisDrug: "" };
+        // LV3-1725: older ANC Revisit records were saved before testedSyphilis was split into
+        // a Yes/No "tested" field + separate testResultSyphilis — they instead have
+        // "Not Done"/"Positive"/"Negative" directly in testedSyphilis. Normalize those on load
+        // so editing an old record doesn't show a blank/wrong Tested-for-Syphilis field.
+        if (safeSyphilis.testedSyphilis === "Not Done") {
+          safeSyphilis.testedSyphilis = "No";
+        } else if (safeSyphilis.testedSyphilis === "Positive" || safeSyphilis.testedSyphilis === "Negative") {
+          safeSyphilis.testResultSyphilis = safeSyphilis.testResultSyphilis || safeSyphilis.testedSyphilis;
+          safeSyphilis.testedSyphilis = "Yes";
+        }
         // Convert Boolean values from API to "Yes"/"No" strings for dropdown compatibility
         const boolToYesNo = (val) => val === true ? "Yes" : val === false ? "No" : val || "";
         const safeHepB = sanitized.hepatitisBInfo && typeof sanitized.hepatitisBInfo === "object"
@@ -803,8 +813,18 @@ const ClinicVisit = (props) => {
 
   const handleSyphilisChange = (e) => {
     const { name, value } = e.target;
-    if (name === "testedSyphilis" && value !== "Positive") {
+    // LV3-1725: testedSyphilis is a Yes/No "were they tested" field, mirroring
+    // testedHepatitisB below — the actual Positive/Negative result lives in the separate
+    // testResultSyphilis field. (Previously this dropdown conflated the two, storing
+    // "Positive"/"Negative"/"Not Done" directly in testedSyphilis, which meant ANC-Revisit-
+    // captured syphilis results could never match PmtctHtsForm.js's `testedSyphilis === "Yes"`
+    // autopopulation check.)
+    if (name === "testedSyphilis" && value !== "Yes") {
       setObjValues({ ...objValues, syphilisInfo: { ...objValues.syphilisInfo, [name]: value, testResultSyphilis: "", treatedSyphilis: "" } });
+      return;
+    }
+    if (name === "testResultSyphilis" && value !== "Positive") {
+      setObjValues({ ...objValues, syphilisInfo: { ...objValues.syphilisInfo, [name]: value, treatedSyphilis: "" } });
       return;
     }
     setObjValues({ ...objValues, syphilisInfo: { ...objValues.syphilisInfo, [name]: value } });
@@ -917,9 +937,8 @@ const ClinicVisit = (props) => {
           temp.dateOfVlResultReceived = "Date VL Result Received cannot be before the Sample Collection Date";
         }
       }
-      temp.infantFeedingPractice = objValues.infantFeedingPractice ? "" : "This field is required";
-      temp.infantOnCtx = objValues.infantOnCtx ? "" : "This field is required";
-      temp.referredToTreatment = objValues.referredToTreatment ? "" : "This field is required";
+      // Not mandatory — clients who haven't delivered yet have no infant to document these
+      // against, and shouldn't be blocked from saving the Mother Visit form.
       temp.visitStatus = objValues.visitStatus ? "" : "This field is required";
       temp.maternalOutcome = objValues.maternalOutcome
         ? ""
@@ -1647,33 +1666,55 @@ const ClinicVisit = (props) => {
                             disabled={disabledField}
                           >
                             <option value="">Select</option>
-                            <option value="Not Done">Not Done</option>
-                            <option value="Positive">Positive</option>
-                            <option value="Negative">Negative</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
                           </Input>
                         </InputGroup>
                       </FormGroup>
                     </div>
-                    {objValues.syphilisInfo.testedSyphilis === "Positive" && (
-                      <div className="form-group mb-3 col-md-4">
-                        <FormGroup>
-                          <Label>Treated for Syphilis</Label>
-                          <InputGroup>
-                            <Input
-                              type="select"
-                              name="treatedSyphilis"
-                              id="treatedSyphilis"
-                              onChange={handleSyphilisChange}
-                              value={objValues.syphilisInfo.treatedSyphilis}
-                              disabled={disabledField}
-                            >
-                              <option value="">Select</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
-                            </Input>
-                          </InputGroup>
-                        </FormGroup>
-                      </div>
+                    {objValues.syphilisInfo.testedSyphilis === "Yes" && (
+                      <>
+                        <div className="form-group mb-3 col-md-4">
+                          <FormGroup>
+                            <Label>Syphilis Test Result</Label>
+                            <InputGroup>
+                              <Input
+                                type="select"
+                                name="testResultSyphilis"
+                                id="testResultSyphilis"
+                                onChange={handleSyphilisChange}
+                                value={objValues.syphilisInfo.testResultSyphilis}
+                                disabled={disabledField}
+                              >
+                                <option value="">Select</option>
+                                <option value="Positive">Positive</option>
+                                <option value="Negative">Negative</option>
+                              </Input>
+                            </InputGroup>
+                          </FormGroup>
+                        </div>
+                        {objValues.syphilisInfo.testResultSyphilis === "Positive" && (
+                          <div className="form-group mb-3 col-md-4">
+                            <FormGroup>
+                              <Label>Treated for Syphilis</Label>
+                              <InputGroup>
+                                <Input
+                                  type="select"
+                                  name="treatedSyphilis"
+                                  id="treatedSyphilis"
+                                  onChange={handleSyphilisChange}
+                                  value={objValues.syphilisInfo.treatedSyphilis}
+                                  disabled={disabledField}
+                                >
+                                  <option value="">Select</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
+                                </Input>
+                              </InputGroup>
+                            </FormGroup>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1910,13 +1951,18 @@ const ClinicVisit = (props) => {
                         <Label>Urinalysis - Sugar</Label>
                         <InputGroup>
                           <Input
-                            type="text"
+                            type="select"
                             name="urinalysisSugar"
                             id="urinalysisSugar"
-                            value={objValues.urinalysisSugar}
+                            value={objValues.urinalysisSugar || ""}
                             onChange={handleInputChange}
                             disabled={disabledField}
-                          />
+                          >
+                            <option value="">Select</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Abnormal">Abnormal</option>
+                            <option value="Not Done">Not Done</option>
+                          </Input>
                         </InputGroup>
                       </FormGroup>
                     </div>
@@ -1925,13 +1971,18 @@ const ClinicVisit = (props) => {
                         <Label>Urinalysis - Proteins</Label>
                         <InputGroup>
                           <Input
-                            type="text"
+                            type="select"
                             name="urinalysisProteins"
                             id="urinalysisProteins"
-                            value={objValues.urinalysisProteins}
+                            value={objValues.urinalysisProteins || ""}
                             onChange={handleInputChange}
                             disabled={disabledField}
-                          />
+                          >
+                            <option value="">Select</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Abnormal">Abnormal</option>
+                            <option value="Not Done">Not Done</option>
+                          </Input>
                         </InputGroup>
                       </FormGroup>
                     </div>
@@ -2510,7 +2561,7 @@ const ClinicVisit = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Infant Feeding Practice at Present <span style={{ color: "red" }}> *</span>
+                          Infant Feeding Practice at Present
                         </Label>
                         <InputGroup>
                           <Input
@@ -2546,7 +2597,7 @@ const ClinicVisit = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Infant on CTX <span style={{ color: "red" }}> *</span>
+                          Infant on CTX
                         </Label>
                         <InputGroup>
                           <Input
@@ -2574,7 +2625,7 @@ const ClinicVisit = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Referred To Treatment <span style={{ color: "red" }}> *</span>
+                          Referred To Treatment
                         </Label>
                         <InputGroup>
                           <Input
