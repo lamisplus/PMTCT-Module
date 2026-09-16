@@ -172,6 +172,27 @@ const toTestingPointAbbr = (testSetting) => {
  * SerialNumber is user-entered (see Serial Number field) and checked for
  * uniqueness against the shared HTS client-code-uniqueness API.
  */
+// Both the client's own "Syphilis Test Result" and "Partner Tested — Syphilis" fields now
+// source from the SYPHILIS_RESULT codeset (codes like SYPHILIS_RESULT_POSITIVE), but records
+// saved before this change hold raw legacy strings instead — "Reactive"/"Non-reactive" for the
+// client field, plain "Positive"/"Negative" (no prefix) for the partner field. Neither matches
+// a codeset code, so without this the dropdown would render blank on an old record even though
+// a value is on file. Already-valid codes (records saved after this change) pass through
+// unchanged. Saving again after this normalizes the record forward to the real code — no bulk
+// DB migration needed.
+const normalizeSyphilisResultCode = (rawValue) => {
+  if (!rawValue) return rawValue;
+  if (rawValue.startsWith("SYPHILIS_RESULT_")) return rawValue;
+  const legacyMap = {
+    reactive: "SYPHILIS_RESULT_POSITIVE",
+    "non-reactive": "SYPHILIS_RESULT_NEGATIVE",
+    "non reactive": "SYPHILIS_RESULT_NEGATIVE",
+    positive: "SYPHILIS_RESULT_POSITIVE",
+    negative: "SYPHILIS_RESULT_NEGATIVE",
+  };
+  return legacyMap[rawValue.trim().toLowerCase()] || rawValue;
+};
+
 const generateClientCode = (setting, testSetting, dateOfVisit, serialNumber) => {
   if (!setting || !serialNumber || !dateOfVisit) return "";
 
@@ -237,9 +258,10 @@ const mapToHtsEntryPointSetting = (testEntryPoint) => {
 // via GET pmtct/anc/get-person-id (see fetchPersonId), and facilityId is stated to be derived
 // on HTS-Module's own backend.
 //
-// options.dateOfPreviouslyKnown: only meaningful for the checkPriorHtsPositiveRecord scenario.
-// HTS's DTO has no field for this yet (raised with their team) — included anyway so it starts
-// flowing through automatically the moment they add support, with no further change needed here.
+// options.dateOfPreviouslyKnown: only meaningful for the checkPriorHtsPositiveRecord scenario —
+// holds today's PMTCT visit date (labeled "Date of Visit" on the form), distinct from
+// payload.dateOfHivTest which is the adopted record's own original test date. HTS-Module added
+// support for this observation key on the sprint-08-09-2026 branch.
 // options.rawObservation: only meaningful for the checkPriorHtsPositiveRecord scenario — the
 // adopted record's raw observation JSON, fetched directly from HTS-Module's own GET
 // hts-encounter/{id}. Spread in as the base of the request so HTS-only fields PMTCT has no UI
@@ -389,6 +411,7 @@ const PmtctHtsForm = (props) => {
   const [serologyFromAnc, setSerologyFromAnc] = useState({ syphilis: false, hepatitisB: false });
   const [entrySetting, setEntrySetting] = useState([]);
   const [testEntryPoint, setTestEntryPoint] = useState([]);
+  const [syphilisResultOptions, setSyphilisResultOptions] = useState([]);
   const [communitySetting, setCommunitySetting] = useState([]);
   const [disableHIVStatus, setDisableHIVStatus] = useState(false);
   const [autoPostPartumTiming, setAutoPostPartumTiming] = useState(false);
@@ -693,7 +716,7 @@ const PmtctHtsForm = (props) => {
           clientCode: data.clientCode || "",
           serialNumber: derivedSerialNumber,
           hospitalNumber: data.hospitalNumber || prev.hospitalNumber,
-          syphilis: data.syphilisInfo?.testResult || data.syphilis || "",
+          syphilis: normalizeSyphilisResultCode(data.syphilisInfo?.testResult || data.syphilis || ""),
           hepatitisB: data.hbvInfo?.testResult || data.hepatitisB || "",
           hepatitisC: data.hepatitisC || "",
           testingType: data.testingType || prev.testingType,
@@ -717,7 +740,7 @@ const PmtctHtsForm = (props) => {
           tbReferred: data.tbReferred || "",
           partnerNotificationAgreed: data.partnerInfo?.notificationAgreed || "",
           partnerTestedHiv: data.partnerInfo?.testedHiv || "",
-          partnerTestedSyphilis: data.partnerInfo?.testedSyphilis || "",
+          partnerTestedSyphilis: normalizeSyphilisResultCode(data.partnerInfo?.testedSyphilis || ""),
           partnerTestedHbv: data.partnerInfo?.testedHbv || "",
           partnerReferredTo: data.partnerInfo?.referral || "",
           viralLoadMonitoring: data.viralLoadMonitoring || "",
@@ -965,7 +988,7 @@ const PmtctHtsForm = (props) => {
                 const updates = {};
                 // Only pre-populate syphilis if positive and not already set
                 if (hasPrevSyph && !prev.syphilis) {
-                  updates.syphilis = prevSyphResult;
+                  updates.syphilis = normalizeSyphilisResultCode(prevSyphResult);
                   if (prevHts.syphilisInfo?.treatment && !prev.syphilisTreatment)
                     updates.syphilisTreatment = prevHts.syphilisInfo.treatment;
                   if (prevHts.syphilisInfo?.drugName && !prev.syphilisDrugName)
@@ -1002,6 +1025,7 @@ const PmtctHtsForm = (props) => {
 
   useEffect(() => {
     POINT_ENTRY_PMTCT();
+    GET_SYPHILIS_RESULT_CODESET();
     GET_CODESETS();
     getLastPmtctHtsRecord();
     fetchPersonId(props.patientUuid);
@@ -1088,15 +1112,15 @@ const PmtctHtsForm = (props) => {
               }
             }
 
-            // ANC records Syphilis as Positive/Negative — the HTS form's own
-            // Syphilis field uses Reactive/Non-reactive, so map between the two.
+            // ANC records Syphilis as plain Positive/Negative text — map that onto the
+            // HTS form's own SYPHILIS_RESULT codeset code.
             const syph = response?.data?.syphilisInfo;
             if (syph && syph.testedSyphilis === "Yes") {
               const result = (syph.testResultSyphilis || "").trim().toLowerCase();
               if (result === "positive" || result === "negative") {
                 setPayload((prev) => ({
                   ...prev,
-                  syphilis: prev.syphilis || (result === "positive" ? "Reactive" : "Non-reactive"),
+                  syphilis: prev.syphilis || normalizeSyphilisResultCode(result),
                 }));
                 setSerologyFromAnc((prev) => ({ ...prev, syphilis: true }));
               }
@@ -1187,7 +1211,7 @@ const PmtctHtsForm = (props) => {
           clientCode: response.data.clientCode || "",
           serialNumber: derivedSerialNumber,
           hospitalNumber: response.data.hospitalNumber || "",
-          syphilis: response.data.syphilisInfo?.testResult || response.data.syphilis || "",
+          syphilis: normalizeSyphilisResultCode(response.data.syphilisInfo?.testResult || response.data.syphilis || ""),
           hepatitisB: response.data.hbvInfo?.testResult || response.data.hepatitisB || "",
           hepatitisC: response.data.hepatitisC || "",
           testingType: response.data.testingType || "",
@@ -1219,7 +1243,7 @@ const PmtctHtsForm = (props) => {
           // Partner — load from JSONB
           partnerNotificationAgreed: response.data.partnerInfo?.notificationAgreed || "",
           partnerTestedHiv: response.data.partnerInfo?.testedHiv || "",
-          partnerTestedSyphilis: response.data.partnerInfo?.testedSyphilis || "",
+          partnerTestedSyphilis: normalizeSyphilisResultCode(response.data.partnerInfo?.testedSyphilis || ""),
           partnerTestedHbv: response.data.partnerInfo?.testedHbv || "",
           partnerReferredTo: response.data.partnerInfo?.referral || "",
           viralLoadMonitoring: response.data.viralLoadMonitoring || "",
@@ -1325,6 +1349,19 @@ const PmtctHtsForm = (props) => {
       .then((response) => {
         setTestEntryPoint(response.data);
         // console.log("deducted", ans);
+      })
+      .catch((error) => {
+        //console.log(error);
+      });
+  };
+
+  const GET_SYPHILIS_RESULT_CODESET = () => {
+    axios
+      .get(`${baseUrl}application-codesets/v2/SYPHILIS_RESULT`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setSyphilisResultOptions(response.data || []);
       })
       .catch((error) => {
         //console.log(error);
@@ -2333,25 +2370,49 @@ const PmtctHtsForm = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
+                        {/* Adopting an existing positive HTS-module record: this slot shows
+                            "Date of Visit" (today's PMTCT encounter date, dateOfPreviouslyKnown)
+                            instead of "Date of HIV Test" — that field moves down next to
+                            "Previously Known HIV Positive" for display/auto-population instead. */}
                         <Label>
-                          Date of HIV Test <span style={{ color: "red" }}> *</span>
+                          {priorHtsPositiveRecordId ? "Date of Visit" : "Date of HIV Test"}{" "}
+                          <span style={{ color: "red" }}> *</span>
                         </Label>
                         <InputGroup>
-                          <Input
-                            type="date"
-                            onKeyPress={(e) => { e.preventDefault(); }}
-                            name="dateOfHivTest"
-                            id="dateOfHivTest"
-                            onChange={handleInputChange}
-                            value={payload.dateOfHivTest}
-                            min={
-                              patientObj.ancNo ? props?.patientObj?.dateOfEnrollment : ""
-                            }
-                            max={moment(new Date()).format("YYYY-MM-DD")}
-                            disabled={disabledField}
-                          />
+                          {priorHtsPositiveRecordId ? (
+                            <Input
+                              type="date"
+                              name="dateOfPreviouslyKnown"
+                              id="dateOfPreviouslyKnown"
+                              onChange={(e) => setDateOfPreviouslyKnown(e.target.value)}
+                              value={dateOfPreviouslyKnown}
+                              disabled={disabledField}
+                              min={payload.dateOfHivTest || undefined}
+                              max={moment().format("YYYY-MM-DD")}
+                            />
+                          ) : (
+                            <Input
+                              type="date"
+                              onKeyPress={(e) => { e.preventDefault(); }}
+                              name="dateOfHivTest"
+                              id="dateOfHivTest"
+                              onChange={handleInputChange}
+                              value={payload.dateOfHivTest}
+                              min={
+                                patientObj.ancNo ? props?.patientObj?.dateOfEnrollment : ""
+                              }
+                              max={moment(new Date()).format("YYYY-MM-DD")}
+                              disabled={disabledField}
+                            />
+                          )}
                         </InputGroup>
-                        {errors.dateOfHivTest !== "" ? (
+                        {priorHtsPositiveRecordId ? (
+                          errors.dateOfPreviouslyKnown ? (
+                            <span className={classes.error}>{errors.dateOfPreviouslyKnown}</span>
+                          ) : (
+                            ""
+                          )
+                        ) : errors.dateOfHivTest !== "" ? (
                           <span className={classes.error}>{errors.dateOfHivTest}</span>
                         ) : (
                           ""
@@ -2627,35 +2688,29 @@ const PmtctHtsForm = (props) => {
                           )}
                         </FormGroup>
                       </div>
-                      {/* Only shown when adopting an existing positive HTS-module record — the
-                          user must manually enter the date they're documenting this on PMTCT,
-                          which is a different date from when the HTS-module record was itself
-                          created (see priorHtsPositiveRecordId). Saved into observation once
-                          HTS-Module's team adds support for it on their end (see
-                          dateOfPreviouslyKnown in buildHtsEncounterRequestPayload). */}
+                      {/* Only shown when adopting an existing positive HTS-module record — displays
+                          the record's own original test date (payload.dateOfHivTest, auto-loaded
+                          by checkPriorHtsPositiveRecord from that record's date_of_visit).
+                          Read-only: this is a retrieved historical fact, not user-entered. The
+                          "Date of Visit" field above (dateOfPreviouslyKnown) is where today's
+                          PMTCT encounter date is captured for this scenario instead. */}
                       {!!priorHtsPositiveRecordId && (
                         <div className="form-group mb-3 col-md-4">
                           <FormGroup>
                             <Label>
-                              Date of Previously Known <span style={{ color: "red" }}> *</span>
+                              Date of HIV Test <span style={{ color: "red" }}> *</span>
                             </Label>
                             <InputGroup>
                               <Input
                                 type="date"
-                                name="dateOfPreviouslyKnown"
-                                id="dateOfPreviouslyKnown"
-                                onChange={(e) => setDateOfPreviouslyKnown(e.target.value)}
-                                value={dateOfPreviouslyKnown}
-                                disabled={disabledField}
-                                // Can't be documented before the adopted record's own visit date
-                                // (payload.dateOfHivTest is that record's date_of_visit, loaded
-                                // by checkPriorHtsPositiveRecord), and can't be in the future.
-                                min={payload.dateOfHivTest || undefined}
-                                max={moment().format("YYYY-MM-DD")}
+                                name="dateOfHivTest"
+                                id="dateOfHivTestPreviouslyKnown"
+                                value={payload.dateOfHivTest}
+                                disabled
                               />
                             </InputGroup>
-                            {errors.dateOfPreviouslyKnown ? (
-                              <span className={classes.error}>{errors.dateOfPreviouslyKnown}</span>
+                            {errors.dateOfHivTest !== "" ? (
+                              <span className={classes.error}>{errors.dateOfHivTest}</span>
                             ) : (
                               ""
                             )}
@@ -2955,8 +3010,11 @@ const PmtctHtsForm = (props) => {
                           disabled={disabledField}
                         >
                           <option value="">Select</option>
-                          <option value="Reactive">Reactive</option>
-                          <option value="Non-reactive">Non-reactive</option>
+                          {syphilisResultOptions.map((item) => (
+                            <option key={item.id} value={item.code}>
+                              {item.display}
+                            </option>
+                          ))}
                         </Input>
                       </InputGroup>
                       {serologyFromAnc.syphilis && (
@@ -2967,7 +3025,7 @@ const PmtctHtsForm = (props) => {
                     </FormGroup>
                   </div>
 
-                  {payload.syphilis === "Reactive" && (
+                  {payload.syphilis === "SYPHILIS_RESULT_POSITIVE" && (
                     <>
                       <div className="form-group mb-3 col-md-4">
                         <FormGroup>
@@ -3338,8 +3396,17 @@ const PmtctHtsForm = (props) => {
                               disabled={disabledField}
                             >
                               <option value="">Select</option>
-                              <option value="Positive">Positive</option>
-                              <option value="Negative">Negative</option>
+                              {syphilisResultOptions
+                                .filter(
+                                  (item) =>
+                                    item.code !== "SYPHILIS_RESULT_OTHERS" &&
+                                    item.code !== "SYPHILIS_RESULT_NOT_DONE"
+                                )
+                                .map((item) => (
+                                  <option key={item.id} value={item.code}>
+                                    {item.display}
+                                  </option>
+                                ))}
                             </Input>
                           </InputGroup>
                         </FormGroup>

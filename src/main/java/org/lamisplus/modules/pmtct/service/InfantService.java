@@ -442,13 +442,23 @@ public class InfantService {
     }
 
 
+    // pmtctCycleUuid is accepted for API-compatibility (existing frontend callers still send
+    // it) but deliberately no longer used to filter — an infant's PCR progression is a single
+    // continuous life-course fact, not scoped to a single mother pmtct cycle. Previously filtered
+    // by cycle here (getInfantVisitsByInfantHospitalNumberAndCycleUuid), which could return empty
+    // for a genuinely documented PCR history whenever the caller's "current" cycle uuid didn't
+    // match whatever cycle uuid was on record at the time the visit was saved (e.g. the mother's
+    // latest cycle having since moved on to a new pregnancy) — the Child Follow-up tab would then
+    // treat a fully-documented infant as untested and re-prompt from the 1st PCR. Now matches the
+    // already-correct cycle-agnostic pattern used by firstPcrExist() and
+    // PMTCTEnrollmentService.getLatestPCRFromJsonb() (the dashboard alert badge).
     public InfantPCRTestDto getLatestPCR(String infantHospitalNumber, String pmtctCycleUuid) {
         if (infantHospitalNumber == null || infantHospitalNumber.isEmpty()) {
             return new InfantPCRTestDto();
         }
         // 1. Check InfantVisit JSONB (follow-up visits, newest first)
         List<InfantVisit> visits = infantVisitRepository
-            .getInfantVisitsByInfantHospitalNumberAndCycleUuid(infantHospitalNumber, pmtctCycleUuid);
+            .getInfantVisitsByInfantHospitalNumberOrdered(infantHospitalNumber);
         for (InfantVisit visit : visits) {
             if (visit.getInfantPcrData() != null
                     && visit.getInfantPcrData().getTestType() != null
@@ -462,19 +472,20 @@ public class InfantService {
         if (infant.isPresent()
                 && infant.get().getInfantPcrData() != null
                 && infant.get().getInfantPcrData().getTestType() != null
-                && !infant.get().getInfantPcrData().getTestType().isEmpty()
-                && pmtctCycleUuid.equals(infant.get().getPmtctCycleUuid())) {
+                && !infant.get().getInfantPcrData().getTestType().isEmpty()) {
             return infant.get().getInfantPcrData();
         }
         return new InfantPCRTestDto();
     }
 
+    // pmtctCycleUuid is accepted for API-compatibility (existing frontend callers still send it)
+    // but deliberately no longer used to filter — same reasoning as getLatestPCR above.
     public InfantRapidAntiBodyTestDto getLatestRapidTest(String infantHospitalNumber, String motherUuid, String pmtctCycleUuid) {
         if (infantHospitalNumber == null || infantHospitalNumber.isEmpty()) {
             return new InfantRapidAntiBodyTestDto();
         }
         List<InfantVisit> visits = infantVisitRepository
-            .getInfantVisitsByInfantHospitalNumberAndCycleUuid(infantHospitalNumber, pmtctCycleUuid);
+            .getInfantVisitsByInfantHospitalNumberOrdered(infantHospitalNumber);
         for (InfantVisit visit : visits) {
             if (visit.getRapidTestData() != null
                     && visit.getRapidTestData().getResult() != null

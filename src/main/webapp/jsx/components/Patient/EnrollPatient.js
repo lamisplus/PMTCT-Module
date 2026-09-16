@@ -31,7 +31,7 @@ import PmtctEnrollment from "../PmtctServices/PmtctEnrollment";
 // import Form from 'react-bootstrap/Form';
 import { Modal } from "react-bootstrap";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
-import { scrollToFirstError } from "../../utils";
+import { scrollToFirstError, isPatientAlreadyKnownPositive } from "../../utils";
 import AncFormFields from "../PmtctServices/AncFormFields";
 import PmtctHtsForm from "../PmtctServices/PmtctHtsForm";
 import LabourDelivery from "../PmtctServices/LabourDelivery";
@@ -807,6 +807,13 @@ const UserRegistration = (props) => {
 
           toast.success("Patient registered successfully");
 
+          // HIV status is established once and carries forward permanently — an already
+          // known-positive patient never needs to go through PMTCT HTS again on a new cycle.
+          const alreadyKnownPositive = await isPatientAlreadyKnownPositive(
+            payload.patient_uuid,
+            checkIfCycleIsCreated?.response?.uuid
+          );
+
           history.push({
             pathname: "/patient-history",
             state: {
@@ -816,7 +823,7 @@ const UserRegistration = (props) => {
               },
               postValue: locationState.postValue,
               entrypointValue: locationState.entrypointValue,
-              autoOpenRoute: "pmtct-hts",
+              ...(alreadyKnownPositive ? {} : { autoOpenRoute: "pmtct-hts" }),
             },
           });
         } else {

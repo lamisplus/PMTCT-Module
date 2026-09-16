@@ -147,5 +147,43 @@ export  const convertMaternalCodeToValue = (code) => {
       return "";
 }
 
+// HIV status is established once and carries forward permanently across PMTCT cycles — it is
+// never re-established per cycle. patient-hiv-summary is already patient-wide-aware (falls back
+// to the patient's latest positive result from any cycle/module when the current cycle has none
+// of its own), so this is the one place every "is she already known positive" check should go
+// through, instead of each caller re-deriving it from a cycle-scoped HTS lookup.
+export const getPatientWideHivStatus = async (patientUuid, pmtctCycleUuid) => {
+  if (!patientUuid || !pmtctCycleUuid) return null;
+  try {
+    const response = await axios.get(
+      `${baseUrl}pmtct/anc/patient-hiv-summary?patientUuid=${patientUuid}&pmtctCycleUuid=${pmtctCycleUuid}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response?.data || null;
+  } catch (error) {
+    // Best-effort — a failed check must never block the normal save/routing flow.
+    return null;
+  }
+};
+
+// Same "positive" interpretation used elsewhere (e.g. SubMenu.js's checkPositive) — treats
+// "reactive" as positive but excludes "non-reactive"/"non reactive".
+export const isKnownPositiveSummary = (summary) => {
+  if (!summary) return false;
+  if (summary.acuteHivInfectionDetected) return true;
+  const status = String(summary.hivStatus || "").toLowerCase().trim();
+  if (!status) return false;
+  return (
+    status.includes("positive") ||
+    (status.includes("reactive") && !status.includes("non-reactive") && !status.includes("non reactive"))
+  );
+};
+
+// Convenience wrapper for the routing gates: fetch + interpret in one call.
+export const isPatientAlreadyKnownPositive = async (patientUuid, pmtctCycleUuid) => {
+  const summary = await getPatientWideHivStatus(patientUuid, pmtctCycleUuid);
+  return isKnownPositiveSummary(summary);
+};
+
 
 

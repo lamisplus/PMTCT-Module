@@ -25,7 +25,7 @@ import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
-import { validateGestationalAge, addWeeksToDate } from "../../utils";
+import { validateGestationalAge, addWeeksToDate, getPatientWideHivStatus } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -465,14 +465,19 @@ const ClinicVisit = (props) => {
         `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${pmtctCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      .then((response) => {
-        if (response.data) {
-          if (response.data.finalResult) {
-            setHtsHivResult(response.data.finalResult);
+      .then(async (response) => {
+        if (response.data?.finalResult) {
+          setHtsHivResult(response.data.finalResult);
+        } else {
+          // HIV status is established once and carries forward permanently — this cycle may
+          // have no HTS record of its own yet, but the status shouldn't display as blank/missing.
+          const summary = await getPatientWideHivStatus(patientUuid, pmtctCycleUuid);
+          if (summary?.hivStatus) {
+            setHtsHivResult(summary.hivStatus);
           }
-          if (response.data.ancNo) {
-            setAncNumber(response.data.ancNo);
-          }
+        }
+        if (response.data?.ancNo) {
+          setAncNumber(response.data.ancNo);
         }
       })
       .catch(() => {});

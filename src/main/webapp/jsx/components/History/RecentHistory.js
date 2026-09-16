@@ -14,6 +14,7 @@ import "react-widgets/dist/css/react-widgets.css";
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
 import { Button } from "semantic-ui-react";
+import { getPatientWideHivStatus, isKnownPositiveSummary } from "../../utils";
 
 const RecentHistory = (props) => {
   let history = useHistory();
@@ -40,6 +41,24 @@ const RecentHistory = (props) => {
   // Resolve patientUuid consistently across all API calls
   const resolvedPatientUuid = props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
   const resolvedCycleUuid = props.selectedCycleId || props.latestPmtctCycle?.uuid;
+
+  // HIV status is established once and carries forward permanently across PMTCT cycles.
+  // patientObj's own dynamicHivStatus/staticHivStatus/hivStatus fields can lag behind that (e.g.
+  // right after a brand-new cycle is created, before any fetch has re-populated them), which
+  // otherwise makes the "no HTS record" warning below fire for an already-known-positive client.
+  // patient-hiv-summary is the same patient-wide-aware source already used elsewhere for this.
+  const [patientWideKnownPositive, setPatientWideKnownPositive] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    if (!resolvedPatientUuid || !resolvedCycleUuid) {
+      setPatientWideKnownPositive(false);
+      return;
+    }
+    getPatientWideHivStatus(resolvedPatientUuid, resolvedCycleUuid).then((summary) => {
+      if (!cancelled) setPatientWideKnownPositive(isKnownPositiveSummary(summary));
+    });
+    return () => { cancelled = true; };
+  }, [resolvedPatientUuid, resolvedCycleUuid]);
 
   useEffect(() => {
     let cancelled = false;
@@ -810,7 +829,8 @@ const RecentHistory = (props) => {
               (!props.patientObj.staticHivStatus ||
                 props.patientObj.staticHivStatus === "") &&
               (!props.patientObj.hivStatus ||
-                props.patientObj.hivStatus === "") ? (
+                props.patientObj.hivStatus === "") &&
+              !patientWideKnownPositive ? (
                 <div style={{
                   padding: "12px 16px", borderRadius: "8px",
                   background: "#fffbeb", color: "#92400e",

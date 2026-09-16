@@ -189,45 +189,10 @@ function SubMenu(props) {
 
         const hasExistingHts = !!(htsRes.data?.id);
 
-        // If no HTS record exists (e.g. deleted), reset to "no record" state
-        if (!hasExistingHts) {
-          setIsSyphilisPositive(false);
-          setIsHepatitisPositive(false);
-          setPatientStatus(null);
-          showRetestingMenu(null, false);
-          setMenuReady(true);
-          return;
-        }
-
-        // Derive HIV status from the HTS record only — do NOT fall back to patient-level props
-        let hivStatus = htsRes.data?.finalResult
-          || htsRes.data?.confirmatoryHivTest?.result
-          || null;
-
-        // LV3-1732: a client whose Suspected Acute HIV Infection resolved to Acute (VL
-        // >=1000c/ml) must get Mother Clinical Information access as a HIV Positive Client —
-        // but checkAndApplyAcuteInfectionStatus's resolution target is deliberately patient-wide
-        // (see its own comment), so the confirmed-Acute record can be a different hts_encounter
-        // row than this cycle's own pmtct_hts=true record findLatestByPatientUuidAndCycleUuid
-        // (above, via get-latest-pmtct-hts-enrollment) reads finalResult from — same gap already
-        // fixed for the Patient Dashboard badge (getPatientHivSummary), checked here too so this
-        // access gate doesn't miss it. Best-effort: a failure here must never block menu load.
-        // isSuspectedAcuteUnresolved also captured here — a client still awaiting VL resolution
-        // (or genuinely resolved-but-Acute) must never be offered Retesting either; see
-        // showRetestingMenu's new isSuspectedAcute param below.
-        let isSuspectedAcuteUnresolved = false;
-        try {
-          const summaryRes = await axios.get(
-            `${baseUrl}pmtct/anc/patient-hiv-summary?patientUuid=${patientUuid}&pmtctCycleUuid=${thePmtctCycleUuid}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (summaryRes.data?.acuteHivInfectionDetected) {
-            hivStatus = "Positive";
-          }
-          isSuspectedAcuteUnresolved = Boolean(summaryRes.data?.suspectedAcuteInfection);
-        } catch (summaryErr) {
-          // Best-effort — see comment above.
-        }
+        // Derive HIV status from THIS cycle's own record first, if it has one.
+        let hivStatus = hasExistingHts
+          ? (htsRes.data?.finalResult || htsRes.data?.confirmatoryHivTest?.result || null)
+          : null;
 
         // Helper to check if a test value indicates positive
         const checkPositive = (val) => {
@@ -236,14 +201,40 @@ function SubMenu(props) {
           return norm.includes("positive") || (norm.includes("reactive") && !norm.includes("non-reactive") && !norm.includes("non reactive"));
         };
 
-        // Check syphilis positive status from CURRENT cycle
-        const syphilisResult = htsRes.data?.syphilisInfo?.testResult || htsRes.data?.syphilis || "";
+        // Check syphilis/hepatitis positive status from CURRENT cycle's own record, if any
+        const syphilisResult = hasExistingHts ? (htsRes.data?.syphilisInfo?.testResult || htsRes.data?.syphilis || "") : "";
         let syphPositive = checkPositive(syphilisResult);
 
-        // Check hepatitis positive status from CURRENT cycle (Hep B or Hep C)
-        const hepBResult = htsRes.data?.hbvInfo?.testResult || htsRes.data?.hepatitisB || "";
-        const hepCResult = htsRes.data?.hepatitisC || "";
+        const hepBResult = hasExistingHts ? (htsRes.data?.hbvInfo?.testResult || htsRes.data?.hepatitisB || "") : "";
+        const hepCResult = hasExistingHts ? (htsRes.data?.hepatitisC || "") : "";
         let hepPositive = checkPositive(hepBResult) || checkPositive(hepCResult);
+
+        // LV3-1732 + HIV status carries forward permanently: a client whose Suspected Acute HIV
+        // Infection resolved to Acute (VL >=1000c/ml) must get Mother Clinical Information access
+        // as a HIV Positive Client, and a client already established positive on an EARLIER cycle
+        // (this cycle has no HTS record of its own yet — hivStatus is still null above) must not
+        // look "untested"/missing just because she hasn't touched HTS again this cycle. Both are
+        // patient-wide facts, not per-cycle ones — patient-hiv-summary already resolves both (see
+        // getPatientHivSummary's own patient-wide fallback), so it's the single source of truth
+        // here regardless of whether this cycle has its own record. Best-effort: a failure here
+        // must never block menu load. isSuspectedAcuteUnresolved also captured here — a client
+        // still awaiting VL resolution (or genuinely resolved-but-Acute) must never be offered
+        // Retesting either; see showRetestingMenu's new isSuspectedAcute param below.
+        let isSuspectedAcuteUnresolved = false;
+        try {
+          const summaryRes = await axios.get(
+            `${baseUrl}pmtct/anc/patient-hiv-summary?patientUuid=${patientUuid}&pmtctCycleUuid=${thePmtctCycleUuid}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (summaryRes.data?.acuteHivInfectionDetected) {
+            hivStatus = "Positive";
+          } else if (!hivStatus && summaryRes.data?.hivStatus) {
+            hivStatus = summaryRes.data.hivStatus;
+          }
+          isSuspectedAcuteUnresolved = Boolean(summaryRes.data?.suspectedAcuteInfection);
+        } catch (summaryErr) {
+          // Best-effort — see comment above.
+        }
 
         // If syphilis or hepatitis are not positive from current cycle,
         // check historical data from ALL cycles (positive status carries forward)

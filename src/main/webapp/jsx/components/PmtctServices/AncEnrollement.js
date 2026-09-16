@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import AncFormFields from "./AncFormFields";
-import { scrollToFirstError } from "../../utils";
+import { scrollToFirstError, isPatientAlreadyKnownPositive } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -404,9 +404,29 @@ const AncEnrollement = (props) => {
       .post(`${baseUrl}pmtct/anc/anc-enrollement`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => {
+      .then(async (response) => {
         setSaving(false);
         toast.success("ANC Enrollment saved successfully");
+
+        // HIV status is established once and carries forward permanently — an already
+        // known-positive patient never needs to go through PMTCT HTS again on a new cycle.
+        const patientUuid = objValues.patientUuid;
+        const alreadyKnownPositive = await isPatientAlreadyKnownPositive(
+          patientUuid,
+          payload.pmtctCycleUuid
+        );
+
+        if (alreadyKnownPositive) {
+          props.setActiveContent({
+            ...props.activeContent,
+            route: "recent-history",
+            actionType: "create",
+            id: "",
+            obj: {},
+          });
+          return;
+        }
+
         if (props.setPmtctHtsRetestingType) {
           props.setPmtctHtsRetestingType("pmtct-hts");
         }

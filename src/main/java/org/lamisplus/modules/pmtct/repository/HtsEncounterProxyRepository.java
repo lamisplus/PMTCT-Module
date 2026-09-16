@@ -183,12 +183,17 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY id DESC")
     List<HtsEncounterProxy> findByPatientUuidAndUnarchived(String patientUuid);
 
+    // 'positive'/'reactive' cover legacy pre-codeset records (Reactive/Non-reactive dropdown);
+    // 'syphilis_result_positive' covers records saved after the field became SYPHILIS_RESULT
+    // codeset-driven (PmtctHtsForm.js), whose testResult is now a code like
+    // SYPHILIS_RESULT_POSITIVE rather than a plain word.
     @Query(nativeQuery = true, value
             = "SELECT EXISTS(SELECT 1 FROM hts_encounter "
             + "WHERE pmtct_hts = true AND archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND ("
-            + "    LOWER(COALESCE(observation->'syphilisInfo'->>'testResult', '')) IN ('positive', 'reactive')"
+            + "    LOWER(COALESCE(observation->'syphilisInfo'->>'testResult', '')) LIKE '%positive%' "
+            + "    OR LOWER(COALESCE(observation->'syphilisInfo'->>'testResult', '')) = 'reactive'"
             + "  )"
             + ")")
     boolean hasEverPositiveSyphilis(String patientUuid);

@@ -27,7 +27,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import "react-summernote/dist/react-summernote.css"; // import styles
 import { Spinner } from "reactstrap";
 import { Message } from "semantic-ui-react";
-import { calculateGestationalAge, addWeeksToDate } from "../../utils";
+import { calculateGestationalAge, addWeeksToDate, getPatientWideHivStatus } from "../../utils";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
 
@@ -387,7 +387,14 @@ const AncPnc = (props) => {
       if (response.data) {
         const htsData = response.data;
         // Auto-populate HIV Test Result and ANC Number for info display
-        if (htsData.finalResult) setHtsHivResult(htsData.finalResult);
+        if (htsData.finalResult) {
+          setHtsHivResult(htsData.finalResult);
+        } else {
+          // HIV status is established once and carries forward permanently — this cycle may
+          // have no HTS record of its own yet, but the status shouldn't display as blank/missing.
+          const summary = await getPatientWideHivStatus(patientUuid, pmtctCycleUuid);
+          if (summary?.hivStatus) setHtsHivResult(summary.hivStatus);
+        }
         if (htsData.ancNo) setAncNumber(htsData.ancNo);
         const updates = {};
         // Map syphilis from HTS to enrollment syphilisDetails
@@ -712,8 +719,15 @@ const AncPnc = (props) => {
       axios.get(
         `${baseUrl}pmtct/anc/get-latest-pmtct-hts-enrollment/${patientUuid}?pmtctCycleUuid=${displayCycleUuid}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      ).then((res) => {
-        if (res.data?.finalResult) setHtsHivResult(res.data.finalResult);
+      ).then(async (res) => {
+        if (res.data?.finalResult) {
+          setHtsHivResult(res.data.finalResult);
+        } else {
+          // HIV status is established once and carries forward permanently — this cycle may
+          // have no HTS record of its own yet, but the status shouldn't display as blank/missing.
+          const summary = await getPatientWideHivStatus(patientUuid, displayCycleUuid);
+          if (summary?.hivStatus) setHtsHivResult(summary.hivStatus);
+        }
         if (res.data?.ancNo) setAncNumber(res.data.ancNo);
       }).catch(() => {});
     }

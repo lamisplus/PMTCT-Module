@@ -25,6 +25,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
+import { isPatientAlreadyKnownPositive } from "../../utils";
 import { calculateGestationalAge } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
@@ -783,12 +784,23 @@ const LabourDelivery = (props) => {
           .post(`${baseUrl}pmtct/anc/pmtct-delivery`, delivery, {
             headers: { Authorization: `Bearer ${token}` },
           })
-          .then((response) => {
+          .then(async (response) => {
             setSaving(false);
             props.patientObj.deliveryStatus = true;
             toast.success("Record save successful", {
               position: toast.POSITION.BOTTOM_CENTER,
             });
+
+            // HIV status is established once and carries forward permanently — an already
+            // known-positive patient never needs to go through PMTCT HTS again on a new cycle,
+            // so skip the auto-route to it entirely and fall through to the normal next screen.
+            const patientUuid =
+              props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
+            const alreadyKnownPositive = await isPatientAlreadyKnownPositive(
+              patientUuid,
+              delivery.pmtctCycleUuid
+            );
+
             // Enrollment page: navigate to patient-history via handleRoute
             if (props.onEnrollPatient && props.handleRoute) {
               const data = {
@@ -799,8 +811,8 @@ const LabourDelivery = (props) => {
                 hospitalNumber: props.patientObj?.identifier?.identifier?.[0]?.value
                   || props.patientObj?.hospitalNumber,
               };
-              props.handleRoute(data, { autoOpenRoute: "pmtct-hts" });
-            } else if (isLdEntryPoint && props.setPmtctHtsRetestingType) {
+              props.handleRoute(data, alreadyKnownPositive ? {} : { autoOpenRoute: "pmtct-hts" });
+            } else if (!alreadyKnownPositive && isLdEntryPoint && props.setPmtctHtsRetestingType) {
               // L&D entry point in PatientDetail: navigate to PMTCT HTS form
               props.setPmtctHtsRetestingType("pmtct-hts");
               props.setActiveContent({
