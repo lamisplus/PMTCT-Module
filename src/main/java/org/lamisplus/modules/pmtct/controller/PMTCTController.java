@@ -44,6 +44,8 @@ public class PMTCTController {
 
     private final PmtctVisitRepository pmtctVisitRepository;
 
+    private final FamilyPlanningVisitService familyPlanningVisitService;
+
     @GetMapping(value = "anc-visit-count")
     public ResponseEntity<Integer> getAncVisitCount(
             @RequestParam String patientUuid,
@@ -506,6 +508,37 @@ public class PMTCTController {
     @DeleteMapping(value = "/delete/mothervisit/{id}")
     public ResponseEntity<String> deleteMotherVisit(@PathVariable("id") String id) {
         this.pmtctVisitService.deleteMotherVisit(id);
+        return ResponseEntity.accepted().build();
+    }
+
+    @GetMapping(value = "has-active-pmtct-enrollment/{patientUuid}")
+    public ResponseEntity<Boolean> hasActivePmtctEnrollment(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.hasActivePmtctEnrollment(patientUuid));
+    }
+
+    @PostMapping(value = "family-planning-visit")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> saveFamilyPlanningVisit(@Valid @RequestBody FamilyPlanningVisitRequestDto familyPlanningVisitRequestDto) {
+        return ResponseEntity.ok(familyPlanningVisitService.save(familyPlanningVisitRequestDto));
+    }
+
+    @PutMapping(value = "update-family-planning-visit/{id}")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> updateFamilyPlanningVisit(@PathVariable("id") String id, @Valid @RequestBody FamilyPlanningVisitRequestDto familyPlanningVisitRequestDto) {
+        return ResponseEntity.ok(familyPlanningVisitService.update(id, familyPlanningVisitRequestDto));
+    }
+
+    @GetMapping(value = "family-planning-visit/{id}")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> viewFamilyPlanningVisit(@PathVariable("id") String id) {
+        return ResponseEntity.ok(familyPlanningVisitService.getById(id));
+    }
+
+    @GetMapping(value = "family-planning-visits-by-patient/{patientUuid}")
+    public ResponseEntity<List<FamilyPlanningVisitResponseDto>> getFamilyPlanningVisitsByPatient(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(familyPlanningVisitService.getAllByPatient(patientUuid));
+    }
+
+    @DeleteMapping(value = "/delete/family-planning-visit/{id}")
+    public ResponseEntity<String> deleteFamilyPlanningVisit(@PathVariable("id") String id) {
+        this.familyPlanningVisitService.delete(id);
         return ResponseEntity.accepted().build();
     }
 

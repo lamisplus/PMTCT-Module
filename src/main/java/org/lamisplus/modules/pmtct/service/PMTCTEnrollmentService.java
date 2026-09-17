@@ -613,6 +613,14 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
         return enrollment.isPresent();
     }
 
+    // Patient-wide (no cycle) active-PMTCT-enrollment check, promoted to a public method for
+    // the Family Planning gate ("prevent creation of an FP encounter for a client with no
+    // PMTCT/HTS enrolment") — wraps the same repository check checkPatientOnHTS already uses
+    // privately at line ~642, the only other place this fact is currently checked.
+    public boolean hasActivePmtctEnrollment(String patientUuid) {
+        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(patientUuid);
+    }
+
 
 
 //        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(patientUuid);

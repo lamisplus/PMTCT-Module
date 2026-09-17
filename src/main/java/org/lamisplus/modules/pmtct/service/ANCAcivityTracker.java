@@ -28,6 +28,8 @@ public class ANCAcivityTracker {
 
     private  final InfantRepository infantRepository;
 
+    private final FamilyPlanningVisitRepository familyPlanningVisitRepository;
+
 
 
     private String resolvePatientUuidFromAncNo(String ancNo) {
@@ -267,6 +269,20 @@ public class ANCAcivityTracker {
             });
         }
 
+        List<FamilyPlanningVisit> familyPlanningVisits = this.familyPlanningVisitRepository.getByPatientUuid(patientUuid);
+        if (!(familyPlanningVisits.isEmpty())) {
+            familyPlanningVisits.forEach(familyPlanningVisit -> {
+                ActivityTracker activityTracker = new ActivityTracker();
+                activityTracker.setActivityName("Family Planning");
+                activityTracker.setPath("pmtct-family-planning");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(familyPlanningVisit.getId());
+                activityTracker.setActivityDate(familyPlanningVisit.getVisitDate());
+                activityTrackers.add(activityTracker);
+            });
+        }
 
         return activityTrackers;
 
@@ -408,6 +424,20 @@ public class ANCAcivityTracker {
             });
         }
 
+        List<FamilyPlanningVisit> familyPlanningVisitsByCycle = this.familyPlanningVisitRepository.getByPatientUuidAndCycleUuid(patientUuid, pmtctCycleUuid);
+        if (!(familyPlanningVisitsByCycle.isEmpty())) {
+            familyPlanningVisitsByCycle.forEach(familyPlanningVisit -> {
+                ActivityTracker activityTracker = new ActivityTracker();
+                activityTracker.setActivityName("Family Planning");
+                activityTracker.setPath("pmtct-family-planning");
+                activityTracker.setEditable(true);
+                activityTracker.setDeletable(true);
+                activityTracker.setViewable(true);
+                activityTracker.setRecordId(familyPlanningVisit.getId());
+                activityTracker.setActivityDate(familyPlanningVisit.getVisitDate());
+                activityTrackers.add(activityTracker);
+            });
+        }
 
         return activityTrackers;
 

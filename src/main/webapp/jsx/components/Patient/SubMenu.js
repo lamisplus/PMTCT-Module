@@ -145,6 +145,9 @@ function SubMenu(props) {
   const loadLabourDelivery = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "labour-delivery", actionType: "create", id: "", obj: {} });
   };
+  const loadFamilyPlanning = (row) => {
+    props.setActiveContent({ ...props.activeContent, route: "family-planning", actionType: "create", id: "", obj: {} });
+  };
   const onClickConsultation = (row) => {
     props.setActiveContent({ ...props.activeContent, route: "consultation", actionType: "create", id: "", obj: {}, activeTab: "home" });
     if (props.setMotherVisitType) props.setMotherVisitType("MOTHER_VISIT");
@@ -379,6 +382,13 @@ const showRetestingMenu = (patientHivStatus, hasExistingHts = false, isSuspected
                       <>
                         <Menu.Item onClick={() => onClickConsultation()} style={menuItemStyle("consultation")}>
                           Mother Follow Up Visit
+                        </Menu.Item>
+
+                        {/* Applies regardless of delivery status, unlike Labour & Delivery/
+                            Infant Information below — PPFP counselling and method provision
+                            can happen ante- or post-partum. */}
+                        <Menu.Item onClick={() => loadFamilyPlanning()} style={menuItemStyle("family-planning")}>
+                          Family Planning
                         </Menu.Item>
 
                         {!deliveryStatus && (

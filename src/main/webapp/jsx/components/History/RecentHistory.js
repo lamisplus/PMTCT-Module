@@ -271,6 +271,14 @@ const RecentHistory = (props) => {
         activeTab: "home",
         actionType: action,
       });
+    } else if (row.path === "pmtct-family-planning") {
+      props.setActiveContent({
+        ...props.activeContent,
+        route: "family-planning",
+        id: row.recordId,
+        activeTab: "home",
+        actionType: action,
+      });
     }  else if (row.path === "pmtct-hts") {
       props.setActiveContent({
         ...props.activeContent,
@@ -398,6 +406,31 @@ const RecentHistory = (props) => {
       //props.setActiveContent({...props.activeContent, route:'art-commencement-view', id:row.id})
       axios
         .delete(`${baseUrl}pmtct/anc/delete/infantvisit/${row.recordId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          toast.success("Record Deleted Successfully");
+          RecentActivities();
+          toggle();
+          setSaving(false);
+        })
+        .catch((error) => {
+          setSaving(false);
+          if (error.response && error.response.data) {
+            let errorMessage =
+              error.response.data.apierror &&
+              error.response.data.apierror.message !== ""
+                ? error.response.data.apierror.message
+                : "Something went wrong, please try again";
+            toast.error(errorMessage);
+          } else {
+            toast.error("Something went wrong. Please try again...");
+          }
+        });
+    } else if (row.path === "pmtct-family-planning") {
+      setSaving(true);
+      axios
+        .delete(`${baseUrl}pmtct/anc/delete/family-planning-visit/${row.recordId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {

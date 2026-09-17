@@ -1417,6 +1417,17 @@ const ClinicVisit = (props) => {
       objValues.infantMotherArtDto = infantMotherArtDto;
       objValues.infantMotherArtDto.visitDate = infantVisitRequestDto.visitDate;
       objValues.infantMotherArtDto.source = objValues.source;
+      // regimenTypeId/regimenId are optional (Original Regimen Line/Regimen aren't required —
+      // see validate(), which never checks them) but backed by Long columns server-side. Their
+      // "unselected" state defaults to "" (empty string) to display the dropdown's blank option;
+      // sending that literal "" crashes Jackson's Long deserialization with a blank-message 400
+      // Bad Request before the request even reaches the controller. Null out anything left blank.
+      if (objValues.infantMotherArtDto.regimenTypeId === "") {
+        objValues.infantMotherArtDto.regimenTypeId = null;
+      }
+      if (objValues.infantMotherArtDto.regimenId === "") {
+        objValues.infantMotherArtDto.regimenId = null;
+      }
 
 
       if(!arvFilledAtRegistration && infantArvDto.infantArvType){

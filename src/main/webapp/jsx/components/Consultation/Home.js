@@ -916,8 +916,11 @@ const ClinicVisit = (props) => {
       if (objValues.sfhLength && (parseFloat(objValues.sfhLength) < 22 || parseFloat(objValues.sfhLength) > 38)) {
         temp.sfhLength = "SFH must be between 22 and 38 cm";
       }
-      temp.currentArtStatus = objValues.currentArtStatus ? "" : "This field is required";
-      temp.mothersArtRegimen = objValues.mothersArtRegimen ? "" : "This field is required";
+      // Not on ART: no regimen is being taken, so Regimen Line/Mother's ART Regimen don't apply.
+      temp.mothersArtRegimen =
+        objValues.currentArtStatus === "Not on ART" || objValues.mothersArtRegimen
+          ? ""
+          : "This field is required";
       if (
         (objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Treatment" ||
           objValues.hepatitisBInfo?.currentHbvStatus === "Positive on Prophylaxis") &&
@@ -2201,9 +2204,7 @@ const ClinicVisit = (props) => {
                   <div className="row">
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
-                        <Label>
-                          Current ART Status <span style={{ color: "red" }}> *</span>
-                        </Label>
+                        <Label>Current ART Status</Label>
                         <InputGroup>
                           <Input
                             type="select"
@@ -2230,7 +2231,10 @@ const ClinicVisit = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Regimen Line <span style={{ color: "red" }}> *</span>
+                          Regimen Line{" "}
+                          {objValues.currentArtStatus !== "Not on ART" && (
+                            <span style={{ color: "red" }}> *</span>
+                          )}
                         </Label>
                         <InputGroup>
                           <Input
@@ -2254,7 +2258,10 @@ const ClinicVisit = (props) => {
                     <div className="form-group mb-3 col-md-4">
                       <FormGroup>
                         <Label>
-                          Mother's ART Regimen <span style={{ color: "red" }}> *</span>
+                          Mother's ART Regimen{" "}
+                          {objValues.currentArtStatus !== "Not on ART" && (
+                            <span style={{ color: "red" }}> *</span>
+                          )}
                         </Label>
                         <InputGroup>
                           <Input

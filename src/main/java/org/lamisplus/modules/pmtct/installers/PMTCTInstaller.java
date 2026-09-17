@@ -7,7 +7,7 @@ import org.springframework.core.annotation.Order;
 @Order(1)
 @Installer(name = "pmtct-schema-installer",
         description = "Installs the required database tables",
-        version = 9)
+        version = 10)
 public class PMTCTInstaller extends AcrossLiquibaseInstaller {
 
     public PMTCTInstaller() {
