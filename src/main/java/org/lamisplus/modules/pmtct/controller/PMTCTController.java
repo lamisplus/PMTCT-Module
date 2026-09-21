@@ -17,6 +17,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -398,6 +399,22 @@ public class PMTCTController {
             @RequestParam(defaultValue = "10") Integer pageSize) {
         PersonMetaDataDto personMetaDataDto = infantService.getAllInfants(pageNo, pageSize);
         return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/hiv-exposed-infants")
+    public ResponseEntity<PersonMetaDataDto> getHivExposedInfants(
+            @RequestParam(defaultValue = "*") String searchParam,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PersonMetaDataDto personMetaDataDto = infantService.getHivExposedInfantGrid(searchParam, pageNo, pageSize);
+        return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/infant-by-own-patient-uuid/{infantPatientUuid}")
+    public ResponseEntity<InfantDto> getInfantByOwnPatientUuid(@PathVariable("infantPatientUuid") String infantPatientUuid) {
+        Optional<Infant> infant = infantService.getInfantByInfantPatientUuid(infantPatientUuid);
+        return infant.map(value -> ResponseEntity.ok(infantService.buildInfantDTO(value, value.getMotherPatientUuid())))
+                .orElseGet(() -> ResponseEntity.ok().build());
     }
 
     @PostMapping(value = "infant-visitations")

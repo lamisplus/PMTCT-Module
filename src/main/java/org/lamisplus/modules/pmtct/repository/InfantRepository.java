@@ -31,6 +31,11 @@ public interface InfantRepository extends CommonJpaRepository<Infant, String> {
     // data must not leak into the currently-active infant with the same hospital number.
     Optional<Infant> getInfantByInfantHospitalNumberAndArchived(String infantHospitalNumber, Boolean archived);
 
+    // Looks up an infant by their OWN patient uuid rather than their mother's — the only
+    // lookup available for an HEI-without-maternal-record infant, since mother_patient_uuid
+    // is intentionally null for that category.
+    Optional<Infant> getInfantByInfantPatientUuidAndArchived(String infantPatientUuid, Boolean archived);
+
     @Query(
             value = "SELECT * FROM pmtct_infant_information pi WHERE pi.facility_id=?1 AND (EXTRACT (YEAR FROM now()) - EXTRACT(YEAR FROM pi.date_of_delivery) < 10 ) ORDER BY pi.id desc",
             nativeQuery = true

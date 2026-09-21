@@ -120,6 +120,18 @@ const sectionIconStyle = {
 
 const LabourinfantInfo = (props) => {
   const patientObj = props.patientObj;
+  // HIV-Exposed Infant, no maternal record: patientObj here is the CHILD's own existing
+  // patient record (found via the HEI grid), not a mother's — there is no mother to link,
+  // so every motherPatientUuid derivation below must be forced to null instead of reading
+  // props.patientObj. The backend also enforces this independently (defense in depth).
+  const isHeiFlow = props.isHeiFlow === true;
+  const motherOrNullUuid = isHeiFlow
+    ? null
+    : props.patientObj.patient_uuid
+    ? props.patientObj.patient_uuid
+    : props.patientObj.patientUuid
+    ? props.patientObj.patientUuid
+    : props.patientObj.uuid;
   //let history = useHistory();
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
@@ -157,12 +169,8 @@ const LabourinfantInfo = (props) => {
     dateOfDelivery: "",
     ctxStatus: "",
     infantHospitalNumber: "",
-    patientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid
-      ? props.patientObj.patientUuid
-      : props.patientObj.uuid,
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    patientUuid: motherOrNullUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
      infantPCRTestDto:  {
               ageAtTest: "",
               ancNumber: '',
@@ -173,10 +181,8 @@ const LabourinfantInfo = (props) => {
               infantHospitalNumber: '',
               results: "",
               testType: "",
-              pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-              motherPatientUuid: props.patientObj.patient_uuid
-                ? props.patientObj.patient_uuid
-                : props.patientObj.patientUuid,
+              pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+              motherPatientUuid: motherOrNullUuid,
 
   },
       infantArvDto: {
@@ -188,10 +194,8 @@ const LabourinfantInfo = (props) => {
     infantHospitalNumber:'',
     dateOfCtx: "",
     dateOfArv: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
   },
     source: "WEB",
 
@@ -208,10 +212,8 @@ const LabourinfantInfo = (props) => {
     infantHospitalNumber: infantHospitalNumber,
     results: "",
     testType: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
     source: "WEB",
   });
   const [arvAgeAtInitiation, setArvAgeAtInitiation] = useState("");
@@ -236,10 +238,8 @@ const LabourinfantInfo = (props) => {
     dateOfArv: "",
     dateOfArvCompletion: "",
     otherArvType: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
     source: "WEB",
   });
 
@@ -587,8 +587,10 @@ const LabourinfantInfo = (props) => {
     }
   }, [props.patientObj.id, props.activeContent.id]);
 
-  // Pre-fill mother's syphilis status from PMTCT HTS
+  // Pre-fill mother's syphilis status from PMTCT HTS — not applicable when there's no
+  // mother (patientObj is the child's own record in that case).
   useEffect(() => {
+    if (isHeiFlow) return;
     const patientUuid = props.patientObj.patient_uuid
       || props.patientObj.patientUuid
       || props.patientObj.uuid;
@@ -765,6 +767,13 @@ const LabourinfantInfo = (props) => {
       // Wire new fields into payload
       infantInfo.syphilisProphylaxis = syphilisData;
       infantInfo.hbvVaccinations = hbvVaccinations;
+
+      if (isHeiFlow) {
+        infantInfo.entryCategory = "HEI_NO_MATERNAL_RECORD";
+        infantInfo.infantPatientUuid = props.patientObj.patient_uuid
+          || props.patientObj.patientUuid
+          || props.patientObj.uuid;
+      }
 
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios

@@ -686,4 +686,16 @@
                  stripComments="true"/>
     </changeSet>
 
+    <changeSet failOnError="true" id="20260921-001" author="claude">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pmtct_infant_information" columnName="entry_category" />
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE pmtct_infant_information
+                ADD entry_category character varying
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

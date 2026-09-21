@@ -7,6 +7,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.domain.repositories.ApplicationCodesetRepository;
 import org.lamisplus.modules.base.service.UserService;
+import org.lamisplus.modules.patient.domain.dto.PageDTO;
 import org.lamisplus.modules.patient.domain.dto.PersonMetaDataDto;
 import org.lamisplus.modules.patient.domain.entity.Person;
 import org.lamisplus.modules.patient.repository.PersonRepository;
@@ -16,6 +17,7 @@ import org.lamisplus.modules.pmtct.domain.entity.ANC;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.lamisplus.modules.pmtct.domain.entity.InfantVisit;
 import org.lamisplus.modules.pmtct.repository.ANCRepository;
+import org.lamisplus.modules.pmtct.repository.HivExposedInfantRepository;
 import org.lamisplus.modules.pmtct.repository.InfantRepository;
 import org.lamisplus.modules.pmtct.repository.InfantVisitRepository;
 import org.springframework.data.domain.Page;
@@ -49,12 +51,16 @@ public class InfantService {
     private final InfantVisitService infantVisitService;
     private ObjectMapper mapper = new ObjectMapper();
     private final ApplicationCodesetRepository applicationCodesetRepository;
+    private final HivExposedInfantRepository hivExposedInfantRepository;
+
+    public static final String HEI_NO_MATERNAL_RECORD = "HEI_NO_MATERNAL_RECORD";
 
 
     public InfantDtoResponse save(InfantDto infantDto) {
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
+        boolean isHeiNoMaternalRecord = HEI_NO_MATERNAL_RECORD.equals(infantDto.getEntryCategory());
 
         // Validate infant hospital number is not already in use
         if (infantDto.getInfantHospitalNumber() != null && !infantDto.getInfantHospitalNumber().isEmpty()) {
@@ -72,38 +78,58 @@ public class InfantService {
             }
         }
 
-        // Create patient_person record for the infant
-        Person infantPerson = new Person();
-        infantPerson.setUuid(UUID.randomUUID().toString());
-        infantPerson.setFirstName(personService.treatNull(infantDto.getFirstName()));
-        infantPerson.setOtherName(personService.treatNull(infantDto.getMiddleName()));
-        infantPerson.setSurname(personService.treatNull(infantDto.getSurname()));
-        infantPerson.setDateOfBirth(infantDto.getDateOfDelivery());
-        infantPerson.setDateOfRegistration(LocalDate.now());
-        infantPerson.setSex(convertSexCode(infantDto.getSex()));
-        infantPerson.setFullName(personService.getFullName(infantDto.getFirstName(), infantDto.getMiddleName(), infantDto.getSurname()));
-        infantPerson.setHospitalNumber(infantDto.getInfantHospitalNumber());
-        infantPerson.setActive(true);
-        infantPerson.setArchived(0);
-        infantPerson.setFacilityId(facilityId);
-        infantPerson.setIsDateOfBirthEstimated(false);
-
-        // Copy address and contact from the mother's patient_person record
-        if (infantDto.getPatientUuid() != null) {
-            Optional<Person> motherPerson = personRepository.findByUuid(infantDto.getPatientUuid());
-            if (motherPerson.isPresent()) {
-                infantPerson.setAddress(motherPerson.get().getAddress());
-                infantPerson.setContactPoint(motherPerson.get().getContactPoint());
+        String infantOwnPatientUuid;
+        if (isHeiNoMaternalRecord) {
+            // This child already exists as a patient (found via the HIV-Exposed Infant grid) —
+            // do not create a second patient_person identity for them.
+            if (infantDto.getInfantPatientUuid() == null || infantDto.getInfantPatientUuid().trim().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "An existing patient must be selected for an HIV-Exposed Infant without a maternal record.");
             }
+            Optional<Person> existingInfantPerson = personRepository.findByUuid(infantDto.getInfantPatientUuid());
+            if (!existingInfantPerson.isPresent()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Selected patient could not be found.");
+            }
+            infantOwnPatientUuid = infantDto.getInfantPatientUuid();
+        } else {
+            // Create patient_person record for the infant
+            Person infantPerson = new Person();
+            infantPerson.setUuid(UUID.randomUUID().toString());
+            infantPerson.setFirstName(personService.treatNull(infantDto.getFirstName()));
+            infantPerson.setOtherName(personService.treatNull(infantDto.getMiddleName()));
+            infantPerson.setSurname(personService.treatNull(infantDto.getSurname()));
+            infantPerson.setDateOfBirth(infantDto.getDateOfDelivery());
+            infantPerson.setDateOfRegistration(LocalDate.now());
+            infantPerson.setSex(convertSexCode(infantDto.getSex()));
+            infantPerson.setFullName(personService.getFullName(infantDto.getFirstName(), infantDto.getMiddleName(), infantDto.getSurname()));
+            infantPerson.setHospitalNumber(infantDto.getInfantHospitalNumber());
+            infantPerson.setActive(true);
+            infantPerson.setArchived(0);
+            infantPerson.setFacilityId(facilityId);
+            infantPerson.setIsDateOfBirthEstimated(false);
+
+            // Copy address and contact from the mother's patient_person record
+            if (infantDto.getPatientUuid() != null) {
+                Optional<Person> motherPerson = personRepository.findByUuid(infantDto.getPatientUuid());
+                if (motherPerson.isPresent()) {
+                    infantPerson.setAddress(motherPerson.get().getAddress());
+                    infantPerson.setContactPoint(motherPerson.get().getContactPoint());
+                }
+            }
+
+            personRepository.save(infantPerson);
+            infantOwnPatientUuid = infantPerson.getUuid();
         }
 
-        personRepository.save(infantPerson);
-
         Infant infant = new Infant();
-        infant.setMotherPatientUuid(infantDto.getPatientUuid());
+        // An HEI-without-maternal-record infant has no mother in the system by design —
+        // never set from infantDto.getPatientUuid() in that case, regardless of what's sent.
+        infant.setMotherPatientUuid(isHeiNoMaternalRecord ? null : infantDto.getPatientUuid());
         infant.setDateOfDelivery(infantDto.getDateOfDelivery());
         infant.setInfantHospitalNumber(infantDto.getInfantHospitalNumber());
-        infant.setInfantPatientUuid(infantPerson.getUuid());
+        infant.setInfantPatientUuid(infantOwnPatientUuid);
+        infant.setEntryCategory(infantDto.getEntryCategory());
         infant.setUuid(UUID.randomUUID().toString());
         infant.setFacilityId(facilityId);
         infant.setCreatedBy(user.getUserName());
@@ -114,11 +140,12 @@ public class InfantService {
         infant.setLength(infantDto.getLength());
         infant.setCtxStatus(infantDto.getCtxStatus());
 
-        // Set pmtctCycleUuid - this is now compulsory
-        if (infantDto.getPmtctCycleUuid() == null) {
+        // Set pmtctCycleUuid - compulsory for a standard, mother-linked infant; an
+        // HEI-without-maternal-record infant has no PMTCT/pregnancy cycle to attach to.
+        if (!isHeiNoMaternalRecord && infantDto.getPmtctCycleUuid() == null) {
             throw new IllegalArgumentException("pmtctCycleUuid is required for infant registration");
         }
-        infant.setPmtctCycleUuid(infantDto.getPmtctCycleUuid());
+        infant.setPmtctCycleUuid(isHeiNoMaternalRecord ? null : infantDto.getPmtctCycleUuid());
 
         infant.setArchived(false);
         infant.setSource(infantDto.getSource());
@@ -150,6 +177,40 @@ public class InfantService {
                 .infantArvDto(result.getInfantArvData())
                 .infantPCRTestDto(result.getInfantPcrData())
                 .build();
+    }
+
+    // Candidates for the HIV-Exposed Infant grid: 0-24 months old with a positive HTS
+    // record, regardless of gender or PMTCT/maternal enrollment. See HivExposedInfantRepository
+    // for the exact criteria.
+    public PersonMetaDataDto getHivExposedInfantGrid(String searchValue, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Optional<User> currentUser = this.userService.getUserWithRoles();
+        Long currentOrganisationUnitId = 0L;
+        if (currentUser.isPresent()) {
+            currentOrganisationUnitId = currentUser.get().getCurrentOrganisationUnitId();
+        }
+
+        Page<PatientPerson> candidates;
+        if (searchValue == null || searchValue.equals("*") || searchValue.trim().isEmpty()) {
+            candidates = hivExposedInfantRepository.getHivExposedInfantCandidates(currentOrganisationUnitId, paging);
+        } else {
+            candidates = hivExposedInfantRepository.searchHivExposedInfantCandidates(currentOrganisationUnitId, searchValue.trim(), paging);
+        }
+
+        PageDTO pageDTO = personService.generatePagination(candidates);
+        PersonMetaDataDto personMetaDataDto = new PersonMetaDataDto();
+        personMetaDataDto.setTotalRecords((int) candidates.getTotalElements());
+        personMetaDataDto.setPageSize(pageDTO.getPageSize());
+        personMetaDataDto.setTotalPages(pageDTO.getTotalPages());
+        personMetaDataDto.setCurrentPage(pageDTO.getPageNumber());
+        personMetaDataDto.setRecords(new ArrayList<>(candidates.getContent()));
+        return personMetaDataDto;
+    }
+
+    // Does this patient already have an Infant Information record? Used by the dedicated
+    // infant dashboard to decide whether Infant Visit should be shown yet.
+    public Optional<Infant> getInfantByInfantPatientUuid(String infantPatientUuid) {
+        return infantRepository.getInfantByInfantPatientUuidAndArchived(infantPatientUuid, false);
     }
 
     public int calculateAgeInMonths(LocalDate dob){

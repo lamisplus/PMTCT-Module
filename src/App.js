@@ -8,6 +8,7 @@ import "./../src/main/webapp/css/style.css";
 import "bootstrap/dist/css/bootstrap.css";
 import Home from "./main/webapp/jsx/components/Home";
 import PatientDetail from "./main/webapp/jsx/components/Patient/PatientDetail";
+import InfantOnlyDashboard from "./main/webapp/jsx/components/Patient/InfantOnlyDashboard";
 import RegisterPatientPage from "./main/webapp/jsx/components/Patient/RegisterPatient";
 import EnrollPatientPage from "./main/webapp/jsx/components/Patient/EnrollPatient";
 import UpdatePatientEnrollment from "./main/webapp/jsx/components/Patient/UpdatePatientEnrollment";
@@ -25,6 +26,11 @@ export default function App() {
           {/* Route to patient Dashboard */}
           <Route path="/patient-history">
             <PatientDetail />
+          </Route>
+
+          {/* Dedicated dashboard for an HIV-Exposed Infant with no maternal record */}
+          <Route path="/hei-infant-dashboard">
+            <InfantOnlyDashboard />
           </Route>
 
           <Route path="/register-patient">

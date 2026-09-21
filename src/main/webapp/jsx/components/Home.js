@@ -11,6 +11,7 @@ import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
 import CheckedInPatient from "./Patient/CheckedInPatient";
 import ActivePmtctHtsPatients from "./Patient/ActivePmtctHtsPatientList";
+import HivExposedInfantList from "./Patient/HivExposedInfantList";
 import { usePermissions } from "../../hooks/usePermissions";
 import PMTCTDashboard from "./Dashboard/PMTCTDashboard";
 import axios from "axios";
@@ -197,6 +198,10 @@ const Home = (props) => {
 
                       <Tab eventKey="pmtct" title="General PMTCT Patients">
                         <PmtctPatients />
+                      </Tab>
+
+                      <Tab eventKey="hei" title="HIV Exposed Infants">
+                        <HivExposedInfantList />
                       </Tab>
                     </Tabs>
                   </div>
