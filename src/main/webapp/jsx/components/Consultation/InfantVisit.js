@@ -265,11 +265,7 @@ const ClinicVisit = (props) => {
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     // ageAtCtx: "",
-    patientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid
-      ? props.patientObj.patientUuid
-      : "",
+    patientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid || "",
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
     breastFeeding: "",
@@ -302,9 +298,7 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     dateOfCtx: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -322,9 +316,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -341,9 +333,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -356,9 +346,7 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     uuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
   });
 
   const [hbvVaccinationDto, setHbvVaccinationDto] = useState({
@@ -1398,6 +1386,23 @@ const ClinicVisit = (props) => {
       temp.artEnrollmentNo = infantVisitRequestDto.artEnrollmentNo ? "" : "This field is required";
     }
 
+    // Mother's ART section: mirrors the backend rule (InfantVisitService.saveConsolidation) —
+    // Timing of ART Initiation, Original Regimen Line, and Original Regimen must all be filled
+    // together, or all left blank. Without this, the backend rejects the save with a 400 whose
+    // message Spring Boot suppresses by default, leaving the user with no explanation.
+    const hasArtTime = !!infantMotherArtDto.motherArtInitiationTime;
+    const hasRegimenType = !!infantMotherArtDto.regimenTypeId;
+    const hasRegimen = !!infantMotherArtDto.regimenId;
+    if (hasArtTime || hasRegimenType || hasRegimen) {
+      temp.motherArtInitiationTime = hasArtTime ? "" : "This field is required";
+      temp.regimenTypeId = hasRegimenType ? "" : "This field is required";
+      temp.regimenId = hasRegimen ? "" : "This field is required";
+    } else {
+      temp.motherArtInitiationTime = "";
+      temp.regimenTypeId = "";
+      temp.regimenId = "";
+    }
+
     setErrors({
       ...temp,
     });
@@ -1409,6 +1414,10 @@ const ClinicVisit = (props) => {
     e.preventDefault();
     if (visitDateStatus) {
       toast.error("Visit Date already exists for this infant. Please select a different date.");
+      return;
+    }
+    if (!infantVisitRequestDto.patientUuid) {
+      toast.error("Mother's patient reference is missing. Please reload the page and try again.");
       return;
     }
     console.log("validate()", validate(), errors);
