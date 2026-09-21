@@ -428,7 +428,9 @@ const InfantInformation = (props) => {
                         <Dropdown.Menu style={{ zIndex: 1050 }}>
                           <Dropdown.Item onClick={() => LoadPage(row, "view")}><VisibilityIcon style={{ fontSize: "16px", marginRight: "8px" }} />View Infant Info</Dropdown.Item>
                           <Dropdown.Item onClick={() => LoadPage(row, "update")}><EditIcon style={{ fontSize: "16px", marginRight: "8px" }} />Edit Infant Info</Dropdown.Item>
-                          <Dropdown.Item onClick={() => LoadVisitPage(row)}><EventNoteIcon style={{ fontSize: "16px", marginRight: "8px" }} />Follow Up Visit</Dropdown.Item>
+                          {row.birthOutcome !== "Dead" && (
+                            <Dropdown.Item onClick={() => LoadVisitPage(row)}><EventNoteIcon style={{ fontSize: "16px", marginRight: "8px" }} />Follow Up Visit</Dropdown.Item>
+                          )}
                           <Dropdown.Divider />
                           <Dropdown.Item onClick={() => LoadModal(row)} style={{ color: "#dc2626" }}><DeleteIcon style={{ fontSize: "16px", marginRight: "8px" }} />Delete</Dropdown.Item>
                         </Dropdown.Menu>

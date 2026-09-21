@@ -166,6 +166,7 @@ public class InfantVisitService
         infantVisitResponseDto.setDateLinkedToArtClinic(infantVisit.getDateLinkedToArtClinic());
         infantVisitResponseDto.setArtEnrollmentNo(infantVisit.getArtEnrollmentNo());
         infantVisitResponseDto.setComments(infantVisit.getComments());
+        infantVisitResponseDto.setPatientUuid(infantVisit.getMotherPatientUuid());
 
         return infantVisitResponseDto;
     }
@@ -220,10 +221,23 @@ public class InfantVisitService
                     "An infant visit already exists for this infant on " + visitDate + ". Please select a different date.");
         }
 
+        // An infant with a birth outcome of "Dead" should no longer accept new follow-up visits
+        if (infantHospitalNumber != null) {
+            Optional<Infant> infantForOutcomeCheck = this.infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+            if (infantForOutcomeCheck.isPresent() && "Dead".equals(infantForOutcomeCheck.get().getBirthOutcome())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cannot record a follow-up visit for an infant marked as deceased.");
+            }
+        }
+
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
         String motherPatientUuid = infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPatientUuid();
+        if (motherPatientUuid == null || motherPatientUuid.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Mother's patient reference is missing — please reload the page and try again.");
+        }
 
         InfantVisitRequestDto visitDto = infantVisitationConsolidatedDto.getInfantVisitRequestDto();
         visitDto.setUniqueUuid(UUID.randomUUID().toString());
