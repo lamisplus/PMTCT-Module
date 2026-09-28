@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- LV3-1965 §10: single-row status table tracking whether the one-time historical HTS
+         backfill has been run to completion. See HtsBackfillService/HtsBackfillController. -->
+    <changeSet failOnError="false" author="system" id="2026-09-22-create-pmtct-hts-backfill-status">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="pmtct_hts_backfill_status" />
+            </not>
+        </preConditions>
+        <sql>
+            CREATE TABLE pmtct_hts_backfill_status (
+                id bigint PRIMARY KEY,
+                completed boolean NOT NULL DEFAULT false,
+                completed_date timestamp,
+                completed_by character varying,
+                records_mapped integer,
+                patients_affected integer
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

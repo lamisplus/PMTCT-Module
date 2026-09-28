@@ -73,7 +73,12 @@ const calculateAgeInMonths = (dob) => {
 // not the pregnant-woman PatientDetail dashboard.
 const HivExposedInfantList = () => {
   const columns = [
-    { title: "Patient Name", field: "fullName" },
+    {
+      title: "Patient Name",
+      field: "fullName",
+      render: (rowData) =>
+        rowData.fullName || `${rowData.firstName || ""} ${rowData.surname || ""}`.trim(),
+    },
     { title: "Hospital Number", field: "hospitalNumber", filtering: false },
     { title: "Sex", field: "sex", filtering: false },
     {
@@ -150,7 +155,7 @@ const HivExposedInfantList = () => {
     <div>
       <MaterialTable
         icons={tableIcons}
-        title="HIV-Exposed Infants (0-24 months, HTS positive)"
+        title="HIV Exposed Infants"
         columns={columns}
         data={getData}
         localization={{

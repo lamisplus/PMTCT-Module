@@ -10,7 +10,7 @@
 </parent>
 <groupId>org.lamisplus.modules</groupId>
 <artifactId>pmtct</artifactId>
-<version>2.5.2.1</version>
+<version>2.5.2</version>
 <packaging>jar</packaging>
 <name>pmtct</name>
 <description>PMTCT Module</description>
@@ -99,6 +99,16 @@
         <groupId>org.lamisplus.modules</groupId>
         <artifactId>hiv</artifactId>
         <version>2.7.1</version>
+    </dependency>
+
+    <!-- LV3-1965 historical backfill: in-process access to HTS-Module's own HtsEncounterService,
+         mirroring the existing Patient-Module injection pattern above - no HTS-Module code
+         touched, every write still goes through its real update()/validation, just without an
+         HTTP round-trip so a bulk pass across the existing patient backlog is feasible. -->
+    <dependency>
+        <groupId>org.lamisplus.modules</groupId>
+        <artifactId>hts</artifactId>
+        <version>2.6.0.1</version>
     </dependency>
 <!--    <dependency>-->
 <!--        <groupId>org.lamisplus.modules</groupId>-->

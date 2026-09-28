@@ -25,7 +25,7 @@ import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import moment from "moment";
 import { GET_CODESETS_IN_BATCH } from "../../../utils";
-import { isPatientAlreadyKnownPositive } from "../../utils";
+import { isPatientAlreadyKnownPositive, syncExternalHtsRecordsToCycle } from "../../utils";
 import { calculateGestationalAge } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
@@ -791,11 +791,26 @@ const LabourDelivery = (props) => {
               position: toast.POSITION.BOTTOM_CENTER,
             });
 
+            const patientUuid =
+              props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
+
+            // LV3-1965 Flow A2b: best-effort, fire-and-forget - only for the L&D entry point
+            // (a client with no prior ANC record entering PMTCT directly through Delivery). The
+            // ANC-entry case was ruled out: her HTS status is already established right after
+            // ANC Enrolment (Flow A2/adoption), so a routine delivery on an already-ANC-enrolled
+            // cycle has nothing left to sync. Not awaited: must never delay routing below.
+            if (isLdEntryPoint) {
+              syncExternalHtsRecordsToCycle(
+                patientUuid,
+                delivery.pmtctCycleUuid,
+                "delivery",
+                delivery.dateOfDelivery
+              );
+            }
+
             // HIV status is established once and carries forward permanently — an already
             // known-positive patient never needs to go through PMTCT HTS again on a new cycle,
             // so skip the auto-route to it entirely and fall through to the normal next screen.
-            const patientUuid =
-              props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
             const alreadyKnownPositive = await isPatientAlreadyKnownPositive(
               patientUuid,
               delivery.pmtctCycleUuid

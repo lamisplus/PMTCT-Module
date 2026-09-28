@@ -11,7 +11,11 @@ import { toast } from "react-toastify";
 import { url as baseUrl, token } from "./../../../api";
 import { Spinner } from "reactstrap";
 import AncFormFields from "./AncFormFields";
-import { scrollToFirstError, isPatientAlreadyKnownPositive } from "../../utils";
+import {
+  scrollToFirstError,
+  isPatientAlreadyKnownPositive,
+  syncExternalHtsRecordsToCycle,
+} from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -407,6 +411,17 @@ const AncEnrollement = (props) => {
       .then(async (response) => {
         setSaving(false);
         toast.success("ANC Enrollment saved successfully");
+
+        // LV3-1965 Flow A2: best-effort, fire-and-forget - attaches this cycle's uuid to any
+        // pre-existing external (HTS-module-authored) negative record that the ANC branch of
+        // the mapping rule says belongs here, so it shows up in her history without anyone
+        // re-entering it. Not awaited: must never delay or block the routing below.
+        syncExternalHtsRecordsToCycle(
+          objValues.patientUuid,
+          payload.pmtctCycleUuid,
+          "anc",
+          objValues.dateOfEnrollment
+        );
 
         // HIV status is established once and carries forward permanently — an already
         // known-positive patient never needs to go through PMTCT HTS again on a new cycle.

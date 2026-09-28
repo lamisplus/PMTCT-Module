@@ -790,6 +790,19 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
         return infantsResult;
     }
 
+    // PCR alert for a single, standalone infant — e.g. an HIV-Exposed Infant with no
+    // maternal record, so there's no mother/cycle to look infants up through. The alert
+    // itself (age vs. testing schedule, latest PCR result) is entirely about the infant's
+    // own delivery date, visit history and PCR results, so processInfant() below already
+    // works unchanged; this just gives it a single-infant entry point.
+    public InfantPCRAlert checkHEIPromptForInfant(String infantHospitalNumber) {
+        Optional<Infant> infantOpt = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+        if (!infantOpt.isPresent()) {
+            return null;
+        }
+        return processInfant(infantOpt.get(), new InfantPCRAlert());
+    }
+
     private InfantPCRAlert  processInfant(Infant infant, InfantPCRAlert infantRes ) {
         // Get delivery date and hospital number
         LocalDate deliveryDate = infant.getDateOfDelivery();

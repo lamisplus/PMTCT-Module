@@ -183,14 +183,19 @@ public class InfantService {
     // record, regardless of gender or PMTCT/maternal enrollment. See HivExposedInfantRepository
     // for the exact criteria.
     public PersonMetaDataDto getHivExposedInfantGrid(String searchValue, int pageNo, int pageSize) {
-        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        // No Sort here deliberately: the query already has its own ORDER BY around a
+        // DISTINCT ON subquery. A Sort-bearing Pageable makes Spring Data JPA try to
+        // append its own ORDER BY to this native query, which breaks the "pp" alias
+        // scope (it only exists inside the subquery) — "missing FROM-clause entry for
+        // table pp".
+        Pageable paging = PageRequest.of(pageNo, pageSize);
         Optional<User> currentUser = this.userService.getUserWithRoles();
         Long currentOrganisationUnitId = 0L;
         if (currentUser.isPresent()) {
             currentOrganisationUnitId = currentUser.get().getCurrentOrganisationUnitId();
         }
 
-        Page<PatientPerson> candidates;
+        Page<HivExposedInfantCandidateDto> candidates;
         if (searchValue == null || searchValue.equals("*") || searchValue.trim().isEmpty()) {
             candidates = hivExposedInfantRepository.getHivExposedInfantCandidates(currentOrganisationUnitId, paging);
         } else {

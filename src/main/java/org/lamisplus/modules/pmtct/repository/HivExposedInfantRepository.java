@@ -1,7 +1,7 @@
 package org.lamisplus.modules.pmtct.repository;
 
 import com.foreach.across.modules.hibernate.jpa.repositories.CommonJpaRepository;
-import org.lamisplus.modules.pmtct.domain.dto.PatientPerson;
+import org.lamisplus.modules.pmtct.domain.dto.HivExposedInfantCandidateDto;
 import org.lamisplus.modules.pmtct.domain.entity.Infant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,10 +13,24 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
 
     // Candidates for the HIV-Exposed Infant grid: 0-24 months old, with a positive HTS
     // record on the HTS module's own hts_encounter table (not PMTCT's ANC-side pmtct_hts) —
-    // regardless of gender, and independent of any PMTCT/maternal enrollment.
+    // regardless of gender, and independent of any PMTCT/maternal enrollment. Written as a
+    // CTE rather than a "SELECT * FROM (...) AS subquery" wrapper — the latter form reliably
+    // triggered "missing FROM-clause entry for table pp" once Spring Data applied its own
+    // pagination handling on top, even with an unsorted Pageable. Columns are explicitly
+    // aliased to their HivExposedInfantCandidateDto getter's camelCase name — Spring Data's
+    // native-query-to-interface-projection binding does NOT auto-convert snake_case column
+    // labels.
     @Query(
-            value = "SELECT * FROM ( " +
-                    "  SELECT DISTINCT ON (pp.uuid) pp.* " +
+            value = "WITH candidates AS ( " +
+                    "  SELECT DISTINCT ON (pp.uuid) pp.id AS id, pp.uuid AS uuid, " +
+                    "    pp.uuid AS \"patientUuid\", pp.id AS \"personId\", " +
+                    "    pp.full_name AS \"fullName\", pp.first_name AS \"firstName\", pp.surname AS surname, " +
+                    "    pp.hospital_number AS \"hospitalNumber\", " +
+                    "    pp.sex AS sex, pp.date_of_birth AS \"dateOfBirth\", " +
+                    "    pp.date_of_registration AS \"dateOfEnrollment\", " +
+                    "    COALESCE(he.observation->>'finalHivTestResult', " +
+                    "      CASE WHEN he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' THEN 'Positive' ELSE NULL END " +
+                    "    ) AS \"hivStatus\" " +
                     "  FROM patient_person pp " +
                     "  INNER JOIN hts_encounter he ON he.patient_uuid = pp.uuid AND he.archived = false " +
                     "  WHERE pp.archived = 0 " +
@@ -28,7 +42,7 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "      OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
                     "    ) " +
                     "  ORDER BY pp.uuid, he.id DESC " +
-                    ") AS subquery ORDER BY id DESC",
+                    ") SELECT * FROM candidates ORDER BY id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                     "FROM patient_person pp " +
@@ -43,11 +57,19 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "  )",
             nativeQuery = true
     )
-    Page<PatientPerson> getHivExposedInfantCandidates(Long facilityId, Pageable pageable);
+    Page<HivExposedInfantCandidateDto> getHivExposedInfantCandidates(Long facilityId, Pageable pageable);
 
     @Query(
-            value = "SELECT * FROM ( " +
-                    "  SELECT DISTINCT ON (pp.uuid) pp.* " +
+            value = "WITH candidates AS ( " +
+                    "  SELECT DISTINCT ON (pp.uuid) pp.id AS id, pp.uuid AS uuid, " +
+                    "    pp.uuid AS \"patientUuid\", pp.id AS \"personId\", " +
+                    "    pp.full_name AS \"fullName\", pp.first_name AS \"firstName\", pp.surname AS surname, " +
+                    "    pp.hospital_number AS \"hospitalNumber\", " +
+                    "    pp.sex AS sex, pp.date_of_birth AS \"dateOfBirth\", " +
+                    "    pp.date_of_registration AS \"dateOfEnrollment\", " +
+                    "    COALESCE(he.observation->>'finalHivTestResult', " +
+                    "      CASE WHEN he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' THEN 'Positive' ELSE NULL END " +
+                    "    ) AS \"hivStatus\" " +
                     "  FROM patient_person pp " +
                     "  INNER JOIN hts_encounter he ON he.patient_uuid = pp.uuid AND he.archived = false " +
                     "  WHERE pp.archived = 0 " +
@@ -60,7 +82,7 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "      OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
                     "    ) " +
                     "  ORDER BY pp.uuid, he.id DESC " +
-                    ") AS subquery ORDER BY id DESC",
+                    ") SELECT * FROM candidates ORDER BY id DESC",
             countQuery =
                     "SELECT COUNT(DISTINCT pp.uuid) " +
                     "FROM patient_person pp " +
@@ -76,5 +98,5 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "  )",
             nativeQuery = true
     )
-    Page<PatientPerson> searchHivExposedInfantCandidates(Long facilityId, String searchParam, Pageable pageable);
+    Page<HivExposedInfantCandidateDto> searchHivExposedInfantCandidates(Long facilityId, String searchParam, Pageable pageable);
 }

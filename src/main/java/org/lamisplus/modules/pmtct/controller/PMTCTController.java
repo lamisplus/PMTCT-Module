@@ -744,6 +744,15 @@ public class PMTCTController {
         return pmtctEnrollmentService.checkHEIPrompt(patientUuid, pmtctCycleUuid);
     }
 
+    // Same PCR alert, for a standalone infant with no maternal record (e.g. an
+    // HIV-Exposed Infant) — looked up directly by their own hospital number instead of
+    // via a mother + PMTCT cycle.
+    @GetMapping(value = "check-for-infant-pcr-alert-standalone/{infantHospitalNumber}")
+    public ResponseEntity<InfantPCRAlert> getHEIPromptStandalone(@PathVariable String infantHospitalNumber) {
+        InfantPCRAlert alert = pmtctEnrollmentService.checkHEIPromptForInfant(infantHospitalNumber);
+        return alert != null ? ResponseEntity.ok(alert) : ResponseEntity.ok().build();
+    }
+
     // LV3-1732: checked on patient page load (and callable on demand) so a client documented
     // elsewhere as Suspected Acute HIV Infection with a later VL >= 1000 gets their HTS status
     // auto-promoted to Acute HIV Infection / HIV-Positive, whether the original suspected-acute
@@ -771,6 +780,26 @@ public class PMTCTController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    // LV3-1965 Flow A2: called by AncEnrollement.js right after ANC Enrolment save. Read-only -
+    // the frontend does the actual GET/PUT sync against HTS-Module directly for each id returned.
+    @GetMapping(value = "hts-anc-sync-candidates")
+    public ResponseEntity<List<Long>> getAncSyncCandidates(
+            @RequestParam String patientUuid,
+            @RequestParam LocalDate dateOfEnrollment) {
+
+        return ResponseEntity.ok(pmtctHtsService.findUnmappedAncSyncCandidates(patientUuid, dateOfEnrollment));
+    }
+
+    // LV3-1965 Flow A2b: called by LabourDelivery.js right after a Delivery save at the L&D
+    // entry point.
+    @GetMapping(value = "hts-delivery-sync-candidates")
+    public ResponseEntity<List<Long>> getDeliverySyncCandidates(
+            @RequestParam String patientUuid,
+            @RequestParam LocalDate dateOfDelivery) {
+
+        return ResponseEntity.ok(pmtctHtsService.findUnmappedDeliverySyncCandidates(patientUuid, dateOfDelivery));
     }
 
     @PostMapping(value = "pregnancy-cycle")

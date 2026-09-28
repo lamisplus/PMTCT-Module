@@ -185,5 +185,77 @@ export const isPatientAlreadyKnownPositive = async (patientUuid, pmtctCycleUuid)
   return isKnownPositiveSummary(summary);
 };
 
+// LV3-1965 Flow A2 / A2b: silently attaches pmtctCycleUuid to any external HTS-module record
+// (Setting = ANC or L&D) that the mapping rule says belongs to a cycle that was just created,
+// so it shows up in that cycle's history without anyone re-entering it. Called right after ANC
+// Enrolment save (branch: "anc") or a Labour & Delivery entry-point save (branch: "delivery") -
+// never for a routine delivery on an already-ANC-enrolled cycle, since that scenario was ruled
+// out (see the design doc's "Ruled out" note on the original Flow B).
+//
+// pmtct_hts is deliberately left untouched on every record this syncs - it stays false, since
+// nobody reviewed the record the way a provider reviews an adopted positive record via
+// checkPriorHtsPositiveRecord below. The six PMTCT-side queries that used to require
+// pmtct_hts = true were relaxed instead (HtsEncounterProxyRepository, PMTCT-Module) so the
+// cycle match alone is sufficient.
+//
+// Best-effort throughout: a failure here must never block the ANC/Delivery save the caller just
+// completed. Errors are swallowed and logged to the console, not surfaced to the user.
+export const syncExternalHtsRecordsToCycle = async (patientUuid, pmtctCycleUuid, branch, anchorDate) => {
+  if (!patientUuid || !pmtctCycleUuid || !anchorDate) return;
+
+  const candidateEndpoint =
+    branch === "delivery"
+      ? `${baseUrl}pmtct/anc/hts-delivery-sync-candidates?patientUuid=${patientUuid}&dateOfDelivery=${anchorDate}`
+      : `${baseUrl}pmtct/anc/hts-anc-sync-candidates?patientUuid=${patientUuid}&dateOfEnrollment=${anchorDate}`;
+
+  let candidateIds = [];
+  try {
+    const response = await axios.get(candidateEndpoint, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    candidateIds = Array.isArray(response?.data) ? response.data : [];
+  } catch (error) {
+    return;
+  }
+  if (candidateIds.length === 0) return;
+
+  for (const id of candidateIds) {
+    try {
+      // Fetch the record whole, directly from HTS-Module's own GET - same source
+      // checkPriorHtsPositiveRecord (PmtctHtsForm.js) already trusts for this exact purpose.
+      const getResponse = await axios.get(`${baseUrl}hts-encounter/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const record = getResponse?.data;
+      if (!record) continue;
+
+      // Full reconstruction, not a partial update - HTS-Module's PUT rebuilds the entire
+      // observation column from whatever's in the request body, so anything omitted here
+      // would be silently wiped. Spreading record.observation first preserves every custom
+      // field HTS captured that this sync has no reason to touch; the explicit top-level
+      // fields below round-trip unchanged; pmtctCycleUuid is the one real change.
+      const putBody = {
+        ...(record.observation || {}),
+        dateOfVisit: record.dateOfVisit,
+        clientCode: record.clientCode,
+        setting: record.setting,
+        facilityId: record.facilityId,
+        pmtctHts: record.pmtctHts,
+        source: record.source,
+        longitude: record.longitude,
+        latitude: record.latitude,
+        pmtctCycleUuid: pmtctCycleUuid,
+      };
+
+      await axios.put(`${baseUrl}hts-encounter/${id}`, putBody, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      // Best-effort per record - one failure must not stop the rest of the batch, and must
+      // never surface to the user or block the save flow that triggered this sync.
+    }
+  }
+};
+
 
 

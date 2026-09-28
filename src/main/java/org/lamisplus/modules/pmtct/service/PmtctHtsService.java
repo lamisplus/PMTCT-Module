@@ -1019,6 +1019,27 @@ public class PmtctHtsService {
         if (patientUuid == null || pmtctCycleUuid == null) return false;
         return htsEncounterProxyRepository.existsInitialHtsForCycle(patientUuid, pmtctCycleUuid);
     }
+
+    // LV3-1965 Flow A2: called right after ANC Enrolment save. Read-only - returns the ids of
+    // external, never-mapped HTS records (Setting = ANC, dateOfVisit <= the new
+    // dateOfEnrollment) that the frontend should sync pmtctCycleUuid onto via HTS-Module's own
+    // GET/PUT hts-encounter endpoints (PMTCT has no write access to add a new endpoint there,
+    // and reusing PUT safely requires fetching the whole record first, which only the frontend
+    // is positioned to do - see PmtctHtsForm.js's checkPriorHtsPositiveRecord for the existing
+    // precedent this mirrors).
+    public List<Long> findUnmappedAncSyncCandidates(String patientUuid, LocalDate dateOfEnrollment) {
+        if (patientUuid == null || dateOfEnrollment == null) return Collections.emptyList();
+        return htsEncounterProxyRepository.findUnmappedAncSyncCandidateIds(patientUuid, dateOfEnrollment);
+    }
+
+    // LV3-1965 Flow A2b: same as findUnmappedAncSyncCandidates, called right after a Delivery
+    // save where entryPoint = PMTCT_ENTRY_POINT_L&D (a client with no prior ANC record entering
+    // PMTCT directly through Labour & Delivery). Setting = L&D, dateOfVisit >= the new
+    // dateOfDelivery.
+    public List<Long> findUnmappedDeliverySyncCandidates(String patientUuid, LocalDate dateOfDelivery) {
+        if (patientUuid == null || dateOfDelivery == null) return Collections.emptyList();
+        return htsEncounterProxyRepository.findUnmappedDeliverySyncCandidateIds(patientUuid, dateOfDelivery);
+    }
 //
 
     public HivRetestStatusResponse getHivRetestStatus(String patientUuid) {

@@ -200,6 +200,8 @@ const FamilyPlanning = (props) => {
       temp.visitDate = "Encounter Date cannot be in the future";
     }
 
+    temp.methodsProvided = methodsProvided.length > 0 ? "" : "Select at least one Family Planning Method Provided";
+
     if (methodsProvided.includes("FP_METHOD_ORAL_PILLS")) {
       temp.nameOfPill = oralPillsData.nameOfPill ? "" : "This field is required";
       temp.oralPillsClientStatus = oralPillsData.clientStatus ? "" : "This field is required";
@@ -485,6 +487,7 @@ const FamilyPlanning = (props) => {
                   </div>
                 ))}
               </div>
+              {errors.methodsProvided ? <span className={classes.error}>{errors.methodsProvided}</span> : ""}
 
               {/* Oral Pills */}
               {methodsProvided.includes("FP_METHOD_ORAL_PILLS") && (

@@ -56,9 +56,14 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
     boolean isClientCodeTaken(String code);
 
     // ══════════════════ Phase 2: Native queries for PMTCT HTS reads ══════════════════
+    // LV3-1965: pmtct_hts = true dropped deliberately - a Flow A2/A2b synced record (external,
+    // never PMTCT-authored) carries pmtctCycleUuid but stays pmtct_hts = false on purpose (see
+    // HtsEncounterProxyRepository's sync candidate queries below and PmtctHtsService). The cycle
+    // match alone is sufficient scoping: nothing except a genuine PMTCT save or the LV3-1965 sync
+    // ever sets pmtctCycleUuid, so this can't accidentally pull in unrelated rows.
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
@@ -71,17 +76,19 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
     Optional<HtsEncounterProxy> findLatestByPatientUuid(String patientUuid);
 
+    // LV3-1965: pmtct_hts = true dropped - see findLatestByPatientUuidAndCycleUuid's comment above.
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "ORDER BY id DESC LIMIT 1")
     Optional<HtsEncounterProxy> findByCycleUuidAndArchived(String cycleUuid);
 
+    // LV3-1965: pmtct_hts = true dropped - see findLatestByPatientUuidAndCycleUuid's comment above.
     @Query(nativeQuery = true, value
             = "SELECT COALESCE(NULLIF(observation->>'finalHivTestResult', ''), observation->>'confirmatoryHivTest') "
             + "FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
@@ -128,10 +135,14 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY date_of_visit DESC, id DESC LIMIT 1")
     Optional<HtsEncounterProxy> findConfirmedAcuteHivInfection(String patientUuid);
 
+    // LV3-1965: pmtct_hts = true dropped - see findLatestByPatientUuidAndCycleUuid's comment above.
+    // This is the query that most needed the relaxation: without it, a Flow A2/A2b-synced
+    // negative record would never count as "an initial test already exists for this cycle,"
+    // and the next retest entered through PMTCT's own form could fail to get typed RETESTING.
     @Query(nativeQuery = true, value
             = "SELECT EXISTS("
             + "  SELECT 1 FROM hts_encounter "
-            + "  WHERE pmtct_hts = true AND archived = false "
+            + "  WHERE archived = false "
             + "    AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "    AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "    AND UPPER(COALESCE(observation->>'testingType','')) != 'RETESTING'"
@@ -147,11 +158,12 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + ")")
     boolean existsByPatientUuidAndDateOfVisit(String patientUuid, LocalDate dateOfVisit);
 
+    // LV3-1965: pmtct_hts = true dropped - see findLatestByPatientUuidAndCycleUuid's comment above.
     @Query(nativeQuery = true, value
             = "SELECT COALESCE(NULLIF(observation->>'finalHivTestResult', ''), observation->>'confirmatoryHivTest') AS result, "
             + "  date_of_visit AS date_of_hiv_test "
             + "FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "  AND UPPER(COALESCE(observation->>'testingType','')) = 'RETESTING' "
@@ -168,13 +180,40 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY id DESC LIMIT 1")
     List<Object[]> findLatestRetestingResult(String patientUuid);
 
+    // LV3-1965: pmtct_hts = true dropped - see findLatestByPatientUuidAndCycleUuid's comment above.
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' = :cycleUuid "
             + "ORDER BY id DESC")
     List<HtsEncounterProxy> findByPatientUuidAndCycleUuid(String patientUuid, String cycleUuid);
+
+    // ══════════════════ LV3-1965: Flow A2 / A2b sync candidates ══════════════════
+    // Unmapped (never PMTCT-authored, never previously synced) external HTS records that could
+    // belong to the pregnancy cycle just created via ANC Enrolment. Scoped to Setting = ANC and
+    // dateOfVisit <= the new dateOfEnrollment, per the ANC branch of the mapping rule. Every
+    // qualifying row gets synced (see PmtctHtsService) - a client can legitimately have more than
+    // one pre-enrolment test (e.g. an initial test and a repeat), and both belong to this cycle.
+    @Query(nativeQuery = true, value
+            = "SELECT id FROM hts_encounter "
+            + "WHERE archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND observation->>'pmtctCycleUuid' IS NULL "
+            + "  AND UPPER(COALESCE(observation->>'modality', '')) LIKE '%SETTING_ANC%' "
+            + "  AND date_of_visit <= :dateOfEnrollment")
+    List<Long> findUnmappedAncSyncCandidateIds(String patientUuid, LocalDate dateOfEnrollment);
+
+    // Same as above, for a cycle created via the Labour & Delivery entry point (Flow A2b):
+    // Setting = L&D and dateOfVisit >= the new dateOfDelivery.
+    @Query(nativeQuery = true, value
+            = "SELECT id FROM hts_encounter "
+            + "WHERE archived = false "
+            + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND observation->>'pmtctCycleUuid' IS NULL "
+            + "  AND UPPER(COALESCE(observation->>'modality', '')) LIKE '%SETTING_L&D%' "
+            + "  AND date_of_visit >= :dateOfDelivery")
+    List<Long> findUnmappedDeliverySyncCandidateIds(String patientUuid, LocalDate dateOfDelivery);
 
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "
