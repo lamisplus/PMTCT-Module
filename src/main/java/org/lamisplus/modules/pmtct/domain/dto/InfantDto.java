@@ -26,7 +26,8 @@ public class InfantDto implements Serializable
     private Double bodyWeight;
     private Double length;
     private String ctxStatus;
-    @NotNull(message = "pmtctCycleUuid is required")
+    // Required unless entryCategory is HEI_NO_MATERNAL_RECORD — enforced in
+    // InfantService.save() rather than here, since that check is conditional.
     private String pmtctCycleUuid;
     private InfantArvDto infantArvDto;
     private InfantPCRTestDto infantPCRTestDto;
@@ -35,4 +36,7 @@ public class InfantDto implements Serializable
     private String entryPointOther;
     private InfantSyphilisProphylaxisDto syphilisProphylaxis;
     private List<InfantHbvVaccinationDto> hbvVaccinations;
+    // "HEI_NO_MATERNAL_RECORD" when this infant was found via the HIV-Exposed Infant grid
+    // and has no maternal record in the system; null/absent for a standard, mother-linked infant.
+    private String entryCategory;
 }

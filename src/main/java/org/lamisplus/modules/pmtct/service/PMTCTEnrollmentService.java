@@ -613,6 +613,14 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
         return enrollment.isPresent();
     }
 
+    // Patient-wide (no cycle) active-PMTCT-enrollment check, promoted to a public method for
+    // the Family Planning gate ("prevent creation of an FP encounter for a client with no
+    // PMTCT/HTS enrolment") — wraps the same repository check checkPatientOnHTS already uses
+    // privately at line ~642, the only other place this fact is currently checked.
+    public boolean hasActivePmtctEnrollment(String patientUuid) {
+        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(patientUuid);
+    }
+
 
 
 //        return pmtctEnrollmentReporsitory.checkPatientOnPMTCT(patientUuid);
@@ -780,6 +788,19 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
 
 
         return infantsResult;
+    }
+
+    // PCR alert for a single, standalone infant — e.g. an HIV-Exposed Infant with no
+    // maternal record, so there's no mother/cycle to look infants up through. The alert
+    // itself (age vs. testing schedule, latest PCR result) is entirely about the infant's
+    // own delivery date, visit history and PCR results, so processInfant() below already
+    // works unchanged; this just gives it a single-infant entry point.
+    public InfantPCRAlert checkHEIPromptForInfant(String infantHospitalNumber) {
+        Optional<Infant> infantOpt = infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
+        if (!infantOpt.isPresent()) {
+            return null;
+        }
+        return processInfant(infantOpt.get(), new InfantPCRAlert());
     }
 
     private InfantPCRAlert  processInfant(Infant infant, InfantPCRAlert infantRes ) {

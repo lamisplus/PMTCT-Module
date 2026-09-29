@@ -11,6 +11,7 @@ import ANCPatients from "./Patient/ActiveANCPatientList";
 import PmtctPatients from "./Patient/PmtctPatients";
 import CheckedInPatient from "./Patient/CheckedInPatient";
 import ActivePmtctHtsPatients from "./Patient/ActivePmtctHtsPatientList";
+import HivExposedInfantList from "./Patient/HivExposedInfantList";
 import { usePermissions } from "../../hooks/usePermissions";
 import PMTCTDashboard from "./Dashboard/PMTCTDashboard";
 import axios from "axios";
@@ -47,6 +48,35 @@ const Home = (props) => {
       })
       .catch(() => {
         // Silently ignore — endpoint may not exist on older backend
+      });
+  }, []);
+
+  // LV3-1965 §10: silently checks, on landing-page mount, whether the one-time historical HTS
+  // backfill has already completed. If not, it just fires it off in the background — no modal,
+  // no confirmation, nothing shown either way. The persisted completed flag (checked by the
+  // backend itself, not tracked here) is what stops this from re-running on every future visit;
+  // once it's actually done, GET status returns completed: true and this effect does nothing.
+  useEffect(() => {
+    axios
+      .get(`${baseUrl}pmtct/anc/hts-backfill-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data && !res.data.completed) {
+          axios
+            .post(
+              `${baseUrl}pmtct/anc/hts-backfill`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            )
+            .catch(() => {
+              // Best-effort — a failed trigger just means it'll be tried again on the next visit,
+              // since the completed flag only gets set once a run actually finishes.
+            });
+        }
+      })
+      .catch(() => {
+        // Silently ignore — best-effort, must never block the landing page.
       });
   }, []);
 
@@ -197,6 +227,10 @@ const Home = (props) => {
 
                       <Tab eventKey="pmtct" title="General PMTCT Patients">
                         <PmtctPatients />
+                      </Tab>
+
+                      <Tab eventKey="hei" title="HIV Exposed Infants">
+                        <HivExposedInfantList />
                       </Tab>
                     </Tabs>
                   </div>

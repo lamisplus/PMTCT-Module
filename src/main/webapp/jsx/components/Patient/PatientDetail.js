@@ -12,6 +12,7 @@ import ClinicVisit from "../Consultation/Index";
 import PmtctEnrollment from "./../PmtctServices/PmtctEnrollment";
 import AncEnrollement from "./../PmtctServices/AncEnrollement";
 import LabourDelivery from "./../PmtctServices/LabourDelivery";
+import FamilyPlanning from "./../PmtctServices/FamilyPlanning";
 import PmtctHts from "./../PMTCTHTSEnrollment/Index";
 import Partners from "./../PmtctServices/Partners/Index";
 import Infants from "./../PmtctServices/Infants/Index";
@@ -461,6 +462,16 @@ function PatientCard(props) {
               latestPmtctCycle={latestPmtctCycle}
               selectedCycleId={selectedCycleId}
               setPmtctHtsRetestingType={setPmtctHtsRetestingType}
+            />
+          )}
+
+          {activeContent.route === "family-planning" && (
+            <FamilyPlanning
+              patientObj={patientObj}
+              setActiveContent={setActiveContent}
+              activeContent={activeContent}
+              latestPmtctCycle={latestPmtctCycle}
+              selectedCycleId={selectedCycleId}
             />
           )}
 

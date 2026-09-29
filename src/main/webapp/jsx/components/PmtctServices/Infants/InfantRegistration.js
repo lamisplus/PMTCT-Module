@@ -120,6 +120,18 @@ const sectionIconStyle = {
 
 const LabourinfantInfo = (props) => {
   const patientObj = props.patientObj;
+  // HIV-Exposed Infant, no maternal record: patientObj here is the CHILD's own existing
+  // patient record (found via the HEI grid), not a mother's — there is no mother to link,
+  // so every motherPatientUuid derivation below must be forced to null instead of reading
+  // props.patientObj. The backend also enforces this independently (defense in depth).
+  const isHeiFlow = props.isHeiFlow === true;
+  const motherOrNullUuid = isHeiFlow
+    ? null
+    : props.patientObj.patient_uuid
+    ? props.patientObj.patient_uuid
+    : props.patientObj.patientUuid
+    ? props.patientObj.patientUuid
+    : props.patientObj.uuid;
   //let history = useHistory();
   const classes = useStyles();
   const [saving, setSaving] = useState(false);
@@ -156,13 +168,13 @@ const LabourinfantInfo = (props) => {
     uuid: patientObj.ancUuid,
     dateOfDelivery: "",
     ctxStatus: "",
-    infantHospitalNumber: "",
-    patientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid
-      ? props.patientObj.patientUuid
-      : props.patientObj.uuid,
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
+    // HEI (no maternal record) flow: patientObj is the infant's own already-registered patient
+    // record, so the hospital number is already known - pre-fill it directly here rather than
+    // through handleInputChangeinfantInfoDto, which would trigger the live "already exists"
+    // check against this exact number and block it (see the disabled input below).
+    infantHospitalNumber: isHeiFlow ? (patientObj?.hospitalNumber || "") : "",
+    patientUuid: motherOrNullUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
      infantPCRTestDto:  {
               ageAtTest: "",
               ancNumber: '',
@@ -173,10 +185,8 @@ const LabourinfantInfo = (props) => {
               infantHospitalNumber: '',
               results: "",
               testType: "",
-              pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-              motherPatientUuid: props.patientObj.patient_uuid
-                ? props.patientObj.patient_uuid
-                : props.patientObj.patientUuid,
+              pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+              motherPatientUuid: motherOrNullUuid,
 
   },
       infantArvDto: {
@@ -188,10 +198,8 @@ const LabourinfantInfo = (props) => {
     infantHospitalNumber:'',
     dateOfCtx: "",
     dateOfArv: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
   },
     source: "WEB",
 
@@ -208,10 +216,8 @@ const LabourinfantInfo = (props) => {
     infantHospitalNumber: infantHospitalNumber,
     results: "",
     testType: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
     source: "WEB",
   });
   const [arvAgeAtInitiation, setArvAgeAtInitiation] = useState("");
@@ -236,10 +242,8 @@ const LabourinfantInfo = (props) => {
     dateOfArv: "",
     dateOfArvCompletion: "",
     otherArvType: "",
-    pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid
-      ? props.patientObj.patient_uuid
-      : props.patientObj.patientUuid,
+    pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
+    motherPatientUuid: motherOrNullUuid,
     source: "WEB",
   });
 
@@ -587,8 +591,10 @@ const LabourinfantInfo = (props) => {
     }
   }, [props.patientObj.id, props.activeContent.id]);
 
-  // Pre-fill mother's syphilis status from PMTCT HTS
+  // Pre-fill mother's syphilis status from PMTCT HTS — not applicable when there's no
+  // mother (patientObj is the child's own record in that case).
   useEffect(() => {
+    if (isHeiFlow) return;
     const patientUuid = props.patientObj.patient_uuid
       || props.patientObj.patientUuid
       || props.patientObj.uuid;
@@ -765,6 +771,13 @@ const LabourinfantInfo = (props) => {
       // Wire new fields into payload
       infantInfo.syphilisProphylaxis = syphilisData;
       infantInfo.hbvVaccinations = hbvVaccinations;
+
+      if (isHeiFlow) {
+        infantInfo.entryCategory = "HEI_NO_MATERNAL_RECORD";
+        infantInfo.infantPatientUuid = props.patientObj.patient_uuid
+          || props.patientObj.patientUuid
+          || props.patientObj.uuid;
+      }
 
       if (props.activeContent && props.activeContent.actionType === "update") {
         axios
@@ -952,7 +965,7 @@ const LabourinfantInfo = (props) => {
                             id="infantHospitalNumber"
                             onChange={handleInputChangeinfantInfoDto}
                             value={infantInfo.infantHospitalNumber}
-                            disabled={disabledField}
+                            disabled={disabledField || isHeiFlow}
                           />
                         </InputGroup>
                         {errors.infantHospitalNumber !== "" ? (
@@ -962,7 +975,12 @@ const LabourinfantInfo = (props) => {
                         ) : (
                           ""
                         )}
-                        {hospitalNumStatus === true ? (
+                        {/* HEI flow: this is the infant's own already-registered hospital
+                            number, auto-filled and read-only above - never routes through
+                            handleInputChangeinfantInfoDto, so hospitalNumStatus can never be
+                            set true for it. The live "already exists" warning only applies to
+                            the normal (non-HEI) manually-typed path. */}
+                        {!isHeiFlow && hospitalNumStatus === true ? (
                           <span className={classes.error}>
                             {"Hospital number already exist"}
                           </span>
@@ -2118,7 +2136,7 @@ const LabourinfantInfo = (props) => {
                   type="submit"
                   variant="contained"
                   color="primary"
-                  hidden={hospitalNumStatus}
+                  hidden={!isHeiFlow && hospitalNumStatus}
                   className={classes.button}
                   disabled={saving}
                   startIcon={<SaveIcon />}

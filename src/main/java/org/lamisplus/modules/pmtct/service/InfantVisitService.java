@@ -221,20 +221,27 @@ public class InfantVisitService
                     "An infant visit already exists for this infant on " + visitDate + ". Please select a different date.");
         }
 
+        // Look up the Infant record once, shared by the checks below.
+        Optional<Infant> infantForChecks = infantHospitalNumber != null
+                ? this.infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber)
+                : Optional.empty();
+
         // An infant with a birth outcome of "Dead" should no longer accept new follow-up visits
-        if (infantHospitalNumber != null) {
-            Optional<Infant> infantForOutcomeCheck = this.infantRepository.getInfantByInfantHospitalNumber(infantHospitalNumber);
-            if (infantForOutcomeCheck.isPresent() && "Dead".equals(infantForOutcomeCheck.get().getBirthOutcome())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Cannot record a follow-up visit for an infant marked as deceased.");
-            }
+        if (infantForChecks.isPresent() && "Dead".equals(infantForChecks.get().getBirthOutcome())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot record a follow-up visit for an infant marked as deceased.");
         }
+
+        // An HEI-without-maternal-record infant has no mother in the system by design —
+        // the blank-mother_patient_uuid guard below doesn't apply to them.
+        boolean isHeiNoMaternalRecord = infantForChecks.isPresent()
+                && InfantService.HEI_NO_MATERNAL_RECORD.equals(infantForChecks.get().getEntryCategory());
 
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
         String motherPatientUuid = infantVisitationConsolidatedDto.getInfantVisitRequestDto().getPatientUuid();
-        if (motherPatientUuid == null || motherPatientUuid.trim().isEmpty()) {
+        if (!isHeiNoMaternalRecord && (motherPatientUuid == null || motherPatientUuid.trim().isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Mother's patient reference is missing — please reload the page and try again.");
         }

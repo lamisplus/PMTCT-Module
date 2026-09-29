@@ -56,6 +56,12 @@ public class Infant extends PMTCTTransactionalEntity implements Serializable, Pe
     private String entryPoint;
     private String entryPointOther;
 
+    // Distinguishes an intentionally motherless infant record (e.g. an HIV-Exposed Infant
+    // found via HTS with no maternal record in the system) from a mother_patient_uuid left
+    // blank by mistake. "HEI_NO_MATERNAL_RECORD" is the only value in use today; null means
+    // this is a standard, mother-linked infant.
+    private String entryCategory;
+
     @PrePersist
     public void prePersist() {
         if (this.archived == null) {

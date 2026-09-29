@@ -17,6 +17,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -43,6 +44,8 @@ public class PMTCTController {
     private final PmtctPregnancyCycleService pmtctPregnancyCycleService;
 
     private final PmtctVisitRepository pmtctVisitRepository;
+
+    private final FamilyPlanningVisitService familyPlanningVisitService;
 
     @GetMapping(value = "anc-visit-count")
     public ResponseEntity<Integer> getAncVisitCount(
@@ -398,6 +401,22 @@ public class PMTCTController {
         return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/hiv-exposed-infants")
+    public ResponseEntity<PersonMetaDataDto> getHivExposedInfants(
+            @RequestParam(defaultValue = "*") String searchParam,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PersonMetaDataDto personMetaDataDto = infantService.getHivExposedInfantGrid(searchParam, pageNo, pageSize);
+        return new ResponseEntity<>(personMetaDataDto, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/infant-by-own-patient-uuid/{infantPatientUuid}")
+    public ResponseEntity<InfantDto> getInfantByOwnPatientUuid(@PathVariable("infantPatientUuid") String infantPatientUuid) {
+        Optional<Infant> infant = infantService.getInfantByInfantPatientUuid(infantPatientUuid);
+        return infant.map(value -> ResponseEntity.ok(infantService.buildInfantDTO(value, value.getMotherPatientUuid())))
+                .orElseGet(() -> ResponseEntity.ok().build());
+    }
+
     @PostMapping(value = "infant-visitations")
     public ResponseEntity<InfantVisitResponseDto> InfantVisitation(@Valid @RequestBody InfantVisitRequestDto infantVisitRequestDto) {
         return ResponseEntity.ok(infantVisitService.save(infantVisitRequestDto));
@@ -506,6 +525,37 @@ public class PMTCTController {
     @DeleteMapping(value = "/delete/mothervisit/{id}")
     public ResponseEntity<String> deleteMotherVisit(@PathVariable("id") String id) {
         this.pmtctVisitService.deleteMotherVisit(id);
+        return ResponseEntity.accepted().build();
+    }
+
+    @GetMapping(value = "has-active-pmtct-enrollment/{patientUuid}")
+    public ResponseEntity<Boolean> hasActivePmtctEnrollment(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(pmtctEnrollmentService.hasActivePmtctEnrollment(patientUuid));
+    }
+
+    @PostMapping(value = "family-planning-visit")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> saveFamilyPlanningVisit(@Valid @RequestBody FamilyPlanningVisitRequestDto familyPlanningVisitRequestDto) {
+        return ResponseEntity.ok(familyPlanningVisitService.save(familyPlanningVisitRequestDto));
+    }
+
+    @PutMapping(value = "update-family-planning-visit/{id}")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> updateFamilyPlanningVisit(@PathVariable("id") String id, @Valid @RequestBody FamilyPlanningVisitRequestDto familyPlanningVisitRequestDto) {
+        return ResponseEntity.ok(familyPlanningVisitService.update(id, familyPlanningVisitRequestDto));
+    }
+
+    @GetMapping(value = "family-planning-visit/{id}")
+    public ResponseEntity<FamilyPlanningVisitResponseDto> viewFamilyPlanningVisit(@PathVariable("id") String id) {
+        return ResponseEntity.ok(familyPlanningVisitService.getById(id));
+    }
+
+    @GetMapping(value = "family-planning-visits-by-patient/{patientUuid}")
+    public ResponseEntity<List<FamilyPlanningVisitResponseDto>> getFamilyPlanningVisitsByPatient(@PathVariable("patientUuid") String patientUuid) {
+        return ResponseEntity.ok(familyPlanningVisitService.getAllByPatient(patientUuid));
+    }
+
+    @DeleteMapping(value = "/delete/family-planning-visit/{id}")
+    public ResponseEntity<String> deleteFamilyPlanningVisit(@PathVariable("id") String id) {
+        this.familyPlanningVisitService.delete(id);
         return ResponseEntity.accepted().build();
     }
 
@@ -694,6 +744,15 @@ public class PMTCTController {
         return pmtctEnrollmentService.checkHEIPrompt(patientUuid, pmtctCycleUuid);
     }
 
+    // Same PCR alert, for a standalone infant with no maternal record (e.g. an
+    // HIV-Exposed Infant) — looked up directly by their own hospital number instead of
+    // via a mother + PMTCT cycle.
+    @GetMapping(value = "check-for-infant-pcr-alert-standalone/{infantHospitalNumber}")
+    public ResponseEntity<InfantPCRAlert> getHEIPromptStandalone(@PathVariable String infantHospitalNumber) {
+        InfantPCRAlert alert = pmtctEnrollmentService.checkHEIPromptForInfant(infantHospitalNumber);
+        return alert != null ? ResponseEntity.ok(alert) : ResponseEntity.ok().build();
+    }
+
     // LV3-1732: checked on patient page load (and callable on demand) so a client documented
     // elsewhere as Suspected Acute HIV Infection with a later VL >= 1000 gets their HTS status
     // auto-promoted to Acute HIV Infection / HIV-Positive, whether the original suspected-acute
@@ -721,6 +780,26 @@ public class PMTCTController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    // LV3-1965 Flow A2: called by AncEnrollement.js right after ANC Enrolment save. Read-only -
+    // the frontend does the actual GET/PUT sync against HTS-Module directly for each id returned.
+    @GetMapping(value = "hts-anc-sync-candidates")
+    public ResponseEntity<List<Long>> getAncSyncCandidates(
+            @RequestParam String patientUuid,
+            @RequestParam LocalDate dateOfEnrollment) {
+
+        return ResponseEntity.ok(pmtctHtsService.findUnmappedAncSyncCandidates(patientUuid, dateOfEnrollment));
+    }
+
+    // LV3-1965 Flow A2b: called by LabourDelivery.js right after a Delivery save at the L&D
+    // entry point.
+    @GetMapping(value = "hts-delivery-sync-candidates")
+    public ResponseEntity<List<Long>> getDeliverySyncCandidates(
+            @RequestParam String patientUuid,
+            @RequestParam LocalDate dateOfDelivery) {
+
+        return ResponseEntity.ok(pmtctHtsService.findUnmappedDeliverySyncCandidates(patientUuid, dateOfDelivery));
     }
 
     @PostMapping(value = "pregnancy-cycle")

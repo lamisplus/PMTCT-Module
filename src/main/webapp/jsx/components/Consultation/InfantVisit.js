@@ -159,6 +159,14 @@ const sectionIconStyle = {
 
 const ClinicVisit = (props) => {
   let patientObj = props.patientObj ? props.patientObj : {};
+  // HIV-Exposed Infant, no maternal record: patientObj is the child's own existing patient
+  // record, not a mother's — there is no mother to link. The backend independently enforces
+  // this via the Infant's entry_category (looked up by infantHospitalNumber), so this is
+  // belt-and-suspenders, not the only guard.
+  const isHeiFlow = props.isHeiFlow === true;
+  const motherOrNullUuid = isHeiFlow
+    ? null
+    : props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -265,7 +273,7 @@ const ClinicVisit = (props) => {
 
   const [infantVisitRequestDto, setInfantVisitRequestDto] = useState({
     // ageAtCtx: "",
-    patientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid || "",
+    patientUuid: motherOrNullUuid || "",
     ancNumber: props.patientObj.ancNo,
     bodyWeight: "",
     breastFeeding: "",
@@ -298,7 +306,7 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     dateOfCtx: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
+    motherPatientUuid: motherOrNullUuid,
   });
   const [infantMotherArtDto, setInfantMotherArtDto] = useState({
     ancNumber: props.patientObj.ancNo,
@@ -316,7 +324,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
+    motherPatientUuid: motherOrNullUuid,
   });
 
   const [infantPCRTestDto, setInfantPCRTestDto] = useState({
@@ -333,7 +341,7 @@ const ClinicVisit = (props) => {
     uuid: "",
     uniqueUuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
+    motherPatientUuid: motherOrNullUuid,
   });
 
   const [infantRapidTestDTO, setInfantRapidTestDTO] = useState({
@@ -346,7 +354,7 @@ const ClinicVisit = (props) => {
     uniqueUuid: "",
     uuid: "",
     pmtctCycleUuid: props?.latestPmtctCycle?.uuid,
-    motherPatientUuid: props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid,
+    motherPatientUuid: motherOrNullUuid,
   });
 
   const [hbvVaccinationDto, setHbvVaccinationDto] = useState({

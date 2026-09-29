@@ -28,6 +28,16 @@ public interface ANCRepository extends CommonJpaRepository<ANC, String> {
 
     List<ANC> findByArchived(Boolean archived);
 
+    // LV3-1965 historical backfill: every existing ANC cycle to check for unmapped HTS
+    // candidates, one row per (patientUuid, cycleUuid, dateOfEnrollment). Distinct on
+    // pmtct_cycle_uuid since a cycle could in theory have more than one non-archived ANC row -
+    // takes the latest, matching the "current" enrollment date for that cycle.
+    @Query(value = "SELECT DISTINCT ON (pmtct_cycle_uuid) patient_uuid, pmtct_cycle_uuid, date_of_enrollment "
+            + "FROM pmtct_anc "
+            + "WHERE archived = false AND pmtct_cycle_uuid IS NOT NULL AND date_of_enrollment IS NOT NULL "
+            + "ORDER BY pmtct_cycle_uuid, id DESC", nativeQuery = true)
+    List<Object[]> findCyclesForHtsBackfill();
+
     @Query(value = "SELECT * FROM pmtct_anc WHERE patient_uuid = ?1 AND archived = ?2 ORDER BY id DESC LIMIT 1", nativeQuery = true)
     Optional<ANC> findANCByPatientUuidAndArchived(String patientUuid, Boolean archived);
 
