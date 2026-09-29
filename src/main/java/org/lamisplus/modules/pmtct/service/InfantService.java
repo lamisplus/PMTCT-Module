@@ -70,9 +70,16 @@ public class InfantService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Hospital number '" + infantDto.getInfantHospitalNumber() + "' already exists in infant records. Please use a unique hospital number.");
             }
-            // Check patient_person table
+            // Check patient_person table - but not against the infant's own record. In the
+            // HEI-without-maternal-record flow, the infant already exists in patient_person
+            // under this exact hospital number by design (infantDto.infantPatientUuid points
+            // at that same row, found via the HIV-Exposed Infant grid) - only a DIFFERENT
+            // person holding this number is a genuine conflict.
             Optional<Person> existingPerson = personRepository.getPersonByHospitalNumberAndFacilityId(infantDto.getInfantHospitalNumber(), facilityId);
-            if (existingPerson.isPresent()) {
+            boolean isSameHeiPatient = isHeiNoMaternalRecord
+                    && existingPerson.isPresent()
+                    && existingPerson.get().getUuid().equals(infantDto.getInfantPatientUuid());
+            if (existingPerson.isPresent() && !isSameHeiPatient) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Hospital number '" + infantDto.getInfantHospitalNumber() + "' already exists in patient records. Please use a unique hospital number.");
             }

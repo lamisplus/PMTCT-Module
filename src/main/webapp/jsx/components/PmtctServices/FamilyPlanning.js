@@ -4,7 +4,6 @@ import MatButton from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 import SaveIcon from "@material-ui/icons/Save";
 import CancelIcon from "@material-ui/icons/Cancel";
-import PersonIcon from "@material-ui/icons/Person";
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import HealingIcon from "@material-ui/icons/Healing";
@@ -38,6 +37,10 @@ const sectionBoxStyle = {
   backgroundColor: "#f8f9fa",
   marginBottom: "15px",
 };
+
+// Marks a field that validate() actually enforces - kept as one shared element so every
+// compulsory field's asterisk stays visually identical.
+const Required = () => <span style={{ color: "red" }}>*</span>;
 
 const FamilyPlanning = (props) => {
   const classes = useStyles();
@@ -199,6 +202,9 @@ const FamilyPlanning = (props) => {
     if (payload.visitDate && moment(payload.visitDate).isAfter(moment(), "day")) {
       temp.visitDate = "Encounter Date cannot be in the future";
     }
+    if (payload.visitDate && patientObj.dateOfBirth && moment(payload.visitDate).isBefore(moment(patientObj.dateOfBirth), "day")) {
+      temp.visitDate = "Encounter Date cannot be earlier than the client's Date of Birth";
+    }
 
     temp.methodsProvided = methodsProvided.length > 0 ? "" : "Select at least one Family Planning Method Provided";
 
@@ -333,39 +339,11 @@ const FamilyPlanning = (props) => {
       <Card className={classes.card}>
         <CardBody>
           <form onSubmit={handleSubmit}>
-            {/* Header (Read-only) */}
-            <div style={sectionBoxStyle}>
-              <h6 style={sectionHeaderStyle}>
-                <PersonIcon style={sectionIconStyle} />
-                Client Demography
-              </h6>
-              <div className="row">
-                <div className="form-group mb-2 col-md-3">
-                  <Label>Name</Label>
-                  <Input disabled value={patientObj.fullName || patientObj.name || ""} />
-                </div>
-                <div className="form-group mb-2 col-md-3">
-                  <Label>Hospital Number</Label>
-                  <Input disabled value={patientObj.hospitalNumber || patientObj?.identifier?.identifier?.[0]?.value || ""} />
-                </div>
-                <div className="form-group mb-2 col-md-3">
-                  <Label>ANC No</Label>
-                  <Input disabled value={patientObj.ancNo || ""} />
-                </div>
-                <div className="form-group mb-2 col-md-3">
-                  <Label>Sex</Label>
-                  <Input disabled value={patientObj.sex || "Female"} />
-                </div>
-                <div className="form-group mb-2 col-md-3">
-                  <Label>Date of Birth</Label>
-                  <Input disabled value={patientObj.dateOfBirth || ""} />
-                </div>
-                <div className="form-group mb-2 col-md-3">
-                  <Label>Address/Telephone</Label>
-                  <Input disabled value={patientObj.address || patientObj.telephone || ""} />
-                </div>
-              </div>
-            </div>
+            {/* Client Demography section removed - PatientCardDetail already renders this same
+                info (name, hospital number, ANC no, sex, address/telephone) as a sibling of this
+                form on PatientDetail.js, so duplicating it here was redundant. Date of Birth is
+                still read via patientObj.dateOfBirth for the Encounter Date validation below,
+                just no longer displayed as its own field on this form. */}
 
             {/* Clinical Data */}
             <div style={sectionBoxStyle}>
@@ -376,7 +354,7 @@ const FamilyPlanning = (props) => {
               <div className="row">
                 <div className="form-group mb-3 col-md-3">
                   <Label>
-                    Encounter Date <span style={{ color: "red" }}>*</span>
+                    Encounter Date <Required />
                   </Label>
                   <Input
                     type="date"
@@ -385,6 +363,7 @@ const FamilyPlanning = (props) => {
                     onChange={handleChange}
                     disabled={disabledField}
                     max={moment().format("YYYY-MM-DD")}
+                    min={patientObj.dateOfBirth ? moment(patientObj.dateOfBirth).format("YYYY-MM-DD") : undefined}
                   />
                   {errors.visitDate ? <span className={classes.error}>{errors.visitDate}</span> : ""}
                 </div>
@@ -468,7 +447,7 @@ const FamilyPlanning = (props) => {
             <div style={sectionBoxStyle}>
               <h6 style={sectionHeaderStyle}>
                 <HealingIcon style={sectionIconStyle} />
-                Family Planning Method Provided
+                Family Planning Method Provided <Required />
               </h6>
               <div className="row">
                 {(codesets.FP_METHOD_PROVIDED || []).map((item) => (
@@ -496,7 +475,7 @@ const FamilyPlanning = (props) => {
                     <strong>Oral Pills</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Name of Pill</Label>
+                    <Label>Name of Pill <Required /></Label>
                     <Input
                       value={oralPillsData.nameOfPill}
                       onChange={(e) => setOralPillsData((prev) => ({ ...prev, nameOfPill: e.target.value }))}
@@ -505,7 +484,7 @@ const FamilyPlanning = (props) => {
                     {errors.nameOfPill ? <span className={classes.error}>{errors.nameOfPill}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Client Status</Label>
+                    <Label>Client Status <Required /></Label>
                     <Input
                       type="select"
                       value={oralPillsData.clientStatus}
@@ -518,7 +497,7 @@ const FamilyPlanning = (props) => {
                     {errors.oralPillsClientStatus ? <span className={classes.error}>{errors.oralPillsClientStatus}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Quantity (Number of Cycles)</Label>
+                    <Label>Quantity (Number of Cycles) <Required /></Label>
                     <Input
                       type="number"
                       value={oralPillsData.quantity}
@@ -537,7 +516,7 @@ const FamilyPlanning = (props) => {
                     <strong>Injectable</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Name of Injectable</Label>
+                    <Label>Name of Injectable <Required /></Label>
                     <Input
                       type="select"
                       value={injectableData.nameOfInjectable}
@@ -551,7 +530,7 @@ const FamilyPlanning = (props) => {
                   </div>
                   {injectableData.nameOfInjectable === "FP_NAME_OF_INJECTABLE_DMPA_IM" && (
                     <div className="form-group mb-3 col-md-4">
-                      <Label>Route</Label>
+                      <Label>Route <Required /></Label>
                       <Input
                         type="select"
                         value={injectableData.route}
@@ -566,7 +545,7 @@ const FamilyPlanning = (props) => {
                   )}
                   {injectableData.route === "FP_INJECTABLE_ROUTE_SELF_INJECTION" && (
                     <div className="form-group mb-3 col-md-4">
-                      <Label>Quantity (Uniject)</Label>
+                      <Label>Quantity (Uniject) <Required /></Label>
                       <Input
                         type="number"
                         value={injectableData.quantity}
@@ -577,7 +556,7 @@ const FamilyPlanning = (props) => {
                     </div>
                   )}
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Client Status</Label>
+                    <Label>Client Status <Required /></Label>
                     <Input
                       type="select"
                       value={injectableData.clientStatus}
@@ -599,7 +578,7 @@ const FamilyPlanning = (props) => {
                     <strong>IUD</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Type of IUD</Label>
+                    <Label>Type of IUD <Required /></Label>
                     <Input
                       type="select"
                       value={iudData.typeOfIud}
@@ -612,7 +591,7 @@ const FamilyPlanning = (props) => {
                     {errors.typeOfIud ? <span className={classes.error}>{errors.typeOfIud}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Action</Label>
+                    <Label>Action <Required /></Label>
                     <Input
                       type="select"
                       value={iudData.action}
@@ -626,7 +605,7 @@ const FamilyPlanning = (props) => {
                   </div>
                   {iudData.action === "FP_ACTION_IN" && (
                     <div className="form-group mb-3 col-md-4">
-                      <Label>Client Status</Label>
+                      <Label>Client Status <Required /></Label>
                       <Input
                         type="select"
                         value={iudData.clientStatus}
@@ -649,7 +628,7 @@ const FamilyPlanning = (props) => {
                     <strong>Condoms</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Type of Condom</Label>
+                    <Label>Type of Condom <Required /></Label>
                     <Input
                       type="select"
                       value={condomData.typeOfCondom}
@@ -662,7 +641,7 @@ const FamilyPlanning = (props) => {
                     {errors.typeOfCondom ? <span className={classes.error}>{errors.typeOfCondom}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Client Status</Label>
+                    <Label>Client Status <Required /></Label>
                     <Input
                       type="select"
                       value={condomData.clientStatus}
@@ -675,7 +654,7 @@ const FamilyPlanning = (props) => {
                     {errors.condomClientStatus ? <span className={classes.error}>{errors.condomClientStatus}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Quantity (Number of Pieces)</Label>
+                    <Label>Quantity (Number of Pieces) <Required /></Label>
                     <Input
                       type="number"
                       value={condomData.quantity}
@@ -694,7 +673,7 @@ const FamilyPlanning = (props) => {
                     <strong>Implants</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Type of Implant</Label>
+                    <Label>Type of Implant <Required /></Label>
                     <Input
                       type="select"
                       value={implantData.typeOfImplant}
@@ -707,7 +686,7 @@ const FamilyPlanning = (props) => {
                     {errors.typeOfImplant ? <span className={classes.error}>{errors.typeOfImplant}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Action</Label>
+                    <Label>Action <Required /></Label>
                     <Input
                       type="select"
                       value={implantData.action}
@@ -721,7 +700,7 @@ const FamilyPlanning = (props) => {
                   </div>
                   {implantData.action === "FP_ACTION_IN" && (
                     <div className="form-group mb-3 col-md-4">
-                      <Label>Client Status</Label>
+                      <Label>Client Status <Required /></Label>
                       <Input
                         type="select"
                         value={implantData.clientStatus}
@@ -744,7 +723,7 @@ const FamilyPlanning = (props) => {
                     <strong>Voluntary Sterilization</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Voluntary Sterilization</Label>
+                    <Label>Voluntary Sterilization <Required /></Label>
                     <Input
                       type="select"
                       value={sterilizationData.sex}
@@ -766,7 +745,7 @@ const FamilyPlanning = (props) => {
                     <strong>Natural Methods</strong>
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Client Status</Label>
+                    <Label>Client Status <Required /></Label>
                     <Input
                       type="select"
                       value={naturalMethodsData.clientStatus}
@@ -779,7 +758,7 @@ const FamilyPlanning = (props) => {
                     {errors.naturalMethodClientStatus ? <span className={classes.error}>{errors.naturalMethodClientStatus}</span> : ""}
                   </div>
                   <div className="form-group mb-3 col-md-4">
-                    <Label>Method</Label>
+                    <Label>Method <Required /></Label>
                     <Input
                       type="select"
                       value={naturalMethodsData.method}
@@ -793,7 +772,7 @@ const FamilyPlanning = (props) => {
                   </div>
                   {naturalMethodsData.method === "FP_NATURAL_METHOD_OTHERS" && (
                     <div className="form-group mb-3 col-md-4">
-                      <Label>Specify</Label>
+                      <Label>Specify <Required /></Label>
                       <Input
                         type="select"
                         value={naturalMethodsData.othersSpecify}

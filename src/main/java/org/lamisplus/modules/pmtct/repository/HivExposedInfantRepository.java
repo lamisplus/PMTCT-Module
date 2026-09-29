@@ -13,7 +13,11 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
 
     // Candidates for the HIV-Exposed Infant grid: 0-24 months old, with a positive HTS
     // record on the HTS module's own hts_encounter table (not PMTCT's ANC-side pmtct_hts) —
-    // regardless of gender, and independent of any PMTCT/maternal enrollment. Written as a
+    // regardless of gender. Excludes anyone who already has a maternal-linked
+    // pmtct_infant_information record (mother_patient_uuid set) - this grid is specifically
+    // for infants with NO maternal record on file, so an infant whose mother is already
+    // documented (Lost to Follow-Up or otherwise) must not appear here even if they'd
+    // otherwise match every other filter. Written as a
     // CTE rather than a "SELECT * FROM (...) AS subquery" wrapper — the latter form reliably
     // triggered "missing FROM-clause entry for table pp" once Spring Data applied its own
     // pagination handling on top, even with an unsorted Pageable. Columns are explicitly
@@ -41,6 +45,11 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "      he.observation->>'finalHivTestResult' ILIKE 'Positive' " +
                     "      OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
                     "    ) " +
+                    "    AND NOT EXISTS ( " +
+                    "      SELECT 1 FROM pmtct_infant_information pi " +
+                    "      WHERE pi.infant_patient_uuid = pp.uuid AND pi.archived = false " +
+                    "        AND pi.mother_patient_uuid IS NOT NULL " +
+                    "    ) " +
                     "  ORDER BY pp.uuid, he.id DESC " +
                     ") SELECT * FROM candidates ORDER BY id DESC",
             countQuery =
@@ -54,6 +63,11 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "  AND ( " +
                     "    he.observation->>'finalHivTestResult' ILIKE 'Positive' " +
                     "    OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
+                    "  ) " +
+                    "  AND NOT EXISTS ( " +
+                    "    SELECT 1 FROM pmtct_infant_information pi " +
+                    "    WHERE pi.infant_patient_uuid = pp.uuid AND pi.archived = false " +
+                    "      AND pi.mother_patient_uuid IS NOT NULL " +
                     "  )",
             nativeQuery = true
     )
@@ -81,6 +95,11 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "      he.observation->>'finalHivTestResult' ILIKE 'Positive' " +
                     "      OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
                     "    ) " +
+                    "    AND NOT EXISTS ( " +
+                    "      SELECT 1 FROM pmtct_infant_information pi " +
+                    "      WHERE pi.infant_patient_uuid = pp.uuid AND pi.archived = false " +
+                    "        AND pi.mother_patient_uuid IS NOT NULL " +
+                    "    ) " +
                     "  ORDER BY pp.uuid, he.id DESC " +
                     ") SELECT * FROM candidates ORDER BY id DESC",
             countQuery =
@@ -95,6 +114,11 @@ public interface HivExposedInfantRepository extends CommonJpaRepository<Infant, 
                     "  AND ( " +
                     "    he.observation->>'finalHivTestResult' ILIKE 'Positive' " +
                     "    OR he.observation->>'confirmatoryHivTest' = 'HIV_CONFIRMATORY_TEST_RESULT_POSITIVE' " +
+                    "  ) " +
+                    "  AND NOT EXISTS ( " +
+                    "    SELECT 1 FROM pmtct_infant_information pi " +
+                    "    WHERE pi.infant_patient_uuid = pp.uuid AND pi.archived = false " +
+                    "      AND pi.mother_patient_uuid IS NOT NULL " +
                     "  )",
             nativeQuery = true
     )

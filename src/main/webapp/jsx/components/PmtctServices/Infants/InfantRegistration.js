@@ -168,7 +168,11 @@ const LabourinfantInfo = (props) => {
     uuid: patientObj.ancUuid,
     dateOfDelivery: "",
     ctxStatus: "",
-    infantHospitalNumber: "",
+    // HEI (no maternal record) flow: patientObj is the infant's own already-registered patient
+    // record, so the hospital number is already known - pre-fill it directly here rather than
+    // through handleInputChangeinfantInfoDto, which would trigger the live "already exists"
+    // check against this exact number and block it (see the disabled input below).
+    infantHospitalNumber: isHeiFlow ? (patientObj?.hospitalNumber || "") : "",
     patientUuid: motherOrNullUuid,
     pmtctCycleUuid: isHeiFlow ? null : props?.latestPmtctCycle?.uuid,
      infantPCRTestDto:  {
@@ -961,7 +965,7 @@ const LabourinfantInfo = (props) => {
                             id="infantHospitalNumber"
                             onChange={handleInputChangeinfantInfoDto}
                             value={infantInfo.infantHospitalNumber}
-                            disabled={disabledField}
+                            disabled={disabledField || isHeiFlow}
                           />
                         </InputGroup>
                         {errors.infantHospitalNumber !== "" ? (
@@ -971,7 +975,12 @@ const LabourinfantInfo = (props) => {
                         ) : (
                           ""
                         )}
-                        {hospitalNumStatus === true ? (
+                        {/* HEI flow: this is the infant's own already-registered hospital
+                            number, auto-filled and read-only above - never routes through
+                            handleInputChangeinfantInfoDto, so hospitalNumStatus can never be
+                            set true for it. The live "already exists" warning only applies to
+                            the normal (non-HEI) manually-typed path. */}
+                        {!isHeiFlow && hospitalNumStatus === true ? (
                           <span className={classes.error}>
                             {"Hospital number already exist"}
                           </span>
@@ -2127,7 +2136,7 @@ const LabourinfantInfo = (props) => {
                   type="submit"
                   variant="contained"
                   color="primary"
-                  hidden={hospitalNumStatus}
+                  hidden={!isHeiFlow && hospitalNumStatus}
                   className={classes.button}
                   disabled={saving}
                   startIcon={<SaveIcon />}
