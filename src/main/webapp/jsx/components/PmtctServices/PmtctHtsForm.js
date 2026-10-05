@@ -2168,7 +2168,7 @@ const PmtctHtsForm = (props) => {
           rawObservation: priorHtsRawObservation,
         });
         htsEncounterPayload.patientId = resolvedPersonId;
-
+        htsEncounterPayload.facilityId = localStorage.getItem("FacId");
         response = await axios.put(
           `${baseUrl}hts-encounter/${priorHtsPositiveRecordId}`,
           htsEncounterPayload,
@@ -2213,6 +2213,7 @@ const PmtctHtsForm = (props) => {
         const htsEncounterPayload = buildHtsEncounterRequestPayload(payload);
         htsEncounterPayload.patientId = resolvedPersonId;
         // facilityId intentionally not set — stated to be derived on HTS-Module's own backend.
+        htsEncounterPayload.facilityId = localStorage.getItem("FacId");
 
         if (isUpdate) {
           response = await axios.put(
