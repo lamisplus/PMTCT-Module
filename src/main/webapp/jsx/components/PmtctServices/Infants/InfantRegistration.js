@@ -156,10 +156,12 @@ const LabourinfantInfo = (props) => {
   const [infantInfo, setInfantInfo] = useState({
     ancNo: patientObj?.ancNo,
     dateOfinfantInfo: "",
-    firstName: "",
+    firstName: isHeiFlow ? (patientObj?.firstName || "") : "",
     middleName: "",
-    sex: "",
-    surname: "",
+    sex: isHeiFlow
+        ? (patientObj?.sex === "Female" ? "SEX_FEMALE" : patientObj?.sex === "Male" ? "SEX_MALE" : (patientObj?.sex || ""))
+        : "",
+    surname: isHeiFlow ? (patientObj?.surname || "") : "",
     bodyWeight: "",
     length: "",
     birthOutcome: "",
@@ -220,6 +222,8 @@ const LabourinfantInfo = (props) => {
     motherPatientUuid: motherOrNullUuid,
     source: "WEB",
   });
+
+  // console.log("Patientobj ", patientObj)
   const [arvAgeAtInitiation, setArvAgeAtInitiation] = useState("");
   const [motherSyphilisPositive, setMotherSyphilisPositive] = useState(false);
   const [motherSyphilisTestResult, setMotherSyphilisTestResult] = useState("");
@@ -1012,7 +1016,7 @@ const LabourinfantInfo = (props) => {
                                 ? infantInfo.dateOfDelivery
                                 : newDateOfDelivery
                             }
-                            disabled={true}
+                            disabled={disabledField}
                           />
                         </InputGroup>
                         {errors.dateOfDelivery !== "" ? (
