@@ -167,6 +167,10 @@ const ClinicVisit = (props) => {
   const motherOrNullUuid = isHeiFlow
     ? null
     : props.patientObj.patient_uuid || props.patientObj.patientUuid || props.patientObj.uuid;
+  // For HEI flow, infant hospital number comes from patientObj (child's own record)
+  const infantHospitalNumberInit = isHeiFlow && props.patientObj.hospitalNumber
+    ? props.patientObj.hospitalNumber
+    : "";
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -278,7 +282,7 @@ const ClinicVisit = (props) => {
     bodyWeight: "",
     breastFeeding: "",
     // ctxStatus: "",
-    infantHospitalNumber: "",
+    infantHospitalNumber: infantHospitalNumberInit,
     visitDate: "",
     visitStatus: "",
     infantOutcomeAt18Months: "",
@@ -297,7 +301,7 @@ const ClinicVisit = (props) => {
     arvDeliveryPoint: "",
     infantArvTime: "",
     infantArvType: "",
-    infantHospitalNumber: "",
+    infantHospitalNumber: infantHospitalNumberInit,
     timingOfAvrWithin72Hours: "",
     timingOfAvrAfter72Hours: "",
     otherProphylaxisType: "",
@@ -334,7 +338,7 @@ const ClinicVisit = (props) => {
     dateResultReceivedByCaregiver: "",
     dateSampleCollected: "",
     dateSampleSent: "",
-    infantHospitalNumber: "",
+    infantHospitalNumber: infantHospitalNumberInit,
     results: "",
     testType: "",
     id: "",
@@ -1424,7 +1428,8 @@ const ClinicVisit = (props) => {
       toast.error("Visit Date already exists for this infant. Please select a different date.");
       return;
     }
-    if (!infantVisitRequestDto.patientUuid) {
+    // For HEI flow (no maternal record), patientUuid is intentionally null
+    if (!isHeiFlow && !infantVisitRequestDto.patientUuid) {
       toast.error("Mother's patient reference is missing. Please reload the page and try again.");
       return;
     }
