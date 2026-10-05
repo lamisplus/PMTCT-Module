@@ -368,9 +368,11 @@ const InfantOnlyDashboard = () => {
             Home
           </Menu.Item>
 
-          <Menu.Item onClick={openInfantInformation} style={menuItemStyle(activeContent.route === "add-infant")}>
-            Infant Information
-          </Menu.Item>
+          {!infantRecord && (
+            <Menu.Item onClick={openInfantInformation} style={menuItemStyle(activeContent.route === "add-infant")}>
+              Infant Information
+            </Menu.Item>
+          )}
 
           <Menu.Item onClick={() => setActiveContentRaw({ route: "history" })} style={menuItemStyle(activeContent.route === "history")}>
             History
