@@ -388,12 +388,8 @@ public class InfantVisitService
             filterResponseDto.setMotherArt(Boolean.FALSE);
         }
 
-        int infantAge = this.calculateAge(hospitalNumber);
-        if(infantAge>= 18) {
-            filterResponseDto.setOutCome(Boolean.TRUE);
-        } else {
-            filterResponseDto.setOutCome(Boolean.FALSE);
-        }
+        // Always show final outcome field regardless of infant age
+        filterResponseDto.setOutCome(Boolean.TRUE);
         return filterResponseDto;
     }
 
