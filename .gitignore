@@ -30,6 +30,9 @@ application-debug.log
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Ignore React build output in static directory
+src/main/resources/views/static/pmtct/
+
 ### Custom ignores
 target
 .idea
