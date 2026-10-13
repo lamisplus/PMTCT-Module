@@ -34,10 +34,19 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
             + "ORDER BY date_of_visit ASC, id ASC LIMIT 1")
     Optional<HtsEncounterProxy> findEarliestHtsModulePositiveRecord(String patientUuid);
 
-    // Used by viewPMTCTHTSEnrollmentById so opening a record for view/edit enforces the same
-    // pmtct_hts = true boundary PMTCT's own listing/history queries already apply — otherwise
-    // this single-record fetch (by numeric id alone) could load a record PMTCT never authored.
+    // Used by updateHtsEncounter to ensure only PMTCT-authored records can be updated.
+    // Synced HTS module records (pmtct_hts = false) remain view-only in PMTCT.
     Optional<HtsEncounterProxy> findByIdAndPmtctHtsAndArchived(Long id, Boolean pmtctHts, Boolean archived);
+
+    // LV3-1965: Used by viewPMTCTHTSEnrollmentById for VIEW-ONLY access. Includes both
+    // PMTCT-authored (pmtct_hts = true) AND synced HTS module records (pmtct_hts = false
+    // with pmtctCycleUuid populated). Prevents accidentally pulling ALL HTS records.
+    @Query(nativeQuery = true, value
+            = "SELECT * FROM hts_encounter "
+            + "WHERE archived = :archived "
+            + "  AND id = :id "
+            + "  AND (pmtct_hts = true OR observation->>'pmtctCycleUuid' IS NOT NULL)")
+    Optional<HtsEncounterProxy> findByIdForPmtctView(Long id, Boolean archived);
 
     List<HtsEncounterProxy> findByPatientUuidAndPmtctHtsAndArchivedOrderByDateOfVisitDesc(
             UUID patientUuid, Boolean pmtctHts, Boolean archived);
@@ -195,30 +204,43 @@ public interface HtsEncounterProxyRepository extends JpaRepository<HtsEncounterP
     // dateOfVisit <= the new dateOfEnrollment, per the ANC branch of the mapping rule. Every
     // qualifying row gets synced (see PmtctHtsService) - a client can legitimately have more than
     // one pre-enrolment test (e.g. an initial test and a repeat), and both belong to this cycle.
+    // UPDATED: Uses facilitySetting/communityEntryPoint instead of modality for better accuracy.
     @Query(nativeQuery = true, value
             = "SELECT id FROM hts_encounter "
             + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' IS NULL "
-            + "  AND UPPER(COALESCE(observation->>'modality', '')) LIKE '%SETTING_ANC%' "
+            + "  AND ("
+            + "    UPPER(COALESCE(observation->>'facilitySetting', '')) LIKE '%ANC%' "
+            + "    OR UPPER(COALESCE(observation->>'communityEntryPoint', '')) LIKE '%ANC%'"
+            + "  ) "
             + "  AND date_of_visit <= :dateOfEnrollment")
     List<Long> findUnmappedAncSyncCandidateIds(String patientUuid, LocalDate dateOfEnrollment);
 
     // Same as above, for a cycle created via the Labour & Delivery entry point (Flow A2b):
     // Setting = L&D and dateOfVisit >= the new dateOfDelivery.
+    // UPDATED: Uses facilitySetting/communityEntryPoint instead of modality.
     @Query(nativeQuery = true, value
             = "SELECT id FROM hts_encounter "
             + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
             + "  AND observation->>'pmtctCycleUuid' IS NULL "
-            + "  AND UPPER(COALESCE(observation->>'modality', '')) LIKE '%SETTING_L&D%' "
+            + "  AND ("
+            + "    UPPER(COALESCE(observation->>'facilitySetting', '')) LIKE '%L&D%' "
+            + "    OR UPPER(COALESCE(observation->>'communityEntryPoint', '')) LIKE '%L&D%'"
+            + "  ) "
             + "  AND date_of_visit >= :dateOfDelivery")
     List<Long> findUnmappedDeliverySyncCandidateIds(String patientUuid, LocalDate dateOfDelivery);
 
+    // LV3-1965: Must include both PMTCT-authored (pmtct_hts = true) AND synced HTS module
+    // records (pmtct_hts = false with pmtctCycleUuid populated). Without this, synced records
+    // won't appear in patient history. We DON'T want all pmtct_hts = false records blindly —
+    // only the ones that have been deliberately synced to a PMTCT cycle.
     @Query(nativeQuery = true, value
             = "SELECT * FROM hts_encounter "
-            + "WHERE pmtct_hts = true AND archived = false "
+            + "WHERE archived = false "
             + "  AND CAST(patient_uuid AS TEXT) = :patientUuid "
+            + "  AND (pmtct_hts = true OR observation->>'pmtctCycleUuid' IS NOT NULL) "
             + "ORDER BY id DESC")
     List<HtsEncounterProxy> findByPatientUuidAndUnarchived(String patientUuid);
 

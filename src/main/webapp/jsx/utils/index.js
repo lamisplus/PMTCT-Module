@@ -214,6 +214,7 @@ export const syncExternalHtsRecordsToCycle = async (patientUuid, pmtctCycleUuid,
       headers: { Authorization: `Bearer ${token}` },
     });
     candidateIds = Array.isArray(response?.data) ? response.data : [];
+    console.log("candidatesid", candidateIds)
   } catch (error) {
     return;
   }

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="lv3-1965-sync-external-hts-module-records-to-pmtct-cycles-anc" author="gboyeguntaiwo">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="hts_encounter"/>
+            <tableExists tableName="pmtct_anc"/>
+            <tableExists tableName="pmtct_pregnancy_cycle"/>
+        </preConditions>
+
+        <comment>
+            LV3-1965 Flow A2: Sync HTS module records (pmtct_hts = false) to PMTCT pregnancy
+            cycles for clients who entered via ANC. Updates observation JSONB column to add
+            pmtctCycleUuid field. Scoped to Setting contains 'ANC' and dateOfVisit on or before
+            ANC enrollment date.
+        </comment>
+
+        <sql>
+            UPDATE hts_encounter h
+            SET observation = jsonb_set(
+                h.observation,
+                '{pmtctCycleUuid}',
+                to_jsonb(pc.uuid::text),
+                true
+            )
+            FROM pmtct_anc a
+            INNER JOIN pmtct_pregnancy_cycle pc ON a.pmtct_cycle_uuid = pc.uuid
+            WHERE h.archived = false
+              AND h.pmtct_hts = false
+              AND h.observation->>'pmtctCycleUuid' IS NULL
+              AND CAST(h.patient_uuid AS TEXT) = a.patient_uuid
+              AND a.archived = false
+              AND (
+                UPPER(COALESCE(h.observation->>'facilitySetting', '')) LIKE '%ANC%'
+                OR UPPER(COALESCE(h.observation->>'communityEntryPoint', '')) LIKE '%ANC%'
+              )
+              AND h.date_of_visit &lt;= a.date_of_enrollment;
+        </sql>
+
+        <rollback>
+            <!-- Remove pmtctCycleUuid from synced ANC records -->
+            <sql>
+                UPDATE hts_encounter h
+                SET observation = h.observation - 'pmtctCycleUuid'
+                FROM pmtct_anc a
+                WHERE h.archived = false
+                  AND h.pmtct_hts = false
+                  AND h.observation->>'pmtctCycleUuid' IS NOT NULL
+                  AND CAST(h.patient_uuid AS TEXT) = a.patient_uuid
+                  AND a.archived = false
+                  AND (
+                    UPPER(COALESCE(h.observation->>'facilitySetting', '')) LIKE '%ANC%'
+                    OR UPPER(COALESCE(h.observation->>'communityEntryPoint', '')) LIKE '%ANC%'
+                  )
+                  AND h.date_of_visit &lt;= a.date_of_enrollment;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="lv3-1965-sync-external-hts-module-records-to-pmtct-cycles-ld" author="pmtct-team">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="hts_encounter"/>
+            <tableExists tableName="pmtct_delivery"/>
+            <tableExists tableName="pmtct_pregnancy_cycle"/>
+        </preConditions>
+
+        <comment>
+            LV3-1965 Flow A2b: Sync HTS module records (pmtct_hts = false) to PMTCT pregnancy
+            cycles for clients who entered directly via Labour &amp; Delivery (no prior ANC).
+            Updates observation JSONB column to add pmtctCycleUuid field. Scoped to Setting
+            contains 'L&amp;D' and dateOfVisit on or after delivery date.
+        </comment>
+
+        <sql>
+            UPDATE hts_encounter h
+            SET observation = jsonb_set(
+                h.observation,
+                '{pmtctCycleUuid}',
+                to_jsonb(pc.uuid::text),
+                true
+            )
+            FROM pmtct_delivery d
+            INNER JOIN pmtct_pregnancy_cycle pc ON d.pmtct_cycle_uuid = pc.uuid
+            WHERE h.archived = false
+              AND h.pmtct_hts = false
+              AND h.observation->>'pmtctCycleUuid' IS NULL
+              AND CAST(h.patient_uuid AS TEXT) = d.patient_uuid
+              AND d.archived = false
+              AND (
+                UPPER(COALESCE(h.observation->>'facilitySetting', '')) LIKE '%L&amp;D%'
+                OR UPPER(COALESCE(h.observation->>'communityEntryPoint', '')) LIKE '%L&amp;D%'
+              )
+              AND h.date_of_visit &gt;= d.date_of_delivery;
+        </sql>
+
+        <rollback>
+            <!-- Remove pmtctCycleUuid from synced L&D records -->
+            <sql>
+                UPDATE hts_encounter h
+                SET observation = h.observation - 'pmtctCycleUuid'
+                FROM pmtct_delivery d
+                WHERE h.archived = false
+                  AND h.pmtct_hts = false
+                  AND h.observation->>'pmtctCycleUuid' IS NOT NULL
+                  AND CAST(h.patient_uuid AS TEXT) = d.patient_uuid
+                  AND d.archived = false
+                  AND (
+                    UPPER(COALESCE(h.observation->>'facilitySetting', '')) LIKE '%L&amp;D%'
+                    OR UPPER(COALESCE(h.observation->>'communityEntryPoint', '')) LIKE '%L&amp;D%'
+                  )
+                  AND h.date_of_visit &gt;= d.date_of_delivery;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

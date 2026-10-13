@@ -529,7 +529,7 @@ const PatientnHistory = (props) => {
                       View
                     </Dropdown.Item>
                   )}
-                  {row.viewable && (
+                  {row.editable && (
                     <Dropdown.Item
                       className="dropdown-item"
                       onClick={() => LoadViewPage(row, "update")}
@@ -537,12 +537,14 @@ const PatientnHistory = (props) => {
                       Update
                     </Dropdown.Item>
                   )}
-                  <Dropdown.Item
-                    className="dropdown-item"
-                    onClick={() => LoadModal(row, "delete")}
-                  >
-                    Delete
-                  </Dropdown.Item>
+                  {row.deletable && (
+                    <Dropdown.Item
+                      className="dropdown-item"
+                      onClick={() => LoadModal(row, "delete")}
+                    >
+                      Delete
+                    </Dropdown.Item>
+                  )}
                 </Dropdown.Menu>
               </Dropdown>
             ) : (

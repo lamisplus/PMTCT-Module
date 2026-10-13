@@ -197,7 +197,7 @@ const ClinicVisit = (props) => {
   const [formFilter, setFormFilter] = useState({
     infantArv: false,
     motherArt: false,
-    outCome: false,
+    outCome: true,
   });
   const [visitDateStatus, setVisitDateStatus] = useState(false);
   const [showRapidTest, setshowRapidTest] = useState(false);

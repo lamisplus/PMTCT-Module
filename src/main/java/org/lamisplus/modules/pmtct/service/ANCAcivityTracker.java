@@ -260,8 +260,11 @@ public class ANCAcivityTracker {
                 activityTracker.setActivityName("RETESTING".equalsIgnoreCase(testingType) ? "Retesting" : "PMTCT HTS");
                 activityTracker.setTestingType(testingType);
                 activityTracker.setPath("pmtct-hts");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
+                // LV3-1965: Only PMTCT-authored records (pmtct_hts = true) are editable/deletable.
+                // Synced HTS module records (pmtct_hts = false with pmtctCycleUuid) are view-only.
+                boolean isPmtctAuthored = proxy.getPmtctHts() != null && proxy.getPmtctHts();
+                activityTracker.setEditable(isPmtctAuthored);
+                activityTracker.setDeletable(isPmtctAuthored);
                 activityTracker.setViewable(true);
                 activityTracker.setRecordId(String.valueOf(proxy.getId()));
                 activityTracker.setActivityDate(proxy.getDateOfVisit());
@@ -415,8 +418,11 @@ public class ANCAcivityTracker {
                 activityTracker.setActivityName("RETESTING".equalsIgnoreCase(testingType) ? "Retesting" : "PMTCT HTS");
                 activityTracker.setTestingType(testingType);
                 activityTracker.setPath("pmtct-hts");
-                activityTracker.setEditable(true);
-                activityTracker.setDeletable(true);
+                // LV3-1965: Only PMTCT-authored records (pmtct_hts = true) are editable/deletable.
+                // Synced HTS module records (pmtct_hts = false with pmtctCycleUuid) are view-only.
+                boolean isPmtctAuthored = proxy.getPmtctHts() != null && proxy.getPmtctHts();
+                activityTracker.setEditable(isPmtctAuthored);
+                activityTracker.setDeletable(isPmtctAuthored);
                 activityTracker.setViewable(true);
                 activityTracker.setRecordId(String.valueOf(proxy.getId()));
                 activityTracker.setActivityDate(proxy.getDateOfVisit());

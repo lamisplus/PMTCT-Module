@@ -241,7 +241,10 @@ public class PmtctHtsService {
     }
 
     public PmtctHtsReponseDTO updateHtsEncounter(Long id, PmtctHtsRequestDTO dto) {
-        HtsEncounterProxy existing = this.htsEncounterProxyRepository.findByIdAndArchived(id, false)
+        // LV3-1965: UPDATE restricted to pmtct_hts = true only — synced HTS module records
+        // (pmtct_hts = false with pmtctCycleUuid) are VIEW-ONLY in PMTCT. Prevents PMTCT users
+        // from modifying records the HTS module authored.
+        HtsEncounterProxy existing = this.htsEncounterProxyRepository.findByIdAndPmtctHtsAndArchived(id, true, false)
                 .orElseThrow(() -> new EntityNotFoundException(HtsEncounterProxy.class, "id", id + ""));
 
         Optional<User> currentUser = this.userService.getUserWithRoles();
@@ -810,12 +813,12 @@ public class PmtctHtsService {
 
     public  PmtctHtsReponseDTO  viewPMTCTHTSEnrollmentById(String id) {
         try {
-            // Numeric ID → hts_encounter table (post-migration records). pmtct_hts = true
-            // required — enforces the same boundary PMTCT's own listing/history queries
-            // already apply, so this single-record fetch can't be used to open a record
-            // PMTCT never authored.
+            // Numeric ID → hts_encounter table (post-migration records). LV3-1965: VIEW access
+            // includes both PMTCT-authored (pmtct_hts = true) AND synced HTS module records
+            // (pmtct_hts = false with pmtctCycleUuid). UPDATE remains restricted to pmtct_hts = true
+            // only (see updateHtsEncounter) to prevent modifying HTS-module-authored data.
             Long htsId = Long.parseLong(id);
-            HtsEncounterProxy proxy = htsEncounterProxyRepository.findByIdAndPmtctHtsAndArchived(htsId, true, false)
+            HtsEncounterProxy proxy = htsEncounterProxyRepository.findByIdForPmtctView(htsId, false)
                     .orElseThrow(() -> new EntityNotFoundException(HtsEncounterProxy.class, "Id", id));
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = currentUser.get();
