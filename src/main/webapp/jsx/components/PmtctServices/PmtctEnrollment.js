@@ -774,6 +774,12 @@ const AncPnc = (props) => {
   // auto-populated LMP left GA blank (and the form failing required-field validation on
   // submit) unless the user happened to re-touch one of those date fields by hand.
   useEffect(() => {
+    const isEditMode = props.activeContent?.id && props.activeContent?.actionType !== "create";
+    if (isEditMode && (enroll.gaweeks !== "" && enroll.gaweeks !== null && enroll.gaweeks !== undefined)) {
+      return;
+    }
+
+    // For new records or records without GA, calculate if both dates are present
     if (enroll.gaweeks || !enroll.lmp || !enroll.pmtctEnrollmentDate) return;
     const computedGa = calculateGestationalAge(enroll.pmtctEnrollmentDate, enroll.lmp);
     if (computedGa >= 4 && computedGa <= 45) {
@@ -783,7 +789,7 @@ const AncPnc = (props) => {
         expectedDeliveryDate: prev.expectedDeliveryDate || calculateExpectedDate(prev.lmp),
       }));
     }
-  }, [enroll.lmp, enroll.pmtctEnrollmentDate]);
+  }, [enroll.lmp, enroll.pmtctEnrollmentDate, props.activeContent?.id, props.activeContent?.actionType]);
 
   useEffect(() => {
     // if (props?.allEntryPoint) {
