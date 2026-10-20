@@ -9,6 +9,7 @@ import org.springframework.data.domain.Persistable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Persistable;
 
 import org.lamisplus.modules.pmtct.domain.dto.HbvDetailsDto;
 import org.lamisplus.modules.pmtct.domain.dto.SyphilisDetailsDto;
+import org.lamisplus.modules.pmtct.util.SafeIntegerDeserializer;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -28,8 +30,10 @@ import java.time.LocalDate;
 public class PMTCTEnrollment extends PMTCTTransactionalEntity implements Serializable, Persistable<String> {
     @Column(name = "pmtct_enrollment_date")
     private LocalDate pmtctEnrollmentDate;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gravida;
     @JsonProperty("gaweeks")
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     @Column(name = "gaweeks")
     private Integer gAWeeks;
     public String entryPoint;

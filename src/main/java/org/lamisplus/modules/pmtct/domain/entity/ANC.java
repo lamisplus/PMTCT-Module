@@ -1,10 +1,12 @@
 package org.lamisplus.modules.pmtct.domain.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.lamisplus.modules.pmtct.domain.dto.*;
+import org.lamisplus.modules.pmtct.util.SafeIntegerDeserializer;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
@@ -18,11 +20,14 @@ import java.time.LocalDate;
 public class ANC extends PMTCTTransactionalEntity implements Serializable, Persistable<String> {
     private String ancNo;
     private LocalDate dateOfEnrollment;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gravida;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer parity;
     @JsonProperty("lmp")
     private LocalDate LMP;
     @JsonProperty("gaweeks")
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     @Column(name = "gaweeks")
     private Integer gAWeeks;
     private String patientUuid;

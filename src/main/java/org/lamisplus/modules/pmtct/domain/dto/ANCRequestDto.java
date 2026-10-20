@@ -4,6 +4,8 @@ import lombok.Data;
 import org.lamisplus.modules.patient.domain.dto.PersonDto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.lamisplus.modules.pmtct.util.SafeIntegerDeserializer;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -20,11 +22,14 @@ public class ANCRequestDto implements Serializable
     private String communitySetting;
 
     private LocalDate dateOfEnrollment;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gravida;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer parity;
     @JsonProperty("lmp")
     private LocalDate LMP;
     @JsonProperty("gaweeks")
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gAWeeks;
     private PersonDto personDto;
     private String patient_uuid;

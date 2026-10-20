@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.lamisplus.modules.pmtct.util.SafeIntegerDeserializer;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -21,11 +23,14 @@ public class ANCEnrollementRequestDto{
     private String referredFromSpokesSite;
 
     private LocalDate dateOfEnrollment;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gravida;
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer parity;
     @JsonProperty("lmp")
     private LocalDate LMP;
     @JsonProperty("gaweeks")
+    @JsonDeserialize(using = SafeIntegerDeserializer.class)
     private Integer gAWeeks;
     private final String patient_uuid;
 
