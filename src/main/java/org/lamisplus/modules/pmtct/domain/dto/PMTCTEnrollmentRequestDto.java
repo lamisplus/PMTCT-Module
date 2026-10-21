@@ -2,11 +2,13 @@
 
  import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  import lombok.AllArgsConstructor;
  import lombok.Builder;
  import lombok.Data;
  import org.lamisplus.modules.patient.domain.dto.PersonDto;
  import org.lamisplus.modules.pmtct.domain.entity.InfantMotherArt;
+ import org.lamisplus.modules.pmtct.util.SafeIntegerDeserializer;
 
 
  import javax.validation.constraints.NotNull;
@@ -23,8 +25,10 @@
      private String source;
      private String id;
      private LocalDate pmtctEnrollmentDate;
+     @JsonDeserialize(using = SafeIntegerDeserializer.class)
      private Integer gravida;
      @JsonProperty("gaweeks")
+     @JsonDeserialize(using = SafeIntegerDeserializer.class)
      private Integer gAWeeks;
      private String entryPoint;
      private LocalDate artStartDate;

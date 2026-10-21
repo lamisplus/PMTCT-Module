@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+    <!-- Fix incorrect GA values for records with existing non-null GA -->
+    <changeSet failOnError="false" author="gboyeguntaiwo" id="2026-10-19-fix-incorrect-gestational-age">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_enrollment" />
+            <columnExists tableName="pmtct_enrollment" columnName="gaweeks" />
+            <columnExists tableName="pmtct_enrollment" columnName="lmp" />
+            <columnExists tableName="pmtct_enrollment" columnName="pmtct_enrollment_date" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_enrollment
+            SET
+                gaweeks = FLOOR((pmtct_enrollment_date - lmp) / 7.0),
+                last_modified_date = CURRENT_TIMESTAMP,
+                last_modified_by = 'SYSTEM_GA_FIX'
+            WHERE
+                archived = false
+                AND lmp IS NOT NULL
+                AND pmtct_enrollment_date IS NOT NULL
+                AND gaweeks IS NOT NULL
+                AND gaweeks > 0
+                -- Only update records where calculated GA is valid (4-45 weeks)
+                AND FLOOR((pmtct_enrollment_date - lmp) / 7.0) BETWEEN 4 AND 45
+                -- Only update if stored GA differs from calculated GA
+                AND FLOOR((pmtct_enrollment_date - lmp) / 7.0) != gaweeks;
+        </sql>
+    </changeSet>
+
+    <!-- Fix records with NULL or 0 GA that should have valid GA -->
+    <changeSet failOnError="false" author="system" id="2026-10-19-fix-null-gestational-age">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_enrollment" />
+            <columnExists tableName="pmtct_enrollment" columnName="gaweeks" />
+            <columnExists tableName="pmtct_enrollment" columnName="lmp" />
+            <columnExists tableName="pmtct_enrollment" columnName="pmtct_enrollment_date" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_enrollment
+            SET
+                gaweeks = FLOOR((pmtct_enrollment_date - lmp) / 7.0),
+                last_modified_date = CURRENT_TIMESTAMP,
+                last_modified_by = 'SYSTEM_GA_FIX'
+            WHERE
+                archived = false
+                AND lmp IS NOT NULL
+                AND pmtct_enrollment_date IS NOT NULL
+                AND (gaweeks IS NULL OR gaweeks = 0)
+                -- Only update if calculated GA is valid (4-45 weeks)
+                AND FLOOR((pmtct_enrollment_date - lmp) / 7.0) BETWEEN 4 AND 45;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
