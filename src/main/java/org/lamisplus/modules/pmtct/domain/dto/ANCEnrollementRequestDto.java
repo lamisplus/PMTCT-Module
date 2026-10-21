@@ -27,7 +27,7 @@ public class ANCEnrollementRequestDto{
     private LocalDate LMP;
     @JsonProperty("gaweeks")
     private Integer gAWeeks;
-    private final String patient_uuid;
+    private String patient_uuid;
 
     @NotNull(message = "pmtctCycleUuid is required")
     private String pmtctCycleUuid;

@@ -12,6 +12,7 @@ public class PmtctPregnancyCycleRequestDto {
     @NotNull(message = "patient_uuid is required")
     @JsonProperty("patientUuid")
     private String patientUuid;
+    private String uuid;
     private String maternalOutcome;
     private String entryPoint;
     private String pregnancyOutcome;
