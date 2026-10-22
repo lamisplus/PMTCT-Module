@@ -56,4 +56,92 @@
         </sql>
     </changeSet>
 
+    <!-- Fix post-delivery mother visitation GA: Use L&D GA when available -->
+    <changeSet failOnError="false" author="gboyeguntaiwo" id="2026-10-22-fix-mother-visit-ga-post-delivery">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_mother_visitation" />
+            <tableExists tableName="pmtct_delivery" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="ga_weeks" />
+            <columnExists tableName="pmtct_delivery" columnName="gaweeks" />
+            <columnExists tableName="pmtct_delivery" columnName="date_of_delivery" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation pmv
+            SET
+                ga_weeks = d.gaweeks,
+                last_modified_date = CURRENT_TIMESTAMP,
+                last_modified_by = 'SYSTEM_GA_FIX_DELIVERY'
+            FROM pmtct_delivery d
+            WHERE pmv.patient_uuid = d.patient_uuid
+                AND pmv.pmtct_cycle_uuid = d.pmtct_cycle_uuid
+                AND pmv.archived = false
+                AND d.archived = false
+                AND pmv.date_of_visit >= d.date_of_delivery
+                AND d.gaweeks IS NOT NULL
+                AND pmv.ga_weeks != d.gaweeks;
+        </sql>
+    </changeSet>
+
+    <!-- Fix post-delivery mother visitation GA: Calculate at delivery when L&D GA is null -->
+    <changeSet failOnError="false" author="gboyeguntaiwo" id="2026-10-22-fix-mother-visit-ga-calculate-at-delivery">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_mother_visitation" />
+            <tableExists tableName="pmtct_delivery" />
+            <tableExists tableName="pmtct_enrollment" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="ga_weeks" />
+            <columnExists tableName="pmtct_delivery" columnName="date_of_delivery" />
+            <columnExists tableName="pmtct_enrollment" columnName="lmp" />
+        </preConditions>
+        <sql>
+            UPDATE pmtct_mother_visitation pmv
+            SET
+                ga_weeks = CASE
+                    WHEN FLOOR((d.date_of_delivery - pe.lmp) / 7.0) > 45 THEN 45
+                    ELSE FLOOR((d.date_of_delivery - pe.lmp) / 7.0)
+                END,
+                last_modified_date = CURRENT_TIMESTAMP,
+                last_modified_by = 'SYSTEM_GA_CALC_AT_DELIVERY'
+            FROM pmtct_delivery d
+            JOIN pmtct_enrollment pe
+                ON d.patient_uuid = pe.patient_uuid
+                AND d.pmtct_cycle_uuid = pe.pmtct_cycle_uuid
+                AND pe.archived = false
+            WHERE pmv.patient_uuid = d.patient_uuid
+                AND pmv.pmtct_cycle_uuid = d.pmtct_cycle_uuid
+                AND pmv.archived = false
+                AND d.archived = false
+                AND pmv.date_of_visit >= d.date_of_delivery
+                AND d.gaweeks IS NULL
+                AND pe.lmp IS NOT NULL
+                AND FLOOR((d.date_of_delivery - pe.lmp) / 7.0) >= 0;
+        </sql>
+    </changeSet>
+
+    <!-- Fix mother visitation GA > 45 for non-delivery or pre-delivery visits -->
+    <changeSet failOnError="false" author="gboyeguntaiwo" id="2026-10-22-fix-mother-visit-ga-cap-45">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pmtct_mother_visitation" />
+            <tableExists tableName="pmtct_enrollment" />
+            <columnExists tableName="pmtct_mother_visitation" columnName="ga_weeks" />
+        </preConditions>
+        <sql><![CDATA[
+            UPDATE pmtct_mother_visitation pmv
+            SET
+                ga_weeks = 45,
+                last_modified_date = CURRENT_TIMESTAMP,
+                last_modified_by = 'SYSTEM_GA_CAP_45'
+            FROM pmtct_enrollment pe
+            LEFT JOIN pmtct_delivery d
+                ON d.patient_uuid = pe.patient_uuid
+                AND d.pmtct_cycle_uuid = pe.pmtct_cycle_uuid
+                AND d.archived = false
+            WHERE pmv.patient_uuid = pe.patient_uuid
+                AND pmv.pmtct_cycle_uuid = pe.pmtct_cycle_uuid
+                AND pmv.archived = false
+                AND pe.archived = false
+                AND pmv.ga_weeks > 45
+                AND (d.date_of_delivery IS NULL OR pmv.date_of_visit < d.date_of_delivery);
+        ]]></sql>
+    </changeSet>
+
 </databaseChangeLog>

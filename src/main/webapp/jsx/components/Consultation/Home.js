@@ -155,6 +155,8 @@ const ClinicVisit = (props) => {
   const [artUniqueNumber, setArtUniqueNumber] = useState("");
   const [ancNumber, setAncNumber] = useState("");
   const [userList, setUserList] = useState([]);
+  const [deliveryData, setDeliveryData] = useState(null); // Store L&D data (dateOfDelivery, gaweeks)
+  const [gaSource, setGaSource] = useState(null); // Track whether GA is from L&D or calculated
 
   // Build current user's full name for pre-populating signature
   const getCurrentUserFullName = () => {
@@ -423,6 +425,32 @@ const ClinicVisit = (props) => {
       .catch(() => {});
   };
 
+  // Fetch Labour and Delivery data (dateOfDelivery and gaweeks)
+  // Used to determine if the visit is post-delivery and if so, use the L&D GA instead of calculating
+  const fetchDeliveryData = () => {
+    const pmtctCycleUuid = props.latestPmtctCycle?.uuid || props.patientObj?.pmtctCycleUuid;
+    const patientUuid = props.patientObj.patient_uuid
+      ? props.patientObj.patient_uuid
+      : props.patientObj.patientUuid;
+    if (patientUuid && pmtctCycleUuid) {
+      axios
+        .get(`${baseUrl}pmtct/anc/view-delivery-with-uuid/${patientUuid}/${pmtctCycleUuid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          if (response.data?.dateOfDelivery) {
+            setDeliveryData({
+              dateOfDelivery: response.data.dateOfDelivery,
+              gaweeks: response.data.gaweeks || null,
+            });
+          }
+        })
+        .catch(() => {
+          // No delivery record found — this is fine, patient may not have delivered yet
+        });
+    }
+  };
+
   const fetchLmpDate = () => {
     const pmtctCycleUuid = props.latestPmtctCycle?.uuid || props.patientObj?.pmtctCycleUuid;
     const patientUuid = props.patientObj.patient_uuid
@@ -506,6 +534,7 @@ const ClinicVisit = (props) => {
     checkCycleClosed();
     fetchAncVisitCount();
     fetchLmpDate();
+    fetchDeliveryData();
     fetchHtsAndUniqueIds();
     // Fetch facility users for Signature dropdown
     axios.get(`${baseUrl}users`, {
@@ -549,20 +578,67 @@ const ClinicVisit = (props) => {
   }, [props.latestPmtctCycle?.uuid]);
 
   // Auto-calculate Gestational Age from LMP and visit date (ANC Revisit & Mother Visit)
+  // If a valid Labour and Delivery Form has been saved and the mother follow-up visit occurs
+  // on or after the documented delivery date, use the GA from the Labour and Delivery Form instead
   useEffect(() => {
-    if (lmpDate && objValues.dateOfVisit) {
-      const lmp = new Date(lmpDate);
+    if (objValues.dateOfVisit) {
       const visitDate = new Date(objValues.dateOfVisit);
-      if (visitDate >= lmp) {
-        const gaWeeks = Math.floor((visitDate - lmp) / (1000 * 60 * 60 * 24 * 7));
-        const gaCheck = validateGestationalAge(gaWeeks, 0, 45);
-        if (gaCheck.reason === "too_high") {
-          toast.error(`Gestational age (${gaWeeks} weeks) exceeds 45 weeks based on LMP (${moment(lmpDate).format("DD-MM-YYYY")}). Please review the date of visit.`);
+
+      // Check if there's a valid delivery record and if the visit is post-delivery
+      if (deliveryData?.dateOfDelivery) {
+        const deliveryDate = new Date(deliveryData.dateOfDelivery);
+
+        // Visit is on or after delivery
+        if (visitDate >= deliveryDate) {
+          // Use GA from L&D if available, otherwise calculate GA at delivery time
+          if (deliveryData.gaweeks != null) {
+            // L&D has GA recorded - use it
+            setObjValues((prev) => ({ ...prev, gaWeeks: deliveryData.gaweeks }));
+            setGaSource({
+              type: 'delivery',
+              deliveryDate: deliveryData.dateOfDelivery,
+              gaWeeks: deliveryData.gaweeks
+            });
+          } else if (lmpDate) {
+            // L&D exists but no GA - calculate GA at delivery time
+            const lmp = new Date(lmpDate);
+            const gaAtDelivery = Math.floor((deliveryDate - lmp) / (1000 * 60 * 60 * 24 * 7));
+            const cappedGA = gaAtDelivery > 45 ? 45 : gaAtDelivery;
+            setObjValues((prev) => ({ ...prev, gaWeeks: cappedGA }));
+            setGaSource({
+              type: 'delivery',
+              deliveryDate: deliveryData.dateOfDelivery,
+              gaWeeks: cappedGA,
+              calculated: true // Flag to indicate this was calculated, not from L&D form
+            });
+          }
+          return; // Don't continue to normal calculation
         }
-        setObjValues((prev) => ({ ...prev, gaWeeks: gaWeeks }));
       }
+
+      // Normal calculation for pre-delivery visits or when no delivery data exists
+      if (lmpDate) {
+        const lmp = new Date(lmpDate);
+        if (visitDate >= lmp) {
+          const gaWeeks = Math.floor((visitDate - lmp) / (1000 * 60 * 60 * 24 * 7));
+          const gaCheck = validateGestationalAge(gaWeeks, 0, 45);
+          if (gaCheck.reason === "too_high") {
+            toast.error(`Gestational age (${gaWeeks} weeks) exceeds 45 weeks based on LMP (${moment(lmpDate).format("DD-MM-YYYY")}). Please review the date of visit.`);
+          }
+          // Cap GA at 45 weeks
+          const cappedGA = gaWeeks > 45 ? 45 : gaWeeks;
+          setObjValues((prev) => ({ ...prev, gaWeeks: cappedGA }));
+          setGaSource({
+            type: 'calculated',
+            lmp: lmpDate,
+            gaWeeks: cappedGA
+          });
+        }
+      }
+    } else {
+      setGaSource(null);
     }
-  }, [objValues.dateOfVisit, lmpDate]);
+  }, [objValues.dateOfVisit, lmpDate, deliveryData]);
 
   const GetVisit = (id) => {
     axios
@@ -1515,6 +1591,19 @@ const ClinicVisit = (props) => {
                               disabled={true}
                             />
                           </InputGroup>
+                          {gaSource?.type === 'delivery' && (
+                            <small style={{ color: '#14a44d', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+                              {gaSource.calculated
+                                ? `GA calculated at delivery (Delivery Date: ${moment(gaSource.deliveryDate).format("DD-MM-YYYY")})`
+                                : `GA from Labour & Delivery form (Delivery Date: ${moment(gaSource.deliveryDate).format("DD-MM-YYYY")})`
+                              }
+                            </small>
+                          )}
+                          {gaSource?.type === 'calculated' && gaSource.gaWeeks >= 45 && (
+                            <small style={{ color: '#dc4c64', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+                              GA capped at 45 weeks
+                            </small>
+                          )}
                         </FormGroup>
                       </div>
                   </div>

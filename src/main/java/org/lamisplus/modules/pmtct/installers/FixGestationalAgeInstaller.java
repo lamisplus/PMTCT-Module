@@ -7,8 +7,9 @@ import org.springframework.core.annotation.Order;
 
 @Order(22)
 @Installer(name = "fix-gestational-age-migration",
-        description = "Fix incorrect Gestational Age values in pmtct_enrollment caused by frontend recalculation bug",
-        runCondition = InstallerRunCondition.AlwaysRun)
+        description = "Fix incorrect Gestational Age values in pmtct_enrollment and pmtct_mother_visitation - v2.0",
+        runCondition = InstallerRunCondition.AlwaysRun,
+        version = 2)
 public class FixGestationalAgeInstaller extends AcrossLiquibaseInstaller {
 
     public FixGestationalAgeInstaller() {
