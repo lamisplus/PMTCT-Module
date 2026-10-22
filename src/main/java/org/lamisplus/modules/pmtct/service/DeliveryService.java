@@ -207,7 +207,6 @@ public class DeliveryService
     }
 
     private String getFullName(String uuid) {
-        System.out.println("hostpitalNumber = " + uuid);
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
         Long facilityId = user.getCurrentOrganisationUnitId();
@@ -243,7 +242,6 @@ public class DeliveryService
                 age = 0;
             }
         }
-        System.out.println("Age " + age);
         return age;
     }
     public List<DeliveryResponseDto> getAllDeliveries() {

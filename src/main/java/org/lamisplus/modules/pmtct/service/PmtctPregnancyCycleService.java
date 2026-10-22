@@ -86,7 +86,7 @@ public class PmtctPregnancyCycleService {
         pregnancyCycle.setCreatedDate(LocalDateTime.now());
         pregnancyCycle.setLastModifiedBy(user.getUserName());
         pregnancyCycle.setLastModifiedDate(LocalDateTime.now());
-        pregnancyCycle.setUuid(UUID.randomUUID().toString());
+        pregnancyCycle.setUuid(requestDto.getUuid());
         pregnancyCycle.setArchived(false);
         pregnancyCycle.setIsClosed(false);
 

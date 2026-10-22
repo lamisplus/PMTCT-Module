@@ -340,11 +340,9 @@ public class PmtctVisitService {
             Optional<User> currentUser = this.userService.getUserWithRoles();
             User user = (User) currentUser.get();
             Long facilityId = user.getCurrentOrganisationUnitId();
-            System.out.println("facilityId = "+facilityId);
-            System.out.println("pmtctVisit.getPatientUuid() = "+pmtctVisit.getPatientUuid());
+
             Optional<Person> persons = this.personRepository.getPersonByUuidAndFacilityIdAndArchived(pmtctVisit.getPatientUuid(), facilityId, 0);
             if (persons.isPresent()) {
-                System.out.println("Doc check me out here 1");
                 Person person = persons.get();
                 pmtctVisitResponseDto.setFullName(this.getFullName(pmtctVisit.getPatientUuid()));
                 pmtctVisitResponseDto.setSex(person.getSex());

@@ -412,7 +412,6 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
           age = 0;
       } 
     } 
-      System.out.println("Age " + age);
       return age;
   }
   
@@ -427,6 +426,12 @@ private HtsEncounterProxyRepository htsEncounterProxyRepository;
     @SneakyThrows
     public PMTCTEnrollment getSinglePmtctEnrollment(String id) {
         return this.pmtctEnrollmentReporsitory.findById(id)
+                .orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
+    }
+
+    @SneakyThrows
+    public PMTCTEnrollment getSinglePmtctEnrollmentByCycleUuid(String cycleUuid) {
+        return this.pmtctEnrollmentReporsitory.findByPmtctCycleIdAndArchived(cycleUuid, false)
                 .orElseThrow(() -> new Exception("PMTCTEnrollment NOT FOUND"));
     }
 
