@@ -82,17 +82,10 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-        <!--    <dependency>-->
-        <!--        <groupId>org.lamisplus.modules</groupId>-->
-        <!--        <artifactId>base</artifactId>-->
-        <!--        <version>2.0.0</version>-->
-        <!--    </dependency>-->
-
         <dependency>
             <groupId>org.lamisplus.modules</groupId>
             <artifactId>patient</artifactId>
-            <version>2.1.0</version>
+            <version>2.2.3.1</version>
         </dependency>
 
         <dependency>
@@ -110,17 +103,6 @@
             <artifactId>hts</artifactId>
             <version>2.6.1.1</version>
         </dependency>
-        <!--    <dependency>-->
-        <!--        <groupId>org.lamisplus.modules</groupId>-->
-        <!--        <artifactId>hiv</artifactId>-->
-        <!--        <version>1.0.0 </version>-->
-        <!--    </dependency>-->
-
-        <!--    <dependency>-->
-        <!--        <groupId>org.projectlombok</groupId>-->
-        <!--        <artifactId>lombok</artifactId>-->
-        <!--        <optional>true</optional>-->
-        <!--    </dependency>-->
 
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -261,13 +243,6 @@
         </dependency>
 
 
-
-        <!--    <dependency>-->
-        <!--        <groupId>org.projectlombok</groupId>-->
-        <!--        <artifactId>lombok</artifactId>-->
-        <!--        <version>${lombok.version}</version>-->
-        <!--        <scope>provided</scope>-->
-        <!--    </dependency>-->
     </dependencies>
 
     <build>
@@ -308,34 +283,6 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.12.1</version>
                 <executions>
-                    <!--                <execution>-->
-                    <!--                    <id>install node and npm</id>-->
-                    <!--                    <goals>-->
-                    <!--                        <goal>install-node-and-npm</goal>-->
-                    <!--                    </goals>-->
-                    <!--                    <configuration>-->
-                    <!--                        <nodeVersion>v16.13.2</nodeVersion>-->
-                    <!--                        <npmVersion>8.1.2</npmVersion>-->
-                    <!--                    </configuration>-->
-                    <!--                </execution>-->
-                    <!--                <execution>-->
-                    <!--                    <id>npm install</id>-->
-                    <!--                    <goals>-->
-                    <!--                        <goal>npm</goal>-->
-                    <!--                    </goals>-->
-                    <!--                    <configuration>-->
-                    <!--                        <arguments>install</arguments>-->
-                    <!--                    </configuration>-->
-                    <!--                </execution>-->
-                    <!--                <execution>-->
-                    <!--                    <id>npm run build</id>-->
-                    <!--                    <goals>-->
-                    <!--                        <goal>npm</goal>-->
-                    <!--                    </goals>-->
-                    <!--                    <configuration>-->
-                    <!--                        <arguments>run build</arguments>-->
-                    <!--                    </configuration>-->
-                    <!--                </execution>-->
                 </executions>
             </plugin>
             <plugin>
